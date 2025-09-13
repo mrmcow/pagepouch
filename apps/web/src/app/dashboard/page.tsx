@@ -208,6 +208,38 @@ function DashboardContent() {
     }
   }
 
+  const handleToggleFavorite = async (clipId: string, isFavorite: boolean) => {
+    try {
+      const response = await fetch(`/api/clips/${clipId}/favorite`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_favorite: isFavorite }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle favorite')
+      }
+
+      // Update the clip in state
+      setState(prev => ({
+        ...prev,
+        clips: prev.clips.map(clip => 
+          clip.id === clipId 
+            ? { ...clip, is_favorite: isFavorite }
+            : clip
+        ),
+        selectedClip: prev.selectedClip?.id === clipId 
+          ? { ...prev.selectedClip, is_favorite: isFavorite }
+          : prev.selectedClip,
+      }))
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error)
+      throw error
+    }
+  }
+
   const handleClipNavigate = (direction: 'prev' | 'next') => {
     if (!state.selectedClip) return
 
@@ -315,8 +347,8 @@ function DashboardContent() {
     // Apply view filter
     let matchesViewFilter = true
     if (state.viewFilter === 'favorites') {
-      // For now, we'll use clips with notes as "favorites" - you can add a favorites field to the schema later
-      matchesViewFilter = !!clip.notes && clip.notes.trim().length > 0
+      // Show only favorited clips
+      matchesViewFilter = clip.is_favorite === true
     } else if (state.viewFilter === 'recent') {
       // Show clips from the last 7 days
       const sevenDaysAgo = new Date()
@@ -615,7 +647,7 @@ function DashboardContent() {
                          'No clips yet'}
                       </h3>
                       <p className="text-muted-foreground">
-                        {state.viewFilter === 'favorites' ? 'Clips with notes will appear here as favorites' :
+                        {state.viewFilter === 'favorites' ? 'Star clips to add them to your favorites' :
                          state.viewFilter === 'recent' ? 'Clips from the last 7 days will appear here' :
                          'Install the PagePouch extension to start capturing web content'}
                       </p>
@@ -644,6 +676,7 @@ function DashboardContent() {
                         onClick={() => handleClipClick(clip)}
                         onUpdate={handleClipUpdate}
                         onDelete={handleClipDelete}
+                        onToggleFavorite={handleToggleFavorite}
                       />
                     ))}
                   </div>
@@ -700,9 +733,10 @@ interface ClipCardProps {
   onClick: () => void
   onUpdate: (clipId: string, updates: Partial<Clip>) => Promise<void>
   onDelete: (clipId: string) => Promise<void>
+  onToggleFavorite: (clipId: string, isFavorite: boolean) => Promise<void>
 }
 
-function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete }: ClipCardProps) {
+function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onToggleFavorite }: ClipCardProps) {
   const folder = folders.find(f => f.id === clip.folder_id)
   
   const handleDelete = async (e: React.MouseEvent) => {
@@ -713,6 +747,15 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete }: Clip
       } catch (error) {
         console.error('Failed to delete clip:', error)
       }
+    }
+  }
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await onToggleFavorite(clip.id, !clip.is_favorite)
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error)
     }
   }
 
@@ -731,7 +774,23 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete }: Clip
           )}
           
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm truncate text-foreground/90 mb-1">{clip.title}</h3>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-medium text-sm truncate text-foreground/90">{clip.title}</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-6 w-6 p-0 ml-2 flex-shrink-0 transition-colors ${
+                  clip.is_favorite 
+                    ? 'text-yellow-500 hover:text-yellow-600' 
+                    : 'text-muted-foreground/50 hover:text-yellow-500'
+                }`}
+                onClick={handleToggleFavorite}
+              >
+                <Star 
+                  className={`h-3 w-3 ${clip.is_favorite ? 'fill-current' : ''}`} 
+                />
+              </Button>
+            </div>
             <div className="flex items-center space-x-2 text-xs text-muted-foreground/80">
               <Globe className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{new URL(clip.url).hostname}</span>
@@ -795,6 +854,26 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete }: Clip
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          
+          {/* Favorite Star Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`absolute top-2 right-2 h-8 w-8 p-0 transition-all duration-200 ${
+              clip.is_favorite 
+                ? 'opacity-100 bg-yellow-500/20 hover:bg-yellow-500/30' 
+                : 'opacity-0 group-hover:opacity-100 hover:bg-white/20'
+            }`}
+            onClick={handleToggleFavorite}
+          >
+            <Star 
+              className={`h-4 w-4 transition-colors ${
+                clip.is_favorite 
+                  ? 'fill-yellow-500 text-yellow-500' 
+                  : 'text-white hover:text-yellow-500'
+              }`} 
+            />
+          </Button>
         </div>
       )}
       

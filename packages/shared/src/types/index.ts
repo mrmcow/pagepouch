@@ -26,6 +26,7 @@ export const ClipSchema = z.object({
   updated_at: z.string().datetime(),
   folder_id: z.string().uuid().optional(),
   notes: z.string().optional(),
+  is_favorite: z.boolean().default(false),
 });
 
 export type Clip = z.infer<typeof ClipSchema>;

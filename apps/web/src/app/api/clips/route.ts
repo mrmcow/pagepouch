@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
         notes,
         created_at,
         updated_at,
-        folder_id
+        folder_id,
+        is_favorite
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
