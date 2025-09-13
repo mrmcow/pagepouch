@@ -8,6 +8,12 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = createClient()
+    
+    if (!supabase) {
+      console.error('Supabase client not available in callback')
+      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    }
+    
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {

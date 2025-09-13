@@ -77,7 +77,8 @@ export default function SignUpPage() {
         }
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+      console.error('Signup error:', err)
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -100,7 +101,8 @@ export default function SignUpPage() {
         setError(error.message)
       }
     } catch (err) {
-      setError('Failed to sign up with Google. Please try again.')
+      console.error('Google signup error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to sign up with Google. Please try again.')
     } finally {
       setIsLoading(false)
     }

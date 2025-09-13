@@ -28,6 +28,12 @@ export default function LoginPage() {
 
     try {
       const supabase = getSupabase()
+      
+      if (!supabase) {
+        setError('Authentication service is not available. Please check your configuration.')
+        return
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -43,7 +49,8 @@ export default function LoginPage() {
         router.refresh()
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+      console.error('Login error:', err)
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -55,6 +62,12 @@ export default function LoginPage() {
 
     try {
       const supabase = getSupabase()
+      
+      if (!supabase) {
+        setError('Authentication service is not available. Please check your configuration.')
+        return
+      }
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -66,7 +79,8 @@ export default function LoginPage() {
         setError(error.message)
       }
     } catch (err) {
-      setError('Failed to sign in with Google. Please try again.')
+      console.error('Google login error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to sign in with Google. Please try again.')
     } finally {
       setIsLoading(false)
     }

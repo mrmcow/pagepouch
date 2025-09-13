@@ -11,7 +11,13 @@ export function createClient() {
       // Server-side during build - return mock
       return null as any
     }
-    throw new Error('Missing Supabase environment variables')
+    
+    // Client-side runtime error with helpful message
+    console.error('Supabase configuration missing:', {
+      url: supabaseUrl ? 'present' : 'missing',
+      key: supabaseAnonKey ? 'present' : 'missing'
+    })
+    throw new Error('Supabase is not configured. Please check environment variables.')
   }
   
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
