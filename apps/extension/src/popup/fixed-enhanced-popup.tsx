@@ -427,7 +427,11 @@ function FixedEnhancedPopupApp() {
 
   const openWebApp = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
-      chrome.tabs.create({ url: 'http://localhost:3000/dashboard' });
+      // Use production URL in production, localhost in development
+      const webAppUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://pagepouch-web.vercel.app/dashboard'
+        : 'http://localhost:3000/dashboard';
+      chrome.tabs.create({ url: webAppUrl });
     }
   };
 

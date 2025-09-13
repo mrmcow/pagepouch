@@ -105,6 +105,15 @@ export class ExtensionAuth {
 
 // API helpers for extension
 export class ExtensionAPI {
+  // Get the correct API base URL based on environment
+  private static getApiBaseUrl(): string {
+    // In production, use the deployed web app URL
+    // In development, use localhost
+    return process.env.NODE_ENV === 'production' 
+      ? 'https://pagepouch-web.vercel.app'
+      : 'http://localhost:3000'
+  }
+
   static async saveClip(clipData: {
     url: string
     title: string
@@ -121,10 +130,11 @@ export class ExtensionAPI {
       throw new Error('Not authenticated')
     }
 
+    const apiUrl = `${this.getApiBaseUrl()}/api/clips`
     console.log('Saving clip to API with token:', token ? 'present' : 'missing');
-    console.log('API endpoint:', 'http://localhost:3000/api/clips');
+    console.log('API endpoint:', apiUrl);
 
-    const response = await fetch('http://localhost:3000/api/clips', {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -173,7 +183,7 @@ export class ExtensionAPI {
     if (params?.folder_id) searchParams.set('folder_id', params.folder_id)
     if (params?.q) searchParams.set('q', params.q)
 
-    const response = await fetch(`http://localhost:3000/api/clips?${searchParams}`, {
+    const response = await fetch(`${this.getApiBaseUrl()}/api/clips?${searchParams}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -194,7 +204,7 @@ export class ExtensionAPI {
       throw new Error('Not authenticated')
     }
 
-    const response = await fetch('http://localhost:3000/api/folders', {
+    const response = await fetch(`${this.getApiBaseUrl()}/api/folders`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
