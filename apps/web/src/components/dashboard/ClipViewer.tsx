@@ -382,18 +382,47 @@ export function ClipViewer({
                 {/* Screenshot Tab */}
                 <TabsContent value="screenshot" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
                   {clip.screenshot_url ? (
-                    <div className="flex-1 bg-muted/30 overflow-auto">
-                      <div className="p-4">
-                        <img
-                          src={clip.screenshot_url}
-                          alt={clip.title}
-                          className="w-full h-auto shadow-lg rounded border block mx-auto"
-                          style={{ 
-                            maxHeight: 'none', 
-                            maxWidth: '100%',
-                            minHeight: 'auto'
-                          }}
-                        />
+                    <div className="flex-1 bg-muted/30 overflow-auto relative">
+                      <div className="p-4 min-h-full">
+                        <div className="flex justify-center">
+                          <div className="relative">
+                            <img
+                              src={clip.screenshot_url}
+                              alt={clip.title}
+                              className="max-w-full h-auto shadow-lg rounded border bg-white"
+                              style={{ 
+                                maxHeight: 'none',
+                                width: 'auto',
+                                height: 'auto',
+                                display: 'block',
+                                minWidth: '300px' // Ensure minimum width for very narrow screenshots
+                              }}
+                              onLoad={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                console.log('Screenshot loaded:', {
+                                  naturalWidth: img.naturalWidth,
+                                  naturalHeight: img.naturalHeight,
+                                  displayWidth: img.width,
+                                  displayHeight: img.height,
+                                  aspectRatio: img.naturalWidth / img.naturalHeight
+                                });
+                              }}
+                              onError={(e) => {
+                                console.error('Failed to load screenshot:', clip.screenshot_url);
+                              }}
+                            />
+                            
+                            {/* Loading indicator */}
+                            <div className="absolute inset-0 bg-muted/50 flex items-center justify-center opacity-0 transition-opacity duration-200" id={`loading-${clip.id}`}>
+                              <div className="text-muted-foreground">Loading screenshot...</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Scroll hint for long screenshots */}
+                        <div className="text-center text-xs text-muted-foreground mt-4 opacity-70">
+                          Scroll to view the full screenshot
+                        </div>
                       </div>
                     </div>
                   ) : (
