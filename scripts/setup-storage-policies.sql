@@ -1,0 +1,46 @@
+-- PagePouch Storage Setup Instructions
+-- 
+-- IMPORTANT: Don't run this SQL directly. Instead, follow these steps in the Supabase Dashboard:
+--
+-- 1. Go to Storage > Buckets in your Supabase Dashboard
+-- 2. Create two buckets:
+--    - Name: "screenshots", Public: Yes
+--    - Name: "favicons", Public: Yes
+--
+-- 3. For each bucket, go to the bucket settings and add these policies:
+--
+-- SCREENSHOTS BUCKET POLICIES:
+-- 
+-- Policy Name: "Users can upload screenshots"
+-- Operation: INSERT
+-- Policy Definition:
+-- bucket_id = 'screenshots' AND auth.uid()::text = (storage.foldername(name))[1]
+--
+-- Policy Name: "Users can view screenshots" 
+-- Operation: SELECT
+-- Policy Definition:
+-- bucket_id = 'screenshots' AND auth.uid()::text = (storage.foldername(name))[1]
+--
+-- Policy Name: "Users can delete screenshots"
+-- Operation: DELETE  
+-- Policy Definition:
+-- bucket_id = 'screenshots' AND auth.uid()::text = (storage.foldername(name))[1]
+--
+-- FAVICONS BUCKET POLICIES:
+--
+-- Policy Name: "Users can upload favicons"
+-- Operation: INSERT
+-- Policy Definition:
+-- bucket_id = 'favicons' AND auth.uid()::text = (storage.foldername(name))[1]
+--
+-- Policy Name: "Users can view favicons"
+-- Operation: SELECT
+-- Policy Definition:
+-- bucket_id = 'favicons' AND auth.uid()::text = (storage.foldername(name))[1]
+--
+-- Policy Name: "Users can delete favicons"
+-- Operation: DELETE
+-- Policy Definition:
+-- bucket_id = 'favicons' AND auth.uid()::text = (storage.foldername(name))[1]
+--
+-- This ensures users can only access files in folders named with their user ID.

@@ -1,0 +1,41 @@
+{
+  "name": "pagepouch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The most frictionless way to capture, organize, and retrieve web content",
+  "keywords": [
+    "browser-extension",
+    "web-clipper",
+    "threat-intelligence",
+    "research-tool"
+  ],
+  "author": "PagePouch Team",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "type-check": "turbo run type-check",
+    "setup-db": "node scripts/setup-database.js",
+    "setup-db-direct": "node scripts/setup-database.js --direct"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "dotenv": "^17.2.2",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "supabase": "^2.40.7",
+    "turbo": "^1.10.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

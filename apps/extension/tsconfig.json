@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM"],
+    "types": ["chrome", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@pagepouch/shared": ["../../packages/shared/src/index.ts"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "../../packages/shared/src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
