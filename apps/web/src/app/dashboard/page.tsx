@@ -57,6 +57,7 @@ interface DashboardState {
   searchQuery: string
   selectedFolder: string | null
   viewMode: 'grid' | 'list'
+  viewFilter: 'library' | 'favorites' | 'recent'
   sortBy: 'created_at' | 'updated_at' | 'title'
   sortOrder: 'asc' | 'desc'
   user: any
@@ -75,6 +76,7 @@ function DashboardContent() {
     searchQuery: '',
     selectedFolder: null,
     viewMode: 'grid',
+    viewFilter: 'library',
     sortBy: 'created_at',
     sortOrder: 'desc',
     user: null,
@@ -310,7 +312,20 @@ function DashboardContent() {
     
     const matchesFolder = !state.selectedFolder || clip.folder_id === state.selectedFolder
 
-    return matchesSearch && matchesFolder
+    // Apply view filter
+    let matchesViewFilter = true
+    if (state.viewFilter === 'favorites') {
+      // For now, we'll use clips with notes as "favorites" - you can add a favorites field to the schema later
+      matchesViewFilter = !!clip.notes && clip.notes.trim().length > 0
+    } else if (state.viewFilter === 'recent') {
+      // Show clips from the last 7 days
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      matchesViewFilter = new Date(clip.created_at) > sevenDaysAgo
+    }
+    // 'library' shows all clips (no additional filter)
+
+    return matchesSearch && matchesFolder && matchesViewFilter
   })
 
   const sortedClips = [...filteredClips].sort((a, b) => {
@@ -353,15 +368,27 @@ function DashboardContent() {
               </button>
               
               <nav className="hidden md:flex items-center space-x-4">
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant={state.viewFilter === 'library' ? 'default' : 'ghost'} 
+                  size="sm"
+                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'library' }))}
+                >
                   <Grid className="mr-2 h-4 w-4" />
                   Library
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant={state.viewFilter === 'favorites' ? 'default' : 'ghost'} 
+                  size="sm"
+                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'favorites' }))}
+                >
                   <Star className="mr-2 h-4 w-4" />
                   Favorites
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant={state.viewFilter === 'recent' ? 'default' : 'ghost'} 
+                  size="sm"
+                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'recent' }))}
+                >
                   <Clock className="mr-2 h-4 w-4" />
                   Recent
                 </Button>
@@ -418,8 +445,8 @@ function DashboardContent() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="container mx-auto px-4 py-6 h-[calc(100vh-80px)]">
+        <div className="flex flex-col lg:flex-row gap-6 h-full">
           {/* Sidebar */}
           <aside className="w-full lg:w-64 space-y-6">
             {/* Quick Actions */}
@@ -526,7 +553,7 @@ function DashboardContent() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 space-y-6 min-w-0">
+          <main className="flex-1 flex flex-col space-y-6 min-w-0 h-full overflow-hidden">
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 flex-1 w-full">
@@ -574,43 +601,55 @@ function DashboardContent() {
             </div>
 
             {/* Clips Grid/List */}
-            {sortedClips.length === 0 ? (
-              <Card className="p-12">
-                <div className="text-center space-y-4">
-                  <div className="flex justify-center opacity-20">
-                    <LogoIcon size={96} />
+            <div className="flex-1 overflow-hidden">
+              {sortedClips.length === 0 ? (
+                <Card className="p-12">
+                  <div className="text-center space-y-4">
+                    <div className="flex justify-center opacity-20">
+                      <LogoIcon size={96} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        {state.viewFilter === 'favorites' ? 'No favorites found' :
+                         state.viewFilter === 'recent' ? 'No recent clips found' :
+                         'No clips yet'}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {state.viewFilter === 'favorites' ? 'Clips with notes will appear here as favorites' :
+                         state.viewFilter === 'recent' ? 'Clips from the last 7 days will appear here' :
+                         'Install the PagePouch extension to start capturing web content'}
+                      </p>
+                    </div>
+                    {state.viewFilter === 'library' && (
+                      <Button onClick={() => router.push('/')}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Install Extension
+                      </Button>
+                    )}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">No clips yet</h3>
-                    <p className="text-muted-foreground">
-                      Install the PagePouch extension to start capturing web content
-                    </p>
+                </Card>
+              ) : (
+                <div className="h-full overflow-y-auto pr-2 -mr-2">
+                  <div className={
+                    state.viewMode === 'grid' 
+                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 pb-6"
+                      : "space-y-2 pb-6"
+                  }>
+                    {sortedClips.map((clip) => (
+                      <ClipCard 
+                        key={clip.id} 
+                        clip={clip} 
+                        viewMode={state.viewMode}
+                        folders={state.folders}
+                        onClick={() => handleClipClick(clip)}
+                        onUpdate={handleClipUpdate}
+                        onDelete={handleClipDelete}
+                      />
+                    ))}
                   </div>
-                  <Button onClick={() => router.push('/')}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Install Extension
-                  </Button>
                 </div>
-              </Card>
-            ) : (
-              <div className={
-                state.viewMode === 'grid' 
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
-                  : "space-y-4"
-              }>
-                {sortedClips.map((clip) => (
-                  <ClipCard 
-                    key={clip.id} 
-                    clip={clip} 
-                    viewMode={state.viewMode}
-                    folders={state.folders}
-                    onClick={() => handleClipClick(clip)}
-                    onUpdate={handleClipUpdate}
-                    onDelete={handleClipDelete}
-                  />
-                ))}
-              </div>
-            )}
+              )}
+            </div>
           </main>
         </div>
       </div>
@@ -679,34 +718,49 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete }: Clip
 
   if (viewMode === 'list') {
     return (
-      <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={onClick}>
-        <div className="flex items-center space-x-4">
+      <Card className="p-3 hover:shadow-md hover:bg-muted/30 transition-all duration-200 cursor-pointer border-0 shadow-sm bg-white/50 backdrop-blur-sm" onClick={onClick}>
+        <div className="flex items-center space-x-3">
           {clip.screenshot_url && (
-            <img
-              src={clip.screenshot_url}
-              alt={clip.title}
-              className="w-16 h-12 object-cover rounded border"
-            />
+            <div className="relative overflow-hidden rounded-md">
+              <img
+                src={clip.screenshot_url}
+                alt={clip.title}
+                className="w-14 h-10 object-cover"
+              />
+            </div>
           )}
           
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium truncate">{clip.title}</h3>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Globe className="h-3 w-3" />
+            <h3 className="font-medium text-sm truncate text-foreground/90 mb-1">{clip.title}</h3>
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground/80">
+              <Globe className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{new URL(clip.url).hostname}</span>
-              <span>•</span>
-              <span>{new Date(clip.created_at).toLocaleDateString()}</span>
+              <span className="text-muted-foreground/50">•</span>
+              <span className="whitespace-nowrap">
+                {new Date(clip.created_at).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric' 
+                })}
+              </span>
+              {folder && (
+                <>
+                  <span className="text-muted-foreground/50">•</span>
+                  <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary/80 border-0">
+                    {folder.name}
+                  </Badge>
+                </>
+              )}
             </div>
-            {folder && (
-              <Badge variant="secondary" className="mt-1">
-                {folder.name}
-              </Badge>
-            )}
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 hover:bg-primary/10"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -732,37 +786,47 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete }: Clip
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow group cursor-pointer" onClick={onClick}>
+    <Card className="overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group cursor-pointer border-0 shadow-sm bg-white/50 backdrop-blur-sm" onClick={onClick}>
       {clip.screenshot_url && (
-        <div className="aspect-video bg-muted">
+        <div className="aspect-[4/3] bg-muted/30 relative overflow-hidden">
           <img
             src={clip.screenshot_url}
             alt={clip.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         </div>
       )}
       
-      <CardContent className="p-4">
-        <div className="space-y-2">
-          <h3 className="font-medium line-clamp-2 leading-tight">{clip.title}</h3>
+      <CardContent className="p-3">
+        <div className="space-y-1.5">
+          <h3 className="font-medium text-sm line-clamp-2 leading-tight text-foreground/90">{clip.title}</h3>
           
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Globe className="h-3 w-3 mr-1" />
+          <div className="flex items-center text-xs text-muted-foreground/80">
+            <Globe className="h-3 w-3 mr-1.5 flex-shrink-0" />
             <span className="truncate">{new URL(clip.url).hostname}</span>
           </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              {new Date(clip.created_at).toLocaleDateString()}
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-muted-foreground/70 font-medium">
+              {new Date(clip.created_at).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric' 
+              })}
             </span>
+            
+            {folder && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary/80 border-0">
+                {folder.name}
+              </Badge>
+            )}
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-primary/10"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreHorizontal className="h-4 w-4" />
