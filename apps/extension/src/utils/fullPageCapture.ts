@@ -23,7 +23,7 @@ export class FullPageCapture {
     quality: 90,
     format: 'png',
     maxHeight: 32767, // Maximum canvas height in most browsers
-    scrollDelay: 500, // Increased delay to respect Chrome's rate limits
+    scrollDelay: 1000, // More conservative delay to respect Chrome's rate limits
   };
 
   /**
@@ -37,6 +37,11 @@ export class FullPageCapture {
     const startTime = Date.now();
 
     try {
+      // Verify permissions before starting
+      if (!this.isSupported()) {
+        throw new Error('Full page capture is not supported - missing Chrome APIs or permissions');
+      }
+
       // Get page dimensions and current scroll position
       const pageInfo = await this.getPageInfo(tabId);
       
@@ -93,15 +98,20 @@ export class FullPageCapture {
           // Additional rate limiting delay between captures (Chrome quota protection)
           if (sectionIndex > 1) {
             console.log('Waiting for Chrome rate limit...');
-            await this.delay(300); // Extra 300ms between captures
+            await this.delay(800); // More conservative 800ms between captures
           }
           
           try {
-            // Capture visible area with retry logic
-            const screenshot = await this.captureWithRetry(opts.format, opts.quality, 3);
+            // Capture visible area with retry logic (increased retries)
+            const screenshot = await this.captureWithRetry(opts.format, opts.quality, 5);
             screenshots.push({dataUrl: screenshot, x: scrollX, y: scrollY});
             
             console.log(`Section ${sectionIndex} captured successfully`);
+            
+            // Additional delay after successful capture to be extra safe
+            if (sectionIndex < totalSections) {
+              await this.delay(200);
+            }
           } catch (error) {
             console.error(`Failed to capture section ${sectionIndex}:`, error);
             throw new Error(`Failed to capture section ${sectionIndex}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -498,7 +508,7 @@ export class FullPageCapture {
   }
 
   /**
-   * Capture with retry logic for rate limiting
+   * Capture with retry logic for rate limiting and permissions
    */
   private static async captureWithRetry(
     format: 'png' | 'jpeg',
@@ -507,6 +517,11 @@ export class FullPageCapture {
   ): Promise<string> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        // Check permissions before attempting capture
+        if (!chrome.tabs || typeof chrome.tabs.captureVisibleTab !== 'function') {
+          throw new Error('Chrome tabs API not available');
+        }
+
         const screenshot = await chrome.tabs.captureVisibleTab({
           format,
           quality,
@@ -515,18 +530,40 @@ export class FullPageCapture {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         
+        console.log(`Capture attempt ${attempt}/${maxRetries} failed:`, errorMessage);
+        
+        // Handle rate limiting
         if (errorMessage.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
           console.log(`Rate limit hit on attempt ${attempt}/${maxRetries}, waiting...`);
           
           if (attempt < maxRetries) {
-            // Exponential backoff: 1s, 2s, 4s...
-            const waitTime = Math.pow(2, attempt - 1) * 1000;
+            // More aggressive backoff: 2s, 4s, 8s...
+            const waitTime = Math.pow(2, attempt) * 1000;
             await this.delay(waitTime);
             continue;
           }
         }
         
-        // Re-throw if not a rate limit error or max retries reached
+        // Handle permission errors
+        if (errorMessage.includes('permission') || errorMessage.includes('activeTab') || errorMessage.includes('all_urls')) {
+          console.log(`Permission error on attempt ${attempt}/${maxRetries}, waiting longer...`);
+          
+          if (attempt < maxRetries) {
+            // Wait longer for permission issues: 3s, 6s, 12s...
+            const waitTime = Math.pow(2, attempt) * 1500;
+            await this.delay(waitTime);
+            continue;
+          }
+        }
+        
+        // For other errors, wait a bit before retrying
+        if (attempt < maxRetries) {
+          console.log(`Generic error, waiting before retry...`);
+          await this.delay(1000 * attempt);
+          continue;
+        }
+        
+        // Re-throw if max retries reached
         throw error;
       }
     }
