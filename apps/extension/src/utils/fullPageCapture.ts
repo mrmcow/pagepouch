@@ -40,13 +40,24 @@ export class FullPageCapture {
       // Get page dimensions and current scroll position
       const pageInfo = await this.getPageInfo(tabId);
       
+      console.log('Full page capture - Page info:', {
+        scrollHeight: pageInfo.scrollHeight,
+        scrollWidth: pageInfo.scrollWidth,
+        viewportWidth: pageInfo.viewportWidth,
+        viewportHeight: pageInfo.viewportHeight,
+        originalScrollX: pageInfo.originalScrollX,
+        originalScrollY: pageInfo.originalScrollY
+      });
+      
       if (pageInfo.scrollHeight <= pageInfo.viewportHeight) {
         // Page fits in viewport, use simple capture
+        console.log('Page fits in viewport, using simple capture');
         return this.captureVisibleArea(tabId, opts, pageInfo, startTime);
       }
 
       // Check if we need horizontal scrolling
       const needsHorizontalScroll = pageInfo.scrollWidth > pageInfo.viewportWidth;
+      console.log('Needs horizontal scroll:', needsHorizontalScroll);
       
       // Calculate scroll positions for both dimensions
       const verticalPositions = this.calculateScrollPositions(
@@ -104,10 +115,21 @@ export class FullPageCapture {
       // Stitch screenshots together
       console.log('Starting image stitching...');
       const actualWidth = Math.max(pageInfo.viewportWidth, pageInfo.scrollWidth);
+      const actualHeight = Math.min(pageInfo.scrollHeight, opts.maxHeight);
+      
+      console.log('Stitching parameters:', {
+        screenshotCount: screenshots.length,
+        actualWidth,
+        actualHeight,
+        viewportWidth: pageInfo.viewportWidth,
+        viewportHeight: pageInfo.viewportHeight,
+        screenshotPositions: screenshots.map(s => ({ x: s.x, y: s.y }))
+      });
+      
       const stitchedImage = await this.stitchGridScreenshots(
         screenshots,
         actualWidth,
-        Math.min(pageInfo.scrollHeight, opts.maxHeight),
+        actualHeight,
         pageInfo.viewportWidth,
         pageInfo.viewportHeight
       );
@@ -350,6 +372,14 @@ export class FullPageCapture {
     viewportHeight: number
   ): Promise<string> {
     try {
+      console.log('Stitching grid screenshots:', {
+        totalScreenshots: screenshots.length,
+        totalWidth,
+        totalHeight,
+        viewportWidth,
+        viewportHeight
+      });
+      
       // Use OffscreenCanvas for service worker compatibility
       const canvas = new OffscreenCanvas(totalWidth, totalHeight);
       const ctx = canvas.getContext('2d');
