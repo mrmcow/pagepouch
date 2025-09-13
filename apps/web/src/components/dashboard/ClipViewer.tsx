@@ -380,20 +380,24 @@ export function ClipViewer({
               {/* Tab Content */}
               <div className="flex-1 overflow-hidden">
                 {/* Screenshot Tab */}
-                <TabsContent value="screenshot" className="h-full m-0">
+                <TabsContent value="screenshot" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
                   {clip.screenshot_url ? (
-                    <div className="h-full bg-muted/30 p-4 overflow-auto">
-                      <div className="w-full">
+                    <div className="flex-1 bg-muted/30 overflow-auto">
+                      <div className="p-4">
                         <img
                           src={clip.screenshot_url}
                           alt={clip.title}
-                          className="w-full h-auto shadow-lg rounded border block"
-                          style={{ maxHeight: 'none', maxWidth: '100%' }}
+                          className="w-full h-auto shadow-lg rounded border block mx-auto"
+                          style={{ 
+                            maxHeight: 'none', 
+                            maxWidth: '100%',
+                            minHeight: 'auto'
+                          }}
                         />
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
                         <Image className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>No screenshot available</p>
@@ -403,9 +407,9 @@ export function ClipViewer({
                 </TabsContent>
 
                 {/* HTML Tab */}
-                <TabsContent value="html" className="h-full m-0">
+                <TabsContent value="html" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
                   {clip.html_content ? (
-                    <div className="h-full overflow-auto">
+                    <div className="flex-1 overflow-auto">
                       <div className="p-4">
                         <div className="bg-muted/30 rounded border overflow-hidden">
                           <pre 
@@ -424,7 +428,7 @@ export function ClipViewer({
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
                         <Code className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>No HTML content available</p>
@@ -434,9 +438,9 @@ export function ClipViewer({
                 </TabsContent>
 
                 {/* Text Tab */}
-                <TabsContent value="text" className="h-full m-0">
+                <TabsContent value="text" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
                   {clip.text_content ? (
-                    <div className="h-full overflow-auto">
+                    <div className="flex-1 overflow-auto">
                       <div className="p-4">
                         <div 
                           className="text-sm whitespace-pre-wrap bg-muted/30 p-4 rounded border leading-relaxed w-full"
@@ -453,7 +457,7 @@ export function ClipViewer({
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
                         <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>No text content available</p>

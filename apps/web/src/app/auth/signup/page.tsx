@@ -22,7 +22,9 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  
+  // Lazy initialization to avoid build-time issues
+  const getSupabase = () => createClient()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,6 +51,7 @@ export default function SignUpPage() {
     }
 
     try {
+      const supabase = getSupabase()
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -85,6 +88,7 @@ export default function SignUpPage() {
     setError(null)
 
     try {
+      const supabase = getSupabase()
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
