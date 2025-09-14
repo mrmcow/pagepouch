@@ -20,6 +20,8 @@ import {
   Image,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Folder,
   MoreHorizontal,
   Search,
@@ -77,10 +79,16 @@ export function ClipViewer({
   const [isLoading, setIsLoading] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [activeTab, setActiveTab] = useState('screenshot')
+  const [htmlViewMode, setHtmlViewMode] = useState('html-rendered')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedText, setSelectedText] = useState('')
   const [showAddNote, setShowAddNote] = useState(false)
   const [noteText, setNoteText] = useState('')
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0)
+  const [totalMatches, setTotalMatches] = useState(0)
+  const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color?: string}>>([])
+  const [clipTags, setClipTags] = useState<Array<{id: string, name: string, color?: string}>>([])
+  const [newTagName, setNewTagName] = useState('')
 
   useEffect(() => {
     if (clip) {
@@ -88,12 +96,45 @@ export function ClipViewer({
         title: clip.title,
         notes: clip.notes || '',
         folder_id: clip.folder_id || '',
-        tags: [] // TODO: Load tags when implemented
+        tags: clipTags.map(tag => tag.name)
       }
       setEditForm(newForm)
       setHasUnsavedChanges(false)
     }
-  }, [clip])
+  }, [clip, clipTags])
+
+  // Load available tags and clip tags
+  useEffect(() => {
+    if (!isOpen || !clip) return
+
+    const loadTags = async () => {
+      try {
+        // Load all available tags
+        const tagsResponse = await fetch('/api/tags')
+        if (tagsResponse.ok) {
+          const tags = await tagsResponse.json()
+          setAvailableTags(tags)
+        }
+
+        // Load tags for this clip
+        const clipTagsResponse = await fetch(`/api/clips/${clip.id}/tags`)
+        if (clipTagsResponse.ok) {
+          const tags = await clipTagsResponse.json()
+          setClipTags(tags)
+          
+          // Update the edit form with the loaded tags
+          setEditForm(prev => ({
+            ...prev,
+            tags: tags.map((tag: any) => tag.name)
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading tags:', error)
+      }
+    }
+
+    loadTags()
+  }, [isOpen, clip])
 
   // Calculate navigation state
   const currentIndex = clip ? clips.findIndex(c => c.id === clip.id) : -1
@@ -156,11 +197,28 @@ export function ClipViewer({
 
     const timeoutId = setTimeout(async () => {
       try {
+        // Save clip metadata
         await onUpdate(clip.id, {
           title: editForm.title,
           notes: editForm.notes,
           folder_id: editForm.folder_id || undefined,
         })
+        
+        // Save tags separately
+        const response = await fetch(`/api/clips/${clip.id}/tags`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            tagNames: editForm.tags
+          }),
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to save tags')
+        }
+        
         setHasUnsavedChanges(false)
       } catch (error) {
         console.error('Auto-save failed:', error)
@@ -177,8 +235,153 @@ export function ClipViewer({
     setHasUnsavedChanges(true)
   }
 
-  if (!isOpen || !clip) return null
+  // Update match count when search query or active tab changes
+  useEffect(() => {
+    if (!searchQuery.trim() || !clip) {
+      setTotalMatches(0)
+      setCurrentMatchIndex(0)
+      return
+    }
 
+    let matches = 0
+    if (activeTab === 'text' && clip.text_content) {
+      matches = countMatches(clip.text_content, searchQuery)
+    } else if (activeTab === 'html' && clip.html_content) {
+      matches = countMatches(clip.html_content, searchQuery)
+    }
+    
+    setTotalMatches(matches)
+    setCurrentMatchIndex(0)
+  }, [searchQuery, activeTab, clip?.text_content, clip?.html_content, clip])
+
+  const updateIframeHighlighting = (newIndex: number) => {
+    const iframe = document.querySelector('iframe[title="HTML Content Preview"]') as HTMLIFrameElement
+    if (iframe && iframe.contentWindow && searchQuery) {
+      iframe.contentWindow.postMessage({
+        type: 'highlight',
+        searchTerm: searchQuery,
+        currentIndex: newIndex
+      }, '*')
+    }
+  }
+
+  // Update iframe highlighting when currentMatchIndex changes or when search starts
+  useEffect(() => {
+    if (activeTab === 'html' && htmlViewMode === 'html-rendered' && searchQuery && totalMatches > 0) {
+      // Add a small delay to ensure iframe is loaded
+      setTimeout(() => {
+        updateIframeHighlighting(currentMatchIndex)
+      }, 200)
+    }
+  }, [currentMatchIndex, activeTab, htmlViewMode, searchQuery, totalMatches])
+
+  const countMatches = (text: string, query: string) => {
+    if (!query.trim()) return 0
+    const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+    const matches = text.match(regex)
+    return matches ? matches.length : 0
+  }
+
+  const highlightSearchText = (text: string, query: string, currentIndex = 0) => {
+    if (!query.trim()) return text
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    let matchCount = 0
+    
+    return text.replace(regex, (match) => {
+      const isCurrentMatch = matchCount === currentIndex
+      matchCount++
+      
+      if (isCurrentMatch) {
+        return `<mark class="bg-orange-300 text-orange-900 px-1 rounded border-2 border-orange-500" id="current-match">${match}</mark>`
+      } else {
+        return `<mark class="bg-yellow-200 text-yellow-900 px-1 rounded">${match}</mark>`
+      }
+    })
+  }
+
+  const highlightSearchTextForSourceCode = (text: string, query: string, currentIndex = 0) => {
+    if (!query.trim()) return text
+    
+    // For source code, we need to escape HTML first, then add highlighting
+    const escapedText = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    let matchCount = 0
+    
+    return escapedText.replace(regex, (match) => {
+      const isCurrentMatch = matchCount === currentIndex
+      matchCount++
+      
+      if (isCurrentMatch) {
+        return `<mark class="bg-orange-300 text-orange-900 px-1 rounded border-2 border-orange-500" id="current-match">${match}</mark>`
+      } else {
+        return `<mark class="bg-yellow-200 text-yellow-900 px-1 rounded">${match}</mark>`
+      }
+    })
+  }
+
+  const navigateToMatch = (direction: 'next' | 'prev') => {
+    if (totalMatches === 0) return
+    
+    let newIndex
+    if (direction === 'next') {
+      newIndex = currentMatchIndex >= totalMatches - 1 ? 0 : currentMatchIndex + 1
+    } else {
+      newIndex = currentMatchIndex <= 0 ? totalMatches - 1 : currentMatchIndex - 1
+    }
+    
+    setCurrentMatchIndex(newIndex)
+    
+    // Update iframe highlighting if in HTML rendered view
+    if (activeTab === 'html' && htmlViewMode === 'html-rendered') {
+      updateIframeHighlighting(newIndex)
+    }
+    
+    // Scroll to current match - handle different tab types
+    setTimeout(() => {
+      if (activeTab === 'html' && htmlViewMode === 'html-rendered') {
+        // For iframe (HTML Rendered view) - scrolling is handled inside the iframe
+        // The iframe will receive the postMessage and handle highlighting + scrolling
+      } else {
+        // For main document (Text tab and HTML Source Code)
+        const currentMatch = document.getElementById('current-match')
+        if (currentMatch) {
+          currentMatch.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }
+    }, 100)
+  }
+
+  const handleAddNoteFromSelection = async () => {
+    if (!selectedText || !noteText.trim()) return
+    
+    // Simple format: just the quoted text and the note (tight spacing)
+    const noteWithSelection = `> "${selectedText}"\n${noteText.trim()}`
+    const currentNotes = editForm.notes ? `${editForm.notes}\n\n${noteWithSelection}` : noteWithSelection
+    
+    handleFormChange('notes', currentNotes)
+    setSelectedText('')
+    setNoteText('')
+    setShowAddNote(false)
+  }
+
+  const formatNotesDisplay = (notes: string) => {
+    if (!notes) return notes
+    
+    return notes
+      // Format blockquotes (excerpts) - clean and tight
+      .replace(/^> "(.*?)"$/gm, '<div class="mb-1 p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r"><div class="text-sm italic text-gray-700 font-medium">"$1"</div></div>')
+      // Format line breaks
+      .replace(/\n/g, '<br>')
+  }
+
+  if (!isOpen || !clip) return null
 
   const handleDelete = async () => {
     if (!clip || !confirm('Are you sure you want to delete this clip?')) return
@@ -201,6 +404,7 @@ export function ClipViewer({
         tags: [...prev.tags, newTag.trim()]
       }))
       setNewTag('')
+      setHasUnsavedChanges(true)
     }
   }
 
@@ -209,49 +413,23 @@ export function ClipViewer({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }))
+    setHasUnsavedChanges(true)
   }
 
-  const handleTextSelection = () => {
-    const selection = window.getSelection()
+  const handleTextSelection = (event?: any) => {
+    let selection;
+    
+    // Check if this is from an iframe
+    if (event?.target?.ownerDocument && event.target.ownerDocument !== document) {
+      selection = event.target.ownerDocument.getSelection();
+    } else {
+      selection = window.getSelection();
+    }
+    
     if (selection && selection.toString().trim()) {
       setSelectedText(selection.toString().trim())
       setShowAddNote(true)
     }
-  }
-
-  const handleAddNoteFromSelection = async () => {
-    if (!selectedText || !noteText.trim()) return
-    
-    // Format the note with better visual distinction for the excerpt
-    const timestamp = new Date().toLocaleString()
-    const noteWithSelection = `📝 **Note added ${timestamp}**\n\n> "${selectedText}"\n\n${noteText.trim()}`
-    const currentNotes = editForm.notes ? `${editForm.notes}\n\n---\n\n${noteWithSelection}` : noteWithSelection
-    
-    handleFormChange('notes', currentNotes)
-    setSelectedText('')
-    setNoteText('')
-    setShowAddNote(false)
-  }
-
-  const highlightSearchText = (text: string, query: string) => {
-    if (!query.trim()) return text
-    
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-    return text.replace(regex, '<mark class="bg-yellow-200 text-yellow-900 px-1 rounded">$1</mark>')
-  }
-
-  const formatNotesDisplay = (notes: string) => {
-    if (!notes) return notes
-    
-    return notes
-      // Format headers with emoji and bold
-      .replace(/📝 \*\*(.*?)\*\*/g, '<div class="flex items-center gap-2 mb-2 mt-4 first:mt-0"><span class="text-lg">📝</span><span class="font-semibold text-sm text-blue-700">$1</span></div>')
-      // Format blockquotes (excerpts)
-      .replace(/^> "(.*?)"$/gm, '<div class="my-2 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r"><div class="text-xs font-medium text-blue-600 mb-1">EXCERPT</div><div class="text-sm italic text-gray-700 font-medium">"$1"</div></div>')
-      // Format separators
-      .replace(/^---$/gm, '<hr class="my-4 border-gray-200">')
-      // Format line breaks
-      .replace(/\n/g, '<br>')
   }
 
   const folder = folders.find(f => f.id === clip.folder_id)
@@ -335,8 +513,8 @@ export function ClipViewer({
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
               {/* Tab Navigation */}
               <div className="border-b bg-background px-4 py-2">
-                <div className="flex items-center justify-between">
-                  <TabsList className="grid w-full max-w-md grid-cols-3">
+                <div className="flex items-center justify-between gap-4">
+                  <TabsList className="grid w-full max-w-md grid-cols-3 flex-shrink-0">
                     <TabsTrigger value="screenshot" className="flex items-center gap-2">
                       <Camera className="h-4 w-4" />
                       Screenshot
@@ -353,21 +531,60 @@ export function ClipViewer({
                   
                   {/* Search Bar - Only show for HTML and Text tabs */}
                   {(activeTab === 'html' || activeTab === 'text') && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           placeholder="Search content..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9 w-64"
+                          className="pl-9 w-48 sm:w-64"
                         />
                       </div>
+                      
+                      {searchQuery && totalMatches > 0 && (
+                        <div className="flex items-center gap-2">
+                          {/* Match count */}
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                            {currentMatchIndex + 1} of {totalMatches}
+                          </span>
+                          
+                          {/* Navigation buttons */}
+                          <div className="flex">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigateToMatch('prev')}
+                              disabled={totalMatches <= 1}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigateToMatch('next')}
+                              disabled={totalMatches <= 1}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {searchQuery && totalMatches === 0 && (
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                          No matches
+                        </span>
+                      )}
+                      
                       {searchQuery && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setSearchQuery('')}
+                          className="h-8 w-8 p-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -378,51 +595,31 @@ export function ClipViewer({
               </div>
 
               {/* Tab Content */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 flex flex-col">
                 {/* Screenshot Tab */}
-                <TabsContent value="screenshot" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
+                <TabsContent value="screenshot" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
                   {clip.screenshot_url ? (
-                    <div className="flex-1 bg-muted/30 overflow-auto relative">
-                      <div className="p-4 min-h-full">
-                        <div className="flex justify-center">
-                          <div className="relative">
-                            <img
-                              src={clip.screenshot_url}
-                              alt={clip.title}
-                              className="max-w-full h-auto shadow-lg rounded border bg-white"
-                              style={{ 
-                                maxHeight: 'none',
-                                width: 'auto',
-                                height: 'auto',
-                                display: 'block',
-                                minWidth: '300px' // Ensure minimum width for very narrow screenshots
-                              }}
-                              onLoad={(e) => {
-                                const img = e.target as HTMLImageElement;
-                                console.log('Screenshot loaded:', {
-                                  naturalWidth: img.naturalWidth,
-                                  naturalHeight: img.naturalHeight,
-                                  displayWidth: img.width,
-                                  displayHeight: img.height,
-                                  aspectRatio: img.naturalWidth / img.naturalHeight
-                                });
-                              }}
-                              onError={(e) => {
-                                console.error('Failed to load screenshot:', clip.screenshot_url);
-                              }}
-                            />
-                            
-                            {/* Loading indicator */}
-                            <div className="absolute inset-0 bg-muted/50 flex items-center justify-center opacity-0 transition-opacity duration-200" id={`loading-${clip.id}`}>
-                              <div className="text-muted-foreground">Loading screenshot...</div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Scroll hint for long screenshots */}
-                        <div className="text-center text-xs text-muted-foreground mt-4 opacity-70">
-                          Scroll to view the full screenshot
-                        </div>
+                    <div className="flex-1 bg-muted/30 p-4">
+                      <div className="bg-white rounded border shadow-sm overflow-auto" style={{ height: 'calc(100vh - 200px)' }}>
+                        <img
+                          src={clip.screenshot_url}
+                          alt={clip.title}
+                          className="max-w-full block"
+                          style={{ height: 'auto', minHeight: '100%' }}
+                          onLoad={(e) => {
+                            const img = e.target as HTMLImageElement;
+                            console.log('Screenshot loaded:', {
+                              naturalWidth: img.naturalWidth,
+                              naturalHeight: img.naturalHeight,
+                              displayWidth: img.width,
+                              displayHeight: img.height,
+                              aspectRatio: img.naturalWidth / img.naturalHeight
+                            });
+                          }}
+                          onError={(e) => {
+                            console.error('Failed to load screenshot:', clip.screenshot_url);
+                          }}
+                        />
                       </div>
                     </div>
                   ) : (
@@ -438,23 +635,287 @@ export function ClipViewer({
                 {/* HTML Tab */}
                 <TabsContent value="html" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
                   {clip.html_content ? (
-                    <div className="flex-1 overflow-auto">
-                      <div className="p-4">
-                        <div className="bg-muted/30 rounded border overflow-hidden">
-                          <pre 
-                            className="text-xs font-mono whitespace-pre-wrap p-4 overflow-auto max-h-full w-full"
-                            style={{ 
-                              maxWidth: '100%',
-                              wordBreak: 'break-all',
-                              overflowWrap: 'break-word'
-                            }}
-                            onMouseUp={handleTextSelection}
-                            dangerouslySetInnerHTML={{
-                              __html: highlightSearchText(clip.html_content, searchQuery)
-                            }}
-                          />
+                    <div className="flex-1 flex flex-col">
+                      <div className="p-4 border-b bg-background">
+                        <div className="text-sm text-muted-foreground mb-2">
+                          Choose how to view the HTML content:
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setHtmlViewMode('html-rendered')}
+                            className={`px-3 py-1 text-xs rounded border ${
+                              htmlViewMode === 'html-rendered' 
+                                ? 'bg-primary text-primary-foreground' 
+                                : 'bg-background hover:bg-muted'
+                            }`}
+                          >
+                            Rendered View
+                          </button>
+                          <button
+                            onClick={() => setHtmlViewMode('html-source')}
+                            className={`px-3 py-1 text-xs rounded border ${
+                              htmlViewMode === 'html-source' 
+                                ? 'bg-primary text-primary-foreground' 
+                                : 'bg-background hover:bg-muted'
+                            }`}
+                          >
+                            Source Code
+                          </button>
                         </div>
                       </div>
+                      
+                      {htmlViewMode === 'html-rendered' ? (
+                        <div className="flex-1 bg-muted/30 p-4">
+                          <div className="bg-white rounded border shadow-sm h-full">
+                            <iframe
+                              srcDoc={`
+                                ${clip.html_content}
+                                <style>
+                                  /* Block specific ad networks and tracking */
+                                  iframe[src*="doubleclick"], iframe[src*="googlesyndication"],
+                                  iframe[src*="amazon-adsystem"], iframe[src*="facebook.com/tr"],
+                                  iframe[src*="googletagmanager"], iframe[src*="google-analytics"],
+                                  .adsbygoogle, .google-ad, .adsystem,
+                                  /* Block obvious ad containers */
+                                  .advertisement, .ad-banner, .ad-container, .ad-wrapper,
+                                  .sidebar-ad, .header-ad, .footer-ad, .inline-ad,
+                                  /* Block media players that interfere with text selection */
+                                  .video-player, .media-player, .player-container, .video-container,
+                                  .jwplayer, .brightcove-player, .vjs-tech, .video-js,
+                                  iframe[src*="youtube"], iframe[src*="vimeo"], iframe[src*="dailymotion"],
+                                  iframe[src*="jwplatform"], iframe[src*="brightcove"], iframe[src*="kaltura"],
+                                  /* Block autoplay media */
+                                  video[autoplay], audio[autoplay] {
+                                    display: none !important;
+                                    visibility: hidden !important;
+                                  }
+                                  
+                                  /* Disable autoplay on all media */
+                                  video, audio {
+                                    autoplay: false !important;
+                                  }
+                                  
+                                  /* Improve reading experience and layout */
+                                  body {
+                                    background: white !important;
+                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                                    line-height: 1.6 !important;
+                                    max-width: none !important;
+                                    margin: 0 !important;
+                                    padding: 20px !important;
+                                  }
+                                  
+                                  /* Improve readability */
+                                  p, div, span, article, section {
+                                    max-width: none !important;
+                                    line-height: 1.6 !important;
+                                  }
+                                  
+                                  /* Remove fixed/sticky elements that might interfere with text selection */
+                                  [style*="position: fixed"], [style*="position: sticky"] {
+                                    position: static !important;
+                                  }
+                                  
+                                  /* Clean typography for better reading */
+                                  h1, h2, h3, h4, h5, h6 {
+                                    line-height: 1.3 !important;
+                                    margin-bottom: 0.5em !important;
+                                  }
+                                  
+                                  /* Better paragraph spacing */
+                                  p {
+                                    margin-bottom: 1em !important;
+                                  }
+                                </style>
+                                <script>
+                                  // Conservative ad blocking - focus on tracking, ads, and media players
+                                  function cleanupPage() {
+                                    // Remove ad network and media player iframes
+                                    document.querySelectorAll('iframe').forEach(iframe => {
+                                      const src = iframe.src || iframe.getAttribute('data-src') || '';
+                                      if (src.includes('doubleclick') || src.includes('googlesyndication') ||
+                                          src.includes('amazon-adsystem') || src.includes('facebook.com/tr') ||
+                                          src.includes('googletagmanager') || src.includes('google-analytics') ||
+                                          src.includes('youtube') || src.includes('vimeo') || src.includes('dailymotion') ||
+                                          src.includes('jwplatform') || src.includes('brightcove') || src.includes('kaltura')) {
+                                        iframe.remove();
+                                      }
+                                    });
+                                    
+                                    // Remove ad containers and media players
+                                    const removeSelectors = [
+                                      '.adsbygoogle', '.google-ad', '.adsystem',
+                                      '.advertisement', '.ad-banner', '.ad-container', '.ad-wrapper',
+                                      '.video-player', '.media-player', '.player-container', '.video-container',
+                                      '.jwplayer', '.brightcove-player', '.vjs-tech', '.video-js'
+                                    ];
+                                    
+                                    removeSelectors.forEach(selector => {
+                                      document.querySelectorAll(selector).forEach(el => el.remove());
+                                    });
+                                    
+                                    // Remove all video and audio elements that might interfere
+                                    document.querySelectorAll('video, audio').forEach(media => {
+                                      // Check if it's part of the main content or just a media player
+                                      const parent = media.closest('article, .article, .content, .post, .story');
+                                      if (!parent || media.closest('.player, .video-player, .media-player')) {
+                                        media.remove();
+                                      } else {
+                                        // Keep but disable autoplay and controls
+                                        media.autoplay = false;
+                                        media.controls = false;
+                                        media.pause();
+                                        media.style.pointerEvents = 'none';
+                                      }
+                                    });
+                                  }
+                                  
+                                  // Run cleanup when page loads
+                                  document.addEventListener('DOMContentLoaded', cleanupPage);
+                                  setTimeout(cleanupPage, 100); // Also run after a short delay
+                                  
+                                  function highlightSearchInIframe(searchTerm, currentIndex = 0) {
+                                    if (!searchTerm) return;
+                                    
+                                    // Only update the current match styling instead of rebuilding everything
+                                    const existingMarks = document.querySelectorAll('mark[data-search-highlight]');
+                                    
+                                    if (existingMarks.length > 0) {
+                                      // If highlights already exist, just update the current match styling
+                                      existingMarks.forEach((mark, index) => {
+                                        mark.removeAttribute('id');
+                                        if (index === currentIndex) {
+                                          mark.id = 'current-match';
+                                          mark.style.cssText = 'background-color: #fed7aa; color: #ea580c; padding: 1px 2px; border: 2px solid #f97316;';
+                                        } else {
+                                          mark.style.cssText = 'background-color: #fef3c7; color: #a16207; padding: 1px 2px;';
+                                        }
+                                      });
+                                      return; // Exit early - no need to rebuild highlights
+                                    }
+                                    
+                                    // First time highlighting - build all highlights
+                                    const walker = document.createTreeWalker(
+                                      document.body,
+                                      NodeFilter.SHOW_TEXT,
+                                      null,
+                                      false
+                                    );
+                                    
+                                    const textNodes = [];
+                                    let node;
+                                    while (node = walker.nextNode()) {
+                                      textNodes.push(node);
+                                    }
+                                    
+                                    let matchCount = 0;
+                                    textNodes.forEach(textNode => {
+                                      const text = textNode.textContent;
+                                      if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
+                                        const regex = new RegExp(\`(\${searchTerm})\`, 'gi');
+                                        const highlightedText = text.replace(regex, (match) => {
+                                          const isCurrentMatch = matchCount === currentIndex;
+                                          matchCount++;
+                                          
+                                          if (isCurrentMatch) {
+                                            return \`<mark data-search-highlight id="current-match" style="background-color: #fed7aa; color: #ea580c; padding: 1px 2px; border: 2px solid #f97316;">\${match}</mark>\`;
+                                          } else {
+                                            return \`<mark data-search-highlight style="background-color: #fef3c7; color: #a16207; padding: 1px 2px;">\${match}</mark>\`;
+                                          }
+                                        });
+                                        const wrapper = document.createElement('span');
+                                        wrapper.innerHTML = highlightedText;
+                                        textNode.parentNode.replaceChild(wrapper, textNode);
+                                      }
+                                    });
+                                  }
+                                  
+                                  // Highlight search term if provided
+                                  window.addEventListener('message', function(event) {
+                                    if (event.data.type === 'highlight') {
+                                      highlightSearchInIframe(event.data.searchTerm, event.data.currentIndex || 0);
+                                      
+                                      // Scroll to current match immediately after highlighting
+                                      const currentMatch = document.getElementById('current-match');
+                                      if (currentMatch) {
+                                        // Use smooth scrolling that maintains current viewport context
+                                        currentMatch.scrollIntoView({ 
+                                          behavior: 'smooth', 
+                                          block: 'center',
+                                          inline: 'nearest'
+                                        });
+                                      }
+                                    }
+                                  });
+                                  
+                                  // Initial highlight - only use searchQuery, not currentMatchIndex
+                                  setTimeout(() => {
+                                    highlightSearchInIframe('${searchQuery}', 0);
+                                    // Scroll to first match after initial highlighting
+                                    setTimeout(() => {
+                                      const currentMatch = document.getElementById('current-match');
+                                      if (currentMatch) {
+                                        currentMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                      }
+                                    }, 100);
+                                  }, 100);
+                                </script>
+                              `}
+                              className="w-full h-full rounded"
+                              sandbox="allow-same-origin allow-scripts"
+                              title="HTML Content Preview"
+                              style={{ minHeight: '500px' }}
+                              onLoad={(e) => {
+                                const iframe = e.target as HTMLIFrameElement;
+                                try {
+                                  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                                  if (iframeDoc) {
+                                    // Add text selection handler
+                                    iframeDoc.addEventListener('mouseup', () => {
+                                      const selection = iframeDoc.getSelection();
+                                      if (selection && selection.toString().trim()) {
+                                        handleTextSelection({
+                                          target: {
+                                            ownerDocument: iframeDoc
+                                          }
+                                        } as any);
+                                      }
+                                    });
+                                    
+                                    // Send search term for highlighting
+                                    if (searchQuery) {
+                                      iframe.contentWindow?.postMessage({
+                                        type: 'highlight',
+                                        searchTerm: searchQuery,
+                                        currentIndex: currentMatchIndex
+                                      }, '*');
+                                    }
+                                  }
+                                } catch (error) {
+                                  console.log('Cannot access iframe content due to security restrictions');
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex-1 bg-muted/30 p-4">
+                          <div className="bg-white rounded border shadow-sm overflow-auto" style={{ height: 'calc(100vh - 200px)' }}>
+                            <div 
+                              className="text-xs font-mono whitespace-pre-wrap p-4 w-full"
+                              style={{ 
+                                maxWidth: '100%',
+                                wordBreak: 'break-all',
+                                overflowWrap: 'break-word'
+                              }}
+                              onMouseUp={handleTextSelection}
+                              dangerouslySetInnerHTML={{
+                                __html: highlightSearchTextForSourceCode(clip.html_content, searchQuery, currentMatchIndex)
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -467,22 +928,24 @@ export function ClipViewer({
                 </TabsContent>
 
                 {/* Text Tab */}
-                <TabsContent value="text" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
+                <TabsContent value="text" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
                   {clip.text_content ? (
-                    <div className="flex-1 overflow-auto">
-                      <div className="p-4">
-                        <div 
-                          className="text-sm whitespace-pre-wrap bg-muted/30 p-4 rounded border leading-relaxed w-full"
-                          style={{ 
-                            maxWidth: '100%',
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word'
-                          }}
-                          onMouseUp={handleTextSelection}
-                          dangerouslySetInnerHTML={{
-                            __html: highlightSearchText(clip.text_content, searchQuery)
-                          }}
-                        />
+                    <div className="flex-1 bg-muted/30 p-4">
+                      <div className="bg-white rounded border shadow-sm overflow-auto" style={{ height: 'calc(100vh - 200px)' }}>
+                        <div className="p-4">
+                          <div 
+                            className="text-sm whitespace-pre-wrap leading-relaxed"
+                            style={{ 
+                              maxWidth: '100%',
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word'
+                            }}
+                            onMouseUp={handleTextSelection}
+                            dangerouslySetInnerHTML={{
+                              __html: highlightSearchText(clip.text_content, searchQuery, currentMatchIndex)
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -504,12 +967,37 @@ export function ClipViewer({
               {/* Title */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
-                <Input
-                  value={editForm.title}
-                  onChange={(e) => handleFormChange('title', e.target.value)}
-                  placeholder="Clip title"
-                  className="font-medium"
-                />
+                <div className="relative">
+                  <textarea
+                    value={editForm.title}
+                    onChange={(e) => handleFormChange('title', e.target.value)}
+                    placeholder="Clip title"
+                    className="w-full font-medium text-sm bg-background border border-input rounded-md px-3 py-2 resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
+                    style={{
+                      minHeight: '2.5rem',
+                      height: 'auto',
+                      lineHeight: '1.4'
+                    }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
+                    onFocus={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
+                    ref={(el) => {
+                      if (el) {
+                        // Auto-resize on mount
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                      }
+                    }}
+                    rows={1}
+                  />
+                </div>
               </div>
 
               {/* URL & Date */}
@@ -561,44 +1049,53 @@ export function ClipViewer({
               {/* Notes */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
-                {editForm.notes && editForm.notes.includes('📝') ? (
-                  <div className="space-y-2">
-                    {/* Formatted Preview */}
-                    <div 
-                      className="text-sm p-3 bg-muted/30 rounded border min-h-[120px] max-h-[200px] overflow-y-auto leading-relaxed"
-                      dangerouslySetInnerHTML={{
-                        __html: formatNotesDisplay(editForm.notes)
-                      }}
-                    />
-                    {/* Raw Edit Mode */}
-                    <details className="group">
-                      <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                        Edit raw notes
-                      </summary>
+                <div className="relative">
+                  {/* Rich text editor style - show formatted view with inline editing */}
+                  {editForm.notes && editForm.notes.includes('> "') ? (
+                    <div className="space-y-2">
+                      {/* Formatted Preview */}
+                      <div 
+                        className="text-sm p-3 bg-background rounded border min-h-[100px] max-h-[300px] overflow-y-auto leading-relaxed cursor-text"
+                        dangerouslySetInnerHTML={{
+                          __html: formatNotesDisplay(editForm.notes)
+                        }}
+                        onClick={() => {
+                          // Focus the textarea when clicking on the preview
+                          const textarea = document.getElementById('notes-textarea') as HTMLTextAreaElement;
+                          if (textarea) {
+                            textarea.focus();
+                            textarea.style.display = 'block';
+                            textarea.previousElementSibling?.setAttribute('style', 'display: none');
+                          }
+                        }}
+                      />
+                      {/* Hidden editable textarea - shows on focus */}
                       <Textarea
+                        id="notes-textarea"
                         value={editForm.notes}
                         onChange={(e) => handleFormChange('notes', e.target.value)}
                         placeholder="Add your notes..."
-                        rows={Math.max(6, Math.min(12, editForm.notes.split('\n').length + 2))}
-                        className="text-sm resize-y min-h-[120px] max-h-[300px] leading-relaxed mt-2"
-                        style={{
-                          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+                        rows={Math.max(4, Math.min(12, (editForm.notes || '').split('\n').length + 1))}
+                        className="text-sm resize-y min-h-[100px] max-h-[300px] leading-relaxed hidden"
+                        onBlur={(e) => {
+                          // Hide textarea and show formatted view when losing focus
+                          e.target.style.display = 'none';
+                          const preview = e.target.previousElementSibling as HTMLElement;
+                          if (preview) preview.style.display = 'block';
                         }}
                       />
-                    </details>
-                  </div>
-                ) : (
-                  <Textarea
-                    value={editForm.notes}
-                    onChange={(e) => handleFormChange('notes', e.target.value)}
-                    placeholder="Add your notes..."
-                    rows={editForm.notes ? Math.max(6, Math.min(12, editForm.notes.split('\n').length + 2)) : 6}
-                    className="text-sm resize-y min-h-[120px] max-h-[300px] leading-relaxed"
-                    style={{
-                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
-                    }}
-                  />
-                )}
+                    </div>
+                  ) : (
+                    <Textarea
+                      id="notes-textarea"
+                      value={editForm.notes}
+                      onChange={(e) => handleFormChange('notes', e.target.value)}
+                      placeholder="Add your notes..."
+                      rows={Math.max(3, Math.min(8, (editForm.notes || '').split('\n').length + 1))}
+                      className="text-sm resize-y min-h-[80px] max-h-[300px] leading-relaxed"
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Tags */}

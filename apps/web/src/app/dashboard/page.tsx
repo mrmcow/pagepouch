@@ -26,7 +26,8 @@ import {
   Edit3,
   Star,
   Clock,
-  Globe
+  Globe,
+  X
 } from 'lucide-react'
 import { 
   DropdownMenu,
@@ -53,9 +54,12 @@ import { EditFolderModal } from '@/components/dashboard/EditFolderModal'
 interface DashboardState {
   clips: Clip[]
   folders: Folder[]
+  availableTags: Array<{id: string, name: string, color?: string}>
+  clipTags: Record<string, string[]> // clipId -> tagIds
   isLoading: boolean
   searchQuery: string
   selectedFolder: string | null
+  selectedTag: string | null
   viewMode: 'grid' | 'list'
   viewFilter: 'library' | 'favorites' | 'recent'
   sortBy: 'created_at' | 'updated_at' | 'title'
@@ -72,9 +76,12 @@ function DashboardContent() {
   const [state, setState] = useState<DashboardState>({
     clips: [],
     folders: [],
-    isLoading: true,
+    availableTags: [],
+    clipTags: {},
+    isLoading: false, // Start with false to show UI immediately
     searchQuery: '',
     selectedFolder: null,
+    selectedTag: null,
     viewMode: 'grid',
     viewFilter: 'library',
     sortBy: 'created_at',
@@ -86,54 +93,130 @@ function DashboardContent() {
     selectedFolderForEdit: null,
     isEditFolderModalOpen: false,
   })
+  
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
 
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
+    // Show UI immediately, load data in background
     checkAuth()
-    loadData()
+    // Don't wait for loadData - let it run in background
+    setTimeout(() => loadData(), 0)
   }, [])
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      router.push('/auth/login')
-      return
-    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
 
-    setState(prev => ({ ...prev, user }))
+      setState(prev => ({ ...prev, user }))
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      // Don't redirect on auth errors - let user try to use the app
+    }
   }
 
   const loadData = async () => {
-    setState(prev => ({ ...prev, isLoading: true }))
-
     try {
-      // Load clips and folders in parallel
-      const [clipsResponse, foldersResponse] = await Promise.all([
-        fetch('/api/clips'),
-        fetch('/api/folders')
+      // Load clips, folders, and tags in parallel with caching
+      const [clipsResponse, foldersResponse, tagsResponse] = await Promise.all([
+        fetch('/api/clips', { 
+          cache: 'no-store', // Always get fresh data
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch('/api/folders', { 
+          cache: 'force-cache', // Cache folders as they change less
+          headers: { 'Cache-Control': 'max-age=300' }
+        }),
+        fetch('/api/tags', { 
+          cache: 'force-cache', // Cache tags as they change less
+          headers: { 'Cache-Control': 'max-age=300' }
+        })
       ])
+
+      if (!clipsResponse.ok || !foldersResponse.ok || !tagsResponse.ok) {
+        throw new Error('Failed to fetch data')
+      }
 
       const clipsData = await clipsResponse.json()
       const foldersData = await foldersResponse.json()
+      const tagsData = await tagsResponse.json()
+
+      // Load clip tags lazily - only when needed for filtering
+      const clipTagsMap: Record<string, string[]> = {}
 
       setState(prev => ({
         ...prev,
         clips: clipsData.clips || [],
         folders: foldersData.folders || [],
-        isLoading: false,
+        availableTags: tagsData || [],
+        clipTags: clipTagsMap,
       }))
+      
+      setIsInitialLoading(false)
     } catch (error) {
       console.error('Failed to load data:', error)
-      setState(prev => ({ ...prev, isLoading: false }))
+      setIsInitialLoading(false)
+      // Show error state but don't block the UI
     }
   }
 
   const handleSearch = (query: string) => {
     setState(prev => ({ ...prev, searchQuery: query }))
-    // TODO: Implement debounced search API call
+  }
+
+  const loadClipTagsForFilter = async (tagId: string) => {
+    try {
+      // Only load if we don't have the data yet
+      if (Object.keys(state.clipTags).length === 0) {
+        const clipTagsMap: Record<string, string[]> = {}
+        
+        // Load tags for all clips efficiently
+        await Promise.all(
+          state.clips.map(async (clip: Clip) => {
+            try {
+              const tagsResponse = await fetch(`/api/clips/${clip.id}/tags`)
+              if (tagsResponse.ok) {
+                const clipTags = await tagsResponse.json()
+                clipTagsMap[clip.id] = clipTags.map((tag: any) => tag.id)
+              } else {
+                clipTagsMap[clip.id] = []
+              }
+            } catch (error) {
+              console.error(`Failed to load tags for clip ${clip.id}:`, error)
+              clipTagsMap[clip.id] = []
+            }
+          })
+        )
+
+        setState(prev => ({
+          ...prev,
+          clipTags: clipTagsMap
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to load clip tags:', error)
+    }
+  }
+
+  const handleTagFilterChange = async (value: string) => {
+    const selectedTag = value === 'all-tags' ? null : value
+    
+    setState(prev => ({ 
+      ...prev, 
+      selectedTag 
+    }))
+    
+    // Load clip tags when a tag filter is selected
+    if (selectedTag) {
+      await loadClipTagsForFilter(selectedTag)
+    }
   }
 
   const handleSignOut = async () => {
@@ -338,11 +421,28 @@ function DashboardContent() {
   }
 
   const filteredClips = state.clips.filter(clip => {
-    const matchesSearch = !state.searchQuery || 
-      clip.title.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
-      clip.text_content?.toLowerCase().includes(state.searchQuery.toLowerCase())
+    const matchesSearch = !state.searchQuery || (() => {
+      const query = state.searchQuery.toLowerCase()
+      const folder = state.folders.find(f => f.id === clip.folder_id)
+      
+      return (
+        // Search in title
+        clip.title.toLowerCase().includes(query) ||
+        // Search in URL
+        clip.url.toLowerCase().includes(query) ||
+        // Search in text content
+        clip.text_content?.toLowerCase().includes(query) ||
+        // Search in HTML content
+        clip.html_content?.toLowerCase().includes(query) ||
+        // Search in folder name
+        folder?.name.toLowerCase().includes(query)
+      )
+    })()
     
     const matchesFolder = !state.selectedFolder || clip.folder_id === state.selectedFolder
+    
+    // Tag filtering: check if clip has the selected tag
+    const matchesTag = !state.selectedTag || (state.clipTags[clip.id] && state.clipTags[clip.id].includes(state.selectedTag))
 
     // Apply view filter
     let matchesViewFilter = true
@@ -357,7 +457,7 @@ function DashboardContent() {
     }
     // 'library' shows all clips (no additional filter)
 
-    return matchesSearch && matchesFolder && matchesViewFilter
+    return matchesSearch && matchesFolder && matchesTag && matchesViewFilter
   })
 
   const sortedClips = [...filteredClips].sort((a, b) => {
@@ -371,29 +471,27 @@ function DashboardContent() {
     }
   })
 
-  if (state.isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <LogoIcon size={64} />
-          </div>
-          <p className="text-muted-foreground">Loading your clips...</p>
-        </div>
-      </div>
-    )
-  }
+  // Don't hide the entire UI while loading - show skeleton instead
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/80">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm supports-[backdrop-filter]:bg-white/70">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo and Navigation */}
             <div className="flex items-center space-x-6">
               <button 
-                onClick={() => router.push('/dashboard')}
+                onClick={() => {
+                  // Reset to all clips view
+                  setState(prev => ({ 
+                    ...prev, 
+                    viewFilter: 'library',
+                    searchQuery: '',
+                    selectedFolder: null,
+                    selectedTag: null
+                  }))
+                }}
                 className="hover:opacity-80 transition-opacity"
               >
                 <LogoWithText size={32} />
@@ -482,7 +580,7 @@ function DashboardContent() {
           {/* Sidebar */}
           <aside className="w-full lg:w-64 space-y-6">
             {/* Quick Actions */}
-            <Card>
+            <Card className="border border-white/20 shadow-md bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Quick Actions</CardTitle>
               </CardHeader>
@@ -508,7 +606,7 @@ function DashboardContent() {
             </Card>
 
             {/* Folders */}
-            <Card>
+            <Card className="border border-white/20 shadow-md bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Folders</CardTitle>
               </CardHeader>
@@ -586,55 +684,106 @@ function DashboardContent() {
 
           {/* Main Content */}
           <main className="flex-1 flex flex-col space-y-6 min-w-0 h-full overflow-hidden">
-            {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 flex-1 w-full">
-                <div className="relative flex-1 w-full max-w-md">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search your clips..."
-                    value={state.searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                
-                <Select
-                  value={state.sortBy}
-                  onValueChange={(value: any) => setState(prev => ({ ...prev, sortBy: value }))}
-                >
-                  <SelectTrigger className="w-full sm:w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="created_at">Date Created</SelectItem>
-                    <SelectItem value="updated_at">Last Modified</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Search and Filters - Clean Simple Layout */}
+            <div className="flex items-center gap-3 w-full px-1 py-3">
+              {/* Main Search Bar */}
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search titles, content, URLs, folders..."
+                  value={state.searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className={`pl-10 pr-3 h-11 w-full bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl ${state.searchQuery ? 'pr-10' : ''}`}
+                />
+                {state.searchQuery && (
+                  <button
+                    onClick={() => handleSearch('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={state.viewMode === 'grid' ? 'default' : 'outline'}
-                  size="sm"
+              {/* Simple Tag Filter */}
+              <select
+                value={state.selectedTag || 'all-tags'}
+                onChange={(e) => handleTagFilterChange(e.target.value)}
+                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl text-sm min-w-[100px]"
+              >
+                <option value="all-tags">All Tags</option>
+                {state.availableTags.map((tag) => (
+                  <option key={tag.id} value={tag.id}>
+                    {tag.name}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Simple Sort */}
+              <select
+                value={state.sortBy}
+                onChange={(e) => setState(prev => ({ ...prev, sortBy: e.target.value as any }))}
+                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl text-sm min-w-[120px]"
+              >
+                <option value="created_at">Date Created</option>
+                <option value="updated_at">Last Modified</option>
+                <option value="title">Title</option>
+              </select>
+                
+              <button
+                onClick={() => setState(prev => ({ 
+                  ...prev, 
+                  sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
+                }))}
+                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl text-sm"
+                title={`Sort ${state.sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+              >
+                {state.sortOrder === 'asc' ? '↑' : '↓'}
+              </button>
+
+              {/* View Mode Toggle */}
+              <div className="flex border border-gray-200 rounded-xl overflow-hidden bg-white">
+                <button
                   onClick={() => setState(prev => ({ ...prev, viewMode: 'grid' }))}
+                  className={`h-11 px-3 transition-all duration-200 ${
+                    state.viewMode === 'grid' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
                 >
                   <Grid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={state.viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
+                </button>
+                <button
                   onClick={() => setState(prev => ({ ...prev, viewMode: 'list' }))}
+                  className={`h-11 px-3 transition-all duration-200 ${
+                    state.viewMode === 'list' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
                 >
                   <List className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
             </div>
 
             {/* Clips Grid/List */}
             <div className="flex-1 overflow-hidden">
-              {sortedClips.length === 0 ? (
+              {isInitialLoading ? (
+                /* Fast Loading Skeleton */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-xl p-4 animate-pulse border border-gray-100">
+                      <div className="aspect-video bg-gray-100 rounded-lg mb-3"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : sortedClips.length === 0 ? (
                 <Card className="p-12">
                   <div className="text-center space-y-4">
                     <div className="flex justify-center opacity-20">
@@ -761,54 +910,69 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
 
   if (viewMode === 'list') {
     return (
-      <Card className="p-3 hover:shadow-md hover:bg-muted/30 transition-all duration-200 cursor-pointer border-0 shadow-sm bg-white/50 backdrop-blur-sm" onClick={onClick}>
+      <Card className={`p-3 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 cursor-pointer shadow-md backdrop-blur-md ${
+        clip.is_favorite 
+          ? 'border-l-4 border-l-yellow-400 bg-gradient-to-r from-yellow-50/40 to-white/60 border-t border-r border-b border-white/20' 
+          : 'border border-white/20 bg-gradient-to-r from-white/80 to-white/60'
+      }`} onClick={onClick}>
         <div className="flex items-center space-x-3">
           {clip.screenshot_url && (
             <div className="relative overflow-hidden rounded-md">
               <img
                 src={clip.screenshot_url}
                 alt={clip.title}
-                className="w-14 h-10 object-cover"
+                className="w-14 h-10 object-top object-cover"
               />
             </div>
           )}
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
+            <div className="mb-1">
               <h3 className="font-medium text-sm truncate text-foreground/90">{clip.title}</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-6 w-6 p-0 ml-2 flex-shrink-0 transition-colors ${
-                  clip.is_favorite 
-                    ? 'text-yellow-500 hover:text-yellow-600' 
-                    : 'text-muted-foreground/50 hover:text-yellow-500'
-                }`}
-                onClick={handleToggleFavorite}
-              >
-                <Star 
-                  className={`h-3 w-3 ${clip.is_favorite ? 'fill-current' : ''}`} 
-                />
-              </Button>
             </div>
             <div className="flex items-center space-x-2 text-xs text-muted-foreground/80">
               <Globe className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{new URL(clip.url).hostname}</span>
               <span className="text-muted-foreground/50">•</span>
-              <span className="whitespace-nowrap">
-                {new Date(clip.created_at).toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric' 
-                })}
-              </span>
-              {folder && (
-                <>
-                  <span className="text-muted-foreground/50">•</span>
-                  <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary/80 border-0">
-                    {folder.name}
-                  </Badge>
-                </>
-              )}
+              <div className="flex items-center gap-1 flex-wrap">
+                <span>
+                  {new Date(clip.created_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })}
+                </span>
+                
+                {folder && (
+                  <>
+                    <span className="text-muted-foreground/50">•</span>
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs px-2 py-0.5 border-0"
+                      style={{
+                        backgroundColor: `${folder.color}20`,
+                        color: folder.color,
+                        borderColor: `${folder.color}40`
+                      }}
+                    >
+                      {folder.name}
+                    </Badge>
+                  </>
+                )}
+                
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleFavorite(e);
+                  }}
+                  className="flex-shrink-0 hover:scale-110 transition-transform"
+                >
+                  <Star className={`h-3 w-3 transition-colors ${
+                    clip.is_favorite 
+                      ? 'fill-yellow-500 text-yellow-500' 
+                      : 'text-muted-foreground/40 hover:text-yellow-500'
+                  }`} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -845,35 +1009,15 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group cursor-pointer border-0 shadow-sm bg-white/50 backdrop-blur-sm" onClick={onClick}>
+    <Card className="overflow-hidden hover:shadow-xl hover:shadow-black/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer border border-white/20 shadow-lg bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md" onClick={onClick}>
       {clip.screenshot_url && (
         <div className="aspect-[4/3] bg-muted/30 relative overflow-hidden">
           <img
             src={clip.screenshot_url}
             alt={clip.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-top object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          
-          {/* Favorite Star Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`absolute top-2 right-2 h-8 w-8 p-0 transition-all duration-200 ${
-              clip.is_favorite 
-                ? 'opacity-100 bg-yellow-500/20 hover:bg-yellow-500/30' 
-                : 'opacity-0 group-hover:opacity-100 hover:bg-white/20'
-            }`}
-            onClick={handleToggleFavorite}
-          >
-            <Star 
-              className={`h-4 w-4 transition-colors ${
-                clip.is_favorite 
-                  ? 'fill-yellow-500 text-yellow-500' 
-                  : 'text-white hover:text-yellow-500'
-              }`} 
-            />
-          </Button>
         </div>
       )}
       
@@ -887,18 +1031,45 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-muted-foreground/70 font-medium">
-              {new Date(clip.created_at).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric' 
-              })}
-            </span>
-            
-            {folder && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary/80 border-0">
-                {folder.name}
-              </Badge>
-            )}
+            <div className="flex items-center gap-1 flex-wrap text-xs text-muted-foreground/70 font-medium">
+              <span>
+                {new Date(clip.created_at).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric' 
+                })}
+              </span>
+              
+              {folder && (
+                <>
+                  <span className="text-muted-foreground/50">•</span>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs px-2 py-0.5 border-0"
+                    style={{
+                      backgroundColor: `${folder.color}20`,
+                      color: folder.color,
+                      borderColor: `${folder.color}40`
+                    }}
+                  >
+                    {folder.name}
+                  </Badge>
+                </>
+              )}
+              
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleFavorite(e);
+                }}
+                className="flex-shrink-0 hover:scale-110 transition-transform"
+              >
+                <Star className={`h-3 w-3 transition-colors ${
+                  clip.is_favorite 
+                    ? 'fill-yellow-500 text-yellow-500' 
+                    : 'text-muted-foreground/40 hover:text-yellow-500'
+                }`} />
+              </button>
+            </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -928,12 +1099,6 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          {folder && (
-            <Badge variant="secondary" className="text-xs">
-              {folder.name}
-            </Badge>
-          )}
         </div>
       </CardContent>
     </Card>

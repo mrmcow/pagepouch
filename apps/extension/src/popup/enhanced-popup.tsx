@@ -29,48 +29,71 @@ interface AuthFormState {
 // Inline styles for the extension popup
 const styles = {
   container: {
-    width: '380px',
-    minHeight: '500px',
+    width: '360px',
+    minHeight: '480px',
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     backgroundColor: '#ffffff',
     color: '#1f2937',
     fontSize: '14px',
     lineHeight: '1.5',
+    display: 'flex',
+    flexDirection: 'column' as const,
   },
   header: {
-    padding: '16px 20px',
-    borderBottom: '1px solid #e5e7eb',
-    backgroundColor: '#f9fafb',
+    padding: '24px 24px 16px 24px',
     display: 'flex',
+    flexDirection: 'column' as const,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    textAlign: 'center' as const,
+    borderBottom: '1px solid #f1f5f9',
+  },
+  logoSection: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '16px',
+  },
+  brandName: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#1e293b',
+    margin: 0,
   },
   content: {
-    padding: '20px',
+    padding: '24px',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '16px',
   },
   button: {
-    padding: '12px 16px',
-    borderRadius: '8px',
+    padding: '14px 24px',
+    borderRadius: '12px',
     border: 'none',
     fontWeight: '500',
     fontSize: '14px',
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: 'all 0.2s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
     width: '100%',
-    marginBottom: '8px',
+    maxWidth: '280px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
   },
   primaryButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#3b82f6',
     color: 'white',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
   },
   secondaryButton: {
-    backgroundColor: '#f3f4f6',
-    color: '#374151',
-    border: '1px solid #d1d5db',
+    backgroundColor: '#ffffff',
+    color: '#475569',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
   },
   dangerButton: {
     backgroundColor: '#dc2626',
@@ -78,19 +101,26 @@ const styles = {
   },
   input: {
     width: '100%',
-    padding: '12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
+    maxWidth: '280px',
+    padding: '14px 16px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
     fontSize: '14px',
-    marginBottom: '12px',
+    marginBottom: '16px',
     boxSizing: 'border-box' as const,
+    backgroundColor: '#ffffff',
+    transition: 'all 0.2s ease',
+    outline: 'none',
   },
   card: {
-    backgroundColor: '#f9fafb',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    padding: '16px',
-    marginBottom: '16px',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #f1f5f9',
+    borderRadius: '12px',
+    padding: '20px',
+    width: '100%',
+    maxWidth: '280px',
+    textAlign: 'center' as const,
+    boxSizing: 'border-box' as const,
   },
   progressBar: {
     width: '100%',
@@ -128,12 +158,15 @@ const styles = {
   },
   tabInfo: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '12px',
-    backgroundColor: '#f3f4f6',
-    borderRadius: '6px',
-    marginBottom: '16px',
+    alignItems: 'flex-start',
+    gap: '12px',
+    padding: '16px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+    border: '1px solid #f1f5f9',
+    width: '100%',
+    maxWidth: '280px',
+    boxSizing: 'border-box' as const,
   },
   tabIcon: {
     width: '16px',
@@ -306,15 +339,27 @@ function EnhancedPopupApp() {
     return (
       <div style={styles.container}>
         <div style={styles.header}>
-          <Logo size={28} />
+          <div style={styles.logoSection}>
+            <Logo size={32} />
+            <h1 style={styles.brandName}>PagePouch</h1>
+          </div>
           <button
             onClick={() => setState(prev => ({ ...prev, showAuth: false }))}
             style={{
+              position: 'absolute' as const,
+              top: '16px',
+              right: '16px',
               background: 'none',
               border: 'none',
-              fontSize: '18px',
+              fontSize: '20px',
               cursor: 'pointer',
-              color: '#6b7280',
+              color: '#64748b',
+              width: '32px',
+              height: '32px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             ×
@@ -384,7 +429,10 @@ function EnhancedPopupApp() {
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <Logo size={28} />
+        <div style={styles.logoSection}>
+          <Logo size={32} />
+          <h1 style={styles.brandName}>PagePouch</h1>
+        </div>
         {state.isAuthenticated && (
           <div style={styles.badge}>
             {state.captureCount} clips
@@ -403,7 +451,7 @@ function EnhancedPopupApp() {
                 style={styles.tabIcon}
               />
             )}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
               <div style={styles.tabTitle}>
                 {state.currentTab.title || 'Untitled'}
               </div>
@@ -516,16 +564,14 @@ function EnhancedPopupApp() {
         {/* Footer */}
         <div style={{ 
           textAlign: 'center', 
-          marginTop: '20px', 
-          paddingTop: '16px', 
-          borderTop: '1px solid #e5e7eb',
+          marginTop: 'auto',
+          paddingTop: '24px', 
+          borderTop: '1px solid #f1f5f9',
           fontSize: '12px',
-          color: '#6b7280',
+          color: '#94a3b8',
         }}>
-          <div>PagePouch v1.0.0</div>
-          <div style={{ marginTop: '4px' }}>
-            Capture • Organize • Retrieve
-          </div>
+          <div style={{ fontWeight: '500', marginBottom: '4px' }}>PagePouch v1.0.0</div>
+          <div>Capture • Organize • Retrieve</div>
         </div>
       </div>
     </div>
