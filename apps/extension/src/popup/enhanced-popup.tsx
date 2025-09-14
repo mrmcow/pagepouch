@@ -3,7 +3,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Logo, LogoIcon } from '../components/Logo';
+
+// Simple Logo component since import might be failing
+const Logo = ({ size = 32 }: { size?: number }) => (
+  <div style={{
+    width: size,
+    height: size,
+    backgroundColor: '#3b82f6',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: size * 0.6,
+    color: 'white',
+    fontWeight: 'bold'
+  }}>
+    📎
+  </div>
+);
 
 interface PopupState {
   isCapturing: boolean;
@@ -253,23 +270,66 @@ function EnhancedPopupApp() {
   const handleCapture = async (captureType: 'visible' | 'fullPage') => {
     if (!state.currentTab?.id) return;
 
-    setState(prev => ({ ...prev, isCapturing: true, captureProgress: undefined }));
+    setState(prev => ({ 
+      ...prev, 
+      isCapturing: true, 
+      captureProgress: {
+        status: 'starting',
+        message: captureType === 'fullPage' ? 'Preparing full page capture...' : 'Preparing visible area capture...'
+      }
+    }));
 
     try {
+      // Show immediate feedback
+      setTimeout(() => {
+        setState(prev => ({ 
+          ...prev, 
+          captureProgress: {
+            status: 'capturing',
+            message: captureType === 'fullPage' ? 'Capturing full page...' : 'Capturing visible area...'
+          }
+        }));
+      }, 100);
+
       await chrome.runtime.sendMessage({
         type: 'CAPTURE_PAGE',
         payload: { 
           tabId: state.currentTab.id,
-          captureType 
+          captureType,
+          url: state.currentTab.url,
+          title: state.currentTab.title
         },
       });
+
+      // Show success feedback
+      setState(prev => ({ 
+        ...prev, 
+        captureProgress: {
+          status: 'complete',
+          message: 'Capture successful! 🎉'
+        }
+      }));
+
+      // Auto-hide after 2 seconds
+      setTimeout(() => {
+        setState(prev => ({ ...prev, isCapturing: false, captureProgress: undefined }));
+      }, 2000);
+
     } catch (error) {
       console.error('Capture failed:', error);
       setState(prev => ({ 
         ...prev, 
         isCapturing: false,
-        captureProgress: { status: 'error', message: 'Capture failed. Please try again.' }
+        captureProgress: { 
+          status: 'error', 
+          message: 'Capture failed. Please refresh the page and try again.' 
+        }
       }));
+
+      // Auto-hide error after 3 seconds
+      setTimeout(() => {
+        setState(prev => ({ ...prev, captureProgress: undefined }));
+      }, 3000);
     }
   };
 
@@ -384,7 +444,10 @@ function EnhancedPopupApp() {
             placeholder="Email"
             value={authForm.email}
             onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
-            style={styles.input}
+            style={{
+              ...styles.input,
+              textAlign: 'center' as const,
+            }}
           />
 
           <input
@@ -392,7 +455,10 @@ function EnhancedPopupApp() {
             placeholder="Password"
             value={authForm.password}
             onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
-            style={styles.input}
+            style={{
+              ...styles.input,
+              textAlign: 'center' as const,
+            }}
           />
 
           {authForm.error && (
@@ -464,19 +530,41 @@ function EnhancedPopupApp() {
 
         {/* Capture Progress */}
         {state.captureProgress && (
-          <div style={styles.card}>
-            <div style={{ marginBottom: '8px', fontWeight: '500' }}>
-              {state.captureProgress.status === 'complete' ? '✅ Capture Complete!' : '📸 Capturing...'}
+          <div style={{
+            ...styles.card,
+            backgroundColor: state.captureProgress.status === 'error' ? '#fef2f2' : 
+                           state.captureProgress.status === 'complete' ? '#f0fdf4' : '#f0f9ff',
+            border: state.captureProgress.status === 'error' ? '1px solid #fecaca' : 
+                   state.captureProgress.status === 'complete' ? '1px solid #bbf7d0' : '1px solid #bfdbfe'
+          }}>
+            <div style={{ 
+              marginBottom: '12px', 
+              fontWeight: '600',
+              color: state.captureProgress.status === 'error' ? '#dc2626' : 
+                     state.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb'
+            }}>
+              {state.captureProgress.status === 'complete' ? '✅ Capture Complete!' : 
+               state.captureProgress.status === 'error' ? '❌ Capture Failed' : '📸 Capturing...'}
             </div>
-            <div style={styles.progressBar}>
-              <div 
-                style={{
-                  ...styles.progressFill,
-                  width: state.captureProgress.status === 'complete' ? '100%' : '60%',
-                }}
-              />
-            </div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            
+            {state.captureProgress.status !== 'error' && (
+              <div style={styles.progressBar}>
+                <div 
+                  style={{
+                    ...styles.progressFill,
+                    width: state.captureProgress.status === 'complete' ? '100%' : 
+                           state.captureProgress.status === 'capturing' ? '75%' : '25%',
+                    backgroundColor: state.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb'
+                  }}
+                />
+              </div>
+            )}
+            
+            <div style={{ 
+              fontSize: '13px', 
+              color: state.captureProgress.status === 'error' ? '#dc2626' : '#6b7280',
+              marginTop: '8px'
+            }}>
               {state.captureProgress.message}
             </div>
           </div>
