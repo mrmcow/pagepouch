@@ -4,19 +4,21 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Simple Logo component since import might be failing
+// Beautiful Logo component
 const Logo = ({ size = 32 }: { size?: number }) => (
   <div style={{
     width: size,
     height: size,
-    backgroundColor: '#3b82f6',
-    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    borderRadius: '12px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: size * 0.6,
     color: 'white',
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+    border: '2px solid rgba(255, 255, 255, 0.2)'
   }}>
     📎
   </div>
@@ -72,10 +74,12 @@ const styles = {
     marginBottom: '16px',
   },
   brandName: {
-    fontSize: '18px',
-    fontWeight: '600',
+    fontSize: '20px',
+    fontWeight: '700',
     color: '#1e293b',
     margin: 0,
+    letterSpacing: '-0.025em',
+    textAlign: 'center' as const,
   },
   content: {
     padding: '24px',
@@ -496,32 +500,48 @@ function EnhancedPopupApp() {
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.logoSection}>
-          <Logo size={32} />
+          <Logo size={40} />
           <h1 style={styles.brandName}>PagePouch</h1>
+          {state.isAuthenticated && (
+            <div style={styles.badge}>
+              {state.captureCount} clips
+            </div>
+          )}
         </div>
-        {state.isAuthenticated && (
-          <div style={styles.badge}>
-            {state.captureCount} clips
-          </div>
-        )}
       </div>
 
       <div style={styles.content}>
         {/* Current Tab Info */}
         {state.currentTab && (
-          <div style={styles.tabInfo}>
+          <div style={{
+            ...styles.tabInfo,
+            flexDirection: 'column' as const,
+            alignItems: 'center',
+            textAlign: 'center' as const,
+            gap: '8px'
+          }}>
             {state.currentTab.favIconUrl && (
               <img 
                 src={state.currentTab.favIconUrl} 
                 alt="Site icon" 
-                style={styles.tabIcon}
+                style={{
+                  ...styles.tabIcon,
+                  marginBottom: '4px'
+                }}
               />
             )}
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-              <div style={styles.tabTitle}>
+            <div style={{ textAlign: 'center', width: '100%' }}>
+              <div style={{
+                ...styles.tabTitle,
+                textAlign: 'center',
+                marginBottom: '4px'
+              }}>
                 {state.currentTab.title || 'Untitled'}
               </div>
-              <div style={styles.tabUrl}>
+              <div style={{
+                ...styles.tabUrl,
+                textAlign: 'center'
+              }}>
                 {state.currentTab.url}
               </div>
             </div>
@@ -658,7 +678,7 @@ function EnhancedPopupApp() {
           fontSize: '12px',
           color: '#94a3b8',
         }}>
-          <div style={{ fontWeight: '500', marginBottom: '4px' }}>PagePouch v1.0.0</div>
+          <div style={{ fontWeight: '500', marginBottom: '4px' }}>PagePouch v1.1.0</div>
           <div>Capture • Organize • Retrieve</div>
         </div>
       </div>
