@@ -38,7 +38,7 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const tags = clipTags.map(ct => ct.tags).filter(Boolean)
+  const tags = clipTags.map((ct: any) => ct.tags).filter(Boolean)
   return NextResponse.json(tags)
 }
 
