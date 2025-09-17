@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,9 +21,14 @@ import {
   PlayIcon
 } from 'lucide-react'
 
-// Browser detection and installation URLs
+// Enhanced browser detection with download URLs
 const getBrowserInfo = () => {
-  if (typeof window === 'undefined') return { name: 'Chrome', icon: 'chrome', url: '#' }
+  if (typeof window === 'undefined') return { 
+    name: 'Chrome', 
+    icon: 'chrome', 
+    downloadUrl: '/extension/downloads/pagepouch-extension.zip',
+    directDownload: true
+  }
   
   const userAgent = window.navigator.userAgent
   
@@ -31,8 +36,10 @@ const getBrowserInfo = () => {
     return { 
       name: 'Firefox', 
       icon: 'firefox', 
-      url: 'https://addons.mozilla.org/en-US/firefox/addon/pagepouch/',
-      storeUrl: 'https://addons.mozilla.org'
+      downloadUrl: '/extension/downloads/pagepouch-extension-firefox.zip',
+      storeUrl: 'https://addons.mozilla.org/en-US/firefox/addon/pagepouch/',
+      directDownload: true,
+      installInstructions: 'Download and install via about:debugging'
     }
   }
   
@@ -40,8 +47,10 @@ const getBrowserInfo = () => {
   return { 
     name: 'Chrome', 
     icon: 'chrome', 
-    url: 'https://chrome.google.com/webstore/detail/pagepouch/extension-id',
-    storeUrl: 'https://chrome.google.com/webstore'
+    downloadUrl: '/extension/downloads/pagepouch-extension.zip',
+    storeUrl: 'https://chrome.google.com/webstore/detail/pagepouch/extension-id',
+    directDownload: true,
+    installInstructions: 'Download and install via chrome://extensions'
   }
 }
 
@@ -49,10 +58,30 @@ const getBrowserInfo = () => {
 export default function HomePage() {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false)
   const [selectedBrowser, setSelectedBrowser] = useState<'chrome' | 'firefox'>('chrome')
+  const [detectedBrowser, setDetectedBrowser] = useState<any>(null)
 
-  const handleDownloadClick = (browser: 'chrome' | 'firefox') => {
-    setSelectedBrowser(browser)
+  // Detect browser on component mount
+  React.useEffect(() => {
+    const browserInfo = getBrowserInfo()
+    setDetectedBrowser(browserInfo)
+    setSelectedBrowser(browserInfo.name.toLowerCase() as 'chrome' | 'firefox')
+  }, [])
+
+  const handleDownloadClick = (browser?: 'chrome' | 'firefox') => {
+    if (browser) {
+      setSelectedBrowser(browser)
+    }
     setIsDownloadModalOpen(true)
+  }
+
+  const handleSmartDownload = () => {
+    if (detectedBrowser?.directDownload) {
+      // Direct download for detected browser
+      window.open(detectedBrowser.downloadUrl, '_blank')
+    } else {
+      // Fallback to modal
+      handleDownloadClick()
+    }
   }
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -212,9 +241,13 @@ export default function HomePage() {
           </div>
           
           <div className="text-center mt-12">
-            <Button size="lg" className="text-lg px-8 py-4 h-auto font-semibold group">
+            <Button 
+              size="lg" 
+              className="text-lg px-8 py-4 h-auto font-semibold group"
+              onClick={handleSmartDownload}
+            >
               <DownloadIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-              Install PagePouch Extension
+              {detectedBrowser ? `Add to ${detectedBrowser.name}` : 'Install PagePouch Extension'}
             </Button>
           </div>
         </div>
@@ -246,22 +279,27 @@ export default function HomePage() {
                 size="lg" 
                 variant="secondary" 
                 className="w-full text-lg py-4 h-auto font-semibold group mb-4"
-                onClick={() => handleDownloadClick('chrome')}
+                onClick={handleSmartDownload}
               >
                 <DownloadIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                Add to Chrome - It's Free
+                {detectedBrowser ? `Add to ${detectedBrowser.name} - It's Free` : 'Add Extension - It\'s Free'}
               </Button>
               
               <div className="text-center mb-4">
                 <p className="text-xs opacity-75">
                   or{' '}
                   <button 
-                    onClick={() => handleDownloadClick('chrome')}
+                    onClick={handleSmartDownload}
                     className="text-white hover:underline font-medium"
                   >
                     download directly
                   </button>
                   {' '}for manual installation
+                  {detectedBrowser?.installInstructions && (
+                    <span className="block mt-1 text-xs opacity-60">
+                      {detectedBrowser.installInstructions}
+                    </span>
+                  )}
                 </p>
               </div>
               
@@ -278,7 +316,14 @@ export default function HomePage() {
             </div>
             
             <p className="text-sm opacity-75">
-              Also available for Firefox
+              {detectedBrowser?.name === 'Firefox' ? 'Also available for Chrome' : 'Also available for Firefox'}
+              {' • '}
+              <button 
+                onClick={() => handleDownloadClick(detectedBrowser?.name === 'Firefox' ? 'chrome' : 'firefox')}
+                className="text-white hover:underline font-medium"
+              >
+                Download for {detectedBrowser?.name === 'Firefox' ? 'Chrome' : 'Firefox'}
+              </button>
             </p>
           </div>
         </div>
