@@ -4,23 +4,51 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Beautiful Logo component
+// Beautiful PagePouch Logo component
 const Logo = ({ size = 32 }: { size?: number }) => (
-  <div style={{
-    width: size,
-    height: size,
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: size * 0.6,
-    color: 'white',
-    fontWeight: 'bold',
-    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-    border: '2px solid rgba(255, 255, 255, 0.2)'
-  }}>
-    📎
+  <div style={{ position: 'relative' }}>
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 48 48" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ filter: 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.3))' }}
+    >
+      <defs>
+        <filter id={`emboss-${size}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.3" floodColor="#1d4ed8" floodOpacity="0.3"/>
+        </filter>
+      </defs>
+      {/* Main document */}
+      <path 
+        d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" 
+        fill="#f8fafc" 
+        stroke="#2563eb" 
+        strokeWidth="2"
+      />
+      {/* Paperclip */}
+      <path 
+        d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" 
+        fill="#2563eb" 
+        stroke="#2563eb" 
+        strokeWidth="2" 
+        strokeLinejoin="round"
+      />
+      {/* Paperclip detail */}
+      <path 
+        d="M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5" 
+        stroke="#ffffff" 
+        strokeWidth="1" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        filter={`url(#emboss-${size})`}
+      />
+      {/* Document lines */}
+      <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+    </svg>
   </div>
 );
 
@@ -59,7 +87,7 @@ const styles = {
     flexDirection: 'column' as const,
   },
   header: {
-    padding: '24px 24px 16px 24px',
+    padding: '16px 20px 12px 20px',
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
@@ -70,8 +98,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '8px',
-    marginBottom: '16px',
+    gap: '6px',
+    marginBottom: '8px',
   },
   brandName: {
     fontSize: '20px',
@@ -82,12 +110,12 @@ const styles = {
     textAlign: 'center' as const,
   },
   content: {
-    padding: '24px',
+    padding: '16px 20px',
     flex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '16px',
+    gap: '12px',
   },
   button: {
     padding: '14px 24px',
@@ -273,6 +301,12 @@ function EnhancedPopupApp() {
 
   const handleCapture = async (captureType: 'visible' | 'fullPage') => {
     if (!state.currentTab?.id) return;
+
+    // Check if user is authenticated before capturing
+    if (!state.isAuthenticated) {
+      setState(prev => ({ ...prev, showAuth: true }));
+      return;
+    }
 
     setState(prev => ({ 
       ...prev, 

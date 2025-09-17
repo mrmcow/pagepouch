@@ -53,7 +53,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
               <DialogTitle className="text-2xl">PagePouch Extension</DialogTitle>
               <p className="text-muted-foreground">Direct download for {browser.name}</p>
             </div>
-            <Badge className="ml-auto">v1.0.5 Beta</Badge>
+            <Badge className="ml-auto">v1.1.0 Beta</Badge>
           </div>
         </DialogHeader>
 
@@ -88,7 +88,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
             </div>
 
             <p className="text-xs text-muted-foreground mt-3">
-              <strong>Build Date:</strong> September 13, 2025 • <strong>Size:</strong> ~2.1 MB
+              <strong>Build Date:</strong> September 17, 2025 • <strong>Size:</strong> ~2.1 MB
             </p>
           </div>
 
