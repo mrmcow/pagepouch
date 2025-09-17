@@ -5,10 +5,17 @@
   "description": "PagePouch Browser Extension - Capture web content with one click",
   "scripts": {
     "dev": "webpack --config webpack.config.js --mode development --watch",
+    "dev:firefox": "webpack --config webpack.firefox.config.js --mode development --watch",
     "build": "webpack --config webpack.config.js --mode production",
+    "build:chrome": "webpack --config webpack.config.js --mode production",
+    "build:firefox": "webpack --config webpack.firefox.config.js --mode production",
+    "build:all": "npm run build:chrome && npm run build:firefox",
     "build:store": "node scripts/build-for-store.js",
     "build:download": "node scripts/create-downloadable.js",
-    "clean": "rm -rf dist build",
+    "build:download:chrome": "node scripts/create-downloadable.js chrome",
+    "build:download:firefox": "node scripts/create-downloadable.js firefox",
+    "build:download:all": "npm run build:download:chrome && npm run build:download:firefox",
+    "clean": "rm -rf dist dist-firefox build",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx"
   },

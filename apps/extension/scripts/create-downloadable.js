@@ -4,20 +4,31 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('🚀 Creating downloadable PagePouch extension...\n');
+// Get browser target from command line argument
+const browserTarget = process.argv[2] || 'chrome'; // Default to chrome
+const validBrowsers = ['chrome', 'firefox'];
 
-// Build the extension
+if (!validBrowsers.includes(browserTarget)) {
+  console.error(`❌ Invalid browser target: ${browserTarget}`);
+  console.log(`✅ Valid options: ${validBrowsers.join(', ')}`);
+  process.exit(1);
+}
+
+console.log(`🚀 Creating downloadable PagePouch extension for ${browserTarget.toUpperCase()}...\n`);
+
+// Build the extension for the target browser
 console.log('📦 Building extension...');
 try {
-  execSync('npm run build', { stdio: 'inherit', cwd: __dirname + '/..' });
+  const buildCommand = browserTarget === 'firefox' ? 'npm run build:firefox' : 'npm run build:chrome';
+  execSync(buildCommand, { stdio: 'inherit', cwd: __dirname + '/..' });
   console.log('✅ Extension built successfully\n');
 } catch (error) {
   console.error('❌ Build failed:', error.message);
   process.exit(1);
 }
 
-// Create downloads directory
-const downloadsDir = path.join(__dirname, '..', 'downloads');
+// Create browser-specific downloads directory
+const downloadsDir = path.join(__dirname, '..', 'downloads', browserTarget);
 if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
@@ -132,8 +143,8 @@ fs.writeFileSync(
 );
 
 // Copy dist folder contents for direct installation
-const distDir = path.join(__dirname, '..', 'dist');
-const unpackedDir = path.join(downloadsDir, 'pagepouch-extension-unpacked');
+const distDir = path.join(__dirname, '..', browserTarget === 'firefox' ? 'dist-firefox' : 'dist');
+const unpackedDir = path.join(downloadsDir, `pagepouch-extension-${browserTarget}-unpacked`);
 
 // Remove existing unpacked directory
 if (fs.existsSync(unpackedDir)) {
@@ -168,10 +179,10 @@ const unpackedManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 delete unpackedManifest.key; // Remove key field for unpacked extensions
 fs.writeFileSync(manifestPath, JSON.stringify(unpackedManifest, null, 2));
 
-// Create ZIP file for Firefox
+// Create ZIP file for the target browser
 console.log('📁 Creating ZIP package...');
 try {
-  const zipPath = path.join(downloadsDir, 'pagepouch-extension.zip');
+  const zipPath = path.join(downloadsDir, `pagepouch-extension-${browserTarget}.zip`);
   
   // Remove existing zip
   if (fs.existsSync(zipPath)) {
@@ -179,7 +190,7 @@ try {
   }
   
   // Create zip using system zip command
-  execSync(`cd "${unpackedDir}" && zip -r "../pagepouch-extension.zip" .`, { stdio: 'inherit' });
+  execSync(`cd "${unpackedDir}" && zip -r "../pagepouch-extension-${browserTarget}.zip" .`, { stdio: 'inherit' });
   
   console.log('✅ ZIP package created successfully\\n');
 } catch (error) {
