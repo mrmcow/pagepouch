@@ -86,13 +86,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
         size="lg" 
         className="w-full text-lg py-4 h-auto font-semibold group mb-4"
         disabled={selectedBrowserData.status === 'coming-soon'}
-        onClick={() => {
-          if (selectedBrowserData.downloadUrl) {
-            window.open(selectedBrowserData.downloadUrl, '_blank')
-          } else {
-            onDownloadClick?.(selectedBrowser)
-          }
-        }}
+        onClick={() => onDownloadClick?.(selectedBrowser)}
       >
         <DownloadIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
         {selectedBrowserData.buttonText}
@@ -103,13 +97,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
         <p className="text-xs text-muted-foreground mb-2">
           or{' '}
           <button 
-            onClick={() => {
-              if (selectedBrowserData.downloadUrl) {
-                window.open(selectedBrowserData.downloadUrl, '_blank')
-              } else {
-                onDownloadClick?.(selectedBrowser)
-              }
-            }}
+            onClick={() => onDownloadClick?.(selectedBrowser)}
             className="text-primary hover:underline font-medium"
           >
             download directly

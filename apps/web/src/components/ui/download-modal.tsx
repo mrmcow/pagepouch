@@ -19,6 +19,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     chrome: {
       name: 'Chrome',
       icon: ChromeIcon,
+      downloadUrl: '/extension/downloads/pagepouch-extension.zip',
       instructions: [
         'Download the ZIP file below',
         'Extract to a folder on your computer',
@@ -30,11 +31,12 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     firefox: {
       name: 'Firefox',
       icon: FirefoxIcon,
+      downloadUrl: '/extension/downloads/pagepouch-extension-firefox.zip',
       instructions: [
         'Download the ZIP file below',
-        'Keep the file as ZIP (don\'t extract)',
-        'Open Firefox → Add-ons Manager (Ctrl+Shift+A)',
-        'Click the gear icon → "Install Add-on From File"',
+        'Open Firefox and go to about:debugging',
+        'Click "This Firefox" in the left sidebar',
+        'Click "Load Temporary Add-on..."',
         'Select the downloaded ZIP file'
       ]
     }
@@ -74,9 +76,9 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
 
             <div className="flex gap-3">
               <Button size="lg" className="flex-1" asChild>
-                <a href="/extension/downloads/pagepouch-extension.zip" download>
+                <a href={browser.downloadUrl} download>
                   <DownloadIcon className="mr-2 h-5 w-5" />
-                  Download Extension ZIP
+                  Download {browser.name} Extension
                 </a>
               </Button>
               <Button variant="outline" size="lg" asChild>

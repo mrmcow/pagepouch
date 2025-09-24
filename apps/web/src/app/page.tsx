@@ -81,15 +81,9 @@ export default function HomePage() {
 
   const handleSmartDownload = () => {
     console.log('Smart download clicked, detected browser:', detectedBrowser) // Debug log
-    if (detectedBrowser?.directDownload) {
-      // Direct download for detected browser
-      console.log('Downloading:', detectedBrowser.downloadUrl) // Debug log
-      window.open(detectedBrowser.downloadUrl, '_blank')
-    } else {
-      // Fallback to modal
-      console.log('Falling back to modal') // Debug log
-      handleDownloadClick()
-    }
+    // Always use the modal for better UX with instructions
+    const browserType = detectedBrowser?.name === 'Firefox' ? 'firefox' : 'chrome'
+    handleDownloadClick(browserType)
   }
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -302,12 +296,7 @@ export default function HomePage() {
                   >
                     download directly
                   </button>
-                  {' '}for manual installation
-                  {detectedBrowser?.installInstructions && (
-                    <span className="block mt-1 text-xs opacity-60">
-                      {detectedBrowser.installInstructions}
-                    </span>
-                  )}
+                  {' '}for manual installation with step-by-step guide
                 </p>
               </div>
               
