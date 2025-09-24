@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ChromeIcon, FirefoxIcon } from '@/components/ui/browser-icons'
@@ -13,6 +13,17 @@ interface BrowserSelectorProps {
 
 export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSelectorProps) {
   const [selectedBrowser, setSelectedBrowser] = useState<'chrome' | 'firefox'>('chrome')
+
+  // Auto-detect browser and set initial selection
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userAgent = window.navigator.userAgent
+      if (userAgent.includes('Firefox')) {
+        setSelectedBrowser('firefox')
+      }
+      // For all other browsers (Chrome, Edge, Safari, etc.), keep Chrome as default
+    }
+  }, [])
 
   const browsers = [
     {
