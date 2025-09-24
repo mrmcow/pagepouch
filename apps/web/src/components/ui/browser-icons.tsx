@@ -5,7 +5,7 @@ interface BrowserIconProps {
   className?: string
 }
 
-// Official Google Chrome icon (February 2022)
+// Official Google Chrome icon (February 2022) - Updated with accurate colors and design
 export function ChromeIcon({ size = 24, className = '' }: BrowserIconProps) {
   // Use a stable ID based on size to avoid hydration mismatches
   const uniqueId = `chrome-${size}`
@@ -18,45 +18,48 @@ export function ChromeIcon({ size = 24, className = '' }: BrowserIconProps) {
       className={className}
     >
       <defs>
-        <radialGradient id={`${uniqueId}-a`} cx="50%" cy="50%" r="50%">
+        {/* Updated gradients to match official Chrome colors */}
+        <radialGradient id={`${uniqueId}-center`} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#4285F4"/>
           <stop offset="100%" stopColor="#1A73E8"/>
         </radialGradient>
-        <radialGradient id={`${uniqueId}-b`} cx="50%" cy="50%" r="50%">
+        <linearGradient id={`${uniqueId}-red`} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#EA4335"/>
           <stop offset="100%" stopColor="#D33B2C"/>
-        </radialGradient>
-        <radialGradient id={`${uniqueId}-c`} cx="50%" cy="50%" r="50%">
+        </linearGradient>
+        <linearGradient id={`${uniqueId}-green`} x1="0%" y1="100%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#34A853"/>
           <stop offset="100%" stopColor="#137333"/>
-        </radialGradient>
-        <radialGradient id={`${uniqueId}-d`} cx="50%" cy="50%" r="50%">
+        </linearGradient>
+        <linearGradient id={`${uniqueId}-yellow`} x1="100%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#FBBC04"/>
           <stop offset="100%" stopColor="#F9AB00"/>
-        </radialGradient>
+        </linearGradient>
       </defs>
       
-      {/* Chrome logo structure */}
+      {/* Outer circle background */}
       <circle cx="256" cy="256" r="256" fill="#f1f3f4"/>
+      
+      {/* White background circle */}
       <circle cx="256" cy="256" r="200" fill="#fff"/>
       
       {/* Red segment (top) */}
-      <path d="M256 56v200l173.205-100C394.297 105.703 330.297 56 256 56z" fill={`url(#${uniqueId}-b)`}/>
+      <path d="M256 56v200l173.205-100C394.297 105.703 330.297 56 256 56z" fill={`url(#${uniqueId}-red)`}/>
       
       {/* Green segment (bottom left) */}
-      <path d="M82.795 356L256 256 82.795 156C32.703 205.703 32.703 306.297 82.795 356z" fill={`url(#${uniqueId}-c)`}/>
+      <path d="M82.795 356L256 256 82.795 156C32.703 205.703 32.703 306.297 82.795 356z" fill={`url(#${uniqueId}-green)`}/>
       
       {/* Yellow segment (bottom right) */}
-      <path d="M429.205 156L256 256l173.205 100C479.297 306.297 479.297 205.703 429.205 156z" fill={`url(#${uniqueId}-d)`}/>
+      <path d="M429.205 156L256 256l173.205 100C479.297 306.297 479.297 205.703 429.205 156z" fill={`url(#${uniqueId}-yellow)`}/>
       
       {/* Blue center circle */}
-      <circle cx="256" cy="256" r="100" fill={`url(#${uniqueId}-a)`}/>
+      <circle cx="256" cy="256" r="100" fill={`url(#${uniqueId}-center)`}/>
       
-      {/* Inner white circle */}
+      {/* Inner white ring */}
       <circle cx="256" cy="256" r="75" fill="#fff"/>
       
       {/* Inner blue circle */}
-      <circle cx="256" cy="256" r="50" fill={`url(#${uniqueId}-a)`}/>
+      <circle cx="256" cy="256" r="50" fill={`url(#${uniqueId}-center)`}/>
     </svg>
   )
 }
