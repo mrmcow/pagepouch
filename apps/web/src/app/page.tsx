@@ -31,8 +31,11 @@ const getBrowserInfo = () => {
   }
   
   const userAgent = window.navigator.userAgent
+  console.log('User Agent:', userAgent) // Debug log
   
-  if (userAgent.includes('Firefox')) {
+  // More robust Firefox detection
+  if (userAgent.includes('Firefox') || userAgent.includes('Gecko')) {
+    console.log('Firefox detected!') // Debug log
     return { 
       name: 'Firefox', 
       icon: 'firefox', 
@@ -44,6 +47,7 @@ const getBrowserInfo = () => {
   }
   
   // Default to Chrome for all other browsers (Chrome, Edge, Safari, etc.)
+  console.log('Chrome detected (default)') // Debug log
   return { 
     name: 'Chrome', 
     icon: 'chrome', 
@@ -328,6 +332,14 @@ export default function HomePage() {
               >
                 Download for {detectedBrowser?.name === 'Firefox' ? 'Chrome' : 'Firefox'}
               </button>
+              {' • '}
+              <a 
+                href="/extension/downloads/pagepouch-extension-firefox.zip"
+                className="text-white hover:underline font-medium"
+                download="pagepouch-extension-firefox.zip"
+              >
+                Direct Firefox Download
+              </a>
             </p>
           </div>
         </div>
