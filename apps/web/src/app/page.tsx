@@ -63,6 +63,7 @@ export default function HomePage() {
   // Detect browser on component mount
   React.useEffect(() => {
     const browserInfo = getBrowserInfo()
+    console.log('Detected browser:', browserInfo) // Debug log
     setDetectedBrowser(browserInfo)
     setSelectedBrowser(browserInfo.name.toLowerCase() as 'chrome' | 'firefox')
   }, [])
@@ -75,11 +76,14 @@ export default function HomePage() {
   }
 
   const handleSmartDownload = () => {
+    console.log('Smart download clicked, detected browser:', detectedBrowser) // Debug log
     if (detectedBrowser?.directDownload) {
       // Direct download for detected browser
+      console.log('Downloading:', detectedBrowser.downloadUrl) // Debug log
       window.open(detectedBrowser.downloadUrl, '_blank')
     } else {
       // Fallback to modal
+      console.log('Falling back to modal') // Debug log
       handleDownloadClick()
     }
   }
