@@ -7,7 +7,7 @@ module.exports = {
   entry: {
     background: './src/background/index.ts',
     content: './src/content/index.ts',
-    popup: './src/popup/enhanced-popup.tsx',
+    // Use vanilla JS popup for Firefox to avoid React CSP issues
   },
   output: {
     path: path.resolve(__dirname, 'dist-firefox'),
@@ -50,13 +50,12 @@ module.exports = {
         // Use Firefox-specific manifest
         { from: 'manifest.firefox.json', to: 'manifest.json' },
         { from: 'icons', to: 'icons', noErrorOnMissing: true },
+        // Copy Firefox-specific popup files
+        { from: 'src/popup/firefox-popup.js', to: 'firefox-popup.js' },
+        { from: 'popup.firefox.html', to: 'popup.html' },
       ],
     }),
-    new HtmlWebpackPlugin({
-      template: './src/popup/popup.html',
-      filename: 'popup.html',
-      chunks: ['popup'],
-    }),
+    // Remove HtmlWebpackPlugin since we're copying the HTML directly
     new webpack.ProvidePlugin({
       process: 'process/browser',
       Buffer: ['buffer', 'Buffer'],
