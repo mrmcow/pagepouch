@@ -23,15 +23,17 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       description: 'Free • 2-minute setup • Works offline',
       buttonText: 'Add to Chrome - It\'s Free',
       storeUrl: '#', // Will be Chrome Web Store URL
+      downloadUrl: '/extension/downloads/pagepouch-extension.zip'
     },
     {
       id: 'firefox' as const,
       name: 'Firefox',
       icon: FirefoxIcon,
-      status: 'coming-soon',
-      description: 'Coming soon to Firefox Add-ons',
-      buttonText: 'Firefox (Coming Soon)',
+      status: 'available',
+      description: 'Free • 2-minute setup • Works offline',
+      buttonText: 'Add to Firefox - It\'s Free',
       storeUrl: '#', // Will be Firefox Add-ons URL
+      downloadUrl: '/extension/downloads/pagepouch-extension-firefox.zip'
     }
   ]
 
@@ -60,9 +62,6 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
               >
                 <IconComponent size={20} />
                 {browser.name}
-                {browser.status === 'coming-soon' && (
-                  <Badge variant="secondary" className="text-xs ml-1">Soon</Badge>
-                )}
               </button>
             )
           })}
@@ -87,6 +86,13 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
         size="lg" 
         className="w-full text-lg py-4 h-auto font-semibold group mb-4"
         disabled={selectedBrowserData.status === 'coming-soon'}
+        onClick={() => {
+          if (selectedBrowserData.downloadUrl) {
+            window.open(selectedBrowserData.downloadUrl, '_blank')
+          } else {
+            onDownloadClick?.(selectedBrowser)
+          }
+        }}
       >
         <DownloadIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
         {selectedBrowserData.buttonText}
@@ -97,7 +103,13 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
         <p className="text-xs text-muted-foreground mb-2">
           or{' '}
           <button 
-            onClick={() => onDownloadClick?.(selectedBrowser)}
+            onClick={() => {
+              if (selectedBrowserData.downloadUrl) {
+                window.open(selectedBrowserData.downloadUrl, '_blank')
+              } else {
+                onDownloadClick?.(selectedBrowser)
+              }
+            }}
             className="text-primary hover:underline font-medium"
           >
             download directly
