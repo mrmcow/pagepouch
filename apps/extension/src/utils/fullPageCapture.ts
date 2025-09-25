@@ -63,6 +63,13 @@ export class FullPageCapture {
         return this.captureVisibleArea(tabId, opts, pageInfo, startTime);
       }
 
+      // Firefox-specific: Use simplified vertical-only approach for better reliability
+      const isFirefox = typeof browser !== 'undefined';
+      if (isFirefox) {
+        console.log('🔧 Firefox detected: Using simplified vertical capture');
+        return this.captureFullPageFirefox(tabId, opts, pageInfo, startTime);
+      }
+
       // Check if we need horizontal scrolling
       // Firefox often underreports scrollWidth, so be more aggressive about detecting wide pages
       const needsHorizontalScroll = pageInfo.scrollWidth > pageInfo.viewportWidth;
@@ -184,6 +191,93 @@ export class FullPageCapture {
       console.error('Full page capture failed:', error);
       throw new Error(`Full page capture failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Firefox-specific full page capture with simplified vertical stitching
+   */
+  private static async captureFullPageFirefox(
+    tabId: number,
+    options: Required<CaptureOptions>,
+    pageInfo: any,
+    startTime: number
+  ): Promise<CaptureResult> {
+    console.log('🔧 Firefox: Starting simplified full page capture');
+    
+    // Calculate scroll positions for vertical scrolling only
+    const verticalPositions = this.calculateScrollPositions(
+      pageInfo.scrollHeight,
+      pageInfo.viewportHeight,
+      options.maxHeight
+    );
+    
+    console.log(`🔧 Firefox: Capturing ${verticalPositions.length} vertical sections`, {
+      scrollHeight: pageInfo.scrollHeight,
+      viewportHeight: pageInfo.viewportHeight,
+      positions: verticalPositions
+    });
+
+    // Capture each vertical section
+    const screenshots: string[] = [];
+    
+    for (let i = 0; i < verticalPositions.length; i++) {
+      const scrollY = verticalPositions[i];
+      const sectionIndex = i + 1;
+      
+      console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${verticalPositions.length} at Y=${scrollY}`);
+      
+      // Scroll to position (no horizontal scrolling)
+      await this.scrollToPosition(tabId, scrollY, 0);
+      
+      // Wait for scroll to complete and page to stabilize
+      await this.delay(options.scrollDelay);
+      
+      try {
+        // Capture visible area
+        const screenshot = await extensionAPI.tabs.captureVisibleTab({
+          format: options.format,
+          quality: options.quality
+        });
+        
+        screenshots.push(screenshot);
+        console.log(`🔧 Firefox: Section ${sectionIndex} captured successfully`);
+        
+        // Brief delay between captures
+        if (sectionIndex < verticalPositions.length) {
+          await this.delay(300);
+        }
+      } catch (error) {
+        console.error(`🔧 Firefox: Failed to capture section ${sectionIndex}:`, error);
+        throw new Error(`Failed to capture section ${sectionIndex}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    // Restore original scroll position
+    await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
+
+    // Stitch screenshots using simple vertical stitching
+    console.log('🔧 Firefox: Starting simple vertical stitching');
+    const stitchedImage = await this.stitchScreenshots(
+      screenshots,
+      pageInfo.viewportWidth,
+      pageInfo.viewportHeight,
+      verticalPositions
+    );
+    
+    console.log('🔧 Firefox: Stitching completed');
+
+    // Compress the image for API upload
+    console.log('🔧 Firefox: Compressing image for API upload');
+    const compressedImage = await this.compressImage(stitchedImage, 0.8); // Higher quality for Firefox
+    console.log('🔧 Firefox: Compression completed');
+
+    return {
+      dataUrl: compressedImage,
+      width: pageInfo.viewportWidth,
+      height: Math.min(pageInfo.scrollHeight, options.maxHeight),
+      scrollHeight: pageInfo.scrollHeight,
+      captureTime: Date.now() - startTime,
+    };
   }
 
   /**
