@@ -7,13 +7,17 @@ import { FullPageCapture } from '../utils/fullPageCapture';
 
 console.log('PagePouch background script loaded');
 
+// Firefox compatibility layer
+const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+console.log('🔧 Background using extension API:', typeof browser !== 'undefined' ? 'browser' : 'chrome');
+
 // Handle extension installation
-chrome.runtime.onInstalled.addListener((details) => {
+extensionAPI.runtime.onInstalled.addListener((details) => {
   console.log('PagePouch extension installed:', details.reason);
   
   if (details.reason === 'install') {
     // Set up initial extension state
-    chrome.storage.local.set({
+    extensionAPI.storage.local.set({
       isFirstRun: true,
       captureCount: 0,
     });
@@ -21,17 +25,23 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 // Handle extension icon click - open popup instead of direct capture
-chrome.action.onClicked.addListener(async (tab) => {
-  // The popup will handle the interaction
-  console.log('Extension clicked on tab:', tab?.url);
-});
+// Note: Firefox uses browserAction, Chrome uses action
+const actionAPI = extensionAPI.action || extensionAPI.browserAction;
+if (actionAPI && actionAPI.onClicked) {
+  actionAPI.onClicked.addListener(async (tab) => {
+    // The popup will handle the interaction
+    console.log('Extension clicked on tab:', tab?.url);
+  });
+} else {
+  console.log('🔧 Action API not available (popup will be used instead)');
+}
 
 // Global capture state
 let currentCaptureController: AbortController | null = null;
 
 // Handle messages from content script and popup
-chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
-  console.log('Background received message:', message);
+extensionAPI.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
+  console.log('🔧 Background received message:', message);
   
   switch (message.type) {
     case 'CAPTURE_PAGE':
@@ -61,7 +71,7 @@ function handleCancelCapture() {
     currentCaptureController = null;
   }
   
-  chrome.runtime.sendMessage({
+  extensionAPI.runtime.sendMessage({
     type: 'CAPTURE_PROGRESS',
     payload: { status: 'cancelled', message: 'Capture cancelled by user' }
   } as ExtensionMessage);
@@ -70,11 +80,11 @@ function handleCancelCapture() {
 async function handlePageCaptureWithActiveTab(payload: any) {
   try {
     // Get the active tab since popup messages don't have sender.tab
-    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [activeTab] = await extensionAPI.tabs.query({ active: true, currentWindow: true });
     
     if (!activeTab) {
       console.error('No active tab found');
-      chrome.runtime.sendMessage({
+      extensionAPI.runtime.sendMessage({
         type: 'CAPTURE_PROGRESS',
         payload: { status: 'error', message: 'No active tab found' }
       } as ExtensionMessage);
@@ -86,7 +96,7 @@ async function handlePageCaptureWithActiveTab(payload: any) {
     
   } catch (error) {
     console.error('Failed to get active tab:', error);
-    chrome.runtime.sendMessage({
+    extensionAPI.runtime.sendMessage({
       type: 'CAPTURE_PROGRESS',
       payload: { status: 'error', message: 'Failed to access active tab' }
     } as ExtensionMessage);
@@ -96,7 +106,7 @@ async function handlePageCaptureWithActiveTab(payload: any) {
 async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
   if (!tab?.id) {
     console.error('No tab ID provided for capture');
-    chrome.runtime.sendMessage({
+    extensionAPI.runtime.sendMessage({
       type: 'CAPTURE_PROGRESS',
       payload: { status: 'error', message: 'No active tab found' }
     } as ExtensionMessage);
@@ -113,7 +123,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
   const timeoutId = setTimeout(() => {
     if (currentCaptureController) {
       currentCaptureController.abort();
-      chrome.runtime.sendMessage({
+      extensionAPI.runtime.sendMessage({
         type: 'CAPTURE_PROGRESS',
         payload: { status: 'error', message: 'Capture timed out. Please try again.' }
       } as ExtensionMessage);
@@ -135,7 +145,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
     }
 
     // Step 1: Get page content from content script
-    chrome.runtime.sendMessage({
+    extensionAPI.runtime.sendMessage({
       type: 'CAPTURE_PROGRESS',
       payload: { status: 'extracting', message: 'Extracting page content...' }
     } as ExtensionMessage);
@@ -190,7 +200,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       console.log('Starting full-page capture for:', payload.url);
       
       // Send progress message to popup
-      chrome.runtime.sendMessage({
+      extensionAPI.runtime.sendMessage({
         type: 'CAPTURE_PROGRESS',
         payload: { status: 'capturing', message: 'Capturing full page...' }
       } as ExtensionMessage);
@@ -214,12 +224,12 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       // Fallback to visible area capture
       console.log('Capturing visible area for:', payload.url);
       
-      chrome.runtime.sendMessage({
+      extensionAPI.runtime.sendMessage({
         type: 'CAPTURE_PROGRESS',
         payload: { status: 'capturing', message: 'Capturing visible area...' }
       } as ExtensionMessage);
       
-      screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, {
+      screenshot = await extensionAPI.tabs.captureVisibleTab(tab.windowId, {
         format: 'png',
         quality: 90
       });
@@ -234,7 +244,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
     console.log('Screenshot captured successfully');
     
     // Send saving progress
-    chrome.runtime.sendMessage({
+    extensionAPI.runtime.sendMessage({
       type: 'CAPTURE_PROGRESS',
       payload: { status: 'saving', message: 'Saving capture...' }
     } as ExtensionMessage);
@@ -277,7 +287,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
         }
         
         // Send success message to popup
-        chrome.runtime.sendMessage({
+        extensionAPI.runtime.sendMessage({
           type: 'CAPTURE_PROGRESS',
           payload: { status: 'complete', message: 'Capture saved to cloud!' }
         } as ExtensionMessage);
@@ -295,7 +305,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
         await saveClipLocally(clipData);
         
         // Send success message (local only)
-        chrome.runtime.sendMessage({
+        extensionAPI.runtime.sendMessage({
           type: 'CAPTURE_PROGRESS',
           payload: { status: 'complete', message: 'Capture saved locally (will sync when online)' }
         } as ExtensionMessage);
@@ -305,16 +315,16 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       await saveClipLocally(clipData);
       
       // Send success message (local only)
-      chrome.runtime.sendMessage({
+      extensionAPI.runtime.sendMessage({
         type: 'CAPTURE_PROGRESS',
         payload: { status: 'complete', message: 'Capture saved locally (sign in to sync)' }
       } as ExtensionMessage);
     }
     
     // Update capture count
-    chrome.storage.local.get(['captureCount'], (result) => {
+    extensionAPI.storage.local.get(['captureCount'], (result) => {
       const newCount = (result.captureCount || 0) + 1;
-      chrome.storage.local.set({ captureCount: newCount });
+      extensionAPI.storage.local.set({ captureCount: newCount });
     });
     
     // Clear timeout and controller
@@ -334,7 +344,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
     }
     
     // Send error message to popup
-    chrome.runtime.sendMessage({
+    extensionAPI.runtime.sendMessage({
       type: 'CAPTURE_PROGRESS',
       payload: { status: 'error', message: error instanceof Error ? error.message : 'Capture failed' }
     } as ExtensionMessage);
@@ -343,7 +353,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
 
 async function saveClipLocally(clipData: any) {
   return new Promise<void>((resolve) => {
-    chrome.storage.local.get(['localClips'], (result) => {
+    extensionAPI.storage.local.get(['localClips'], (result) => {
       const localClips = result.localClips || [];
       const newClip = {
         ...clipData,
@@ -359,7 +369,7 @@ async function saveClipLocally(clipData: any) {
         localClips.splice(100);
       }
       
-      chrome.storage.local.set({ localClips }, () => {
+      extensionAPI.storage.local.set({ localClips }, () => {
         console.log('Clip saved locally');
         resolve();
       });
@@ -379,24 +389,32 @@ async function handleGetAuthToken(sendResponse: (response: any) => void) {
 
 async function handleAuthenticate(payload: { email: string; password: string; isSignUp: boolean }, sendResponse: (response: any) => void) {
   try {
-    console.log('Handling authentication:', payload.isSignUp ? 'sign up' : 'sign in');
+    console.log('🔧 Background: Handling authentication:', payload.isSignUp ? 'sign up' : 'sign in', 'for', payload.email);
     
     let result;
     if (payload.isSignUp) {
+      console.log('🔧 Background: Calling ExtensionAuth.signUp');
       result = await ExtensionAuth.signUp(payload.email, payload.password);
     } else {
+      console.log('🔧 Background: Calling ExtensionAuth.signIn');
       result = await ExtensionAuth.signIn(payload.email, payload.password);
     }
     
+    console.log('🔧 Background: Auth result:', { 
+      hasData: !!result.data, 
+      hasError: !!result.error, 
+      errorMessage: result.error?.message 
+    });
+    
     if (result.error) {
-      console.error('Authentication failed:', result.error);
+      console.error('🔧 Background: Authentication failed:', result.error);
       sendResponse({ error: result.error });
     } else {
-      console.log('Authentication successful');
+      console.log('🔧 Background: Authentication successful, sending response');
       sendResponse({ data: result.data });
     }
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('🔧 Background: Authentication error:', error);
     sendResponse({ error: { message: 'Authentication failed. Please try again.' } });
   }
 }
@@ -409,13 +427,13 @@ async function handleSignOut(sendResponse: (response: any) => void) {
   } catch (error) {
     console.error('Sign out error:', error);
     // Force local cleanup even if remote signout fails
-    await chrome.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken']);
+    await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken']);
     sendResponse({ success: true });
   }
 }
 
 // Sync local clips when user authenticates
-chrome.storage.onChanged.addListener((changes, namespace) => {
+extensionAPI.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.authToken && changes.authToken.newValue) {
     // User just authenticated, sync local clips
     syncLocalClips();
@@ -425,7 +443,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 async function syncLocalClips() {
   try {
     const result = await new Promise<{localClips: any[]}>((resolve) => {
-      chrome.storage.local.get(['localClips'], (result) => {
+      extensionAPI.storage.local.get(['localClips'], (result) => {
         resolve({ localClips: result.localClips || [] });
       });
     });
@@ -457,7 +475,7 @@ async function syncLocalClips() {
     }
 
     // Update local storage with synced status
-    chrome.storage.local.set({ localClips: result.localClips });
+    extensionAPI.storage.local.set({ localClips: result.localClips });
     
     console.log('Local clips sync completed');
   } catch (error) {

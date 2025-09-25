@@ -1,6 +1,9 @@
 // Supabase client for browser extension
 import { createClient } from '@supabase/supabase-js'
 
+// Firefox compatibility layer
+const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 const supabaseUrl = process.env.SUPABASE_URL || 'https://gwvsltgmjreructvbpzg.supabase.co'
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3dnNsdGdtanJlcnVjdHZicHpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3MjY2OTksImV4cCI6MjA3MzMwMjY5OX0.hdq5nlxw5v-zRZ2ZwogvDGzDC3eGZ9u13W0KBfQqeHs'
 
@@ -9,14 +12,26 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Extension-specific auth helpers
 export class ExtensionAuth {
   static async signIn(email: string, password: string) {
+    console.log('🔐 ExtensionAuth.signIn called for:', email);
+    console.log('🔐 Supabase URL:', supabaseUrl);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
+    console.log('🔐 Supabase signIn response:', { 
+      hasData: !!data, 
+      hasSession: !!data.session,
+      hasUser: !!data.user,
+      hasError: !!error,
+      errorMessage: error?.message 
+    });
+
     if (data.session) {
+      console.log('🔐 Storing session in chrome storage');
       // Store session in extension storage
-      await chrome.storage.local.set({
+      await extensionAPI.storage.local.set({
         authToken: data.session.access_token,
         refreshToken: data.session.refresh_token,
         userEmail: data.user?.email,
@@ -40,7 +55,7 @@ export class ExtensionAuth {
 
     if (data.session) {
       // Store session in extension storage
-      await chrome.storage.local.set({
+      await extensionAPI.storage.local.set({
         authToken: data.session.access_token,
         refreshToken: data.session.refresh_token,
         userEmail: data.user?.email,
@@ -55,7 +70,7 @@ export class ExtensionAuth {
     const { error } = await supabase.auth.signOut()
     
     // Clear extension storage
-    await chrome.storage.local.remove([
+    await extensionAPI.storage.local.remove([
       'authToken',
       'refreshToken',
       'userEmail',
@@ -67,7 +82,7 @@ export class ExtensionAuth {
 
   static async getSession() {
     return new Promise<{token: string | null, userId: string | null}>((resolve) => {
-      chrome.storage.local.get(['authToken', 'userId'], (result) => {
+      extensionAPI.storage.local.get(['authToken', 'userId'], (result) => {
         resolve({
           token: result.authToken || null,
           userId: result.userId || null,
@@ -78,7 +93,7 @@ export class ExtensionAuth {
 
   static async refreshSession() {
     const { refreshToken } = await new Promise<{refreshToken: string | null}>((resolve) => {
-      chrome.storage.local.get(['refreshToken'], (result) => {
+      extensionAPI.storage.local.get(['refreshToken'], (result) => {
         resolve({ refreshToken: result.refreshToken || null })
       })
     })
@@ -93,7 +108,7 @@ export class ExtensionAuth {
 
     if (data.session) {
       // Update stored tokens
-      await chrome.storage.local.set({
+      await extensionAPI.storage.local.set({
         authToken: data.session.access_token,
         refreshToken: data.session.refresh_token,
       })

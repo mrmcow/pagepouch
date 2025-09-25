@@ -3,6 +3,10 @@
 
 console.log('🦊 Firefox popup script loaded');
 
+// Firefox compatibility layer
+const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+console.log('🦊 Using extension API:', typeof browser !== 'undefined' ? 'browser' : 'chrome');
+
 // State management
 let appState = {
   isCapturing: false,
@@ -85,26 +89,47 @@ function createElement(tag, attributes = {}, children = []) {
 // Check authentication status
 async function checkAuthStatus() {
   try {
-    const result = await chrome.storage.local.get(['authToken', 'userEmail', 'captureCount']);
-    appState.isAuthenticated = !!result.authToken;
-    appState.userEmail = result.userEmail;
-    appState.captureCount = result.captureCount || 0;
-    console.log('Auth status:', appState.isAuthenticated, 'Email:', appState.userEmail);
+    console.log('🦊 Checking auth status...');
+    const result = await extensionAPI.storage.local.get(['authToken', 'userEmail', 'captureCount']);
+    console.log('🦊 Storage result:', result);
+    
+    if (result) {
+      appState.isAuthenticated = !!result.authToken;
+      appState.userEmail = result.userEmail;
+      appState.captureCount = result.captureCount || 0;
+      console.log('🦊 Auth status:', appState.isAuthenticated, 'Email:', appState.userEmail);
+    } else {
+      console.log('🦊 No storage result, setting defaults');
+      appState.isAuthenticated = false;
+      appState.userEmail = null;
+      appState.captureCount = 0;
+    }
   } catch (error) {
-    console.error('Error checking auth status:', error);
+    console.error('🦊 Error checking auth status:', error);
+    // Set defaults on error
+    appState.isAuthenticated = false;
+    appState.userEmail = null;
+    appState.captureCount = 0;
   }
 }
 
 // Get current tab
 async function getCurrentTab() {
   try {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs[0]) {
+    console.log('🦊 Getting current tab...');
+    const tabs = await extensionAPI.tabs.query({ active: true, currentWindow: true });
+    console.log('🦊 Tabs result:', tabs);
+    
+    if (tabs && tabs.length > 0 && tabs[0]) {
       appState.currentTab = tabs[0];
-      console.log('Current tab:', appState.currentTab.title);
+      console.log('🦊 Current tab:', appState.currentTab.title);
+    } else {
+      console.log('🦊 No active tab found');
+      appState.currentTab = null;
     }
   } catch (error) {
-    console.error('Error getting current tab:', error);
+    console.error('🦊 Error getting current tab:', error);
+    appState.currentTab = null;
   }
 }
 
@@ -134,7 +159,7 @@ async function capturePage(captureType) {
       render();
     }, 100);
     
-    await chrome.runtime.sendMessage({
+    await extensionAPI.runtime.sendMessage({
       type: 'CAPTURE_PAGE',
       payload: {
         tabId: appState.currentTab.id,
@@ -179,8 +204,10 @@ async function handleAuth() {
   render();
   
   try {
+    console.log('🦊 Sending auth request:', { email: authState.email, isSignUp: authState.isSignUp });
+    
     // Use real Supabase authentication
-    const response = await chrome.runtime.sendMessage({
+    const response = await extensionAPI.runtime.sendMessage({
       type: 'AUTHENTICATE',
       payload: {
         email: authState.email,
@@ -189,13 +216,25 @@ async function handleAuth() {
       }
     });
     
-    if (response.error) {
+    console.log('🦊 Auth response received:', response);
+    
+    if (response && response.error) {
+      console.error('🦊 Auth failed:', response.error);
       authState.error = response.error.message || 'Authentication failed';
       authState.isLoading = false;
       render();
       return;
     }
     
+    if (!response || !response.data) {
+      console.error('🦊 Invalid response:', response);
+      authState.error = 'Invalid response from server';
+      authState.isLoading = false;
+      render();
+      return;
+    }
+    
+    console.log('🦊 Auth successful!');
     // Success - update state
     appState.isAuthenticated = true;
     appState.userEmail = authState.email;
@@ -213,7 +252,7 @@ async function handleAuth() {
     render();
     
   } catch (error) {
-    console.error('Auth error:', error);
+    console.error('🦊 Auth error:', error);
     authState.error = 'Authentication failed. Please try again.';
     authState.isLoading = false;
     render();
@@ -223,7 +262,7 @@ async function handleAuth() {
 async function signOut() {
   try {
     // Use background script for sign out
-    await chrome.runtime.sendMessage({
+    await extensionAPI.runtime.sendMessage({
       type: 'SIGN_OUT'
     });
     
@@ -235,7 +274,7 @@ async function signOut() {
   } catch (error) {
     console.error('Sign out failed:', error);
     // Force local cleanup even if remote signout fails
-    await chrome.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
+    await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
     appState.isAuthenticated = false;
     appState.userEmail = null;
     render();
@@ -405,7 +444,7 @@ function render() {
     });
     if (signOutBtn) signOutBtn.addEventListener('click', signOut);
     if (openWebappBtn) openWebappBtn.addEventListener('click', () => {
-      chrome.tabs.create({ url: 'https://pagepouch-web.vercel.app/dashboard' });
+      extensionAPI.tabs.create({ url: 'https://pagepouch-web.vercel.app/dashboard' });
     });
   }
 }
@@ -418,7 +457,7 @@ async function init() {
   await getCurrentTab();
   
   // Listen for messages
-  chrome.runtime.onMessage.addListener((message) => {
+    extensionAPI.runtime.onMessage.addListener((message) => {
     if (message.type === 'CAPTURE_PROGRESS') {
       appState.captureProgress = {
         status: message.payload.status,
