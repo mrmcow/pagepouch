@@ -152,8 +152,8 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
 
     let pageContent: any = {};
     try {
-      // Send message to content script to extract page data
-      const response = await chrome.tabs.sendMessage(tab.id, {
+      // Send message to content script to extract page data (Firefox compatible)
+      const response = await extensionAPI.tabs.sendMessage(tab.id, {
         type: 'EXTRACT_PAGE_DATA'
       });
       
