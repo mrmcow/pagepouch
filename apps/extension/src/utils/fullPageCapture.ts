@@ -202,53 +202,124 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: Starting robust full page capture');
+    console.log('🔧 Firefox: Starting ADVANCED full page capture with proper width handling');
     
-    // Firefox needs some width forcing to capture full content, but done carefully
-    console.log('🔧 Firefox: Applying minimal width forcing for complete capture');
-    
-    // Get initial dimensions
-    const initialPageInfo = await this.getPageInfo(tabId);
-    
-    // Apply minimal width forcing - just enough to capture full content
-    await this.executeScript(tabId, () => {
-      // Set a reasonable minimum width that doesn't distort content
-      const minWidth = Math.max(1200, window.innerWidth);
-      document.body.style.minWidth = minWidth + 'px';
-      document.documentElement.style.minWidth = minWidth + 'px';
+    // Step 1: Get comprehensive page dimensions including device pixel ratio
+    const comprehensivePageInfo = await this.executeScript(tabId, () => {
+      const dpr = window.devicePixelRatio || 1;
+      const body = document.body;
+      const html = document.documentElement;
       
-      // Remove any max-width constraints that might hide content
-      const containers = document.querySelectorAll('[style*="max-width"], .container, .wrapper, .content');
+      // Get all possible width measurements
+      const measurements = {
+        windowInnerWidth: window.innerWidth,
+        windowOuterWidth: window.outerWidth,
+        bodyScrollWidth: body.scrollWidth,
+        bodyOffsetWidth: body.offsetWidth,
+        bodyClientWidth: body.clientWidth,
+        htmlScrollWidth: html.scrollWidth,
+        htmlOffsetWidth: html.offsetWidth,
+        htmlClientWidth: html.clientWidth,
+        viewportWidth: Math.max(html.clientWidth || 0, window.innerWidth || 0),
+        contentWidth: Math.max(
+          body.scrollWidth || 0,
+          body.offsetWidth || 0,
+          html.clientWidth || 0,
+          html.scrollWidth || 0,
+          html.offsetWidth || 0
+        ),
+        devicePixelRatio: dpr,
+        zoom: Math.round((window.outerWidth / window.innerWidth) * 100) / 100
+      };
+      
+      console.log('🔧 Firefox: Comprehensive width measurements:', measurements);
+      return measurements;
+    });
+    
+    // Step 2: Force viewport to accommodate full content width
+    console.log('🔧 Firefox: Applying AGGRESSIVE width expansion for complete capture');
+    
+    const targetWidth = Math.max(
+      comprehensivePageInfo.contentWidth,
+      comprehensivePageInfo.viewportWidth,
+      1400 // Minimum width for modern websites
+    );
+    
+    console.log('🔧 Firefox: Target capture width:', targetWidth);
+    
+    // Apply comprehensive width forcing
+    await this.executeScript(tabId, () => {
+      const targetW = arguments[0] as number;
+      
+      // Store original styles for restoration
+      const originalStyles = {
+        bodyMinWidth: document.body.style.minWidth,
+        bodyMaxWidth: document.body.style.maxWidth,
+        htmlMinWidth: document.documentElement.style.minWidth,
+        htmlMaxWidth: document.documentElement.style.maxWidth,
+        bodyOverflow: document.body.style.overflow,
+        htmlOverflow: document.documentElement.style.overflow
+      };
+      
+      // Force width expansion
+      document.body.style.minWidth = targetW + 'px';
+      document.body.style.maxWidth = 'none';
+      document.documentElement.style.minWidth = targetW + 'px';
+      document.documentElement.style.maxWidth = 'none';
+      
+      // Prevent horizontal scrollbars during capture
+      document.body.style.overflowX = 'hidden';
+      document.documentElement.style.overflowX = 'hidden';
+      
+      // Store for restoration
+      (window as any).__pagepouchOriginalStyles = originalStyles;
+      
+      // Remove container width constraints
+      const containers = document.querySelectorAll('*');
+      const modifiedElements: Array<{element: HTMLElement, originalMaxWidth: string}> = [];
+      
       containers.forEach(el => {
         const element = el as HTMLElement;
         const computedStyle = window.getComputedStyle(element);
-        if (computedStyle.maxWidth && computedStyle.maxWidth !== 'none') {
+        
+        if (computedStyle.maxWidth && 
+            computedStyle.maxWidth !== 'none' && 
+            parseInt(computedStyle.maxWidth) < targetW) {
+          modifiedElements.push({
+            element,
+            originalMaxWidth: element.style.maxWidth || computedStyle.maxWidth
+          });
           element.style.maxWidth = 'none';
-          element.setAttribute('data-pagepouch-max-width', computedStyle.maxWidth);
         }
       });
-    });
+      
+      (window as any).__pagepouchModifiedElements = modifiedElements;
+      
+      console.log('🔧 Firefox: Width forcing applied, modified', modifiedElements.length, 'elements');
+    }, targetWidth);
     
     // Wait for layout to stabilize
-    await this.delay(1000);
+    await this.delay(1500);
     
-    // Get updated dimensions after minimal width forcing
-    const updatedPageInfo = await this.getPageInfo(tabId);
-    console.log('🔧 Firefox: Updated dimensions after minimal width forcing:', {
-      originalWidth: initialPageInfo.viewportWidth,
-      originalScrollWidth: initialPageInfo.scrollWidth,
-      newWidth: updatedPageInfo.viewportWidth,
-      newScrollWidth: updatedPageInfo.scrollWidth
+    // Step 3: Get final dimensions after width forcing
+    const postWidthPageInfo = await this.getPageInfo(tabId);
+    console.log('🔧 Firefox: Final dimensions after width forcing:', {
+      originalViewportWidth: comprehensivePageInfo.viewportWidth,
+      originalContentWidth: comprehensivePageInfo.contentWidth,
+      targetWidth: targetWidth,
+      finalViewportWidth: postWidthPageInfo.viewportWidth,
+      finalScrollWidth: postWidthPageInfo.scrollWidth,
+      devicePixelRatio: comprehensivePageInfo.devicePixelRatio
     });
     
-    // Use the actual content width (not forced viewport width)
-    const captureWidth = Math.max(updatedPageInfo.viewportWidth, updatedPageInfo.scrollWidth);
+    // Use the target width for consistent capture
+    const captureWidth = targetWidth;
     
     // Scroll to bottom multiple times to ensure we get ALL content including lazy loading
     console.log('🔧 Firefox: Scrolling to trigger all lazy content');
     
     let previousHeight = 0;
-    let currentHeight = updatedPageInfo.scrollHeight;
+    let currentHeight = postWidthPageInfo.scrollHeight;
     let attempts = 0;
     
     // Keep scrolling until height stops changing (all lazy content loaded)
@@ -346,44 +417,55 @@ export class FullPageCapture {
     // Restore original scroll position and page constraints
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
     
-    // Restore original page constraints
+    // Restore ALL original page constraints
     await this.executeScript(tabId, () => {
-      // Remove the width forcing
-      document.body.style.minWidth = '';
-      document.documentElement.style.minWidth = '';
+      // Restore original styles
+      const originalStyles = (window as any).__pagepouchOriginalStyles;
+      if (originalStyles) {
+        document.body.style.minWidth = originalStyles.bodyMinWidth;
+        document.body.style.maxWidth = originalStyles.bodyMaxWidth;
+        document.documentElement.style.minWidth = originalStyles.htmlMinWidth;
+        document.documentElement.style.maxWidth = originalStyles.htmlMaxWidth;
+        document.body.style.overflow = originalStyles.bodyOverflow;
+        document.documentElement.style.overflow = originalStyles.htmlOverflow;
+        
+        delete (window as any).__pagepouchOriginalStyles;
+      }
       
-      // Restore original max-width values
-      const containers = document.querySelectorAll('[data-pagepouch-max-width]');
-      containers.forEach(el => {
-        const element = el as HTMLElement;
-        const originalMaxWidth = element.getAttribute('data-pagepouch-max-width');
-        if (originalMaxWidth) {
-          element.style.maxWidth = originalMaxWidth;
-          element.removeAttribute('data-pagepouch-max-width');
-        }
-      });
+      // Restore modified elements
+      const modifiedElements = (window as any).__pagepouchModifiedElements;
+      if (modifiedElements && Array.isArray(modifiedElements)) {
+        modifiedElements.forEach(({element, originalMaxWidth}) => {
+          if (element && element.style) {
+            element.style.maxWidth = originalMaxWidth;
+          }
+        });
+        delete (window as any).__pagepouchModifiedElements;
+      }
+      
+      console.log('🔧 Firefox: All page constraints restored');
     });
 
-    // Vertical stitching with overlap handling
-    console.log('🔧 Firefox: Starting overlap-aware stitching');
+    // Vertical stitching with overlap handling using exact target width
+    console.log('🔧 Firefox: Starting precision stitching with target width:', captureWidth);
     const stitchedImage = await this.stitchFirefoxScreenshotsWithOverlap(
-      screenshots, 
-      captureWidth, 
-      viewportHeight, 
+      screenshots,
+      captureWidth, // Use exact target width
+      viewportHeight,
       finalPageInfo.scrollHeight,
       uniquePositions,
       overlap
     );
-    console.log('🔧 Firefox: Stitching completed');
+    console.log('🔧 Firefox: Precision stitching completed');
 
-    // Light compression to maintain quality
-    console.log('🔧 Firefox: Compressing image');
-    const compressedImage = await this.compressImage(stitchedImage, 0.85);
+    // Light compression to maintain quality while reducing payload
+    console.log('🔧 Firefox: Applying light compression');
+    const compressedImage = await this.compressImage(stitchedImage, 0.90); // Higher quality
     console.log('🔧 Firefox: Compression completed');
 
     return {
       dataUrl: compressedImage,
-      width: captureWidth,
+      width: captureWidth, // Return exact target width
       height: finalPageInfo.scrollHeight,
       scrollHeight: finalPageInfo.scrollHeight,
       captureTime: Date.now() - startTime,
@@ -897,11 +979,13 @@ export class FullPageCapture {
     overlap: number
   ): Promise<string> {
     try {
-      console.log('🔧 Firefox stitching:', {
+      console.log('🔧 Firefox PRECISION stitching:', {
         screenshots: screenshots.length,
-        width,
+        targetWidth: width,
         viewportHeight,
-        totalHeight
+        totalHeight,
+        scrollPositions,
+        overlap
       });
       
       // Create canvas with exact dimensions
