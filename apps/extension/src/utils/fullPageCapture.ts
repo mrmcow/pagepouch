@@ -204,18 +204,51 @@ export class FullPageCapture {
   ): Promise<CaptureResult> {
     console.log('🔧 Firefox: Starting robust full page capture');
     
-    // Get natural page dimensions without forcing width changes
-    console.log('🔧 Firefox: Using natural page dimensions');
-    const naturalPageInfo = await this.getPageInfo(tabId);
+    // Firefox needs some width forcing to capture full content, but done carefully
+    console.log('🔧 Firefox: Applying minimal width forcing for complete capture');
     
-    // Use natural viewport width to avoid skewing
-    const captureWidth = naturalPageInfo.viewportWidth;
+    // Get initial dimensions
+    const initialPageInfo = await this.getPageInfo(tabId);
+    
+    // Apply minimal width forcing - just enough to capture full content
+    await this.executeScript(tabId, () => {
+      // Set a reasonable minimum width that doesn't distort content
+      const minWidth = Math.max(1200, window.innerWidth);
+      document.body.style.minWidth = minWidth + 'px';
+      document.documentElement.style.minWidth = minWidth + 'px';
+      
+      // Remove any max-width constraints that might hide content
+      const containers = document.querySelectorAll('[style*="max-width"], .container, .wrapper, .content');
+      containers.forEach(el => {
+        const element = el as HTMLElement;
+        const computedStyle = window.getComputedStyle(element);
+        if (computedStyle.maxWidth && computedStyle.maxWidth !== 'none') {
+          element.style.maxWidth = 'none';
+          element.setAttribute('data-pagepouch-max-width', computedStyle.maxWidth);
+        }
+      });
+    });
+    
+    // Wait for layout to stabilize
+    await this.delay(1000);
+    
+    // Get updated dimensions after minimal width forcing
+    const updatedPageInfo = await this.getPageInfo(tabId);
+    console.log('🔧 Firefox: Updated dimensions after minimal width forcing:', {
+      originalWidth: initialPageInfo.viewportWidth,
+      originalScrollWidth: initialPageInfo.scrollWidth,
+      newWidth: updatedPageInfo.viewportWidth,
+      newScrollWidth: updatedPageInfo.scrollWidth
+    });
+    
+    // Use the actual content width (not forced viewport width)
+    const captureWidth = Math.max(updatedPageInfo.viewportWidth, updatedPageInfo.scrollWidth);
     
     // Scroll to bottom multiple times to ensure we get ALL content including lazy loading
     console.log('🔧 Firefox: Scrolling to trigger all lazy content');
     
     let previousHeight = 0;
-    let currentHeight = naturalPageInfo.scrollHeight;
+    let currentHeight = updatedPageInfo.scrollHeight;
     let attempts = 0;
     
     // Keep scrolling until height stops changing (all lazy content loaded)
@@ -295,10 +328,10 @@ export class FullPageCapture {
       await this.delay(800); // Longer delay for content to load
       
       try {
-        // Capture with high quality
+        // Capture with maximum quality
         const screenshot = await extensionAPI.tabs.captureVisibleTab({
           format: 'png', // Always use PNG for best quality
-          quality: 95
+          quality: 100  // Maximum quality
         });
         
         screenshots.push(screenshot);
@@ -310,8 +343,26 @@ export class FullPageCapture {
       }
     }
 
-    // Restore original scroll position
+    // Restore original scroll position and page constraints
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
+    
+    // Restore original page constraints
+    await this.executeScript(tabId, () => {
+      // Remove the width forcing
+      document.body.style.minWidth = '';
+      document.documentElement.style.minWidth = '';
+      
+      // Restore original max-width values
+      const containers = document.querySelectorAll('[data-pagepouch-max-width]');
+      containers.forEach(el => {
+        const element = el as HTMLElement;
+        const originalMaxWidth = element.getAttribute('data-pagepouch-max-width');
+        if (originalMaxWidth) {
+          element.style.maxWidth = originalMaxWidth;
+          element.removeAttribute('data-pagepouch-max-width');
+        }
+      });
+    });
 
     // Vertical stitching with overlap handling
     console.log('🔧 Firefox: Starting overlap-aware stitching');
