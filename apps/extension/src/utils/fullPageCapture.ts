@@ -174,6 +174,33 @@ export class FullPageCapture {
     originalScrollX: number;
   }> {
     const results = await this.executeScript(tabId, () => {
+        // Enhanced dimension calculation for Firefox compatibility
+        const bodyScrollWidth = document.body.scrollWidth || 0;
+        const bodyOffsetWidth = document.body.offsetWidth || 0;
+        const docScrollWidth = document.documentElement.scrollWidth || 0;
+        const docOffsetWidth = document.documentElement.offsetWidth || 0;
+        const docClientWidth = document.documentElement.clientWidth || 0;
+        
+        // Firefox-specific: Also check for content width
+        const contentWidth = Math.max(
+          bodyScrollWidth,
+          bodyOffsetWidth,
+          docScrollWidth,
+          docOffsetWidth,
+          docClientWidth,
+          window.innerWidth
+        );
+        
+        console.log('🔧 Firefox page dimensions debug:', {
+          bodyScrollWidth,
+          bodyOffsetWidth,
+          docScrollWidth,
+          docOffsetWidth,
+          docClientWidth,
+          windowInnerWidth: window.innerWidth,
+          calculatedContentWidth: contentWidth
+        });
+        
         return {
           scrollHeight: Math.max(
             document.body.scrollHeight,
@@ -182,13 +209,7 @@ export class FullPageCapture {
             document.documentElement.scrollHeight,
             document.documentElement.offsetHeight
           ),
-          scrollWidth: Math.max(
-            document.body.scrollWidth,
-            document.body.offsetWidth,
-            document.documentElement.clientWidth,
-            document.documentElement.scrollWidth,
-            document.documentElement.offsetWidth
-          ),
+          scrollWidth: contentWidth,
           viewportWidth: window.innerWidth,
           viewportHeight: window.innerHeight,
           originalScrollY: window.scrollY,
