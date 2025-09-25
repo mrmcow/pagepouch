@@ -442,23 +442,32 @@ export class FullPageCapture {
     const positions: number[] = [];
     const effectiveHeight = Math.min(scrollHeight, maxHeight);
     
-    // Calculate overlap to ensure seamless stitching
-    const overlap = Math.floor(viewportHeight * 0.1); // 10% overlap
+    console.log('🔧 Calculating vertical positions:', { scrollHeight, viewportHeight, effectiveHeight });
+    
+    // Use precise positioning with minimal overlap for Firefox
+    const overlap = 20; // Small fixed overlap to prevent gaps
     const step = viewportHeight - overlap;
     
     let currentY = 0;
     
+    // Capture sections with small overlap
     while (currentY < effectiveHeight) {
       positions.push(currentY);
       currentY += step;
       
-      // Ensure we capture the bottom of the page
-      if (currentY >= effectiveHeight - viewportHeight && currentY < effectiveHeight) {
-        positions.push(Math.max(0, effectiveHeight - viewportHeight));
+      // Stop if we're close to the end
+      if (currentY >= effectiveHeight - viewportHeight) {
         break;
       }
     }
-
+    
+    // Always ensure we capture the absolute bottom
+    const bottomPosition = Math.max(0, effectiveHeight - viewportHeight);
+    if (!positions.includes(bottomPosition) && bottomPosition > 0) {
+      positions.push(bottomPosition);
+    }
+    
+    console.log('🔧 Vertical positions calculated:', positions);
     return positions;
   }
 
@@ -471,23 +480,21 @@ export class FullPageCapture {
   ): number[] {
     const positions: number[] = [];
     
-    // Calculate overlap to ensure seamless stitching
-    const overlap = Math.floor(viewportWidth * 0.1); // 10% overlap
-    const step = viewportWidth - overlap;
+    // For Firefox, use precise positioning without overlap for cleaner stitching
+    console.log('🔧 Calculating horizontal positions:', { scrollWidth, viewportWidth });
     
-    let currentX = 0;
+    // Always start at 0
+    positions.push(0);
     
-    while (currentX < scrollWidth) {
-      positions.push(currentX);
-      currentX += step;
-      
-      // Ensure we capture the right edge of the page
-      if (currentX >= scrollWidth - viewportWidth && currentX < scrollWidth) {
-        positions.push(Math.max(0, scrollWidth - viewportWidth));
-        break;
+    // If content is wider than viewport, add position to capture the right edge
+    if (scrollWidth > viewportWidth) {
+      const rightEdgePosition = scrollWidth - viewportWidth;
+      if (rightEdgePosition > 0) {
+        positions.push(rightEdgePosition);
       }
     }
-
+    
+    console.log('🔧 Horizontal positions calculated:', positions);
     return positions;
   }
 
