@@ -458,7 +458,7 @@ async function handleGetFolders(sendResponse: (response: any) => void) {
     const folders = await ExtensionAPI.getFolders();
     console.log('🔧 Background: Folders retrieved:', folders);
     
-    sendResponse({ folders });
+    sendResponse(folders);
   } catch (error) {
     console.error('🔧 Background: Failed to get folders:', error);
     // Return empty folders array on error - let clips save to default location
