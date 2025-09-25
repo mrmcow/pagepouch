@@ -65,6 +65,9 @@ extensionAPI.runtime.onMessage.addListener((message: ExtensionMessage, sender, s
     case 'GET_USAGE':
       handleGetUsage(sendResponse);
       return true; // Keep message channel open for async response
+    case 'CREATE_FOLDER':
+      handleCreateFolder(message.payload, sendResponse);
+      return true; // Keep message channel open for async response
     default:
       console.warn('Unknown message type:', message.type);
   }
@@ -486,6 +489,26 @@ async function handleGetUsage(sendResponse: (response: any) => void) {
       clips_limit: 50,
       subscription_tier: 'free',
       warning_level: 'safe'
+    });
+  }
+}
+
+async function handleCreateFolder(payload: any, sendResponse: (response: any) => void) {
+  try {
+    console.log('🔧 Background: Creating folder:', payload);
+    
+    // Debug: Check if we have a token
+    const { token } = await ExtensionAuth.getSession();
+    console.log('🔧 Background: Auth token available:', token ? 'YES' : 'NO');
+    
+    const folder = await ExtensionAPI.createFolder(payload);
+    console.log('🔧 Background: Folder created:', folder);
+    
+    sendResponse({ folder });
+  } catch (error) {
+    console.error('🔧 Background: Failed to create folder:', error);
+    sendResponse({ 
+      error: 'Failed to create folder'
     });
   }
 }

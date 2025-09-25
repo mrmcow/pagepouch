@@ -110,23 +110,43 @@ async function loadFolders() {
     
     console.log('🦊 Folders response:', response);
     
-    if (response && response.folders) {
+    if (response && response.folders && Array.isArray(response.folders)) {
       appState.folders = response.folders;
       console.log('🦊 Loaded folders:', appState.folders);
       
-      // Set default folder if none selected
-      if (!appState.selectedFolderId && appState.folders.length > 0) {
-        // Try to find "Inbox" folder first
-        const inboxFolder = appState.folders.find(f => f.name.toLowerCase() === 'inbox');
-        appState.selectedFolderId = inboxFolder ? inboxFolder.id : appState.folders[0].id;
-        
-        console.log('🦊 Selected default folder:', appState.selectedFolderId, inboxFolder ? '(Inbox found)' : '(First folder)');
-        
-        // Save selection to storage
-        await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
+      // If no folders exist, create a default Inbox folder
+      if (appState.folders.length === 0) {
+        console.log('🦊 No folders found, creating default Inbox folder...');
+        try {
+          const createResponse = await extensionAPI.runtime.sendMessage({
+            type: 'CREATE_FOLDER',
+            payload: { name: 'Inbox', color: '#6B7280' }
+          });
+          
+          if (createResponse && createResponse.folder) {
+            appState.folders = [createResponse.folder];
+            appState.selectedFolderId = createResponse.folder.id;
+            console.log('🦊 Created default Inbox folder:', createResponse.folder);
+          }
+        } catch (createError) {
+          console.error('🦊 Failed to create default folder:', createError);
+        }
+      } else {
+        // Set default folder if none selected
+        if (!appState.selectedFolderId) {
+          // Try to find "Inbox" folder first
+          const inboxFolder = appState.folders.find(f => f.name.toLowerCase() === 'inbox');
+          appState.selectedFolderId = inboxFolder ? inboxFolder.id : appState.folders[0].id;
+          
+          console.log('🦊 Selected default folder:', appState.selectedFolderId, inboxFolder ? '(Inbox found)' : '(First folder)');
+          
+          // Save selection to storage
+          await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
+        }
       }
     } else {
-      console.log('🦊 No folders in response, using empty folder list');
+      console.log('🦊 No folders in response or invalid format, using empty folder list');
+      console.log('🦊 Response structure:', response);
       // Don't set fallback folders - let clips save to default location
       appState.folders = [];
       appState.selectedFolderId = null;

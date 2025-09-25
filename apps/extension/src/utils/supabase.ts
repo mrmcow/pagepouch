@@ -253,4 +253,29 @@ export class ExtensionAPI {
 
     return response.json()
   }
+
+  static async createFolder(folderData: { name: string; color?: string }) {
+    const { token } = await ExtensionAuth.getSession()
+    
+    if (!token) {
+      throw new Error('Not authenticated')
+    }
+
+    const response = await fetch(`${this.getApiBaseUrl()}/api/folders`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(folderData),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create folder')
+    }
+
+    const result = await response.json()
+    return result.folder
+  }
 }
