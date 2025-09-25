@@ -85,11 +85,11 @@ function createElement(tag, attributes = {}, children = []) {
 // Check authentication status
 async function checkAuthStatus() {
   try {
-    const result = await chrome.storage.local.get(['isAuthenticated', 'userEmail', 'captureCount']);
-    appState.isAuthenticated = result.isAuthenticated || false;
+    const result = await chrome.storage.local.get(['authToken', 'userEmail', 'captureCount']);
+    appState.isAuthenticated = !!result.authToken;
     appState.userEmail = result.userEmail;
     appState.captureCount = result.captureCount || 0;
-    console.log('Auth status:', appState.isAuthenticated);
+    console.log('Auth status:', appState.isAuthenticated, 'Email:', appState.userEmail);
   } catch (error) {
     console.error('Error checking auth status:', error);
   }
@@ -179,20 +179,27 @@ async function handleAuth() {
   render();
   
   try {
-    // For now, simulate authentication
-    // In a real implementation, you'd integrate with Supabase here
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Use real Supabase authentication
+    const response = await chrome.runtime.sendMessage({
+      type: 'AUTHENTICATE',
+      payload: {
+        email: authState.email,
+        password: authState.password,
+        isSignUp: authState.isSignUp
+      }
+    });
     
-    // Simulate success
+    if (response.error) {
+      authState.error = response.error.message || 'Authentication failed';
+      authState.isLoading = false;
+      render();
+      return;
+    }
+    
+    // Success - update state
     appState.isAuthenticated = true;
     appState.userEmail = authState.email;
     appState.showAuth = false;
-    
-    // Store in chrome storage
-    await chrome.storage.local.set({
-      isAuthenticated: true,
-      userEmail: authState.email
-    });
     
     // Reset auth state
     authState = {
@@ -206,6 +213,7 @@ async function handleAuth() {
     render();
     
   } catch (error) {
+    console.error('Auth error:', error);
     authState.error = 'Authentication failed. Please try again.';
     authState.isLoading = false;
     render();
@@ -214,14 +222,33 @@ async function handleAuth() {
 
 async function signOut() {
   try {
+    // Use background script for sign out
+    await chrome.runtime.sendMessage({
+      type: 'SIGN_OUT'
+    });
+    
     appState.isAuthenticated = false;
     appState.userEmail = null;
     appState.showAuth = false;
     
-    await chrome.storage.local.remove(['isAuthenticated', 'userEmail']);
     render();
   } catch (error) {
     console.error('Sign out failed:', error);
+    // Force local cleanup even if remote signout fails
+    await chrome.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
+    appState.isAuthenticated = false;
+    appState.userEmail = null;
+    render();
+  }
+}
+
+// Helper function to update auth button state
+function updateAuthButtonState() {
+  const authSubmit = document.getElementById('auth-submit');
+  if (authSubmit) {
+    const canSubmit = !authState.isLoading && authState.email && authState.password;
+    authSubmit.disabled = !canSubmit;
+    authSubmit.style.opacity = canSubmit ? '1' : '0.6';
   }
 }
 
@@ -347,10 +374,12 @@ function render() {
     
     if (emailInput) emailInput.addEventListener('input', (e) => {
       authState.email = e.target.value;
+      updateAuthButtonState();
     });
     
     if (passwordInput) passwordInput.addEventListener('input', (e) => {
       authState.password = e.target.value;
+      updateAuthButtonState();
     });
     
     if (authSubmit) authSubmit.addEventListener('click', handleAuth);

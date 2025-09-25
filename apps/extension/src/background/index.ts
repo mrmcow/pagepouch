@@ -43,6 +43,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
     case 'GET_AUTH_TOKEN':
       handleGetAuthToken(sendResponse);
       return true; // Keep message channel open for async response
+    case 'AUTHENTICATE':
+      handleAuthenticate(message.payload, sendResponse);
+      return true; // Keep message channel open for async response
+    case 'SIGN_OUT':
+      handleSignOut(sendResponse);
+      return true; // Keep message channel open for async response
     default:
       console.warn('Unknown message type:', message.type);
   }
@@ -368,6 +374,43 @@ async function handleGetAuthToken(sendResponse: (response: any) => void) {
   } catch (error) {
     console.error('Failed to get auth token:', error);
     sendResponse({ token: null });
+  }
+}
+
+async function handleAuthenticate(payload: { email: string; password: string; isSignUp: boolean }, sendResponse: (response: any) => void) {
+  try {
+    console.log('Handling authentication:', payload.isSignUp ? 'sign up' : 'sign in');
+    
+    let result;
+    if (payload.isSignUp) {
+      result = await ExtensionAuth.signUp(payload.email, payload.password);
+    } else {
+      result = await ExtensionAuth.signIn(payload.email, payload.password);
+    }
+    
+    if (result.error) {
+      console.error('Authentication failed:', result.error);
+      sendResponse({ error: result.error });
+    } else {
+      console.log('Authentication successful');
+      sendResponse({ data: result.data });
+    }
+  } catch (error) {
+    console.error('Authentication error:', error);
+    sendResponse({ error: { message: 'Authentication failed. Please try again.' } });
+  }
+}
+
+async function handleSignOut(sendResponse: (response: any) => void) {
+  try {
+    console.log('Handling sign out');
+    await ExtensionAuth.signOut();
+    sendResponse({ success: true });
+  } catch (error) {
+    console.error('Sign out error:', error);
+    // Force local cleanup even if remote signout fails
+    await chrome.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken']);
+    sendResponse({ success: true });
   }
 }
 
