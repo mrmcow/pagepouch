@@ -202,89 +202,19 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: Starting ADVANCED full page capture with REAL width detection');
+    console.log('🔧 Firefox: Starting NON-INVASIVE full page capture');
     
-    // Step 1: Use the ALREADY DETECTED scrollWidth from pageInfo (this is the REAL width!)
-    console.log('🔧 Firefox: Using REAL page dimensions from initial detection:', {
-      scrollWidth: pageInfo.scrollWidth,
+    // DON'T modify the page layout - capture at current viewport dimensions
+    console.log('🔧 Firefox: Using current viewport dimensions WITHOUT modification:', {
       viewportWidth: pageInfo.viewportWidth,
+      viewportHeight: pageInfo.viewportHeight,
       scrollHeight: pageInfo.scrollHeight
     });
     
-    // The REAL content width is what we detected initially - this is accurate!
-    const realContentWidth = pageInfo.scrollWidth || 1280;
-    const realViewportWidth = pageInfo.viewportWidth || 1280;
+    // Use the CURRENT viewport width - don't force any changes
+    const captureWidth = pageInfo.viewportWidth || 1280;
     
-    // Use the LARGER of the real measurements for target width
-    const targetWidth = Math.max(
-      realContentWidth,    // This is the ACTUAL content width (1710px)
-      realViewportWidth,   // This is the viewport width (1280px)  
-      1400                 // Minimum fallback
-    );
-    
-    console.log('🔧 Firefox: REAL target width calculated:', {
-      realContentWidth,
-      realViewportWidth, 
-      targetWidth
-    });
-    
-    // Step 2: Force viewport to show the REAL content width
-    console.log('🔧 Firefox: Forcing viewport to accommodate REAL content width:', targetWidth);
-    
-    await this.executeScript(tabId, (targetW: number) => {
-      // Store original styles for restoration
-      const originalStyles = {
-        bodyMinWidth: document.body.style.minWidth,
-        bodyMaxWidth: document.body.style.maxWidth,
-        htmlMinWidth: document.documentElement.style.minWidth,
-        htmlMaxWidth: document.documentElement.style.maxWidth,
-        bodyOverflow: document.body.style.overflow,
-        htmlOverflow: document.documentElement.style.overflow
-      };
-      
-      // Force viewport to accommodate the REAL content width
-      document.body.style.minWidth = targetW + 'px';
-      document.body.style.maxWidth = 'none';
-      document.documentElement.style.minWidth = targetW + 'px';
-      document.documentElement.style.maxWidth = 'none';
-      
-      // Prevent horizontal scrollbars during capture
-      document.body.style.overflowX = 'hidden';
-      document.documentElement.style.overflowX = 'hidden';
-      
-      // Store for restoration
-      (window as any).__pagepouchOriginalStyles = originalStyles;
-      
-      // Remove ALL container width constraints to show full content
-      const containers = document.querySelectorAll('*');
-      const modifiedElements: Array<{element: HTMLElement, originalMaxWidth: string}> = [];
-      
-      containers.forEach(el => {
-        const element = el as HTMLElement;
-        const computedStyle = window.getComputedStyle(element);
-        
-        if (computedStyle.maxWidth && computedStyle.maxWidth !== 'none') {
-          const maxWidthValue = parseInt(computedStyle.maxWidth);
-          if (!isNaN(maxWidthValue) && maxWidthValue < targetW) {
-            modifiedElements.push({
-              element,
-              originalMaxWidth: element.style.maxWidth || computedStyle.maxWidth
-            });
-            element.style.maxWidth = 'none';
-          }
-        }
-      });
-      
-      (window as any).__pagepouchModifiedElements = modifiedElements;
-      
-      console.log('🔧 Firefox: Viewport forced to', targetW + 'px, modified', modifiedElements.length, 'elements');
-    }, [targetWidth]);
-    
-    // Wait for layout to stabilize after width forcing
-    await this.delay(1500);
-    
-    // Use the REAL target width for capture
-    const captureWidth = targetWidth;
+    console.log('🔧 Firefox: Capture width set to current viewport:', captureWidth);
     
     // Step 3: Scroll to trigger lazy loading and get final height
     console.log('🔧 Firefox: Scrolling to trigger all lazy content');
@@ -391,37 +321,10 @@ export class FullPageCapture {
       }
     }
 
-    // Restore original scroll position and page constraints
+    // Restore original scroll position (no page modifications to restore)
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
     
-    // Restore ALL original page constraints
-    await this.executeScript(tabId, () => {
-      // Restore original styles
-      const originalStyles = (window as any).__pagepouchOriginalStyles;
-      if (originalStyles) {
-        document.body.style.minWidth = originalStyles.bodyMinWidth;
-        document.body.style.maxWidth = originalStyles.bodyMaxWidth;
-        document.documentElement.style.minWidth = originalStyles.htmlMinWidth;
-        document.documentElement.style.maxWidth = originalStyles.htmlMaxWidth;
-        document.body.style.overflow = originalStyles.bodyOverflow;
-        document.documentElement.style.overflow = originalStyles.htmlOverflow;
-        
-        delete (window as any).__pagepouchOriginalStyles;
-      }
-      
-      // Restore modified elements
-      const modifiedElements = (window as any).__pagepouchModifiedElements;
-      if (modifiedElements && Array.isArray(modifiedElements)) {
-        modifiedElements.forEach(({element, originalMaxWidth}) => {
-          if (element && element.style) {
-            element.style.maxWidth = originalMaxWidth;
-          }
-        });
-        delete (window as any).__pagepouchModifiedElements;
-      }
-      
-      console.log('🔧 Firefox: All page constraints restored');
-    });
+    console.log('🔧 Firefox: Scroll position restored (no layout changes were made)');
 
     // Vertical stitching with overlap handling using exact target width
     console.log('🔧 Firefox: Starting precision stitching with target width:', captureWidth);
