@@ -202,62 +202,36 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: Starting ADVANCED full page capture with proper width handling');
+    console.log('🔧 Firefox: Starting ADVANCED full page capture with REAL width detection');
     
-    // Step 1: Get comprehensive page dimensions including device pixel ratio
-    const comprehensivePageInfoResults = await this.executeScript(tabId, () => {
-      const dpr = window.devicePixelRatio || 1;
-      const body = document.body;
-      const html = document.documentElement;
-      
-      // Get all possible width measurements
-      const measurements = {
-        windowInnerWidth: window.innerWidth,
-        windowOuterWidth: window.outerWidth,
-        bodyScrollWidth: body.scrollWidth,
-        bodyOffsetWidth: body.offsetWidth,
-        bodyClientWidth: body.clientWidth,
-        htmlScrollWidth: html.scrollWidth,
-        htmlOffsetWidth: html.offsetWidth,
-        htmlClientWidth: html.clientWidth,
-        viewportWidth: Math.max(html.clientWidth || 0, window.innerWidth || 0),
-        contentWidth: Math.max(
-          body.scrollWidth || 0,
-          body.offsetWidth || 0,
-          html.clientWidth || 0,
-          html.scrollWidth || 0,
-          html.offsetWidth || 0
-        ),
-        devicePixelRatio: dpr,
-        zoom: Math.round((window.outerWidth / window.innerWidth) * 100) / 100
-      };
-      
-      console.log('🔧 Firefox: Comprehensive width measurements:', measurements);
-      return measurements;
+    // Step 1: Use the ALREADY DETECTED scrollWidth from pageInfo (this is the REAL width!)
+    console.log('🔧 Firefox: Using REAL page dimensions from initial detection:', {
+      scrollWidth: pageInfo.scrollWidth,
+      viewportWidth: pageInfo.viewportWidth,
+      scrollHeight: pageInfo.scrollHeight
     });
     
-    const comprehensivePageInfo = comprehensivePageInfoResults[0];
+    // The REAL content width is what we detected initially - this is accurate!
+    const realContentWidth = pageInfo.scrollWidth || 1280;
+    const realViewportWidth = pageInfo.viewportWidth || 1280;
     
-    console.log('🔧 Firefox: Comprehensive page info received:', comprehensivePageInfo);
-    
-    // Step 2: Force viewport to accommodate full content width
-    console.log('🔧 Firefox: Applying AGGRESSIVE width expansion for complete capture');
-    
-    // Ensure we have valid numbers, fallback to safe defaults
-    const contentWidth = comprehensivePageInfo?.contentWidth || 1280;
-    const viewportWidth = comprehensivePageInfo?.viewportWidth || 1280;
-    
+    // Use the LARGER of the real measurements for target width
     const targetWidth = Math.max(
-      contentWidth,
-      viewportWidth,
-      1400 // Minimum width for modern websites
+      realContentWidth,    // This is the ACTUAL content width (1710px)
+      realViewportWidth,   // This is the viewport width (1280px)  
+      1400                 // Minimum fallback
     );
     
-    console.log('🔧 Firefox: Target capture width:', targetWidth);
+    console.log('🔧 Firefox: REAL target width calculated:', {
+      realContentWidth,
+      realViewportWidth, 
+      targetWidth
+    });
     
-    // Apply comprehensive width forcing
+    // Step 2: Force viewport to show the REAL content width
+    console.log('🔧 Firefox: Forcing viewport to accommodate REAL content width:', targetWidth);
+    
     await this.executeScript(tabId, (targetW: number) => {
-      
       // Store original styles for restoration
       const originalStyles = {
         bodyMinWidth: document.body.style.minWidth,
@@ -268,7 +242,7 @@ export class FullPageCapture {
         htmlOverflow: document.documentElement.style.overflow
       };
       
-      // Force width expansion
+      // Force viewport to accommodate the REAL content width
       document.body.style.minWidth = targetW + 'px';
       document.body.style.maxWidth = 'none';
       document.documentElement.style.minWidth = targetW + 'px';
@@ -281,7 +255,7 @@ export class FullPageCapture {
       // Store for restoration
       (window as any).__pagepouchOriginalStyles = originalStyles;
       
-      // Remove container width constraints
+      // Remove ALL container width constraints to show full content
       const containers = document.querySelectorAll('*');
       const modifiedElements: Array<{element: HTMLElement, originalMaxWidth: string}> = [];
       
@@ -289,44 +263,34 @@ export class FullPageCapture {
         const element = el as HTMLElement;
         const computedStyle = window.getComputedStyle(element);
         
-        if (computedStyle.maxWidth && 
-            computedStyle.maxWidth !== 'none' && 
-            parseInt(computedStyle.maxWidth) < targetW) {
-          modifiedElements.push({
-            element,
-            originalMaxWidth: element.style.maxWidth || computedStyle.maxWidth
-          });
-          element.style.maxWidth = 'none';
+        if (computedStyle.maxWidth && computedStyle.maxWidth !== 'none') {
+          const maxWidthValue = parseInt(computedStyle.maxWidth);
+          if (!isNaN(maxWidthValue) && maxWidthValue < targetW) {
+            modifiedElements.push({
+              element,
+              originalMaxWidth: element.style.maxWidth || computedStyle.maxWidth
+            });
+            element.style.maxWidth = 'none';
+          }
         }
       });
       
       (window as any).__pagepouchModifiedElements = modifiedElements;
       
-      console.log('🔧 Firefox: Width forcing applied, modified', modifiedElements.length, 'elements');
+      console.log('🔧 Firefox: Viewport forced to', targetW + 'px, modified', modifiedElements.length, 'elements');
     }, [targetWidth]);
     
-    // Wait for layout to stabilize
+    // Wait for layout to stabilize after width forcing
     await this.delay(1500);
     
-    // Step 3: Get final dimensions after width forcing
-    const postWidthPageInfo = await this.getPageInfo(tabId);
-    console.log('🔧 Firefox: Final dimensions after width forcing:', {
-      originalViewportWidth: comprehensivePageInfo.viewportWidth,
-      originalContentWidth: comprehensivePageInfo.contentWidth,
-      targetWidth: targetWidth,
-      finalViewportWidth: postWidthPageInfo.viewportWidth,
-      finalScrollWidth: postWidthPageInfo.scrollWidth,
-      devicePixelRatio: comprehensivePageInfo.devicePixelRatio
-    });
-    
-    // Use the target width for consistent capture
+    // Use the REAL target width for capture
     const captureWidth = targetWidth;
     
-    // Scroll to bottom multiple times to ensure we get ALL content including lazy loading
+    // Step 3: Scroll to trigger lazy loading and get final height
     console.log('🔧 Firefox: Scrolling to trigger all lazy content');
     
     let previousHeight = 0;
-    let currentHeight = postWidthPageInfo.scrollHeight;
+    let currentHeight = pageInfo.scrollHeight; // Start with initial height
     let attempts = 0;
     
     // Keep scrolling until height stops changing (all lazy content loaded)
@@ -335,7 +299,7 @@ export class FullPageCapture {
       
       // Scroll to current bottom
       await this.scrollToPosition(tabId, currentHeight, 0);
-      await this.delay(1500); // Longer wait for lazy loading
+      await this.delay(1500); // Wait for lazy loading
       
       // Check if height increased
       const checkInfo = await this.getPageInfo(tabId);
@@ -347,6 +311,12 @@ export class FullPageCapture {
     
     // Final page info after all lazy loading
     const finalPageInfo = await this.getPageInfo(tabId);
+    
+    console.log('🔧 Firefox: Final capture dimensions:', {
+      captureWidth,
+      finalHeight: finalPageInfo.scrollHeight,
+      originalHeight: pageInfo.scrollHeight
+    });
     
     // Calculate vertical positions with NO overlap for cleaner results
     const viewportHeight = finalPageInfo.viewportHeight;
