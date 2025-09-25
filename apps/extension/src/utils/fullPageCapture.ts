@@ -205,7 +205,7 @@ export class FullPageCapture {
     console.log('🔧 Firefox: Starting ADVANCED full page capture with proper width handling');
     
     // Step 1: Get comprehensive page dimensions including device pixel ratio
-    const comprehensivePageInfo = await this.executeScript(tabId, () => {
+    const comprehensivePageInfoResults = await this.executeScript(tabId, () => {
       const dpr = window.devicePixelRatio || 1;
       const body = document.body;
       const html = document.documentElement;
@@ -236,20 +236,27 @@ export class FullPageCapture {
       return measurements;
     });
     
+    const comprehensivePageInfo = comprehensivePageInfoResults[0];
+    
+    console.log('🔧 Firefox: Comprehensive page info received:', comprehensivePageInfo);
+    
     // Step 2: Force viewport to accommodate full content width
     console.log('🔧 Firefox: Applying AGGRESSIVE width expansion for complete capture');
     
+    // Ensure we have valid numbers, fallback to safe defaults
+    const contentWidth = comprehensivePageInfo?.contentWidth || 1280;
+    const viewportWidth = comprehensivePageInfo?.viewportWidth || 1280;
+    
     const targetWidth = Math.max(
-      comprehensivePageInfo.contentWidth,
-      comprehensivePageInfo.viewportWidth,
+      contentWidth,
+      viewportWidth,
       1400 // Minimum width for modern websites
     );
     
     console.log('🔧 Firefox: Target capture width:', targetWidth);
     
     // Apply comprehensive width forcing
-    await this.executeScript(tabId, () => {
-      const targetW = arguments[0] as number;
+    await this.executeScript(tabId, (targetW: number) => {
       
       // Store original styles for restoration
       const originalStyles = {
@@ -296,7 +303,7 @@ export class FullPageCapture {
       (window as any).__pagepouchModifiedElements = modifiedElements;
       
       console.log('🔧 Firefox: Width forcing applied, modified', modifiedElements.length, 'elements');
-    }, targetWidth);
+    }, [targetWidth]);
     
     // Wait for layout to stabilize
     await this.delay(1500);
