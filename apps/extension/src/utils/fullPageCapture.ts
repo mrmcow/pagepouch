@@ -173,9 +173,7 @@ export class FullPageCapture {
     originalScrollY: number;
     originalScrollX: number;
   }> {
-    const results = await extensionAPI.scripting.executeScript({
-      target: { tabId },
-      func: () => {
+    const results = await this.executeScript(tabId, () => {
         return {
           scrollHeight: Math.max(
             document.body.scrollHeight,
@@ -196,14 +194,13 @@ export class FullPageCapture {
           originalScrollY: window.scrollY,
           originalScrollX: window.scrollX,
         };
-      },
     });
 
-    if (!results || !results[0] || !results[0].result) {
+    if (!results || !results[0]) {
       throw new Error('Failed to get page information');
     }
 
-    return results[0].result;
+    return results[0];
   }
 
   /**
@@ -270,13 +267,9 @@ export class FullPageCapture {
    * Scroll to specific position
    */
   private static async scrollToPosition(tabId: number, scrollY: number, scrollX: number = 0): Promise<void> {
-    await extensionAPI.scripting.executeScript({
-      target: { tabId },
-      func: (x: number, y: number) => {
-        window.scrollTo(x, y);
-      },
-      args: [scrollX, scrollY],
-    });
+    await this.executeScript(tabId, (x: number, y: number) => {
+      window.scrollTo(x, y);
+    }, [scrollX, scrollY]);
   }
 
   /**
@@ -582,6 +575,37 @@ export class FullPageCapture {
   }
 
   /**
+   * Execute script with browser compatibility
+   */
+  private static async executeScript(tabId: number, func: Function, args?: any[]): Promise<any[]> {
+    if (extensionAPI?.scripting && typeof extensionAPI.scripting.executeScript === 'function') {
+      // Chrome Manifest V3 approach
+      console.log('🔧 Using scripting.executeScript (Chrome)');
+      const results = await extensionAPI.scripting.executeScript({
+        target: { tabId },
+        func,
+        args
+      });
+      return results.map(result => result.result);
+    } else if (extensionAPI?.tabs && typeof extensionAPI.tabs.executeScript === 'function') {
+      // Firefox Manifest V2 approach
+      console.log('🔧 Using tabs.executeScript (Firefox)');
+      return new Promise((resolve, reject) => {
+        const code = args ? `(${func.toString()})(${args.map(arg => JSON.stringify(arg)).join(', ')})` : `(${func.toString()})()`;
+        extensionAPI.tabs.executeScript(tabId, { code }, (results) => {
+          if (extensionAPI.runtime.lastError) {
+            reject(new Error(extensionAPI.runtime.lastError.message));
+          } else {
+            resolve(results || []);
+          }
+        });
+      });
+    } else {
+      throw new Error('No script execution API available');
+    }
+  }
+
+  /**
    * Check if full page capture is supported
    */
   static isSupported(): boolean {
@@ -591,15 +615,22 @@ export class FullPageCapture {
     console.log('🔧 captureVisibleTab available:', typeof extensionAPI?.tabs?.captureVisibleTab === 'function');
     console.log('🔧 scripting API available:', !!extensionAPI?.scripting);
     console.log('🔧 executeScript available:', typeof extensionAPI?.scripting?.executeScript === 'function');
+    console.log('🔧 tabs.executeScript available:', typeof extensionAPI?.tabs?.executeScript === 'function');
+    
+    // Firefox uses tabs.executeScript (Manifest V2), Chrome uses scripting.executeScript (Manifest V3)
+    const hasScriptExecution = !!(
+      (extensionAPI?.scripting && typeof extensionAPI.scripting.executeScript === 'function') ||
+      (extensionAPI?.tabs && typeof extensionAPI.tabs.executeScript === 'function')
+    );
     
     const isSupported = !!(
       extensionAPI &&
       extensionAPI.tabs &&
       typeof extensionAPI.tabs.captureVisibleTab === 'function' &&
-      extensionAPI.scripting &&
-      typeof extensionAPI.scripting.executeScript === 'function'
+      hasScriptExecution
     );
     
+    console.log('🔧 hasScriptExecution:', hasScriptExecution);
     console.log('🔧 FullPageCapture isSupported:', isSupported);
     return isSupported;
   }

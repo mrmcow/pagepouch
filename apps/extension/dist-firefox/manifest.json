@@ -15,6 +15,7 @@
     "activeTab",
     "storage",
     "tabs",
+    "scripting",
     "https://*/*",
     "http://*/*"
   ],
