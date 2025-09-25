@@ -1,17 +1,45 @@
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    // Check for Bearer token first (for extension)
+    const authHeader = request.headers.get('authorization')
+    let supabase
+    let user
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Extension authentication with Bearer token
+      const token = authHeader.replace('Bearer ', '')
+      supabase = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
+      
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      if (tokenError || !tokenUser) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+      
+      user = tokenUser
+    } else {
+      // Web app authentication with cookies
+      supabase = createClient()
+      const { data: { user: cookieUser }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !cookieUser) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+      
+      user = cookieUser
     }
 
     const { data, error } = await supabase
@@ -40,15 +68,42 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    // Check for Bearer token first (for extension)
+    const authHeader = request.headers.get('authorization')
+    let supabase
+    let user
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Extension authentication with Bearer token
+      const token = authHeader.replace('Bearer ', '')
+      supabase = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
+      
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      if (tokenError || !tokenUser) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+      
+      user = tokenUser
+    } else {
+      // Web app authentication with cookies
+      supabase = createClient()
+      const { data: { user: cookieUser }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !cookieUser) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+      
+      user = cookieUser
     }
 
     const { name, color } = await request.json()
