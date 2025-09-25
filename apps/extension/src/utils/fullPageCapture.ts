@@ -202,31 +202,67 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: Using EXACT Chrome approach for full page capture');
+    console.log('🔧 Firefox: Using Chrome approach with Firefox viewport expansion');
     
-    // STEP 1: Determine if we need horizontal scrolling (SAME AS CHROME)
-    const needsHorizontalScroll = pageInfo.scrollWidth > pageInfo.viewportWidth;
-    const forceHorizontalScroll = pageInfo.scrollWidth >= pageInfo.viewportWidth * 1.1; // Force if 10% wider
+    // STEP 1: Expand viewport to capture full content width (Firefox requirement)
+    console.log('🔧 Firefox: Expanding viewport to capture full content width');
+    await this.executeScript(tabId, (targetWidth: number) => {
+      // Store original viewport for restoration
+      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
+      const originalViewport = viewportMeta ? viewportMeta.content : '';
+      
+      // Set viewport to accommodate full content width
+      if (viewportMeta) {
+        viewportMeta.content = `width=${targetWidth}, initial-scale=1.0, user-scalable=no`;
+      } else {
+        const newViewportMeta = document.createElement('meta');
+        newViewportMeta.name = 'viewport';
+        newViewportMeta.content = `width=${targetWidth}, initial-scale=1.0, user-scalable=no`;
+        document.head.appendChild(newViewportMeta);
+        newViewportMeta.setAttribute('data-pagepouch-added', 'true');
+      }
+      
+      // Store for restoration
+      (window as any).__pagepouchOriginalViewport = originalViewport;
+      
+      console.log('🔧 Firefox: Viewport set to', targetWidth + 'px for full width capture');
+    }, [pageInfo.scrollWidth]);
+    
+    // Wait for viewport change to take effect
+    await this.delay(1000);
+    
+    // Get updated page info after viewport expansion
+    const updatedPageInfo = await this.getPageInfo(tabId);
+    console.log('🔧 Firefox: Updated page info after viewport expansion:', {
+      originalWidth: pageInfo.viewportWidth,
+      originalScrollWidth: pageInfo.scrollWidth,
+      newWidth: updatedPageInfo.viewportWidth,
+      newScrollWidth: updatedPageInfo.scrollWidth
+    });
+    
+    // STEP 2: Determine if we need horizontal scrolling (SAME AS CHROME)
+    const needsHorizontalScroll = updatedPageInfo.scrollWidth > updatedPageInfo.viewportWidth;
+    const forceHorizontalScroll = updatedPageInfo.scrollWidth >= updatedPageInfo.viewportWidth * 1.1; // Force if 10% wider
     const finalNeedsHorizontalScroll = needsHorizontalScroll || forceHorizontalScroll;
     
     console.log('🔧 Firefox horizontal scroll analysis:', {
-      scrollWidth: pageInfo.scrollWidth,
-      viewportWidth: pageInfo.viewportWidth,
-      ratio: pageInfo.scrollWidth / pageInfo.viewportWidth,
+      scrollWidth: updatedPageInfo.scrollWidth,
+      viewportWidth: updatedPageInfo.viewportWidth,
+      ratio: updatedPageInfo.scrollWidth / updatedPageInfo.viewportWidth,
       needsHorizontalScroll,
       forceHorizontalScroll,
       finalNeedsHorizontalScroll
     });
     
-    // STEP 2: Calculate scroll positions for both dimensions (SAME AS CHROME)
+    // STEP 3: Calculate scroll positions for both dimensions using updated info
     const verticalPositions = this.calculateScrollPositions(
-      pageInfo.scrollHeight,
-      pageInfo.viewportHeight,
+      updatedPageInfo.scrollHeight,
+      updatedPageInfo.viewportHeight,
       options.maxHeight
     );
     
     const horizontalPositions = finalNeedsHorizontalScroll 
-      ? this.calculateHorizontalScrollPositions(pageInfo.scrollWidth, pageInfo.viewportWidth)
+      ? this.calculateHorizontalScrollPositions(updatedPageInfo.scrollWidth, updatedPageInfo.viewportWidth)
       : [0];
 
     // STEP 3: Capture each section in grid (SAME AS CHROME)
@@ -284,20 +320,39 @@ export class FullPageCapture {
       }
     }
 
-    // STEP 4: Restore original scroll position (SAME AS CHROME)
+    // STEP 4: Restore original scroll position and viewport
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
+    
+    // Restore original viewport
+    await this.executeScript(tabId, () => {
+      const originalViewport = (window as any).__pagepouchOriginalViewport;
+      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
+      
+      if (viewportMeta) {
+        if (viewportMeta.getAttribute('data-pagepouch-added')) {
+          // Remove the meta tag we added
+          viewportMeta.remove();
+        } else if (originalViewport !== undefined) {
+          // Restore original content
+          viewportMeta.content = originalViewport;
+        }
+      }
+      
+      delete (window as any).__pagepouchOriginalViewport;
+      console.log('🔧 Firefox: Viewport restored to original state');
+    });
 
     // STEP 5: Stitch screenshots together (SAME AS CHROME)
     console.log('🔧 Firefox: Starting image stitching...');
-    const actualWidth = Math.max(pageInfo.viewportWidth, pageInfo.scrollWidth);
-    const actualHeight = pageInfo.scrollHeight;
+    const actualWidth = Math.max(updatedPageInfo.viewportWidth, updatedPageInfo.scrollWidth);
+    const actualHeight = updatedPageInfo.scrollHeight;
     
     console.log('🔧 Firefox: Stitching parameters:', {
       screenshotCount: screenshots.length,
       actualWidth,
       actualHeight,
-      viewportWidth: pageInfo.viewportWidth,
-      viewportHeight: pageInfo.viewportHeight,
+      viewportWidth: updatedPageInfo.viewportWidth,
+      viewportHeight: updatedPageInfo.viewportHeight,
       screenshotPositions: screenshots.map(s => ({x: s.x, y: s.y}))
     });
 
@@ -308,8 +363,8 @@ export class FullPageCapture {
         screenshots,
         actualWidth,
         actualHeight,
-        pageInfo.viewportWidth,
-        pageInfo.viewportHeight
+        updatedPageInfo.viewportWidth,
+        updatedPageInfo.viewportHeight
       );
     } else {
       // Vertical stitching only (SAME AS CHROME)
@@ -318,7 +373,7 @@ export class FullPageCapture {
         verticalScreenshots,
         actualWidth,
         actualHeight,
-        pageInfo.viewportHeight
+        updatedPageInfo.viewportHeight
       );
     }
 
