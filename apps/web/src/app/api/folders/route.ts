@@ -17,7 +17,13 @@ export async function GET(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
       
-      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      // Set the auth token for RLS to work properly
+      await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: ''
+      })
+      
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser()
       
       if (tokenError || !tokenUser) {
         return NextResponse.json(
@@ -81,7 +87,13 @@ export async function POST(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
       
-      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      // Set the auth token for RLS to work properly
+      await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: ''
+      })
+      
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser()
       
       if (tokenError || !tokenUser) {
         return NextResponse.json(
