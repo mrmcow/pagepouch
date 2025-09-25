@@ -10,20 +10,30 @@ export async function GET(request: NextRequest) {
     let user
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Extension authentication with Bearer token
-      const token = authHeader.replace('Bearer ', '')
+      // Extension authentication with Bearer token (secure: uses anon key + RLS)
+      const token = authHeader.substring(7)
       supabase = createSupabaseClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        }
       )
       
-      // Set the auth token for RLS to work properly
-      await supabase.auth.setSession({
-        access_token: token,
-        refresh_token: ''
-      })
-      
+      // Verify the token and get user (RLS will protect data access)
       const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser()
+      
+      if (tokenError || !tokenUser) {
+        console.error('Bearer token auth error:', tokenError)
+        return NextResponse.json(
+          { error: 'Invalid or expired token' },
+          { status: 401 }
+        )
+      }
       
       if (tokenError || !tokenUser) {
         return NextResponse.json(
@@ -80,20 +90,30 @@ export async function POST(request: NextRequest) {
     let user
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Extension authentication with Bearer token
-      const token = authHeader.replace('Bearer ', '')
+      // Extension authentication with Bearer token (secure: uses anon key + RLS)
+      const token = authHeader.substring(7)
       supabase = createSupabaseClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        }
       )
       
-      // Set the auth token for RLS to work properly
-      await supabase.auth.setSession({
-        access_token: token,
-        refresh_token: ''
-      })
-      
+      // Verify the token and get user (RLS will protect data access)
       const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser()
+      
+      if (tokenError || !tokenUser) {
+        console.error('Bearer token auth error:', tokenError)
+        return NextResponse.json(
+          { error: 'Invalid or expired token' },
+          { status: 401 }
+        )
+      }
       
       if (tokenError || !tokenUser) {
         return NextResponse.json(
