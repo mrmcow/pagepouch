@@ -148,8 +148,13 @@ export class FullPageCapture {
       );
       console.log('Image stitching completed');
 
+      // Compress the image for API upload to avoid payload size limits
+      console.log('Compressing image for API upload...');
+      const compressedImage = await this.compressImage(stitchedImage, 0.7); // 70% quality
+      console.log('Image compression completed');
+
       return {
-        dataUrl: stitchedImage,
+        dataUrl: compressedImage,
         width: actualWidth,
         height: Math.min(pageInfo.scrollHeight, opts.maxHeight),
         scrollHeight: pageInfo.scrollHeight,
@@ -623,6 +628,49 @@ export class FullPageCapture {
       });
     } else {
       throw new Error('No script execution API available');
+    }
+  }
+
+  /**
+   * Compress image to reduce payload size for API upload
+   */
+  private static async compressImage(dataUrl: string, quality: number = 0.7): Promise<string> {
+    try {
+      // Create image from data URL
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+
+      // Create canvas for compression
+      const canvas = new OffscreenCanvas(img.width, img.height);
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Failed to get canvas context for compression');
+      }
+
+      // Draw image to canvas
+      ctx.drawImage(img, 0, 0);
+
+      // Convert to compressed JPEG
+      const blob = await canvas.convertToBlob({
+        type: 'image/jpeg',
+        quality: quality
+      });
+
+      // Convert blob back to data URL
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Image compression failed, using original:', error);
+      return dataUrl; // Fallback to original if compression fails
     }
   }
 

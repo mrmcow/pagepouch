@@ -604,8 +604,14 @@ export function ClipViewer({
                         <img
                           src={clip.screenshot_url}
                           alt={clip.title}
-                          className="max-w-full block"
-                          style={{ height: 'auto', minHeight: '100%' }}
+                          className="block"
+                          style={{ 
+                            height: 'auto', 
+                            minHeight: '100%',
+                            // Allow full width display for full-page screenshots
+                            minWidth: '100%',
+                            width: 'auto'
+                          }}
                           onLoad={(e) => {
                             const img = e.target as HTMLImageElement;
                             console.log('Screenshot loaded:', {
@@ -613,7 +619,8 @@ export function ClipViewer({
                               naturalHeight: img.naturalHeight,
                               displayWidth: img.width,
                               displayHeight: img.height,
-                              aspectRatio: img.naturalWidth / img.naturalHeight
+                              aspectRatio: img.naturalWidth / img.naturalHeight,
+                              isWideImage: img.naturalWidth > img.naturalHeight * 1.5
                             });
                           }}
                           onError={(e) => {
