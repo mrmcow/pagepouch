@@ -15,7 +15,10 @@ let appState = {
   showAuth: false,
   currentTab: null,
   userEmail: null,
-  captureProgress: null
+  captureProgress: null,
+  folders: [],
+  selectedFolderId: null,
+  loadingFolders: false
 };
 
 let authState = {
@@ -86,23 +89,89 @@ function createElement(tag, attributes = {}, children = []) {
   return element;
 }
 
+// Load user folders
+async function loadFolders() {
+  console.log('🦊 Loading user folders...');
+  appState.loadingFolders = true;
+  render();
+  
+  // Add a small delay to ensure auth token is stored
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  try {
+    const response = await extensionAPI.runtime.sendMessage({
+      type: 'GET_FOLDERS'
+    });
+    
+    console.log('🦊 Folders response:', response);
+    
+    if (response && response.folders) {
+      appState.folders = response.folders;
+      console.log('🦊 Loaded folders:', appState.folders);
+      
+      // Set default folder if none selected
+      if (!appState.selectedFolderId && appState.folders.length > 0) {
+        // Try to find "Inbox" folder first
+        const inboxFolder = appState.folders.find(f => f.name.toLowerCase() === 'inbox');
+        appState.selectedFolderId = inboxFolder ? inboxFolder.id : appState.folders[0].id;
+        
+        console.log('🦊 Selected default folder:', appState.selectedFolderId, inboxFolder ? '(Inbox found)' : '(First folder)');
+        
+        // Save selection to storage
+        await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
+      }
+    } else {
+      console.log('🦊 No folders in response, using empty folder list');
+      // Don't set fallback folders - let clips save to default location
+      appState.folders = [];
+      appState.selectedFolderId = null;
+    }
+  } catch (error) {
+    console.error('🦊 Failed to load folders:', error);
+    // Don't set fallback folders - let clips save to default location
+    appState.folders = [];
+    appState.selectedFolderId = null;
+  }
+  
+  appState.loadingFolders = false;
+  render();
+}
+
+// Handle folder selection
+async function handleFolderChange(folderId) {
+  console.log('🦊 Folder selected:', folderId);
+  appState.selectedFolderId = folderId;
+  
+  // Save selection to storage
+  await extensionAPI.storage.local.set({ selectedFolderId: folderId });
+  
+  render();
+}
+
 // Check authentication status
 async function checkAuthStatus() {
   try {
     console.log('🦊 Checking auth status...');
-    const result = await extensionAPI.storage.local.get(['authToken', 'userEmail', 'captureCount']);
+    const result = await extensionAPI.storage.local.get(['authToken', 'userEmail', 'captureCount', 'selectedFolderId']);
     console.log('🦊 Storage result:', result);
     
     if (result) {
       appState.isAuthenticated = !!result.authToken;
       appState.userEmail = result.userEmail;
       appState.captureCount = result.captureCount || 0;
+      appState.selectedFolderId = result.selectedFolderId;
       console.log('🦊 Auth status:', appState.isAuthenticated, 'Email:', appState.userEmail);
+      
+      // Load folders if authenticated
+      if (appState.isAuthenticated) {
+        await loadFolders();
+      }
     } else {
       console.log('🦊 No storage result, setting defaults');
       appState.isAuthenticated = false;
       appState.userEmail = null;
       appState.captureCount = 0;
+      appState.selectedFolderId = null;
     }
   } catch (error) {
     console.error('🦊 Error checking auth status:', error);
@@ -165,7 +234,9 @@ async function capturePage(captureType) {
         tabId: appState.currentTab.id,
         captureType: captureType,
         url: appState.currentTab.url,
-        title: appState.currentTab.title
+        title: appState.currentTab.title,
+        // Only include folderId if it's a valid UUID (not the fallback 'inbox' string)
+        ...(appState.selectedFolderId && appState.selectedFolderId !== 'inbox' ? { folderId: appState.selectedFolderId } : {})
       }
     });
     
@@ -248,6 +319,9 @@ async function handleAuth() {
       isLoading: false,
       error: null
     };
+    
+    // Load folders after successful authentication
+    await loadFolders();
     
     render();
     
@@ -356,6 +430,25 @@ function renderMainScreen() {
           </div>
         ` : ''}
         
+        ${/* Folder Selector - Always visible when authenticated and folders available */ ''}
+        ${appState.isAuthenticated && appState.folders && appState.folders.length > 0 && !appState.isCapturing ? `
+          <div style="width: 100%; max-width: 280px; margin-bottom: 12px;">
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 6px;">Save to folder:</label>
+            ${appState.loadingFolders ? `
+              <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 13px;">Loading folders...</div>
+            ` : `
+              <select id="folder-select" style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; background-color: #ffffff; color: #1f2937; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 4 5&quot;><path fill=&quot;%23666&quot; d=&quot;M2 0L0 2h4zm0 5L0 3h4z&quot;/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; padding-right: 40px;">
+                ${appState.folders.map(folder => `
+                  <option value="${folder.id}" ${folder.id === appState.selectedFolderId ? 'selected' : ''}>
+                    ${folder.name}${folder.is_default ? ' (Default)' : ''}
+                  </option>
+                `).join('')}
+              </select>
+            `}
+          </div>
+        ` : ''}
+        
+        ${/* Capture Buttons */ ''}
         ${!appState.isCapturing && !appState.captureProgress ? `
           <button id="capture-full" style="${styles.button}; ${styles.primaryButton};">📄 Capture Full Page</button>
           <button id="capture-visible" style="${styles.button}; ${styles.secondaryButton};">📱 Capture Visible Area</button>
@@ -435,6 +528,7 @@ function render() {
     const showAuthBtn = document.getElementById('show-auth');
     const signOutBtn = document.getElementById('sign-out');
     const openWebappBtn = document.getElementById('open-webapp');
+    const folderSelect = document.getElementById('folder-select');
     
     if (captureFullBtn) captureFullBtn.addEventListener('click', () => capturePage('fullPage'));
     if (captureVisibleBtn) captureVisibleBtn.addEventListener('click', () => capturePage('visible'));
@@ -445,6 +539,9 @@ function render() {
     if (signOutBtn) signOutBtn.addEventListener('click', signOut);
     if (openWebappBtn) openWebappBtn.addEventListener('click', () => {
       extensionAPI.tabs.create({ url: 'https://pagepouch-web.vercel.app/dashboard' });
+    });
+    if (folderSelect) folderSelect.addEventListener('change', (e) => {
+      handleFolderChange(e.target.value);
     });
   }
 }

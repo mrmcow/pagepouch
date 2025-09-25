@@ -59,6 +59,9 @@ extensionAPI.runtime.onMessage.addListener((message: ExtensionMessage, sender, s
     case 'SIGN_OUT':
       handleSignOut(sendResponse);
       return true; // Keep message channel open for async response
+    case 'GET_FOLDERS':
+      handleGetFolders(sendResponse);
+      return true; // Keep message channel open for async response
     default:
       console.warn('Unknown message type:', message.type);
   }
@@ -260,6 +263,8 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       ...((pageContent.favicon || payload.favicon) && (pageContent.favicon || payload.favicon).startsWith('http') 
         ? { favicon_url: pageContent.favicon || payload.favicon } 
         : {}),
+      // Include folder ID if provided
+      ...(payload.folderId ? { folder_id: payload.folderId } : {}),
     };
 
     console.log('Prepared clip data:', {
@@ -429,6 +434,27 @@ async function handleSignOut(sendResponse: (response: any) => void) {
     // Force local cleanup even if remote signout fails
     await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken']);
     sendResponse({ success: true });
+  }
+}
+
+async function handleGetFolders(sendResponse: (response: any) => void) {
+  try {
+    console.log('🔧 Background: Getting user folders');
+    
+    // Debug: Check if we have a token
+    const { token } = await ExtensionAuth.getSession();
+    console.log('🔧 Background: Auth token available:', token ? 'YES' : 'NO');
+    
+    const folders = await ExtensionAPI.getFolders();
+    console.log('🔧 Background: Folders retrieved:', folders);
+    
+    sendResponse({ folders });
+  } catch (error) {
+    console.error('🔧 Background: Failed to get folders:', error);
+    // Return empty folders array on error - let clips save to default location
+    sendResponse({ 
+      folders: [] 
+    });
   }
 }
 

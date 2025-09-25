@@ -63,6 +63,13 @@ interface PopupState {
     status: string;
     message: string;
   };
+  folders: Array<{
+    id: string;
+    name: string;
+    is_default?: boolean;
+  }>;
+  selectedFolderId: string | null;
+  loadingFolders: boolean;
 }
 
 interface AuthFormState {
@@ -245,6 +252,9 @@ function EnhancedPopupApp() {
     isAuthenticated: false,
     captureCount: 0,
     showAuth: false,
+    folders: [],
+    selectedFolderId: null,
+    loadingFolders: false,
   });
 
   const [authForm, setAuthForm] = useState<AuthFormState>({
@@ -287,13 +297,19 @@ function EnhancedPopupApp() {
 
   const checkAuthStatus = async () => {
     try {
-      const result = await chrome.storage.local.get(['isAuthenticated', 'userEmail', 'captureCount']);
+      const result = await chrome.storage.local.get(['isAuthenticated', 'userEmail', 'captureCount', 'selectedFolderId']);
       setState(prev => ({
         ...prev,
         isAuthenticated: result.isAuthenticated || false,
         userEmail: result.userEmail,
         captureCount: result.captureCount || 0,
+        selectedFolderId: result.selectedFolderId || null,
       }));
+      
+      // Load folders if authenticated
+      if (result.isAuthenticated) {
+        await loadFolders();
+      }
     } catch (error) {
       console.error('Error checking auth status:', error);
     }
@@ -335,6 +351,8 @@ function EnhancedPopupApp() {
           tabId: state.currentTab.id,
           captureType,
           url: state.currentTab.url,
+          // Only include folderId if it's a valid UUID (not a fallback string)
+          ...(state.selectedFolderId && state.selectedFolderId !== 'inbox' ? { folderId: state.selectedFolderId } : {}),
           title: state.currentTab.title
         },
       });
@@ -399,6 +417,9 @@ function EnhancedPopupApp() {
           showAuth: false 
         }));
         setAuthForm({ email: '', password: '', isSignUp: false, isLoading: false });
+        
+        // Load folders after successful authentication
+        await loadFolders();
       }
     } catch (error) {
       setAuthForm(prev => ({ 
@@ -407,6 +428,61 @@ function EnhancedPopupApp() {
         isLoading: false 
       }));
     }
+  };
+
+  // Load user folders
+  const loadFolders = async () => {
+    setState(prev => ({ ...prev, loadingFolders: true }));
+    
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'GET_FOLDERS'
+      });
+      
+      if (response && response.folders) {
+        setState(prev => {
+          let selectedFolderId = prev.selectedFolderId;
+          
+          // Set default folder if none selected
+          if (!selectedFolderId && response.folders.length > 0) {
+            // Try to find "Inbox" folder first
+            const inboxFolder = response.folders.find((f: any) => f.name.toLowerCase() === 'inbox');
+            selectedFolderId = inboxFolder ? inboxFolder.id : response.folders[0].id;
+            
+            // Save selection to storage
+            chrome.storage.local.set({ selectedFolderId });
+          }
+          
+          return {
+            ...prev,
+            folders: response.folders,
+            selectedFolderId,
+            loadingFolders: false,
+          };
+        });
+      } else {
+        setState(prev => ({ 
+          ...prev, 
+          folders: [], 
+          selectedFolderId: null, 
+          loadingFolders: false 
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load folders:', error);
+      setState(prev => ({ 
+        ...prev, 
+        folders: [], 
+        selectedFolderId: null, 
+        loadingFolders: false 
+      }));
+    }
+  };
+
+  // Handle folder selection change
+  const handleFolderChange = async (folderId: string) => {
+    setState(prev => ({ ...prev, selectedFolderId: folderId }));
+    await chrome.storage.local.set({ selectedFolderId: folderId });
   };
 
   const handleSignOut = async () => {
@@ -621,6 +697,59 @@ function EnhancedPopupApp() {
             }}>
               {state.captureProgress.message}
             </div>
+          </div>
+        )}
+
+        {/* Folder Selector */}
+        {state.isAuthenticated && state.folders && state.folders.length > 0 && !state.isCapturing && (
+          <div style={{ width: '100%', maxWidth: '280px', marginBottom: '12px' }}>
+            <label style={{ 
+              display: 'block', 
+              fontSize: '12px', 
+              fontWeight: '500', 
+              color: '#6b7280', 
+              marginBottom: '6px' 
+            }}>
+              Save to folder:
+            </label>
+            {state.loadingFolders ? (
+              <div style={{ 
+                padding: '12px', 
+                textAlign: 'center', 
+                color: '#6b7280', 
+                fontSize: '13px' 
+              }}>
+                Loading folders...
+              </div>
+            ) : (
+              <select
+                value={state.selectedFolderId || ''}
+                onChange={(e) => handleFolderChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  backgroundColor: '#ffffff',
+                  color: '#1f2937',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '12px',
+                  paddingRight: '40px',
+                }}
+              >
+                {state.folders.map(folder => (
+                  <option key={folder.id} value={folder.id}>
+                    {folder.name}{folder.is_default ? ' (Default)' : ''}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         )}
 

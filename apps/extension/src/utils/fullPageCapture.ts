@@ -63,12 +63,14 @@ export class FullPageCapture {
         return this.captureVisibleArea(tabId, opts, pageInfo, startTime);
       }
 
-      // Firefox-specific: Use simplified vertical-only approach for better reliability
+      // Firefox needs special handling due to captureVisibleTab limitations
       const isFirefox = typeof browser !== 'undefined';
       if (isFirefox) {
-        console.log('🔧 Firefox detected: Using simplified vertical capture');
-        return this.captureFullPageFirefox(tabId, opts, pageInfo, startTime);
+        console.log('🔧 Firefox: Using SIMPLE vertical sections - same as visible area');
+        return this.captureVerticalOnlyFirefox(tabId, opts, pageInfo, startTime);
       }
+      
+      console.log('🔧 Chrome: Using full grid capture');
 
       // Check if we need horizontal scrolling
       // Firefox often underreports scrollWidth, so be more aggressive about detecting wide pages
@@ -194,203 +196,361 @@ export class FullPageCapture {
   }
 
   /**
-   * Firefox-specific full page capture with robust width detection and simple stitching
+   * Firefox SIMPLE capture - exactly like visible area but multiple vertical sections
    */
-  private static async captureFullPageFirefox(
+  private static async captureVerticalOnlyFirefox(
     tabId: number,
     options: Required<CaptureOptions>,
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: Using Chrome approach with Firefox viewport expansion');
+    console.log('🔧 Firefox: SIMPLE vertical sections - same as visible area capture');
     
-    // STEP 1: Expand viewport to capture full content width (Firefox requirement)
-    console.log('🔧 Firefox: Expanding viewport to capture full content width');
-    await this.executeScript(tabId, (targetWidth: number) => {
-      // Store original viewport for restoration
-      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
-      const originalViewport = viewportMeta ? viewportMeta.content : '';
-      
-      // Set viewport to accommodate full content width
-      if (viewportMeta) {
-        viewportMeta.content = `width=${targetWidth}, initial-scale=1.0, user-scalable=no`;
-      } else {
-        const newViewportMeta = document.createElement('meta');
-        newViewportMeta.name = 'viewport';
-        newViewportMeta.content = `width=${targetWidth}, initial-scale=1.0, user-scalable=no`;
-        document.head.appendChild(newViewportMeta);
-        newViewportMeta.setAttribute('data-pagepouch-added', 'true');
-      }
-      
-      // Store for restoration
-      (window as any).__pagepouchOriginalViewport = originalViewport;
-      
-      console.log('🔧 Firefox: Viewport set to', targetWidth + 'px for full width capture');
-    }, [pageInfo.scrollWidth]);
-    
-    // Wait for viewport change to take effect
-    await this.delay(1000);
-    
-    // Get updated page info after viewport expansion
-    const updatedPageInfo = await this.getPageInfo(tabId);
-    console.log('🔧 Firefox: Updated page info after viewport expansion:', {
-      originalWidth: pageInfo.viewportWidth,
-      originalScrollWidth: pageInfo.scrollWidth,
-      newWidth: updatedPageInfo.viewportWidth,
-      newScrollWidth: updatedPageInfo.scrollWidth
+    console.log('🔧 Firefox: Page dimensions:', {
+      scrollWidth: pageInfo.scrollWidth,
+      viewportWidth: pageInfo.viewportWidth,
+      scrollHeight: pageInfo.scrollHeight,
+      viewportHeight: pageInfo.viewportHeight
     });
     
-    // STEP 2: Determine if we need horizontal scrolling (SAME AS CHROME)
-    const needsHorizontalScroll = updatedPageInfo.scrollWidth > updatedPageInfo.viewportWidth;
-    const forceHorizontalScroll = updatedPageInfo.scrollWidth >= updatedPageInfo.viewportWidth * 1.1; // Force if 10% wider
-    const finalNeedsHorizontalScroll = needsHorizontalScroll || forceHorizontalScroll;
-    
-    console.log('🔧 Firefox horizontal scroll analysis:', {
-      scrollWidth: updatedPageInfo.scrollWidth,
-      viewportWidth: updatedPageInfo.viewportWidth,
-      ratio: updatedPageInfo.scrollWidth / updatedPageInfo.viewportWidth,
-      needsHorizontalScroll,
-      forceHorizontalScroll,
-      finalNeedsHorizontalScroll
-    });
-    
-    // STEP 3: Calculate scroll positions for both dimensions using updated info
+    // Calculate vertical positions - same scroll logic as before
     const verticalPositions = this.calculateScrollPositions(
-      updatedPageInfo.scrollHeight,
-      updatedPageInfo.viewportHeight,
+      pageInfo.scrollHeight,
+      pageInfo.viewportHeight,
       options.maxHeight
     );
     
-    const horizontalPositions = finalNeedsHorizontalScroll 
-      ? this.calculateHorizontalScrollPositions(updatedPageInfo.scrollWidth, updatedPageInfo.viewportWidth)
-      : [0];
-
-    // STEP 3: Capture each section in grid (SAME AS CHROME)
-    const screenshots: Array<{dataUrl: string, x: number, y: number}> = [];
-    const totalSections = verticalPositions.length * horizontalPositions.length;
-    
-    console.log(`🔧 Firefox capture grid:`, {
-      verticalPositions: verticalPositions.length,
-      horizontalPositions: horizontalPositions.length,
-      totalSections,
-      verticalPositionsArray: verticalPositions,
-      horizontalPositionsArray: horizontalPositions
+    console.log('🔧 Firefox: SIMPLE capture plan:', {
+      verticalSections: verticalPositions.length,
+      captureWidth: pageInfo.viewportWidth, // Use original viewport width
+      totalHeight: pageInfo.scrollHeight,
+      positions: verticalPositions
     });
-
-    console.log(`🔧 Firefox: Capturing ${totalSections} sections (${horizontalPositions.length}x${verticalPositions.length} grid)...`);
-
-    for (let vIndex = 0; vIndex < verticalPositions.length; vIndex++) {
-      for (let hIndex = 0; hIndex < horizontalPositions.length; hIndex++) {
-        const scrollY = verticalPositions[vIndex];
-        const scrollX = horizontalPositions[hIndex];
-        const sectionIndex = vIndex * horizontalPositions.length + hIndex + 1;
+    
+    // Capture vertical screenshots - EXACTLY like visible area
+    const screenshots: string[] = [];
+    
+    for (let i = 0; i < verticalPositions.length; i++) {
+      const scrollY = verticalPositions[i];
+      
+      console.log(`🔧 Firefox: SIMPLE capture section ${i + 1}/${verticalPositions.length} at Y=${scrollY}`);
+      
+      // Scroll to position
+      await this.scrollToPosition(tabId, scrollY, 0);
+      await this.delay(options.scrollDelay);
+      
+      // Rate limiting
+      if (i > 0) {
+        await this.delay(600);
+      }
+      
+      try {
+        // EXACT SAME CAPTURE as visible area - this works perfectly!
+        const screenshot = await extensionAPI.tabs.captureVisibleTab({
+          format: options.format,
+          quality: options.quality
+        });
         
-        console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${totalSections} at position (${scrollX}, ${scrollY})`);
+        screenshots.push(screenshot);
         
-        // Scroll to position
-        await this.scrollToPosition(tabId, scrollY, scrollX);
-        
-        // Wait for scroll to complete and content to load
-        await this.delay(options.scrollDelay);
-        
-        // Rate limiting delay between captures
-        if (sectionIndex > 1) {
-          console.log('🔧 Firefox: Rate limit delay...');
-          await this.delay(800);
-        }
-        
-        try {
-          // Capture visible area (SAME AS CHROME)
-          const screenshot = await extensionAPI.tabs.captureVisibleTab({
-            format: options.format,
-            quality: options.quality
-          });
-          screenshots.push({dataUrl: screenshot, x: scrollX, y: scrollY});
-          
-          console.log(`🔧 Firefox: Section ${sectionIndex} captured successfully`);
-          
-          // Additional delay after successful capture
-          if (sectionIndex < totalSections) {
-            await this.delay(200);
-          }
-        } catch (error) {
-          console.error(`🔧 Firefox: Failed to capture section ${sectionIndex}:`, error);
-          throw new Error(`Failed to capture section ${sectionIndex}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        console.log(`🔧 Firefox: SIMPLE section ${i + 1} captured successfully`);
+      } catch (error) {
+        console.error(`🔧 Firefox: SIMPLE capture failed section ${i + 1}:`, error);
+        throw new Error(`Failed to capture section ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
-
-    // STEP 4: Restore original scroll position and viewport
+    
+    // Restore original scroll position
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
     
-    // Restore original viewport
-    await this.executeScript(tabId, () => {
-      const originalViewport = (window as any).__pagepouchOriginalViewport;
-      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
+    // Stitch vertical screenshots - simple and clean
+    console.log('🔧 Firefox: SIMPLE vertical stitching', screenshots.length, 'screenshots');
+    const stitchedImage = await this.stitchFirefoxVertical(
+      screenshots,
+      pageInfo.viewportWidth, // Use original viewport width
+      pageInfo.viewportHeight
+    );
+    
+    // Ultra aggressive compression to stay under payload limits
+    let compressionQuality = 0.4; // Much lower default
+    
+    if (screenshots.length > 15) {
+      compressionQuality = 0.15; // Ultra aggressive for extremely long pages
+      console.log('🔧 Firefox: Extremely long page detected - using ultra compression (15%)');
+    } else if (screenshots.length > 10) {
+      compressionQuality = 0.2; // Very aggressive for very long pages
+      console.log('🔧 Firefox: Very long page detected - using aggressive compression (20%)');
+    } else if (screenshots.length > 6) {
+      compressionQuality = 0.3; // Aggressive compression for long pages
+      console.log('🔧 Firefox: Long page detected - using aggressive compression (30%)');
+    } else if (screenshots.length > 3) {
+      compressionQuality = 0.35; // Medium compression for medium pages
+      console.log('🔧 Firefox: Medium page detected - using medium compression (35%)');
+    } else {
+      console.log('🔧 Firefox: Short page - using standard compression (40%)');
+    }
+    
+    const compressedImage = await this.compressImage(stitchedImage, compressionQuality);
+    
+    // Check final size and apply emergency compression if needed
+    const imageSizeMB = (compressedImage.length * 0.75) / (1024 * 1024); // Rough estimate
+    console.log('🔧 Firefox: Final image size estimate:', Math.round(imageSizeMB * 100) / 100, 'MB');
+    
+    let finalImage = compressedImage;
+    
+    if (imageSizeMB > 1.5) { // Very low threshold for emergency compression
+      let emergencyQuality = 0.1; // Start with ultra aggressive compression
       
-      if (viewportMeta) {
-        if (viewportMeta.getAttribute('data-pagepouch-added')) {
-          // Remove the meta tag we added
-          viewportMeta.remove();
-        } else if (originalViewport !== undefined) {
-          // Restore original content
-          viewportMeta.content = originalViewport;
-        }
+      if (imageSizeMB > 3) {
+        emergencyQuality = 0.08; // Extreme compression for very large images
+        console.log('🔧 Firefox: Image extremely large - applying extreme emergency compression (8%)');
+      } else if (imageSizeMB > 2) {
+        emergencyQuality = 0.09; // Ultra aggressive for large images
+        console.log('🔧 Firefox: Image very large - applying ultra emergency compression (9%)');
+      } else {
+        console.log('🔧 Firefox: Image too large - applying emergency compression (10%)');
       }
       
-      delete (window as any).__pagepouchOriginalViewport;
-      console.log('🔧 Firefox: Viewport restored to original state');
-    });
-
-    // STEP 5: Stitch screenshots together (SAME AS CHROME)
-    console.log('🔧 Firefox: Starting image stitching...');
-    const actualWidth = Math.max(updatedPageInfo.viewportWidth, updatedPageInfo.scrollWidth);
-    const actualHeight = updatedPageInfo.scrollHeight;
-    
-    console.log('🔧 Firefox: Stitching parameters:', {
-      screenshotCount: screenshots.length,
-      actualWidth,
-      actualHeight,
-      viewportWidth: updatedPageInfo.viewportWidth,
-      viewportHeight: updatedPageInfo.viewportHeight,
-      screenshotPositions: screenshots.map(s => ({x: s.x, y: s.y}))
-    });
-
-    let stitchedImage: string;
-    if (finalNeedsHorizontalScroll) {
-      // Grid stitching (SAME AS CHROME)
-      stitchedImage = await this.stitchGridScreenshots(
-        screenshots,
-        actualWidth,
-        actualHeight,
-        updatedPageInfo.viewportWidth,
-        updatedPageInfo.viewportHeight
-      );
-    } else {
-      // Vertical stitching only (SAME AS CHROME)
-      const verticalScreenshots = screenshots.map(s => s.dataUrl);
-      stitchedImage = await this.stitchVerticalScreenshots(
-        verticalScreenshots,
-        actualWidth,
-        actualHeight,
-        updatedPageInfo.viewportHeight
-      );
+      finalImage = await this.compressImage(stitchedImage, emergencyQuality);
+      
+      const emergencySizeMB = (finalImage.length * 0.75) / (1024 * 1024);
+      console.log('🔧 Firefox: Emergency compressed size:', Math.round(emergencySizeMB * 100) / 100, 'MB');
+      
+      // Final check - if still too large, apply absolute minimum quality
+      if (emergencySizeMB > 1.2) {
+        console.log('🔧 Firefox: Still too large - applying absolute minimum compression (5%)');
+        finalImage = await this.compressImage(stitchedImage, 0.05);
+        
+        const finalSizeMB = (finalImage.length * 0.75) / (1024 * 1024);
+        console.log('🔧 Firefox: Final absolute minimum size:', Math.round(finalSizeMB * 100) / 100, 'MB');
+      }
     }
-
-    console.log('🔧 Firefox: Image stitching completed');
-
-    // Compress the image to reduce payload size for API upload
-    console.log('🔧 Firefox: Compressing image to reduce payload size');
-    const compressedImage = await this.compressImage(stitchedImage, 0.75); // 75% quality
-    console.log('🔧 Firefox: Image compression completed');
-
+    
     return {
-      dataUrl: compressedImage,
-      width: actualWidth,
-      height: actualHeight,
+      dataUrl: finalImage,
+      width: pageInfo.viewportWidth, // Report original viewport width
+      height: pageInfo.scrollHeight,
       scrollHeight: pageInfo.scrollHeight,
       captureTime: Date.now() - startTime,
     };
+  }
+
+  /**
+   * Firefox GRID stitching - handles horizontal + vertical grid perfectly
+   */
+  private static async stitchFirefoxGrid(
+    screenshots: Array<{dataUrl: string, x: number, y: number}>,
+    totalWidth: number,
+    totalHeight: number,
+    viewportWidth: number,
+    viewportHeight: number,
+    verticalSections: number,
+    horizontalSections: number
+  ): Promise<string> {
+    try {
+      console.log('🔧 Firefox: BULLETPROOF grid stitching');
+      console.log('🔧 Firefox: Grid dimensions:', {
+        totalWidth,
+        totalHeight,
+        viewportWidth,
+        viewportHeight,
+        verticalSections,
+        horizontalSections,
+        totalScreenshots: screenshots.length
+      });
+      
+      const canvas = new OffscreenCanvas(totalWidth, totalHeight);
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Failed to get OffscreenCanvas context');
+      }
+      
+      // Calculate overlaps
+      const verticalOverlap = Math.floor(viewportHeight * 0.1); // 90px
+      const horizontalOverlap = Math.floor(viewportWidth * 0.1); // 128px
+      
+      console.log('🔧 Firefox: Grid overlaps:', {
+        verticalOverlap,
+        horizontalOverlap
+      });
+      
+      // Sort screenshots by position for predictable processing
+      screenshots.sort((a, b) => {
+        if (a.y !== b.y) return a.y - b.y;
+        return a.x - b.x;
+      });
+      
+      // Process each screenshot in grid order
+      for (let vIndex = 0; vIndex < verticalSections; vIndex++) {
+        for (let hIndex = 0; hIndex < horizontalSections; hIndex++) {
+          const screenshotIndex = vIndex * horizontalSections + hIndex;
+          
+          if (screenshotIndex >= screenshots.length) {
+            console.warn(`🔧 Firefox: Missing screenshot at V${vIndex + 1}H${hIndex + 1}`);
+            continue;
+          }
+          
+          const screenshot = screenshots[screenshotIndex];
+          
+          console.log(`🔧 Firefox: Processing V${vIndex + 1}H${hIndex + 1} at (${screenshot.x}, ${screenshot.y})`);
+          
+          // Convert data URL to ImageBitmap
+          const response = await fetch(screenshot.dataUrl);
+          const blob = await response.blob();
+          const imageBitmap = await createImageBitmap(blob);
+          
+          // Calculate destination position on canvas
+          const destX = hIndex === 0 ? 0 : (viewportWidth - horizontalOverlap) * hIndex;
+          const destY = vIndex === 0 ? 0 : (viewportHeight - verticalOverlap) * vIndex;
+          
+          // Calculate source area (skip overlaps for non-first sections)
+          const sourceX = hIndex > 0 ? horizontalOverlap : 0;
+          const sourceY = vIndex > 0 ? verticalOverlap : 0;
+          const sourceWidth = hIndex > 0 ? viewportWidth - horizontalOverlap : viewportWidth;
+          const sourceHeight = vIndex > 0 ? viewportHeight - verticalOverlap : viewportHeight;
+          
+          console.log(`🔧 Firefox: V${vIndex + 1}H${hIndex + 1} -> Canvas(${destX}, ${destY}) from Source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight})`);
+          
+          // Draw the image section
+          ctx.drawImage(
+            imageBitmap,
+            sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle
+            destX, destY, sourceWidth, sourceHeight       // Destination rectangle
+          );
+          
+          // Clean up
+          imageBitmap.close();
+        }
+      }
+      
+      console.log('🔧 Firefox: BULLETPROOF grid stitching completed');
+      
+      // Convert to data URL
+      const blob = await canvas.convertToBlob({ type: 'image/png' });
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to convert blob to data URL'));
+        reader.readAsDataURL(blob);
+      });
+      
+    } catch (error) {
+      console.error('🔧 Firefox: BULLETPROOF grid stitching failed:', error);
+      // Fallback: return first screenshot
+      return screenshots[0]?.dataUrl || '';
+    }
+  }
+
+  /**
+   * DEAD SIMPLE vertical stitching - just stack images with NO width changes
+   */
+  private static async stitchFirefoxVertical(
+    screenshots: string[],
+    width: number,
+    viewportHeight: number
+  ): Promise<string> {
+    try {
+      console.log('🔧 Firefox: DEAD SIMPLE vertical stacking - NO width manipulation');
+      
+      if (screenshots.length === 0) {
+        throw new Error('No screenshots to stitch');
+      }
+      
+      if (screenshots.length === 1) {
+        console.log('🔧 Firefox: Single screenshot, returning as-is');
+        return screenshots[0];
+      }
+      
+      // Get actual dimensions from first screenshot
+      const firstResponse = await fetch(screenshots[0]);
+      const firstBlob = await firstResponse.blob();
+      const firstImage = await createImageBitmap(firstBlob);
+      
+      const actualWidth = firstImage.naturalWidth || firstImage.width;
+      const actualHeight = firstImage.naturalHeight || firstImage.height;
+      
+      console.log('🔧 Firefox: Actual screenshot dimensions:', {
+        actualWidth,
+        actualHeight,
+        providedWidth: width,
+        providedHeight: viewportHeight,
+        screenshots: screenshots.length
+      });
+      
+      // Calculate total height - simple stacking with 10% overlap removal
+      const overlapPixels = Math.floor(actualHeight * 0.1);
+      const sectionHeight = actualHeight - overlapPixels;
+      const totalHeight = actualHeight + (sectionHeight * (screenshots.length - 1));
+      
+      console.log('🔧 Firefox: SIMPLE stacking plan:', {
+        actualWidth,
+        totalHeight,
+        overlapPixels,
+        sectionHeight,
+        sections: screenshots.length
+      });
+      
+      // Create canvas with ACTUAL screenshot dimensions
+      const canvas = new OffscreenCanvas(actualWidth, totalHeight);
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Failed to get OffscreenCanvas context');
+      }
+      
+      let currentY = 0;
+      
+      for (let i = 0; i < screenshots.length; i++) {
+        const screenshot = screenshots[i];
+        
+        // Convert data URL to ImageBitmap
+        const response = await fetch(screenshot);
+        const blob = await response.blob();
+        const imageBitmap = await createImageBitmap(blob);
+        
+        console.log(`🔧 Firefox: SIMPLE stacking section ${i + 1} at Y=${currentY}`);
+        
+        if (i === 0) {
+          // First image - draw completely at Y=0
+          ctx.drawImage(imageBitmap, 0, 0);
+          currentY = actualHeight;
+        } else {
+          // Subsequent images - skip overlap from top, draw at currentY - overlapPixels
+          const drawY = currentY - overlapPixels;
+          ctx.drawImage(
+            imageBitmap,
+            0, overlapPixels, // Source: skip overlap from top
+            imageBitmap.width, imageBitmap.height - overlapPixels, // Source dimensions
+            0, drawY, // Destination
+            imageBitmap.width, imageBitmap.height - overlapPixels // Destination dimensions
+          );
+          currentY += (imageBitmap.height - overlapPixels);
+        }
+        
+        // Clean up
+        imageBitmap.close();
+      }
+      
+      // Clean up first image
+      firstImage.close();
+      
+      console.log('🔧 Firefox: SIMPLE stacking completed - final size:', actualWidth, 'x', totalHeight);
+      
+      // Convert to data URL
+      const blob = await canvas.convertToBlob({ type: 'image/png' });
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to convert blob to data URL'));
+        reader.readAsDataURL(blob);
+      });
+      
+    } catch (error) {
+      console.error('🔧 Firefox: SIMPLE stacking failed:', error);
+      // Fallback: return first screenshot
+      return screenshots[0] || '';
+    }
   }
 
   /**
@@ -499,8 +659,8 @@ export class FullPageCapture {
     
     console.log('🔧 Calculating vertical positions:', { scrollHeight, viewportHeight, effectiveHeight });
     
-    // Use precise positioning with minimal overlap for Firefox
-    const overlap = 20; // Small fixed overlap to prevent gaps
+    // Use percentage-based overlap to match stitching logic
+    const overlap = Math.floor(viewportHeight * 0.1); // 10% overlap to match stitching
     const step = viewportHeight - overlap;
     
     let currentY = 0;
@@ -535,17 +695,24 @@ export class FullPageCapture {
   ): number[] {
     const positions: number[] = [];
     
-    // For Firefox, use precise positioning without overlap for cleaner stitching
     console.log('🔧 Calculating horizontal positions:', { scrollWidth, viewportWidth });
     
     // Always start at 0
     positions.push(0);
     
-    // If content is wider than viewport, add position to capture the right edge
+    // If content is wider than viewport, calculate overlapping positions
     if (scrollWidth > viewportWidth) {
-      const rightEdgePosition = scrollWidth - viewportWidth;
-      if (rightEdgePosition > 0) {
-        positions.push(rightEdgePosition);
+      // Calculate how much we need to scroll to capture remaining width
+      // We want overlap, not gaps!
+      const overlap = Math.floor(viewportWidth * 0.1); // 10% overlap
+      const step = viewportWidth - overlap;
+      
+      let currentPos = 0;
+      while (currentPos + viewportWidth < scrollWidth) {
+        currentPos += step;
+        if (currentPos > 0 && !positions.includes(currentPos)) {
+          positions.push(currentPos);
+        }
       }
     }
     
@@ -693,6 +860,13 @@ export class FullPageCapture {
       // Calculate overlap amounts
       const verticalOverlap = Math.floor(viewportHeight * 0.1);
       const horizontalOverlap = Math.floor(viewportWidth * 0.1);
+      
+      console.log('🔧 Stitching with standard overlaps:', {
+        verticalOverlap,
+        horizontalOverlap,
+        viewportWidth,
+        viewportHeight
+      });
 
       // Group screenshots by rows
       const rows = new Map<number, Array<{dataUrl: string, x: number, y: number}>>();
