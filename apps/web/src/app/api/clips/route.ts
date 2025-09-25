@@ -2,6 +2,12 @@ import { createClient } from '@/lib/supabase-server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { CreateClipRequestSchema } from '@pagepouch/shared'
+import { 
+  getSubscriptionLimits, 
+  getClipsRemaining, 
+  getUsageWarningLevel,
+  hasReachedClipLimit 
+} from '@/lib/subscription-limits'
 
 export async function GET(request: NextRequest) {
   try {
@@ -144,6 +150,53 @@ export async function POST(request: NextRequest) {
     
     console.log('Authenticated user:', user.email)
 
+    // Check user's subscription tier and current usage before processing
+    const { data: userProfile, error: userError } = await supabase
+      .from('users')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+
+    if (userError) {
+      console.error('Error fetching user profile:', userError)
+      return NextResponse.json(
+        { error: 'Failed to fetch user profile' },
+        { status: 500 }
+      )
+    }
+
+    const { data: usageData, error: usageError } = await supabase
+      .from('user_usage')
+      .select('clips_this_month')
+      .eq('user_id', user.id)
+      .single()
+
+    if (usageError) {
+      console.error('Error fetching usage data:', usageError)
+      return NextResponse.json(
+        { error: 'Failed to fetch usage data' },
+        { status: 500 }
+      )
+    }
+
+    const subscriptionTier = userProfile.subscription_tier || 'free'
+    const clipsThisMonth = usageData?.clips_this_month || 0
+
+    // Check if user has reached their clip limit
+    if (hasReachedClipLimit(clipsThisMonth, subscriptionTier)) {
+      const limits = getSubscriptionLimits(subscriptionTier)
+      return NextResponse.json(
+        { 
+          error: 'Clip limit reached',
+          message: `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.`,
+          clips_limit: limits.clipsPerMonth,
+          clips_this_month: clipsThisMonth,
+          subscription_tier: subscriptionTier
+        },
+        { status: 429 } // Too Many Requests
+      )
+    }
+
     const body = await request.json()
     
     // Validate request body
@@ -215,7 +268,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ clip: data }, { status: 201 })
+    // Get updated usage data after clip creation (the trigger will have updated it)
+    const { data: updatedUsage, error: updatedUsageError } = await supabase
+      .from('user_usage')
+      .select('clips_this_month')
+      .eq('user_id', user.id)
+      .single()
+
+    const newClipsThisMonth = updatedUsage?.clips_this_month || (clipsThisMonth + 1)
+    const limits = getSubscriptionLimits(subscriptionTier)
+
+    return NextResponse.json({ 
+      clip: data,
+      usage: {
+        clips_this_month: newClipsThisMonth,
+        clips_limit: limits.clipsPerMonth,
+        clips_remaining: getClipsRemaining(newClipsThisMonth, subscriptionTier),
+        subscription_tier: subscriptionTier,
+        warning_level: getUsageWarningLevel(newClipsThisMonth, subscriptionTier)
+      }
+    }, { status: 201 })
   } catch (error) {
     console.error('Create clip error:', error)
     return NextResponse.json(

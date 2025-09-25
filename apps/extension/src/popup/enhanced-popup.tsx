@@ -56,7 +56,6 @@ interface PopupState {
   isCapturing: boolean;
   isAuthenticated: boolean;
   currentTab?: chrome.tabs.Tab;
-  captureCount: number;
   showAuth: boolean;
   userEmail?: string;
   captureProgress?: {
@@ -70,6 +69,12 @@ interface PopupState {
   }>;
   selectedFolderId: string | null;
   loadingFolders: boolean;
+  // Usage tracking
+  clipsRemaining: number;
+  clipsLimit: number;
+  subscriptionTier: 'free' | 'pro';
+  warningLevel: 'safe' | 'warning' | 'critical' | 'exceeded';
+  usageLoading: boolean;
 }
 
 interface AuthFormState {
@@ -250,11 +255,16 @@ function EnhancedPopupApp() {
   const [state, setState] = useState<PopupState>({
     isCapturing: false,
     isAuthenticated: false,
-    captureCount: 0,
     showAuth: false,
     folders: [],
     selectedFolderId: null,
     loadingFolders: false,
+    // Usage tracking defaults
+    clipsRemaining: 50, // Default for free tier
+    clipsLimit: 50,
+    subscriptionTier: 'free',
+    warningLevel: 'safe',
+    usageLoading: false,
   });
 
   const [authForm, setAuthForm] = useState<AuthFormState>({
@@ -287,6 +297,17 @@ function EnhancedPopupApp() {
         }));
 
         if (message.payload.status === 'complete') {
+          // Update usage data if provided in the response
+          if (message.payload.usage) {
+            setState(prev => ({
+              ...prev,
+              clipsRemaining: message.payload.usage.clips_remaining,
+              clipsLimit: message.payload.usage.clips_limit,
+              subscriptionTier: message.payload.usage.subscription_tier,
+              warningLevel: message.payload.usage.warning_level,
+            }));
+          }
+          
           setTimeout(() => {
             setState(prev => ({ ...prev, captureProgress: undefined, isCapturing: false }));
           }, 2000);
@@ -295,20 +316,46 @@ function EnhancedPopupApp() {
     });
   }, []);
 
+  const loadUsage = async () => {
+    setState(prev => ({ ...prev, usageLoading: true }));
+    
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'GET_USAGE'
+      });
+      
+      if (response && !response.error) {
+        setState(prev => ({
+          ...prev,
+          clipsRemaining: response.clips_remaining,
+          clipsLimit: response.clips_limit,
+          subscriptionTier: response.subscription_tier,
+          warningLevel: response.warning_level,
+          usageLoading: false,
+        }));
+      } else {
+        console.error('Failed to load usage:', response?.error);
+        setState(prev => ({ ...prev, usageLoading: false }));
+      }
+    } catch (error) {
+      console.error('Error loading usage:', error);
+      setState(prev => ({ ...prev, usageLoading: false }));
+    }
+  };
+
   const checkAuthStatus = async () => {
     try {
-      const result = await chrome.storage.local.get(['isAuthenticated', 'userEmail', 'captureCount', 'selectedFolderId']);
+      const result = await chrome.storage.local.get(['isAuthenticated', 'userEmail', 'selectedFolderId']);
       setState(prev => ({
         ...prev,
         isAuthenticated: result.isAuthenticated || false,
         userEmail: result.userEmail,
-        captureCount: result.captureCount || 0,
         selectedFolderId: result.selectedFolderId || null,
       }));
       
-      // Load folders if authenticated
+      // Load folders and usage if authenticated
       if (result.isAuthenticated) {
-        await loadFolders();
+        await Promise.all([loadFolders(), loadUsage()]);
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
@@ -418,8 +465,8 @@ function EnhancedPopupApp() {
         }));
         setAuthForm({ email: '', password: '', isSignUp: false, isLoading: false });
         
-        // Load folders after successful authentication
-        await loadFolders();
+        // Load folders and usage after successful authentication
+        await Promise.all([loadFolders(), loadUsage()]);
       }
     } catch (error) {
       setAuthForm(prev => ({ 
@@ -483,6 +530,27 @@ function EnhancedPopupApp() {
   const handleFolderChange = async (folderId: string) => {
     setState(prev => ({ ...prev, selectedFolderId: folderId }));
     await chrome.storage.local.set({ selectedFolderId: folderId });
+  };
+
+  const getUsageBadgeStyle = () => {
+    const baseStyle = { ...styles.badge };
+    
+    switch (state.warningLevel) {
+      case 'critical':
+        return { ...baseStyle, backgroundColor: '#dc2626', color: 'white' };
+      case 'warning':
+        return { ...baseStyle, backgroundColor: '#f59e0b', color: 'white' };
+      case 'exceeded':
+        return { ...baseStyle, backgroundColor: '#7f1d1d', color: 'white' };
+      default:
+        return baseStyle;
+    }
+  };
+
+  const getUsageBadgeText = () => {
+    if (state.usageLoading) return 'Loading...';
+    if (state.warningLevel === 'exceeded') return 'Limit reached';
+    return `${state.clipsRemaining} clips left`;
   };
 
   const handleSignOut = async () => {
@@ -613,8 +681,8 @@ function EnhancedPopupApp() {
           <Logo size={40} />
           <h1 style={styles.brandName}>PagePouch</h1>
           {state.isAuthenticated && (
-            <div style={styles.badge}>
-              {state.captureCount} clips
+            <div style={getUsageBadgeStyle()}>
+              {getUsageBadgeText()}
             </div>
           )}
         </div>
@@ -756,25 +824,55 @@ function EnhancedPopupApp() {
         {/* Capture Buttons */}
         {!state.isCapturing && !state.captureProgress && (
           <>
-            <button
-              onClick={() => handleCapture('fullPage')}
-              style={{
-                ...styles.button,
-                ...styles.primaryButton,
-              }}
-            >
-              📄 Capture Full Page
-            </button>
+            {state.warningLevel === 'exceeded' ? (
+              <div style={{
+                padding: '16px',
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '12px',
+                textAlign: 'center' as const,
+                marginBottom: '12px'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: '500', color: '#dc2626', marginBottom: '8px' }}>
+                  Monthly limit reached
+                </div>
+                <div style={{ fontSize: '12px', color: '#7f1d1d', marginBottom: '12px' }}>
+                  You've used all {state.clipsLimit} clips this month. Upgrade to Pro for unlimited clips!
+                </div>
+                <button
+                  onClick={() => window.open('https://pagepouch-web.vercel.app/pricing', '_blank')}
+                  style={{
+                    ...styles.button,
+                    ...styles.primaryButton,
+                    backgroundColor: '#dc2626',
+                  }}
+                >
+                  🚀 Upgrade to Pro
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleCapture('fullPage')}
+                  style={{
+                    ...styles.button,
+                    ...styles.primaryButton,
+                  }}
+                >
+                  📄 Capture Full Page
+                </button>
 
-            <button
-              onClick={() => handleCapture('visible')}
-              style={{
-                ...styles.button,
-                ...styles.secondaryButton,
-              }}
-            >
-              📱 Capture Visible Area
-            </button>
+                <button
+                  onClick={() => handleCapture('visible')}
+                  style={{
+                    ...styles.button,
+                    ...styles.secondaryButton,
+                  }}
+                >
+                  📱 Capture Visible Area
+                </button>
+              </>
+            )}
           </>
         )}
 

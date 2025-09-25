@@ -62,6 +62,9 @@ extensionAPI.runtime.onMessage.addListener((message: ExtensionMessage, sender, s
     case 'GET_FOLDERS':
       handleGetFolders(sendResponse);
       return true; // Keep message channel open for async response
+    case 'GET_USAGE':
+      handleGetUsage(sendResponse);
+      return true; // Keep message channel open for async response
     default:
       console.warn('Unknown message type:', message.type);
   }
@@ -282,7 +285,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
     if (token) {
       try {
         // Save to Supabase
-        await ExtensionAPI.saveClip(clipData);
+        const saveResult = await ExtensionAPI.saveClip(clipData);
         console.log('Clip saved to Supabase successfully');
         
         // Check if cancelled during save
@@ -291,10 +294,14 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
           return;
         }
         
-        // Send success message to popup
+        // Send success message to popup with usage data
         extensionAPI.runtime.sendMessage({
           type: 'CAPTURE_PROGRESS',
-          payload: { status: 'complete', message: 'Capture saved to cloud!' }
+          payload: { 
+            status: 'complete', 
+            message: 'Capture saved to cloud!',
+            usage: saveResult.usage // Include usage data from API response
+          }
         } as ExtensionMessage);
         
       } catch (error) {
@@ -454,6 +461,31 @@ async function handleGetFolders(sendResponse: (response: any) => void) {
     // Return empty folders array on error - let clips save to default location
     sendResponse({ 
       folders: [] 
+    });
+  }
+}
+
+async function handleGetUsage(sendResponse: (response: any) => void) {
+  try {
+    console.log('🔧 Background: Getting user usage data');
+    
+    // Debug: Check if we have a token
+    const { token } = await ExtensionAuth.getSession();
+    console.log('🔧 Background: Auth token available:', token ? 'YES' : 'NO');
+    
+    const usage = await ExtensionAPI.getUsage();
+    console.log('🔧 Background: Usage retrieved:', usage);
+    
+    sendResponse(usage);
+  } catch (error) {
+    console.error('🔧 Background: Failed to get usage:', error);
+    // Return default usage data on error
+    sendResponse({ 
+      error: 'Failed to load usage data',
+      clips_remaining: 50,
+      clips_limit: 50,
+      subscription_tier: 'free',
+      warning_level: 'safe'
     });
   }
 }

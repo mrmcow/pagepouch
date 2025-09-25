@@ -232,4 +232,25 @@ export class ExtensionAPI {
 
     return response.json()
   }
+
+  static async getUsage() {
+    const { token } = await ExtensionAuth.getSession()
+    
+    if (!token) {
+      throw new Error('Not authenticated')
+    }
+
+    const response = await fetch(`${this.getApiBaseUrl()}/api/usage`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch usage data')
+    }
+
+    return response.json()
+  }
 }

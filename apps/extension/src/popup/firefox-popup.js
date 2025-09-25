@@ -11,14 +11,19 @@ console.log('🦊 Using extension API:', typeof browser !== 'undefined' ? 'brows
 let appState = {
   isCapturing: false,
   isAuthenticated: false,
-  captureCount: 0,
   showAuth: false,
   currentTab: null,
   userEmail: null,
   captureProgress: null,
   folders: [],
   selectedFolderId: null,
-  loadingFolders: false
+  loadingFolders: false,
+  // Usage tracking
+  clipsRemaining: 50, // Default for free tier
+  clipsLimit: 50,
+  subscriptionTier: 'free',
+  warningLevel: 'safe',
+  usageLoading: false
 };
 
 let authState = {
@@ -137,6 +142,41 @@ async function loadFolders() {
   render();
 }
 
+// Load usage data
+async function loadUsage() {
+  console.log('🦊 Loading user usage...');
+  appState.usageLoading = true;
+  render();
+  
+  try {
+    const response = await extensionAPI.runtime.sendMessage({
+      type: 'GET_USAGE'
+    });
+    
+    console.log('🦊 Usage response:', response);
+    
+    if (response && !response.error) {
+      appState.clipsRemaining = response.clips_remaining;
+      appState.clipsLimit = response.clips_limit;
+      appState.subscriptionTier = response.subscription_tier;
+      appState.warningLevel = response.warning_level;
+      console.log('🦊 Loaded usage:', {
+        remaining: appState.clipsRemaining,
+        limit: appState.clipsLimit,
+        tier: appState.subscriptionTier,
+        warning: appState.warningLevel
+      });
+    } else {
+      console.error('🦊 Failed to load usage:', response?.error);
+    }
+  } catch (error) {
+    console.error('🦊 Error loading usage:', error);
+  }
+  
+  appState.usageLoading = false;
+  render();
+}
+
 // Handle folder selection
 async function handleFolderChange(folderId) {
   console.log('🦊 Folder selected:', folderId);
@@ -148,29 +188,50 @@ async function handleFolderChange(folderId) {
   render();
 }
 
+// Get usage badge style based on warning level
+function getUsageBadgeStyle() {
+  const baseStyle = styles.badge;
+  
+  switch (appState.warningLevel) {
+    case 'critical':
+      return baseStyle + '; background-color: #dc2626; color: white;';
+    case 'warning':
+      return baseStyle + '; background-color: #f59e0b; color: white;';
+    case 'exceeded':
+      return baseStyle + '; background-color: #7f1d1d; color: white;';
+    default:
+      return baseStyle;
+  }
+}
+
+// Get usage badge text
+function getUsageBadgeText() {
+  if (appState.usageLoading) return 'Loading...';
+  if (appState.warningLevel === 'exceeded') return 'Limit reached';
+  return `${appState.clipsRemaining} clips left`;
+}
+
 // Check authentication status
 async function checkAuthStatus() {
   try {
     console.log('🦊 Checking auth status...');
-    const result = await extensionAPI.storage.local.get(['authToken', 'userEmail', 'captureCount', 'selectedFolderId']);
+    const result = await extensionAPI.storage.local.get(['authToken', 'userEmail', 'selectedFolderId']);
     console.log('🦊 Storage result:', result);
     
     if (result) {
       appState.isAuthenticated = !!result.authToken;
       appState.userEmail = result.userEmail;
-      appState.captureCount = result.captureCount || 0;
       appState.selectedFolderId = result.selectedFolderId;
       console.log('🦊 Auth status:', appState.isAuthenticated, 'Email:', appState.userEmail);
       
-      // Load folders if authenticated
+      // Load folders and usage if authenticated
       if (appState.isAuthenticated) {
-        await loadFolders();
+        await Promise.all([loadFolders(), loadUsage()]);
       }
     } else {
       console.log('🦊 No storage result, setting defaults');
       appState.isAuthenticated = false;
       appState.userEmail = null;
-      appState.captureCount = 0;
       appState.selectedFolderId = null;
     }
   } catch (error) {
@@ -178,7 +239,6 @@ async function checkAuthStatus() {
     // Set defaults on error
     appState.isAuthenticated = false;
     appState.userEmail = null;
-    appState.captureCount = 0;
   }
 }
 
@@ -320,8 +380,8 @@ async function handleAuth() {
       error: null
     };
     
-    // Load folders after successful authentication
-    await loadFolders();
+    // Load folders and usage after successful authentication
+    await Promise.all([loadFolders(), loadUsage()]);
     
     render();
     
@@ -402,7 +462,7 @@ function renderMainScreen() {
         <div style="${styles.logoSection}">
           ${createLogo(40)}
           <h1 style="${styles.brandName}">PagePouch</h1>
-          ${appState.isAuthenticated ? `<div style="${styles.badge}">${appState.captureCount} clips</div>` : ''}
+          ${appState.isAuthenticated ? `<div style="${getUsageBadgeStyle()}">${getUsageBadgeText()}</div>` : ''}
         </div>
       </div>
       <div style="${styles.content}">
@@ -449,10 +509,22 @@ function renderMainScreen() {
         ` : ''}
         
         ${/* Capture Buttons */ ''}
-        ${!appState.isCapturing && !appState.captureProgress ? `
-          <button id="capture-full" style="${styles.button}; ${styles.primaryButton};">📄 Capture Full Page</button>
-          <button id="capture-visible" style="${styles.button}; ${styles.secondaryButton};">📱 Capture Visible Area</button>
-        ` : ''}
+        ${!appState.isCapturing && !appState.captureProgress ? (
+          appState.warningLevel === 'exceeded' ? `
+            <div style="padding: 16px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; text-align: center; margin-bottom: 12px;">
+              <div style="font-size: 14px; font-weight: 500; color: #dc2626; margin-bottom: 8px;">
+                Monthly limit reached
+              </div>
+              <div style="font-size: 12px; color: #7f1d1d; margin-bottom: 12px;">
+                You've used all ${appState.clipsLimit} clips this month. Upgrade to Pro for unlimited clips!
+              </div>
+              <button id="upgrade-pro" style="${styles.button}; ${styles.primaryButton}; background-color: #dc2626;">🚀 Upgrade to Pro</button>
+            </div>
+          ` : `
+            <button id="capture-full" style="${styles.button}; ${styles.primaryButton};">📄 Capture Full Page</button>
+            <button id="capture-visible" style="${styles.button}; ${styles.secondaryButton};">📱 Capture Visible Area</button>
+          `
+        ) : ''}
         
         ${appState.isAuthenticated ? `
           <div style="${styles.card}">
@@ -529,6 +601,7 @@ function render() {
     const signOutBtn = document.getElementById('sign-out');
     const openWebappBtn = document.getElementById('open-webapp');
     const folderSelect = document.getElementById('folder-select');
+    const upgradeProBtn = document.getElementById('upgrade-pro');
     
     if (captureFullBtn) captureFullBtn.addEventListener('click', () => capturePage('fullPage'));
     if (captureVisibleBtn) captureVisibleBtn.addEventListener('click', () => capturePage('visible'));
@@ -539,6 +612,9 @@ function render() {
     if (signOutBtn) signOutBtn.addEventListener('click', signOut);
     if (openWebappBtn) openWebappBtn.addEventListener('click', () => {
       extensionAPI.tabs.create({ url: 'https://pagepouch-web.vercel.app/dashboard' });
+    });
+    if (upgradeProBtn) upgradeProBtn.addEventListener('click', () => {
+      extensionAPI.tabs.create({ url: 'https://pagepouch-web.vercel.app/pricing' });
     });
     if (folderSelect) folderSelect.addEventListener('change', (e) => {
       handleFolderChange(e.target.value);
@@ -560,6 +636,20 @@ async function init() {
         status: message.payload.status,
         message: message.payload.message
       };
+      
+      // Update usage data if provided in the response
+      if (message.payload.status === 'complete' && message.payload.usage) {
+        appState.clipsRemaining = message.payload.usage.clips_remaining;
+        appState.clipsLimit = message.payload.usage.clips_limit;
+        appState.subscriptionTier = message.payload.usage.subscription_tier;
+        appState.warningLevel = message.payload.usage.warning_level;
+        console.log('🦊 Updated usage after capture:', {
+          remaining: appState.clipsRemaining,
+          limit: appState.clipsLimit,
+          warning: appState.warningLevel
+        });
+      }
+      
       render();
       
       if (message.payload.status === 'complete') {
