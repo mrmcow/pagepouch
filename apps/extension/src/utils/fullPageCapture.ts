@@ -194,7 +194,7 @@ export class FullPageCapture {
   }
 
   /**
-   * Firefox-specific full page capture with simplified vertical stitching
+   * Firefox-specific full page capture with robust width detection and simple stitching
    */
   private static async captureFullPageFirefox(
     tabId: number,
@@ -202,80 +202,133 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: Starting simplified full page capture');
+    console.log('🔧 Firefox: Starting robust full page capture');
     
-    // Calculate scroll positions for vertical scrolling only
-    const verticalPositions = this.calculateScrollPositions(
-      pageInfo.scrollHeight,
-      pageInfo.viewportHeight,
-      options.maxHeight
-    );
+    // Force page to full width by temporarily removing responsive constraints
+    await this.executeScript(tabId, () => {
+      // Remove viewport meta tag constraints
+      const viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta) {
+        viewportMeta.setAttribute('data-original-content', viewportMeta.getAttribute('content') || '');
+        viewportMeta.setAttribute('content', 'width=1200, initial-scale=1');
+      }
+      
+      // Force body to minimum width
+      document.body.style.minWidth = '1200px';
+      document.documentElement.style.minWidth = '1200px';
+      
+      // Force any responsive containers to full width
+      const containers = document.querySelectorAll('[class*="container"], [class*="wrapper"], [class*="content"]');
+      containers.forEach(el => {
+        const element = el as HTMLElement;
+        element.style.maxWidth = 'none';
+        element.style.width = '100%';
+      });
+    });
     
-    console.log(`🔧 Firefox: Capturing ${verticalPositions.length} vertical sections`, {
-      scrollHeight: pageInfo.scrollHeight,
-      viewportHeight: pageInfo.viewportHeight,
-      positions: verticalPositions
+    // Wait for layout to stabilize
+    await this.delay(1000);
+    
+    // Get updated page dimensions after width forcing
+    const updatedPageInfo = await this.getPageInfo(tabId);
+    console.log('🔧 Firefox: Updated page dimensions after width forcing:', {
+      originalWidth: pageInfo.viewportWidth,
+      newWidth: updatedPageInfo.viewportWidth,
+      scrollWidth: updatedPageInfo.scrollWidth,
+      scrollHeight: updatedPageInfo.scrollHeight
+    });
+    
+    // Use the larger of viewport or scroll width
+    const captureWidth = Math.max(updatedPageInfo.viewportWidth, updatedPageInfo.scrollWidth, 1200);
+    
+    // Calculate simple vertical positions with no overlap for cleaner stitching
+    const viewportHeight = updatedPageInfo.viewportHeight;
+    const totalHeight = updatedPageInfo.scrollHeight;
+    const positions: number[] = [];
+    
+    // Simple approach: divide page into viewport-sized chunks
+    for (let y = 0; y < totalHeight; y += viewportHeight) {
+      positions.push(y);
+    }
+    
+    // Ensure we capture the very bottom
+    if (positions[positions.length - 1] < totalHeight - viewportHeight) {
+      positions.push(Math.max(0, totalHeight - viewportHeight));
+    }
+    
+    console.log(`🔧 Firefox: Capturing ${positions.length} sections with no overlap`, {
+      captureWidth,
+      viewportHeight,
+      totalHeight,
+      positions
     });
 
-    // Capture each vertical section
+    // Capture each section
     const screenshots: string[] = [];
     
-    for (let i = 0; i < verticalPositions.length; i++) {
-      const scrollY = verticalPositions[i];
+    for (let i = 0; i < positions.length; i++) {
+      const scrollY = positions[i];
       const sectionIndex = i + 1;
       
-      console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${verticalPositions.length} at Y=${scrollY}`);
+      console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${positions.length} at Y=${scrollY}`);
       
-      // Scroll to position (no horizontal scrolling)
+      // Scroll to position
       await this.scrollToPosition(tabId, scrollY, 0);
-      
-      // Wait for scroll to complete and page to stabilize
-      await this.delay(options.scrollDelay);
+      await this.delay(800); // Longer delay for content to load
       
       try {
-        // Capture visible area
+        // Capture with high quality
         const screenshot = await extensionAPI.tabs.captureVisibleTab({
-          format: options.format,
-          quality: options.quality
+          format: 'png', // Always use PNG for best quality
+          quality: 95
         });
         
         screenshots.push(screenshot);
-        console.log(`🔧 Firefox: Section ${sectionIndex} captured successfully`);
+        console.log(`🔧 Firefox: Section ${sectionIndex} captured (${screenshot.length} chars)`);
         
-        // Brief delay between captures
-        if (sectionIndex < verticalPositions.length) {
-          await this.delay(300);
-        }
       } catch (error) {
         console.error(`🔧 Firefox: Failed to capture section ${sectionIndex}:`, error);
         throw new Error(`Failed to capture section ${sectionIndex}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
-    // Restore original scroll position
+    // Restore original scroll position and page constraints
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
-
-    // Stitch screenshots using simple vertical stitching
-    console.log('🔧 Firefox: Starting simple vertical stitching');
-    const stitchedImage = await this.stitchScreenshots(
-      screenshots,
-      pageInfo.viewportWidth,
-      pageInfo.viewportHeight,
-      verticalPositions
-    );
     
+    // Restore original page constraints
+    await this.executeScript(tabId, () => {
+      const viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta && viewportMeta.getAttribute('data-original-content')) {
+        viewportMeta.setAttribute('content', viewportMeta.getAttribute('data-original-content') || '');
+        viewportMeta.removeAttribute('data-original-content');
+      }
+      
+      document.body.style.minWidth = '';
+      document.documentElement.style.minWidth = '';
+      
+      const containers = document.querySelectorAll('[class*="container"], [class*="wrapper"], [class*="content"]');
+      containers.forEach(el => {
+        const element = el as HTMLElement;
+        element.style.maxWidth = '';
+        element.style.width = '';
+      });
+    });
+
+    // Simple vertical stitching with no overlap
+    console.log('🔧 Firefox: Starting simple no-overlap stitching');
+    const stitchedImage = await this.stitchFirefoxScreenshots(screenshots, captureWidth, viewportHeight, totalHeight);
     console.log('🔧 Firefox: Stitching completed');
 
-    // Compress the image for API upload
-    console.log('🔧 Firefox: Compressing image for API upload');
-    const compressedImage = await this.compressImage(stitchedImage, 0.8); // Higher quality for Firefox
+    // Light compression to maintain quality
+    console.log('🔧 Firefox: Compressing image');
+    const compressedImage = await this.compressImage(stitchedImage, 0.85);
     console.log('🔧 Firefox: Compression completed');
 
     return {
       dataUrl: compressedImage,
-      width: pageInfo.viewportWidth,
-      height: Math.min(pageInfo.scrollHeight, options.maxHeight),
-      scrollHeight: pageInfo.scrollHeight,
+      width: captureWidth,
+      height: totalHeight,
+      scrollHeight: totalHeight,
       captureTime: Date.now() - startTime,
     };
   }
@@ -772,6 +825,89 @@ export class FullPageCapture {
       });
     } else {
       throw new Error('No script execution API available');
+    }
+  }
+
+  /**
+   * Simple Firefox stitching with no overlap - just stack images vertically
+   */
+  private static async stitchFirefoxScreenshots(
+    screenshots: string[],
+    width: number,
+    viewportHeight: number,
+    totalHeight: number
+  ): Promise<string> {
+    try {
+      console.log('🔧 Firefox stitching:', {
+        screenshots: screenshots.length,
+        width,
+        viewportHeight,
+        totalHeight
+      });
+      
+      // Create canvas with exact dimensions
+      const canvas = new OffscreenCanvas(width, totalHeight);
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Failed to get canvas context');
+      }
+
+      // Fill with white background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, totalHeight);
+
+      // Stack images vertically with no overlap
+      let currentY = 0;
+      
+      for (let i = 0; i < screenshots.length; i++) {
+        const screenshot = screenshots[i];
+        
+        console.log(`🔧 Firefox: Stitching section ${i + 1} at Y=${currentY}`);
+        
+        // Convert data URL to ImageBitmap
+        const response = await fetch(screenshot);
+        const blob = await response.blob();
+        const imageBitmap = await createImageBitmap(blob);
+        
+        // For the last image, we might need to crop it to avoid going beyond totalHeight
+        const remainingHeight = totalHeight - currentY;
+        const imageHeight = Math.min(imageBitmap.height, remainingHeight);
+        
+        if (imageHeight > 0) {
+          // Draw the image (or part of it) at the current Y position
+          ctx.drawImage(
+            imageBitmap,
+            0, 0, imageBitmap.width, imageHeight, // Source
+            0, currentY, width, imageHeight       // Destination
+          );
+          
+          currentY += imageHeight;
+        }
+        
+        imageBitmap.close();
+        
+        // Stop if we've filled the canvas
+        if (currentY >= totalHeight) {
+          break;
+        }
+      }
+
+      console.log(`🔧 Firefox: Stitching completed, final height: ${currentY}`);
+
+      // Convert to data URL
+      const blob = await canvas.convertToBlob({ type: 'image/png' });
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      
+    } catch (error) {
+      console.error('🔧 Firefox stitching failed:', error);
+      // Fallback to first screenshot
+      return screenshots[0] || '';
     }
   }
 
