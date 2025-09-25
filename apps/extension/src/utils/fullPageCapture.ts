@@ -204,17 +204,48 @@ export class FullPageCapture {
   ): Promise<CaptureResult> {
     console.log('🔧 Firefox: Starting NON-INVASIVE full page capture');
     
-    // DON'T modify the page layout - capture at current viewport dimensions
-    console.log('🔧 Firefox: Using current viewport dimensions WITHOUT modification:', {
+    // Capture at ACTUAL content width but WITHOUT modifying page layout
+    console.log('🔧 Firefox: Page dimensions detected:', {
       viewportWidth: pageInfo.viewportWidth,
+      scrollWidth: pageInfo.scrollWidth,
       viewportHeight: pageInfo.viewportHeight,
       scrollHeight: pageInfo.scrollHeight
     });
     
-    // Use the CURRENT viewport width - don't force any changes
-    const captureWidth = pageInfo.viewportWidth || 1280;
+    // Use the ACTUAL content width to capture everything, but don't modify the page
+    const captureWidth = Math.max(pageInfo.scrollWidth || 1280, pageInfo.viewportWidth || 1280);
     
-    console.log('🔧 Firefox: Capture width set to current viewport:', captureWidth);
+    console.log('🔧 Firefox: Capture width set to ACTUAL content width:', {
+      viewportWidth: pageInfo.viewportWidth,
+      scrollWidth: pageInfo.scrollWidth,
+      captureWidth: captureWidth
+    });
+    
+    // Temporarily expand viewport ONLY during capture (invisible to user)
+    await this.executeScript(tabId, (targetWidth: number) => {
+      // Store original viewport meta for restoration
+      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
+      const originalViewport = viewportMeta ? viewportMeta.content : '';
+      
+      // Temporarily set viewport to accommodate full content width
+      if (viewportMeta) {
+        viewportMeta.content = `width=${targetWidth}, initial-scale=1.0`;
+      } else {
+        const newViewportMeta = document.createElement('meta');
+        newViewportMeta.name = 'viewport';
+        newViewportMeta.content = `width=${targetWidth}, initial-scale=1.0`;
+        document.head.appendChild(newViewportMeta);
+        newViewportMeta.setAttribute('data-pagepouch-added', 'true');
+      }
+      
+      // Store for restoration
+      (window as any).__pagepouchOriginalViewport = originalViewport;
+      
+      console.log('🔧 Firefox: Viewport temporarily set to', targetWidth + 'px for capture');
+    }, [captureWidth]);
+    
+    // Brief delay for viewport to take effect
+    await this.delay(500);
     
     // Step 3: Scroll to trigger lazy loading and get final height
     console.log('🔧 Firefox: Scrolling to trigger all lazy content');
@@ -321,10 +352,29 @@ export class FullPageCapture {
       }
     }
 
-    // Restore original scroll position (no page modifications to restore)
+    // Restore original scroll position and viewport
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
     
-    console.log('🔧 Firefox: Scroll position restored (no layout changes were made)');
+    // Restore original viewport meta tag
+    await this.executeScript(tabId, () => {
+      const originalViewport = (window as any).__pagepouchOriginalViewport;
+      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
+      
+      if (viewportMeta) {
+        if (viewportMeta.getAttribute('data-pagepouch-added')) {
+          // Remove the meta tag we added
+          viewportMeta.remove();
+        } else if (originalViewport !== undefined) {
+          // Restore original content
+          viewportMeta.content = originalViewport;
+        }
+      }
+      
+      delete (window as any).__pagepouchOriginalViewport;
+      console.log('🔧 Firefox: Viewport restored to original state');
+    });
+    
+    console.log('🔧 Firefox: All capture modifications restored');
 
     // Vertical stitching with overlap handling using exact target width
     console.log('🔧 Firefox: Starting precision stitching with target width:', captureWidth);
