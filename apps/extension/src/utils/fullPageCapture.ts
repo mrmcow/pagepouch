@@ -64,8 +64,19 @@ export class FullPageCapture {
       }
 
       // Check if we need horizontal scrolling
+      // Firefox often underreports scrollWidth, so be more aggressive about detecting wide pages
       const needsHorizontalScroll = pageInfo.scrollWidth > pageInfo.viewportWidth;
-      console.log('Needs horizontal scroll:', needsHorizontalScroll);
+      const forceHorizontalScroll = pageInfo.scrollWidth >= pageInfo.viewportWidth * 1.1; // Force if 10% wider
+      const finalNeedsHorizontalScroll = needsHorizontalScroll || forceHorizontalScroll;
+      
+      console.log('🔧 Horizontal scroll analysis:', {
+        scrollWidth: pageInfo.scrollWidth,
+        viewportWidth: pageInfo.viewportWidth,
+        ratio: pageInfo.scrollWidth / pageInfo.viewportWidth,
+        needsHorizontalScroll,
+        forceHorizontalScroll,
+        finalNeedsHorizontalScroll
+      });
       
       // Calculate scroll positions for both dimensions
       const verticalPositions = this.calculateScrollPositions(
@@ -74,13 +85,21 @@ export class FullPageCapture {
         opts.maxHeight
       );
       
-      const horizontalPositions = needsHorizontalScroll 
+      const horizontalPositions = finalNeedsHorizontalScroll 
         ? this.calculateHorizontalScrollPositions(pageInfo.scrollWidth, pageInfo.viewportWidth)
         : [0];
 
       // Capture each section (grid of horizontal x vertical positions)
       const screenshots: Array<{dataUrl: string, x: number, y: number}> = [];
       const totalSections = verticalPositions.length * horizontalPositions.length;
+      
+      console.log(`🔧 Firefox capture grid analysis:`, {
+        verticalPositions: verticalPositions.length,
+        horizontalPositions: horizontalPositions.length,
+        totalSections,
+        verticalPositionsArray: verticalPositions,
+        horizontalPositionsArray: horizontalPositions
+      });
 
       console.log(`Capturing ${totalSections} sections (${horizontalPositions.length}x${verticalPositions.length} grid)...`);
 
@@ -186,15 +205,41 @@ export class FullPageCapture {
         const docOffsetWidth = document.documentElement.offsetWidth || 0;
         const docClientWidth = document.documentElement.clientWidth || 0;
         
-        // Firefox-specific: Also check for content width
-        const contentWidth = Math.max(
+        // Firefox-specific: More aggressive width detection
+        // Check all possible width measurements and find the true content width
+        const allWidthMeasurements = [
           bodyScrollWidth,
           bodyOffsetWidth,
           docScrollWidth,
           docOffsetWidth,
           docClientWidth,
-          window.innerWidth
-        );
+          window.innerWidth,
+          window.outerWidth,
+          screen.width
+        ];
+        
+        // Also check for elements that might extend beyond viewport
+        let maxElementWidth = 0;
+        try {
+          const allElements = document.querySelectorAll('*');
+          for (let i = 0; i < Math.min(allElements.length, 100); i++) { // Check first 100 elements
+            const element = allElements[i];
+            const rect = element.getBoundingClientRect();
+            const elementRight = rect.right + window.scrollX;
+            if (elementRight > maxElementWidth) {
+              maxElementWidth = elementRight;
+            }
+          }
+        } catch (e) {
+          console.warn('Could not check element widths:', e);
+        }
+        
+        allWidthMeasurements.push(maxElementWidth);
+        
+        const contentWidth = Math.max(...allWidthMeasurements);
+        
+        // Firefox often underreports width, so add a safety margin if we detect potential issues
+        const finalWidth = contentWidth > window.innerWidth ? contentWidth : Math.max(contentWidth, window.innerWidth * 1.2);
         
         console.log('🔧 Firefox page dimensions debug:', {
           bodyScrollWidth,
@@ -203,7 +248,12 @@ export class FullPageCapture {
           docOffsetWidth,
           docClientWidth,
           windowInnerWidth: window.innerWidth,
-          calculatedContentWidth: contentWidth
+          windowOuterWidth: window.outerWidth,
+          screenWidth: screen.width,
+          maxElementWidth,
+          calculatedContentWidth: contentWidth,
+          finalWidth,
+          allMeasurements: allWidthMeasurements
         });
         
         return {
@@ -214,7 +264,7 @@ export class FullPageCapture {
             document.documentElement.scrollHeight,
             document.documentElement.offsetHeight
           ),
-          scrollWidth: contentWidth,
+          scrollWidth: finalWidth,
           viewportWidth: window.innerWidth,
           viewportHeight: window.innerHeight,
           originalScrollY: window.scrollY,
