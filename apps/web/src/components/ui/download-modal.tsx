@@ -19,7 +19,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     chrome: {
       name: 'Chrome',
       icon: ChromeIcon,
-      downloadUrl: '/extension/downloads/pagepouch-extension.zip',
+      downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip',
       instructions: [
         'Download the ZIP file below',
         'Extract to a folder on your computer',

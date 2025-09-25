@@ -26,7 +26,7 @@ const getBrowserInfo = () => {
   if (typeof window === 'undefined') return { 
     name: 'Chrome', 
     icon: 'chrome', 
-    downloadUrl: '/extension/downloads/pagepouch-extension.zip',
+    downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip',
     directDownload: true
   }
   
@@ -51,7 +51,7 @@ const getBrowserInfo = () => {
   return { 
     name: 'Chrome', 
     icon: 'chrome', 
-    downloadUrl: '/extension/downloads/pagepouch-extension.zip',
+    downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip',
     storeUrl: 'https://chrome.google.com/webstore/detail/pagepouch/extension-id',
     directDownload: true,
     installInstructions: 'Download and install via chrome://extensions'

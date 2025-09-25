@@ -34,7 +34,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       description: 'Free • 2-minute setup • Works offline',
       buttonText: 'Add to Chrome - It\'s Free',
       storeUrl: '#', // Will be Chrome Web Store URL
-      downloadUrl: '/extension/downloads/pagepouch-extension.zip'
+      downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip'
     },
     {
       id: 'firefox' as const,
