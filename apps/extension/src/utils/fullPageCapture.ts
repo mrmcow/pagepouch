@@ -238,39 +238,55 @@ export class FullPageCapture {
       scrollHeight: updatedPageInfo.scrollHeight
     });
     
-    // Use the larger of viewport or scroll width
-    const captureWidth = Math.max(updatedPageInfo.viewportWidth, updatedPageInfo.scrollWidth, 1200);
+    // Use actual viewport width to avoid stretching - don't force wider than necessary
+    const captureWidth = updatedPageInfo.viewportWidth;
     
-    // Calculate simple vertical positions with no overlap for cleaner stitching
-    const viewportHeight = updatedPageInfo.viewportHeight;
-    const totalHeight = updatedPageInfo.scrollHeight;
+    // Get more accurate page height by checking again after layout stabilization
+    await this.delay(500);
+    const finalPageInfo = await this.getPageInfo(tabId);
+    
+    // Calculate simple vertical positions with small overlap to ensure complete capture
+    const viewportHeight = finalPageInfo.viewportHeight;
+    const totalHeight = finalPageInfo.scrollHeight;
     const positions: number[] = [];
     
-    // Simple approach: divide page into viewport-sized chunks
-    for (let y = 0; y < totalHeight; y += viewportHeight) {
-      positions.push(y);
+    // Add small overlap (5%) to ensure we don't miss any content
+    const overlap = Math.floor(viewportHeight * 0.05);
+    const step = viewportHeight - overlap;
+    
+    let currentY = 0;
+    while (currentY < totalHeight) {
+      positions.push(currentY);
+      currentY += step;
     }
     
-    // Ensure we capture the very bottom
-    if (positions[positions.length - 1] < totalHeight - viewportHeight) {
-      positions.push(Math.max(0, totalHeight - viewportHeight));
+    // Always ensure we capture the absolute bottom of the page
+    const lastPosition = Math.max(0, totalHeight - viewportHeight);
+    if (positions[positions.length - 1] < lastPosition) {
+      positions.push(lastPosition);
     }
     
-    console.log(`🔧 Firefox: Capturing ${positions.length} sections with no overlap`, {
+    // Remove any duplicate positions
+    const uniquePositions = [...new Set(positions)].sort((a, b) => a - b);
+    
+    console.log(`🔧 Firefox: Capturing ${uniquePositions.length} sections with 5% overlap`, {
       captureWidth,
       viewportHeight,
       totalHeight,
-      positions
+      finalHeight: finalPageInfo.scrollHeight,
+      overlap,
+      step,
+      positions: uniquePositions
     });
 
     // Capture each section
     const screenshots: string[] = [];
     
-    for (let i = 0; i < positions.length; i++) {
-      const scrollY = positions[i];
+    for (let i = 0; i < uniquePositions.length; i++) {
+      const scrollY = uniquePositions[i];
       const sectionIndex = i + 1;
       
-      console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${positions.length} at Y=${scrollY}`);
+      console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${uniquePositions.length} at Y=${scrollY}`);
       
       // Scroll to position
       await this.scrollToPosition(tabId, scrollY, 0);
@@ -314,9 +330,16 @@ export class FullPageCapture {
       });
     });
 
-    // Simple vertical stitching with no overlap
-    console.log('🔧 Firefox: Starting simple no-overlap stitching');
-    const stitchedImage = await this.stitchFirefoxScreenshots(screenshots, captureWidth, viewportHeight, totalHeight);
+    // Simple vertical stitching with overlap handling
+    console.log('🔧 Firefox: Starting overlap-aware stitching');
+    const stitchedImage = await this.stitchFirefoxScreenshots(
+      screenshots, 
+      captureWidth, 
+      viewportHeight, 
+      finalPageInfo.scrollHeight,
+      uniquePositions,
+      overlap
+    );
     console.log('🔧 Firefox: Stitching completed');
 
     // Light compression to maintain quality
@@ -327,8 +350,8 @@ export class FullPageCapture {
     return {
       dataUrl: compressedImage,
       width: captureWidth,
-      height: totalHeight,
-      scrollHeight: totalHeight,
+      height: finalPageInfo.scrollHeight,
+      scrollHeight: finalPageInfo.scrollHeight,
       captureTime: Date.now() - startTime,
     };
   }
@@ -829,13 +852,15 @@ export class FullPageCapture {
   }
 
   /**
-   * Simple Firefox stitching with no overlap - just stack images vertically
+   * Firefox stitching with overlap handling for complete capture
    */
   private static async stitchFirefoxScreenshots(
     screenshots: string[],
     width: number,
     viewportHeight: number,
-    totalHeight: number
+    totalHeight: number,
+    scrollPositions: number[],
+    overlap: number
   ): Promise<string> {
     try {
       console.log('🔧 Firefox stitching:', {
@@ -857,43 +882,49 @@ export class FullPageCapture {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, width, totalHeight);
 
-      // Stack images vertically with no overlap
-      let currentY = 0;
-      
+      // Stack images vertically with proper overlap handling
       for (let i = 0; i < screenshots.length; i++) {
         const screenshot = screenshots[i];
+        const scrollY = scrollPositions[i];
         
-        console.log(`🔧 Firefox: Stitching section ${i + 1} at Y=${currentY}`);
+        console.log(`🔧 Firefox: Stitching section ${i + 1} at scroll Y=${scrollY}`);
         
         // Convert data URL to ImageBitmap
         const response = await fetch(screenshot);
         const blob = await response.blob();
         const imageBitmap = await createImageBitmap(blob);
         
-        // For the last image, we might need to crop it to avoid going beyond totalHeight
-        const remainingHeight = totalHeight - currentY;
-        const imageHeight = Math.min(imageBitmap.height, remainingHeight);
-        
-        if (imageHeight > 0) {
-          // Draw the image (or part of it) at the current Y position
-          ctx.drawImage(
-            imageBitmap,
-            0, 0, imageBitmap.width, imageHeight, // Source
-            0, currentY, width, imageHeight       // Destination
-          );
+        if (i === 0) {
+          // First image - draw completely at the top
+          ctx.drawImage(imageBitmap, 0, 0, width, viewportHeight, 0, 0, width, viewportHeight);
+          console.log(`🔧 Firefox: Drew first section at canvas Y=0`);
+        } else {
+          // Subsequent images - handle overlap
+          const prevScrollY = scrollPositions[i - 1];
+          const canvasY = scrollY; // Use actual scroll position as canvas position
           
-          currentY += imageHeight;
+          // Calculate how much of this image to draw (skip overlapping part)
+          const sourceY = Math.max(0, (prevScrollY + viewportHeight) - scrollY);
+          const sourceHeight = viewportHeight - sourceY;
+          const destY = canvasY + sourceY;
+          
+          if (sourceHeight > 0 && destY < totalHeight) {
+            const finalHeight = Math.min(sourceHeight, totalHeight - destY);
+            
+            ctx.drawImage(
+              imageBitmap,
+              0, sourceY, width, finalHeight,  // Source
+              0, destY, width, finalHeight     // Destination
+            );
+            
+            console.log(`🔧 Firefox: Drew section ${i + 1} from sourceY=${sourceY} to canvasY=${destY}, height=${finalHeight}`);
+          }
         }
         
         imageBitmap.close();
-        
-        // Stop if we've filled the canvas
-        if (currentY >= totalHeight) {
-          break;
-        }
       }
 
-      console.log(`🔧 Firefox: Stitching completed, final height: ${currentY}`);
+      console.log(`🔧 Firefox: Stitching completed, canvas height: ${totalHeight}`);
 
       // Convert to data URL
       const blob = await canvas.convertToBlob({ type: 'image/png' });
