@@ -324,8 +324,13 @@ export class FullPageCapture {
 
     console.log('🔧 Firefox: Image stitching completed');
 
+    // Compress the image to reduce payload size for API upload
+    console.log('🔧 Firefox: Compressing image to reduce payload size');
+    const compressedImage = await this.compressImage(stitchedImage, 0.75); // 75% quality
+    console.log('🔧 Firefox: Image compression completed');
+
     return {
-      dataUrl: stitchedImage,
+      dataUrl: compressedImage,
       width: actualWidth,
       height: actualHeight,
       scrollHeight: pageInfo.scrollHeight,
