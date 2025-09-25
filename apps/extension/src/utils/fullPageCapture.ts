@@ -202,202 +202,133 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: Starting NON-INVASIVE full page capture');
+    console.log('🔧 Firefox: Using EXACT Chrome approach for full page capture');
     
-    // Capture at ACTUAL content width but WITHOUT modifying page layout
-    console.log('🔧 Firefox: Page dimensions detected:', {
-      viewportWidth: pageInfo.viewportWidth,
+    // STEP 1: Determine if we need horizontal scrolling (SAME AS CHROME)
+    const needsHorizontalScroll = pageInfo.scrollWidth > pageInfo.viewportWidth;
+    const forceHorizontalScroll = pageInfo.scrollWidth >= pageInfo.viewportWidth * 1.1; // Force if 10% wider
+    const finalNeedsHorizontalScroll = needsHorizontalScroll || forceHorizontalScroll;
+    
+    console.log('🔧 Firefox horizontal scroll analysis:', {
       scrollWidth: pageInfo.scrollWidth,
-      viewportHeight: pageInfo.viewportHeight,
-      scrollHeight: pageInfo.scrollHeight
-    });
-    
-    // Use the ACTUAL content width to capture everything, but don't modify the page
-    const captureWidth = Math.max(pageInfo.scrollWidth || 1280, pageInfo.viewportWidth || 1280);
-    
-    console.log('🔧 Firefox: Capture width set to ACTUAL content width:', {
       viewportWidth: pageInfo.viewportWidth,
-      scrollWidth: pageInfo.scrollWidth,
-      captureWidth: captureWidth
+      ratio: pageInfo.scrollWidth / pageInfo.viewportWidth,
+      needsHorizontalScroll,
+      forceHorizontalScroll,
+      finalNeedsHorizontalScroll
     });
     
-    // Temporarily expand viewport ONLY during capture (invisible to user)
-    await this.executeScript(tabId, (targetWidth: number) => {
-      // Store original viewport meta for restoration
-      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
-      const originalViewport = viewportMeta ? viewportMeta.content : '';
-      
-      // Temporarily set viewport to accommodate full content width
-      if (viewportMeta) {
-        viewportMeta.content = `width=${targetWidth}, initial-scale=1.0`;
-      } else {
-        const newViewportMeta = document.createElement('meta');
-        newViewportMeta.name = 'viewport';
-        newViewportMeta.content = `width=${targetWidth}, initial-scale=1.0`;
-        document.head.appendChild(newViewportMeta);
-        newViewportMeta.setAttribute('data-pagepouch-added', 'true');
-      }
-      
-      // Store for restoration
-      (window as any).__pagepouchOriginalViewport = originalViewport;
-      
-      console.log('🔧 Firefox: Viewport temporarily set to', targetWidth + 'px for capture');
-    }, [captureWidth]);
+    // STEP 2: Calculate scroll positions for both dimensions (SAME AS CHROME)
+    const verticalPositions = this.calculateScrollPositions(
+      pageInfo.scrollHeight,
+      pageInfo.viewportHeight,
+      options.maxHeight
+    );
     
-    // Brief delay for viewport to take effect
-    await this.delay(500);
+    const horizontalPositions = finalNeedsHorizontalScroll 
+      ? this.calculateHorizontalScrollPositions(pageInfo.scrollWidth, pageInfo.viewportWidth)
+      : [0];
+
+    // STEP 3: Capture each section in grid (SAME AS CHROME)
+    const screenshots: Array<{dataUrl: string, x: number, y: number}> = [];
+    const totalSections = verticalPositions.length * horizontalPositions.length;
     
-    // Step 3: Scroll to trigger lazy loading and get final height
-    console.log('🔧 Firefox: Scrolling to trigger all lazy content');
-    
-    let previousHeight = 0;
-    let currentHeight = pageInfo.scrollHeight; // Start with initial height
-    let attempts = 0;
-    
-    // Keep scrolling until height stops changing (all lazy content loaded)
-    while (currentHeight > previousHeight && attempts < 5) {
-      previousHeight = currentHeight;
-      
-      // Scroll to current bottom
-      await this.scrollToPosition(tabId, currentHeight, 0);
-      await this.delay(1500); // Wait for lazy loading
-      
-      // Check if height increased
-      const checkInfo = await this.getPageInfo(tabId);
-      currentHeight = checkInfo.scrollHeight;
-      attempts++;
-      
-      console.log(`🔧 Firefox: Scroll attempt ${attempts}, height: ${previousHeight} -> ${currentHeight}`);
-    }
-    
-    // Final page info after all lazy loading
-    const finalPageInfo = await this.getPageInfo(tabId);
-    
-    console.log('🔧 Firefox: Final capture dimensions:', {
-      captureWidth,
-      finalHeight: finalPageInfo.scrollHeight,
-      originalHeight: pageInfo.scrollHeight
-    });
-    
-    // Calculate vertical positions with NO overlap for cleaner results
-    const viewportHeight = finalPageInfo.viewportHeight;
-    const totalHeight = finalPageInfo.scrollHeight;
-    const positions: number[] = [];
-    
-    console.log(`🔧 Firefox: Final page dimensions for capture:`, {
-      viewportHeight,
-      totalHeight,
-      captureWidth
-    });
-    
-    // Capture with small overlap to ensure no content is missed
-    const overlap = Math.floor(viewportHeight * 0.1); // 10% overlap
-    const step = viewportHeight - overlap;
-    
-    for (let y = 0; y < totalHeight; y += step) {
-      positions.push(y);
-    }
-    
-    // CRITICAL: Always ensure we capture the absolute bottom
-    const absoluteBottom = Math.max(0, totalHeight - viewportHeight);
-    if (positions[positions.length - 1] < absoluteBottom) {
-      positions.push(absoluteBottom);
-    }
-    
-    // Add extra position if there's a significant gap at the bottom
-    const lastPos = positions[positions.length - 1];
-    if (totalHeight - lastPos > viewportHeight * 0.5) {
-      const extraPos = Math.max(0, totalHeight - Math.floor(viewportHeight * 0.7));
-      if (!positions.includes(extraPos)) {
-        positions.splice(-1, 0, extraPos);
-      }
-    }
-    
-    const uniquePositions = [...new Set(positions)].sort((a, b) => a - b);
-    
-    console.log(`🔧 Firefox: Capturing ${uniquePositions.length} sections with 10% overlap`, {
-      captureWidth,
-      viewportHeight,
-      totalHeight,
-      finalHeight: finalPageInfo.scrollHeight,
-      positions: uniquePositions
+    console.log(`🔧 Firefox capture grid:`, {
+      verticalPositions: verticalPositions.length,
+      horizontalPositions: horizontalPositions.length,
+      totalSections,
+      verticalPositionsArray: verticalPositions,
+      horizontalPositionsArray: horizontalPositions
     });
 
-    // Capture each section
-    const screenshots: string[] = [];
-    
-    for (let i = 0; i < uniquePositions.length; i++) {
-      const scrollY = uniquePositions[i];
-      const sectionIndex = i + 1;
-      
-      console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${uniquePositions.length} at Y=${scrollY}`);
-      
-      // Scroll to position
-      await this.scrollToPosition(tabId, scrollY, 0);
-      await this.delay(800); // Longer delay for content to load
-      
-      try {
-        // Capture with maximum quality
-        const screenshot = await extensionAPI.tabs.captureVisibleTab({
-          format: 'png', // Always use PNG for best quality
-          quality: 100  // Maximum quality
-        });
-        
-        screenshots.push(screenshot);
-        console.log(`🔧 Firefox: Section ${sectionIndex} captured (${screenshot.length} chars)`);
-        
-      } catch (error) {
-        console.error(`🔧 Firefox: Failed to capture section ${sectionIndex}:`, error);
-        throw new Error(`Failed to capture section ${sectionIndex}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
+    console.log(`🔧 Firefox: Capturing ${totalSections} sections (${horizontalPositions.length}x${verticalPositions.length} grid)...`);
 
-    // Restore original scroll position and viewport
-    await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
-    
-    // Restore original viewport meta tag
-    await this.executeScript(tabId, () => {
-      const originalViewport = (window as any).__pagepouchOriginalViewport;
-      const viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement;
-      
-      if (viewportMeta) {
-        if (viewportMeta.getAttribute('data-pagepouch-added')) {
-          // Remove the meta tag we added
-          viewportMeta.remove();
-        } else if (originalViewport !== undefined) {
-          // Restore original content
-          viewportMeta.content = originalViewport;
+    for (let vIndex = 0; vIndex < verticalPositions.length; vIndex++) {
+      for (let hIndex = 0; hIndex < horizontalPositions.length; hIndex++) {
+        const scrollY = verticalPositions[vIndex];
+        const scrollX = horizontalPositions[hIndex];
+        const sectionIndex = vIndex * horizontalPositions.length + hIndex + 1;
+        
+        console.log(`🔧 Firefox: Capturing section ${sectionIndex}/${totalSections} at position (${scrollX}, ${scrollY})`);
+        
+        // Scroll to position
+        await this.scrollToPosition(tabId, scrollY, scrollX);
+        
+        // Wait for scroll to complete and content to load
+        await this.delay(options.scrollDelay);
+        
+        // Rate limiting delay between captures
+        if (sectionIndex > 1) {
+          console.log('🔧 Firefox: Rate limit delay...');
+          await this.delay(800);
+        }
+        
+        try {
+          // Capture visible area (SAME AS CHROME)
+          const screenshot = await extensionAPI.tabs.captureVisibleTab({
+            format: options.format,
+            quality: options.quality
+          });
+          screenshots.push({dataUrl: screenshot, x: scrollX, y: scrollY});
+          
+          console.log(`🔧 Firefox: Section ${sectionIndex} captured successfully`);
+          
+          // Additional delay after successful capture
+          if (sectionIndex < totalSections) {
+            await this.delay(200);
+          }
+        } catch (error) {
+          console.error(`🔧 Firefox: Failed to capture section ${sectionIndex}:`, error);
+          throw new Error(`Failed to capture section ${sectionIndex}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
-      
-      delete (window as any).__pagepouchOriginalViewport;
-      console.log('🔧 Firefox: Viewport restored to original state');
-    });
+    }
+
+    // STEP 4: Restore original scroll position (SAME AS CHROME)
+    await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
+
+    // STEP 5: Stitch screenshots together (SAME AS CHROME)
+    console.log('🔧 Firefox: Starting image stitching...');
+    const actualWidth = Math.max(pageInfo.viewportWidth, pageInfo.scrollWidth);
+    const actualHeight = pageInfo.scrollHeight;
     
-    console.log('🔧 Firefox: All capture modifications restored');
+    console.log('🔧 Firefox: Stitching parameters:', {
+      screenshotCount: screenshots.length,
+      actualWidth,
+      actualHeight,
+      viewportWidth: pageInfo.viewportWidth,
+      viewportHeight: pageInfo.viewportHeight,
+      screenshotPositions: screenshots.map(s => ({x: s.x, y: s.y}))
+    });
 
-    // Vertical stitching with overlap handling using exact target width
-    console.log('🔧 Firefox: Starting precision stitching with target width:', captureWidth);
-    const stitchedImage = await this.stitchFirefoxScreenshotsWithOverlap(
-      screenshots,
-      captureWidth, // Use exact target width
-      viewportHeight,
-      finalPageInfo.scrollHeight,
-      uniquePositions,
-      overlap
-    );
-    console.log('🔧 Firefox: Precision stitching completed');
+    let stitchedImage: string;
+    if (finalNeedsHorizontalScroll) {
+      // Grid stitching (SAME AS CHROME)
+      stitchedImage = await this.stitchGridScreenshots(
+        screenshots,
+        actualWidth,
+        actualHeight,
+        pageInfo.viewportWidth,
+        pageInfo.viewportHeight
+      );
+    } else {
+      // Vertical stitching only (SAME AS CHROME)
+      const verticalScreenshots = screenshots.map(s => s.dataUrl);
+      stitchedImage = await this.stitchVerticalScreenshots(
+        verticalScreenshots,
+        actualWidth,
+        actualHeight,
+        pageInfo.viewportHeight
+      );
+    }
 
-    // Light compression to maintain quality while reducing payload
-    console.log('🔧 Firefox: Applying light compression');
-    const compressedImage = await this.compressImage(stitchedImage, 0.90); // Higher quality
-    console.log('🔧 Firefox: Compression completed');
+    console.log('🔧 Firefox: Image stitching completed');
 
     return {
-      dataUrl: compressedImage,
-      width: captureWidth, // Return exact target width
-      height: finalPageInfo.scrollHeight,
-      scrollHeight: finalPageInfo.scrollHeight,
+      dataUrl: stitchedImage,
+      width: actualWidth,
+      height: actualHeight,
+      scrollHeight: pageInfo.scrollHeight,
       captureTime: Date.now() - startTime,
     };
   }
