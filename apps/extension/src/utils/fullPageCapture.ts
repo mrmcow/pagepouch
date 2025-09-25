@@ -3,6 +3,9 @@
  * Captures entire webpage by scrolling and stitching screenshots
  */
 
+// Firefox compatibility layer
+const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 export interface CaptureOptions {
   quality?: number;
   format?: 'png' | 'jpeg';
@@ -170,7 +173,7 @@ export class FullPageCapture {
     originalScrollY: number;
     originalScrollX: number;
   }> {
-    const results = await chrome.scripting.executeScript({
+    const results = await extensionAPI.scripting.executeScript({
       target: { tabId },
       func: () => {
         return {
@@ -267,7 +270,7 @@ export class FullPageCapture {
    * Scroll to specific position
    */
   private static async scrollToPosition(tabId: number, scrollY: number, scrollX: number = 0): Promise<void> {
-    await chrome.scripting.executeScript({
+    await extensionAPI.scripting.executeScript({
       target: { tabId },
       func: (x: number, y: number) => {
         window.scrollTo(x, y);
@@ -285,7 +288,7 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    const screenshot = await chrome.tabs.captureVisibleTab({
+    const screenshot = await extensionAPI.tabs.captureVisibleTab({
       format: options.format,
       quality: options.quality,
     });
@@ -518,11 +521,11 @@ export class FullPageCapture {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         // Check permissions before attempting capture
-        if (!chrome.tabs || typeof chrome.tabs.captureVisibleTab !== 'function') {
+        if (!extensionAPI.tabs || typeof extensionAPI.tabs.captureVisibleTab !== 'function') {
           throw new Error('Chrome tabs API not available');
         }
 
-        const screenshot = await chrome.tabs.captureVisibleTab({
+        const screenshot = await extensionAPI.tabs.captureVisibleTab({
           format,
           quality,
         });
@@ -582,12 +585,22 @@ export class FullPageCapture {
    * Check if full page capture is supported
    */
   static isSupported(): boolean {
-    return !!(
-      typeof chrome !== 'undefined' &&
-      chrome.tabs &&
-      typeof chrome.tabs.captureVisibleTab === 'function' &&
-      chrome.scripting &&
-      typeof chrome.scripting.executeScript === 'function'
+    console.log('🔧 Checking FullPageCapture support...');
+    console.log('🔧 extensionAPI available:', !!extensionAPI);
+    console.log('🔧 tabs API available:', !!extensionAPI?.tabs);
+    console.log('🔧 captureVisibleTab available:', typeof extensionAPI?.tabs?.captureVisibleTab === 'function');
+    console.log('🔧 scripting API available:', !!extensionAPI?.scripting);
+    console.log('🔧 executeScript available:', typeof extensionAPI?.scripting?.executeScript === 'function');
+    
+    const isSupported = !!(
+      extensionAPI &&
+      extensionAPI.tabs &&
+      typeof extensionAPI.tabs.captureVisibleTab === 'function' &&
+      extensionAPI.scripting &&
+      typeof extensionAPI.scripting.executeScript === 'function'
     );
+    
+    console.log('🔧 FullPageCapture isSupported:', isSupported);
+    return isSupported;
   }
 }
