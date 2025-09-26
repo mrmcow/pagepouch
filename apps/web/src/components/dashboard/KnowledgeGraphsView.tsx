@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Folder } from '@pagepouch/shared'
+import { KnowledgeGraphViewer } from './KnowledgeGraphViewer'
 
 interface KnowledgeGraph {
   id: string
@@ -60,6 +61,7 @@ export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGrap
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedGraphId, setSelectedGraphId] = useState<string | null>(null)
 
   // Load graphs from API
   useEffect(() => {
@@ -230,6 +232,7 @@ export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGrap
             graphs={filteredGraphs}
             viewMode={viewMode}
             folders={folders}
+            onOpenGraph={setSelectedGraphId}
           />
         )}
       </div>
@@ -244,6 +247,17 @@ export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGrap
               setShowCreateModal(false)
             }}
           />
+      )}
+
+      {/* Knowledge Graph Viewer */}
+      {selectedGraphId && (
+        <KnowledgeGraphViewer
+          isOpen={!!selectedGraphId}
+          onClose={() => setSelectedGraphId(null)}
+          graphId={selectedGraphId}
+          graphTitle={graphs.find(g => g.id === selectedGraphId)?.title || 'Knowledge Graph'}
+          graphDescription={graphs.find(g => g.id === selectedGraphId)?.description}
+        />
       )}
     </div>
   )
@@ -450,10 +464,11 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
   )
 }
 
-function GraphsGrid({ graphs, viewMode, folders }: { 
+function GraphsGrid({ graphs, viewMode, folders, onOpenGraph }: { 
   graphs: KnowledgeGraph[], 
   viewMode: 'grid' | 'list',
-  folders: Folder[]
+  folders: Folder[],
+  onOpenGraph: (graphId: string) => void
 }) {
   const getFolderNames = (folderIds: string[]) => {
     return folderIds
@@ -470,7 +485,10 @@ function GraphsGrid({ graphs, viewMode, folders }: {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center relative">
+                  <div 
+                    className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center relative cursor-pointer hover:from-purple-600 hover:to-blue-700 transition-all duration-200"
+                    onClick={() => onOpenGraph(graph.id)}
+                  >
                     {graph.status === 'processing' ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                     ) : (
@@ -504,7 +522,7 @@ function GraphsGrid({ graphs, viewMode, folders }: {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onOpenGraph(graph.id)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Open Graph
                       </DropdownMenuItem>
@@ -553,7 +571,7 @@ function GraphsGrid({ graphs, viewMode, folders }: {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onOpenGraph(graph.id)}>
                     <Eye className="mr-2 h-4 w-4" />
                     Open Graph
                   </DropdownMenuItem>
@@ -576,7 +594,10 @@ function GraphsGrid({ graphs, viewMode, folders }: {
           </CardHeader>
           <CardContent>
             {/* Graph Thumbnail/Preview */}
-            <div className="aspect-video bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg mb-4 flex items-center justify-center border border-purple-100 relative">
+            <div 
+              className="aspect-video bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg mb-4 flex items-center justify-center border border-purple-100 relative cursor-pointer hover:from-purple-100 hover:to-blue-100 transition-all duration-200"
+              onClick={() => onOpenGraph(graph.id)}
+            >
               <div className="text-center">
                 {graph.status === 'processing' ? (
                   <>
@@ -633,7 +654,12 @@ function GraphsGrid({ graphs, viewMode, folders }: {
                 <Calendar className="w-3 h-3" />
                 {new Date(graph.updatedAt).toLocaleDateString()}
               </span>
-              <Button size="sm" variant="ghost" className="text-purple-600 hover:text-purple-700 hover:bg-purple-50">
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                onClick={() => onOpenGraph(graph.id)}
+              >
                 <Eye className="w-4 h-4 mr-1" />
                 Open
               </Button>
