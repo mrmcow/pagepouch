@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { ClipViewer } from './ClipViewer'
+import { generateGraphPreview } from '@/utils/graphPreviewGenerator'
 
 // Enhanced data structure with rich evidence
 interface GraphNode {
@@ -480,14 +481,44 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
 
+  // Function to save graph preview
+  const saveGraphPreview = useCallback(async (graphData: { nodes: GraphNode[], edges: GraphEdge[] }) => {
+    if (!graphId || typeof window === 'undefined') return
+    
+    try {
+      // Generate preview image
+      const previewImage = generateGraphPreview(graphData)
+      
+      // Save to database
+      const response = await fetch(`/api/knowledge-graphs/${graphId}/preview`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ preview_image: previewImage })
+      })
+      
+      if (!response.ok) {
+        console.error('Failed to save graph preview')
+      }
+    } catch (error) {
+      console.error('Error saving graph preview:', error)
+    }
+  }, [graphId])
+
   // Load graph data
   useEffect(() => {
     if (isOpen) {
       // Generate real graph data from user's clips
       const realData = generateRealGraphData(clips, folders)
       setGraphData(realData)
+      
+      // Save preview after a short delay to ensure graph is rendered
+      setTimeout(() => {
+        saveGraphPreview(realData)
+      }, 1000)
     }
-  }, [isOpen, graphId, clips, folders])
+  }, [isOpen, graphId, clips, folders, saveGraphPreview])
 
   // Zoom functions
   const handleZoomIn = useCallback(() => {

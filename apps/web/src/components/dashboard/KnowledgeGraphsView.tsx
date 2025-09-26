@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Folder } from '@pagepouch/shared'
 import { KnowledgeGraphViewer } from './KnowledgeGraphViewer'
+import { generateFallbackPreview } from '@/utils/graphPreviewGenerator'
 
 interface KnowledgeGraph {
   id: string
@@ -47,6 +48,7 @@ interface KnowledgeGraph {
   updatedAt: string
   status: 'processing' | 'completed' | 'failed'
   thumbnail?: string
+  preview_image?: string // Base64 preview image
   isPublic?: boolean
 }
 
@@ -598,31 +600,57 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph }: {
           <CardContent>
             {/* Graph Thumbnail/Preview */}
             <div 
-              className="aspect-video bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg mb-4 flex items-center justify-center border border-purple-100 relative cursor-pointer hover:from-purple-100 hover:to-blue-100 transition-all duration-200"
+              className="aspect-video rounded-lg mb-4 relative cursor-pointer overflow-hidden border border-purple-100 hover:border-purple-200 transition-all duration-200 group"
               onClick={() => onOpenGraph(graph.id)}
             >
-              <div className="text-center">
-                {graph.status === 'processing' ? (
-                  <>
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
-                    <p className="text-xs text-purple-600 font-medium">Processing...</p>
-                  </>
-                ) : graph.status === 'failed' ? (
-                  <>
-                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <span className="text-red-600 text-xs">!</span>
+              {graph.preview_image ? (
+                // Show actual graph preview
+                <div className="relative w-full h-full">
+                  <img 
+                    src={graph.preview_image} 
+                    alt={`Preview of ${graph.title}`}
+                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  />
+                  {/* Overlay gradient for better text visibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  {/* Status indicator */}
+                  {graph.status === 'completed' && (
+                    <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full shadow-sm"></div>
+                  )}
+                  {/* Hover overlay with stats */}
+                  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="bg-white/90 backdrop-blur-sm rounded px-2 py-1 text-xs text-gray-700">
+                      {graph.nodeCount} nodes • {graph.connectionCount} connections
                     </div>
-                    <p className="text-xs text-red-600 font-medium">Failed</p>
-                  </>
-                ) : (
-                  <>
-                    <Brain className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                    <p className="text-xs text-purple-600 font-medium">Interactive Graph</p>
-                  </>
-                )}
-              </div>
-              {graph.status === 'completed' && (
-                <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                </div>
+              ) : (
+                // Fallback for graphs without previews
+                <div className="w-full h-full bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center relative group-hover:from-purple-100 group-hover:to-blue-100 transition-all duration-200">
+                  <div className="text-center">
+                    {graph.status === 'processing' ? (
+                      <>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+                        <p className="text-xs text-purple-600 font-medium">Processing...</p>
+                      </>
+                    ) : graph.status === 'failed' ? (
+                      <>
+                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <span className="text-red-600 text-xs">!</span>
+                        </div>
+                        <p className="text-xs text-red-600 font-medium">Failed</p>
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                        <p className="text-xs text-purple-600 font-medium">Interactive Graph</p>
+                      </>
+                    )}
+                  </div>
+                  {graph.status === 'completed' && (
+                    <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full"></div>
+                  )}
+                </div>
               )}
             </div>
 
