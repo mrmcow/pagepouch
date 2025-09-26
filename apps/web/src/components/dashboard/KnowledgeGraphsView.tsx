@@ -253,12 +253,12 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
   return (
     <div className="h-full flex flex-col">
       {/* Compact Professional Header */}
-      <div className="text-center py-8 bg-gradient-to-br from-slate-50 via-white to-slate-50 border-b border-slate-200">
+      <div className="py-8 bg-gradient-to-br from-slate-50 via-white to-slate-50 border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-6">
           <h1 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
             Visualize Your Research
           </h1>
-          <p className="text-base text-slate-600 max-w-xl mx-auto">
+          <p className="text-base text-slate-600">
             Transform scattered information into connected insights.
           </p>
         </div>
