@@ -53,9 +53,10 @@ interface KnowledgeGraph {
 interface KnowledgeGraphsViewProps {
   folders: Folder[]
   subscriptionTier: 'free' | 'pro'
+  clips: any[] // Add clips prop
 }
 
-export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGraphsViewProps) {
+export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: KnowledgeGraphsViewProps) {
   const [graphs, setGraphs] = useState<KnowledgeGraph[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')

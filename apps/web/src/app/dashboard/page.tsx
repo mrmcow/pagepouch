@@ -1128,6 +1128,7 @@ function DashboardContent() {
               <KnowledgeGraphsView 
                 folders={state.folders}
                 subscriptionTier={state.subscriptionTier}
+                clips={state.clips}
               />
             ) : (
               <div className="flex-1 overflow-hidden">
