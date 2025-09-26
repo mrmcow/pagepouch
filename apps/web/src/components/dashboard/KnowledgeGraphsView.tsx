@@ -188,61 +188,61 @@ export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGrap
 function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => void, folders: Folder[] }) {
   return (
     <div className="h-full flex flex-col">
-      {/* Professional Header */}
-      <div className="text-center py-12 bg-gradient-to-br from-slate-50 via-white to-slate-50 border-b border-slate-200">
+      {/* Compact Professional Header */}
+      <div className="text-center py-8 bg-gradient-to-br from-slate-50 via-white to-slate-50 border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-6">
-          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full px-6 py-3 mb-6 shadow-sm">
-            <div className="w-8 h-8 bg-gradient-to-br from-slate-600 to-slate-800 rounded-lg flex items-center justify-center">
-              <Brain className="w-4 h-4 text-white" />
+          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full px-5 py-2 mb-4 shadow-sm">
+            <div className="w-6 h-6 bg-gradient-to-br from-slate-600 to-slate-800 rounded-md flex items-center justify-center">
+              <Brain className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm font-medium text-slate-700">Knowledge Graphs</span>
-            <Badge className="bg-slate-100 text-slate-600 text-xs border-0">Pro Feature</Badge>
+            <span className="text-xs font-medium text-slate-700">Knowledge Graphs</span>
+            <Badge className="bg-slate-100 text-slate-600 text-xs border-0 px-2 py-0.5">Pro</Badge>
           </div>
           
-          <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">
+          <h1 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">
             Visualize Your Research
           </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Transform scattered information into connected insights. Create interactive knowledge maps from your captured content.
           </p>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         {/* Left Panel - Features */}
-        <div className="w-80 bg-white border-r border-slate-200 p-8">
-          <div className="space-y-8">
+        <div className="w-72 bg-white border-r border-slate-200 p-6">
+          <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-6">What you can do</h3>
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Network className="w-5 h-5 text-blue-600" />
+              <h3 className="text-base font-semibold text-slate-900 mb-4">Capabilities</h3>
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Network className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-1">Auto-connect concepts</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed">AI identifies relationships between entities, topics, and themes across your content</p>
+                    <h4 className="font-medium text-slate-900 text-sm mb-1">Auto-connect concepts</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">AI identifies relationships between entities and themes</p>
                   </div>
                 </div>
                 
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Eye className="w-5 h-5 text-purple-600" />
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Eye className="w-4 h-4 text-purple-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-1">Interactive exploration</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed">Navigate like Miro or Figma with smooth zoom, pan, and click-to-explore</p>
+                    <h4 className="font-medium text-slate-900 text-sm mb-1">Interactive exploration</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">Navigate with smooth zoom, pan, and click-to-explore</p>
                   </div>
                 </div>
                 
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-green-600" />
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-1">Export & share</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed">Generate publication-ready visuals for reports, presentations, and collaboration</p>
+                    <h4 className="font-medium text-slate-900 text-sm mb-1">Export & share</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">Generate publication-ready visuals for reports</p>
                   </div>
                 </div>
               </div>
@@ -250,19 +250,19 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
 
             {folders.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-slate-700 mb-3">Available folders</h3>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {folders.slice(0, 6).map((folder) => (
-                    <div key={folder.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                <h3 className="text-sm font-medium text-slate-700 mb-3">Available folders ({folders.length})</h3>
+                <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                  {folders.slice(0, 5).map((folder) => (
+                    <div key={folder.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-slate-50 transition-colors">
                       <div 
-                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: folder.color || '#64748b' }}
                       />
-                      <span className="text-sm text-slate-700 truncate">{folder.name}</span>
+                      <span className="text-xs text-slate-700 truncate">{folder.name}</span>
                     </div>
                   ))}
-                  {folders.length > 6 && (
-                    <p className="text-xs text-slate-500 px-2">+{folders.length - 6} more folders</p>
+                  {folders.length > 5 && (
+                    <p className="text-xs text-slate-500 px-1.5">+{folders.length - 5} more</p>
                   )}
                 </div>
               </div>
@@ -273,11 +273,11 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
         {/* Center Panel - Visual Preview */}
         <div className="flex-1 bg-slate-50 relative overflow-hidden">
           {/* Subtle Grid Background */}
-          <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 opacity-20">
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" strokeWidth="1"/>
+                <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                  <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#e2e8f0" strokeWidth="1"/>
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#grid)" />
@@ -286,108 +286,105 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
 
           {/* Mock Graph Visualization */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-96 h-64">
+            <div className="relative w-80 h-52">
               {/* Sample Nodes */}
-              <div className="absolute top-8 left-12 w-16 h-16 bg-white rounded-xl shadow-lg border border-slate-200 flex items-center justify-center">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                </div>
+              <div className="absolute top-6 left-8 w-12 h-12 bg-white rounded-lg shadow-lg border border-slate-200 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-blue-600" />
               </div>
               
-              <div className="absolute top-4 right-16 w-20 h-12 bg-white rounded-lg shadow-md border border-slate-200 flex items-center justify-center">
+              <div className="absolute top-2 right-12 w-16 h-8 bg-white rounded-md shadow-md border border-slate-200 flex items-center justify-center">
                 <span className="text-xs font-medium text-slate-700">Research</span>
               </div>
               
-              <div className="absolute bottom-12 left-8 w-14 h-14 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center">
-                <Users className="w-5 h-5 text-purple-600" />
+              <div className="absolute bottom-8 left-6 w-10 h-10 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center">
+                <Users className="w-4 h-4 text-purple-600" />
               </div>
               
-              <div className="absolute bottom-8 right-12 w-18 h-10 bg-white rounded-lg shadow-md border border-slate-200 flex items-center justify-center">
+              <div className="absolute bottom-6 right-8 w-14 h-7 bg-white rounded-md shadow-md border border-slate-200 flex items-center justify-center">
                 <span className="text-xs font-medium text-slate-700">Analysis</span>
               </div>
               
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-gradient-to-br from-slate-600 to-slate-800 rounded-xl shadow-xl flex items-center justify-center">
-                <Brain className="w-8 h-8 text-white" />
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-800 rounded-lg shadow-xl flex items-center justify-center">
+                <Brain className="w-6 h-6 text-white" />
               </div>
 
               {/* Connection Lines */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none">
                 <defs>
                   <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#64748b" stopOpacity="0.3"/>
-                    <stop offset="100%" stopColor="#475569" stopOpacity="0.6"/>
+                    <stop offset="0%" stopColor="#64748b" stopOpacity="0.4"/>
+                    <stop offset="100%" stopColor="#475569" stopOpacity="0.7"/>
                   </linearGradient>
                 </defs>
-                <path d="M 80 60 Q 180 80 200 120" stroke="url(#connectionGradient)" strokeWidth="2" fill="none" strokeDasharray="5,5" className="animate-pulse"/>
-                <path d="M 160 160 Q 120 120 80 100" stroke="url(#connectionGradient)" strokeWidth="2" fill="none" strokeDasharray="5,5" className="animate-pulse"/>
-                <path d="M 200 120 Q 220 180 180 200" stroke="url(#connectionGradient)" strokeWidth="2" fill="none" strokeDasharray="5,5" className="animate-pulse"/>
+                <path d="M 68 48 Q 140 60 160 90" stroke="url(#connectionGradient)" strokeWidth="2" fill="none" strokeDasharray="4,4" className="animate-pulse"/>
+                <path d="M 128 128 Q 100 100 68 80" stroke="url(#connectionGradient)" strokeWidth="2" fill="none" strokeDasharray="4,4" className="animate-pulse"/>
+                <path d="M 160 90 Q 180 140 148 156" stroke="url(#connectionGradient)" strokeWidth="2" fill="none" strokeDasharray="4,4" className="animate-pulse"/>
               </svg>
             </div>
           </div>
 
           {/* Floating Action */}
-          <div className="absolute bottom-8 right-8">
+          <div className="absolute bottom-6 right-6">
             <Button 
               onClick={onCreateGraph}
-              size="lg"
-              className="bg-slate-900 hover:bg-slate-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl px-8 py-4"
+              className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg px-6 py-2.5 text-sm font-medium"
             >
-              <Plus className="mr-2 h-5 w-5" />
-              Create Knowledge Graph
+              <Plus className="mr-2 h-4 w-4" />
+              Create Graph
             </Button>
           </div>
 
           {/* Subtle Overlay Text */}
-          <div className="absolute top-8 left-8">
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm border border-slate-200">
-              <p className="text-sm text-slate-600">Interactive preview</p>
+          <div className="absolute top-6 left-6">
+            <div className="bg-white/90 backdrop-blur-sm rounded-md px-3 py-1.5 shadow-sm border border-slate-200">
+              <p className="text-xs text-slate-600">Interactive preview</p>
             </div>
           </div>
         </div>
 
         {/* Right Panel - Process */}
-        <div className="w-72 bg-white border-l border-slate-200 p-8">
+        <div className="w-64 bg-white border-l border-slate-200 p-6">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-6">How it works</h3>
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium text-slate-600">
+            <h3 className="text-base font-semibold text-slate-900 mb-4">Process</h3>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium text-slate-600">
                   1
                 </div>
                 <div>
-                  <h4 className="font-medium text-slate-900 mb-1">Select folders</h4>
-                  <p className="text-sm text-slate-600">Choose which content to analyze</p>
+                  <h4 className="font-medium text-slate-900 text-sm mb-1">Select folders</h4>
+                  <p className="text-xs text-slate-600">Choose content to analyze</p>
                 </div>
               </div>
               
-              <div className="flex gap-4">
-                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium text-slate-600">
+              <div className="flex gap-3">
+                <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium text-slate-600">
                   2
                 </div>
                 <div>
-                  <h4 className="font-medium text-slate-900 mb-1">AI processing</h4>
-                  <p className="text-sm text-slate-600">Extract entities and relationships</p>
+                  <h4 className="font-medium text-slate-900 text-sm mb-1">AI processing</h4>
+                  <p className="text-xs text-slate-600">Extract entities & relationships</p>
                 </div>
               </div>
               
-              <div className="flex gap-4">
-                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium text-slate-600">
+              <div className="flex gap-3">
+                <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium text-slate-600">
                   3
                 </div>
                 <div>
-                  <h4 className="font-medium text-slate-900 mb-1">Explore & refine</h4>
-                  <p className="text-sm text-slate-600">Navigate your knowledge map</p>
+                  <h4 className="font-medium text-slate-900 text-sm mb-1">Explore & refine</h4>
+                  <p className="text-xs text-slate-600">Navigate your knowledge map</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-slate-200">
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-medium text-slate-900">Pro tip</span>
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <div className="bg-slate-50 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span className="text-xs font-medium text-slate-900">Best practice</span>
                 </div>
-                <p className="text-sm text-slate-600">Start with 2-3 related folders for the best initial results</p>
+                <p className="text-xs text-slate-600">Start with 2-3 related folders for optimal results</p>
               </div>
             </div>
           </div>
