@@ -29,7 +29,9 @@ import {
   Globe,
   X,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Brain,
+  Sparkles
 } from 'lucide-react'
 import { 
   DropdownMenu,
@@ -55,6 +57,8 @@ import { EditFolderModal } from '@/components/dashboard/EditFolderModal'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { ProfileModal } from '@/components/dashboard/ProfileModal'
 import { BillingModal } from '@/components/dashboard/BillingModal'
+import { KnowledgeGraphUpgradeModal } from '@/components/dashboard/KnowledgeGraphUpgradeModal'
+import { KnowledgeGraphsView } from '@/components/dashboard/KnowledgeGraphsView'
 import { CachedImage, useImageCache } from '@/components/ui/cached-image'
 
 interface DashboardState {
@@ -67,7 +71,7 @@ interface DashboardState {
   selectedFolder: string | null
   selectedTag: string | null
   viewMode: 'grid' | 'list'
-  viewFilter: 'library' | 'favorites' | 'recent'
+  viewFilter: 'library' | 'favorites' | 'recent' | 'knowledge-graphs'
   sortBy: 'created_at' | 'updated_at' | 'title'
   sortOrder: 'asc' | 'desc'
   user: any
@@ -78,6 +82,7 @@ interface DashboardState {
   isEditFolderModalOpen: boolean
   isProfileModalOpen: boolean
   isBillingModalOpen: boolean
+  isKnowledgeGraphUpgradeModalOpen: boolean
   // Pagination state
   totalClips: number
   hasMoreClips: boolean
@@ -113,6 +118,7 @@ function DashboardContent() {
     isEditFolderModalOpen: false,
     isProfileModalOpen: false,
     isBillingModalOpen: false,
+    isKnowledgeGraphUpgradeModalOpen: false,
     // Pagination state
     totalClips: 0,
     hasMoreClips: false,
@@ -775,6 +781,17 @@ function DashboardContent() {
                   <Clock className="mr-2 h-4 w-4" />
                   Recent
                 </Button>
+                {!state.isSubscriptionLoading && state.subscriptionTier === 'pro' && (
+                  <Button 
+                    variant={state.viewFilter === 'knowledge-graphs' ? 'default' : 'ghost'} 
+                    size="sm"
+                    className={state.viewFilter === 'knowledge-graphs' ? 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}
+                    onClick={() => setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))}
+                  >
+                    <Brain className="mr-2 h-4 w-4" />
+                    Knowledge Graphs
+                  </Button>
+                )}
               </nav>
             </div>
 
@@ -810,6 +827,7 @@ function DashboardContent() {
         <div className="flex flex-col lg:flex-row gap-6 h-full">
           {/* Sidebar */}
           <aside className="w-full lg:w-64 space-y-6">
+
             {/* Quick Actions */}
             <Card className="border border-white/20 shadow-md bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md">
               <CardHeader className="pb-3">
@@ -1018,6 +1036,7 @@ function DashboardContent() {
           {/* Main Content */}
           <main className="flex-1 flex flex-col space-y-6 min-w-0 h-full overflow-hidden">
             {/* Search and Filters - Clean Simple Layout */}
+            {state.viewFilter !== 'knowledge-graphs' && (
             <div className="flex items-center gap-3 w-full px-1 py-3">
               {/* Main Search Bar */}
               <div className="relative flex-1 min-w-0">
@@ -1100,9 +1119,16 @@ function DashboardContent() {
                 </button>
               </div>
             </div>
+            )}
 
-            {/* Clips Grid/List */}
-            <div className="flex-1 overflow-hidden">
+            {/* Content Area - Clips or Knowledge Graphs */}
+            {state.viewFilter === 'knowledge-graphs' ? (
+              <KnowledgeGraphsView 
+                folders={state.folders}
+                subscriptionTier={state.subscriptionTier}
+              />
+            ) : (
+              <div className="flex-1 overflow-hidden">
               {isInitialLoading ? (
                 /* Fast Loading Skeleton */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -1189,6 +1215,7 @@ function DashboardContent() {
                 </div>
               )}
             </div>
+            )}
           </main>
         </div>
       </div>
@@ -1260,6 +1287,12 @@ function DashboardContent() {
           clipsThisMonth: state.clipsThisMonth,
           clipsLimit: state.clipsLimit
         }}
+      />
+
+      {/* Knowledge Graph Upgrade Modal */}
+      <KnowledgeGraphUpgradeModal
+        isOpen={state.isKnowledgeGraphUpgradeModalOpen}
+        onClose={() => setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: false }))}
       />
     </div>
   )

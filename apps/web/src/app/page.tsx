@@ -161,43 +161,44 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Premium CTA Section - Sophisticated Design */}
-          <div className="max-w-xl mx-auto">
-            <div className="relative">
-              {/* Subtle glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-3xl p-10 shadow-2xl shadow-blue-500/10">
-                <div className="text-center mb-8">
-                  <h3 className="text-3xl font-bold mb-3 text-slate-800 dark:text-slate-200">Start Your Free Trial</h3>
-                  <p className="text-lg text-slate-600 dark:text-slate-400">50 clips free • No credit card required • Instant setup</p>
+          {/* Elevated CTA Section - Clean & Integrated */}
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            {/* Free Trial Header - Floating Above */}
+            <div className="space-y-3">
+              <h3 className="text-4xl font-bold text-slate-800 dark:text-slate-200">Start Your Free Trial</h3>
+              <p className="text-xl text-slate-600 dark:text-slate-400">50 clips free • No credit card required • Instant setup</p>
+            </div>
+            
+            {/* Browser Selector - Elevated & Prominent */}
+            <div className="relative flex justify-center">
+              {/* Subtle glow behind browser selector */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl blur-2xl scale-110"></div>
+              <div className="relative">
+                <BrowserSelector onDownloadClick={handleDownloadClick} />
+              </div>
+            </div>
+            
+            {/* Alternative Option - Minimal & Clean */}
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200/60 dark:border-slate-700/60"></div>
                 </div>
-                
-                <div className="flex justify-center mb-8">
-                  <BrowserSelector onDownloadClick={handleDownloadClick} />
-                </div>
-                
-                <div className="text-center">
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="bg-white dark:bg-slate-900 px-3 text-slate-500 dark:text-slate-400">or</span>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="font-medium border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-8 shadow-sm hover:shadow-md transition-all duration-200" 
-                    asChild
-                  >
-                    <Link href="/auth/signup">
-                      <RocketIcon className="mr-2 h-4 w-4" />
-                      Start with web dashboard
-                    </Link>
-                  </Button>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:bg-slate-950 px-4 py-1 rounded-full text-slate-500 dark:text-slate-400">or</span>
                 </div>
               </div>
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="font-medium bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-slate-200/60 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" 
+                asChild
+              >
+                <Link href="/auth/signup">
+                  <RocketIcon className="mr-2 h-5 w-5" />
+                  Start with web dashboard
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -847,21 +848,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t py-12 px-4 bg-muted/30">
-        <div className="pagepouch-container">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+      {/* Clean, Focused Footer */}
+      <footer className="border-t bg-slate-50 dark:bg-slate-900">
+        <div className="pagepouch-container py-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            {/* Brand */}
+            <div className="flex items-center space-x-3">
               <LogoIcon size={32} />
-              <span className="text-xl font-bold">PagePouch</span>
+              <span className="text-xl font-bold text-slate-800 dark:text-slate-200">PagePouch</span>
             </div>
-            <div className="text-center md:text-right">
-              <p className="text-muted-foreground mb-2">
-                Built with ❤️ for analysts and researchers
-              </p>
-              <p className="text-sm text-muted-foreground">
-                &copy; 2025 PagePouch. All rights reserved.
-              </p>
+
+            {/* Essential Links */}
+            <div className="flex items-center gap-8 text-sm">
+              <Link href="/dashboard" className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                Dashboard
+              </Link>
+              <Link href="/privacy" className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                Privacy
+              </Link>
+              <Link href="/terms" className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                Terms
+              </Link>
+              <a href="mailto:support@pagepouch.com" className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                Support
+              </a>
+            </div>
+
+            {/* Copyright */}
+            <div className="text-sm text-slate-500">
+              &copy; 2025 PagePouch
             </div>
           </div>
         </div>

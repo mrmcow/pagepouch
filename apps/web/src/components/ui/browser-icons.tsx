@@ -18,11 +18,7 @@ export function ChromeIcon({ size = 24, className = '' }: BrowserIconProps) {
       className={className}
     >
       <defs>
-        {/* Updated gradients to match official Chrome colors */}
-        <radialGradient id={`${uniqueId}-center`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#4285F4"/>
-          <stop offset="100%" stopColor="#1A73E8"/>
-        </radialGradient>
+        {/* Chrome gradients - official colors */}
         <linearGradient id={`${uniqueId}-red`} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#EA4335"/>
           <stop offset="100%" stopColor="#D33B2C"/>
@@ -35,31 +31,35 @@ export function ChromeIcon({ size = 24, className = '' }: BrowserIconProps) {
           <stop offset="0%" stopColor="#FBBC04"/>
           <stop offset="100%" stopColor="#F9AB00"/>
         </linearGradient>
+        <radialGradient id={`${uniqueId}-blue`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#4285F4"/>
+          <stop offset="100%" stopColor="#1A73E8"/>
+        </radialGradient>
       </defs>
       
       {/* Outer circle background */}
-      <circle cx="256" cy="256" r="256" fill="#f1f3f4"/>
+      <circle cx="256" cy="256" r="256" fill="#ffffff"/>
       
-      {/* White background circle */}
-      <circle cx="256" cy="256" r="200" fill="#fff"/>
-      
-      {/* Red segment (top) */}
-      <path d="M256 56v200l173.205-100C394.297 105.703 330.297 56 256 56z" fill={`url(#${uniqueId}-red)`}/>
-      
-      {/* Green segment (bottom left) */}
-      <path d="M82.795 356L256 256 82.795 156C32.703 205.703 32.703 306.297 82.795 356z" fill={`url(#${uniqueId}-green)`}/>
+      {/* Red segment (top right) */}
+      <path d="M 256,56 A 200,200 0 0,1 429.205,156 L 256,256 z" fill={`url(#${uniqueId}-red)`}/>
       
       {/* Yellow segment (bottom right) */}
-      <path d="M429.205 156L256 256l173.205 100C479.297 306.297 479.297 205.703 429.205 156z" fill={`url(#${uniqueId}-yellow)`}/>
+      <path d="M 429.205,156 A 200,200 0 0,1 429.205,356 L 256,256 z" fill={`url(#${uniqueId}-yellow)`}/>
+      
+      {/* Green segment (left) */}
+      <path d="M 429.205,356 A 200,200 0 0,1 82.795,356 L 256,256 z" fill={`url(#${uniqueId}-green)`}/>
+      
+      {/* Green segment continuation (top left) */}
+      <path d="M 82.795,356 A 200,200 0 0,1 82.795,156 L 256,256 z" fill={`url(#${uniqueId}-green)`}/>
+      
+      {/* Green segment final (back to top) */}
+      <path d="M 82.795,156 A 200,200 0 0,1 256,56 L 256,256 z" fill={`url(#${uniqueId}-green)`}/>
+      
+      {/* White center circle - the signature Chrome element */}
+      <circle cx="256" cy="256" r="100" fill="#ffffff"/>
       
       {/* Blue center circle */}
-      <circle cx="256" cy="256" r="100" fill={`url(#${uniqueId}-center)`}/>
-      
-      {/* Inner white ring */}
-      <circle cx="256" cy="256" r="75" fill="#fff"/>
-      
-      {/* Inner blue circle */}
-      <circle cx="256" cy="256" r="50" fill={`url(#${uniqueId}-center)`}/>
+      <circle cx="256" cy="256" r="75" fill={`url(#${uniqueId}-blue)`}/>
     </svg>
   )
 }
