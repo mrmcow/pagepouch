@@ -145,7 +145,7 @@ function DashboardContent() {
     setTimeout(() => loadData(), 0)
   }, [])
 
-  // Infinite scrolling effect with progressive image preloading
+  // Infinite scrolling effect with aggressive preloading
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -154,7 +154,7 @@ function DashboardContent() {
           loadMoreClips()
         }
       },
-      { threshold: 0.1, rootMargin: '300px' } // Start loading more clips earlier
+      { threshold: 0.1, rootMargin: '500px' } // Start loading more clips very early (increased from 300px)
     )
 
     const currentRef = loadMoreRef.current
@@ -168,6 +168,77 @@ function DashboardContent() {
       }
     }
   }, [state.hasMoreClips, state.isLoadingMore])
+
+  // Advanced scroll-based preloading with speed detection
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout
+    let lastScrollTop = 0
+    let lastScrollTime = Date.now()
+    let preloadCooldown = false
+
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout)
+      
+      const currentScrollTop = window.scrollY
+      const currentTime = Date.now()
+      const scrollDelta = currentScrollTop - lastScrollTop
+      const timeDelta = currentTime - lastScrollTime
+      const scrollSpeed = Math.abs(scrollDelta) / timeDelta // pixels per ms
+      
+      lastScrollTop = currentScrollTop
+      lastScrollTime = currentTime
+
+      scrollTimeout = setTimeout(() => {
+        if (preloadCooldown) return // Prevent too frequent preloading
+        
+        const windowHeight = window.innerHeight
+        const documentHeight = document.documentElement.scrollHeight
+        const scrollProgress = currentScrollTop / (documentHeight - windowHeight)
+        
+        // Adaptive preloading based on scroll speed and position
+        let shouldPreload = false
+        let batchSize = 10
+        
+        if (scrollSpeed > 2) { // Fast scrolling
+          shouldPreload = scrollProgress > 0.4
+          batchSize = 20
+        } else if (scrollSpeed > 0.5) { // Medium scrolling
+          shouldPreload = scrollProgress > 0.5
+          batchSize = 15
+        } else { // Slow scrolling
+          shouldPreload = scrollProgress > 0.7
+          batchSize = 10
+        }
+        
+        if (shouldPreload && state.clips.length > 0) {
+          // Get clips in current context (filtered by folder if selected)
+          let contextClips = state.clips
+          if (state.selectedFolder) {
+            contextClips = state.clips.filter(clip => clip.folder_id === state.selectedFolder)
+          }
+          
+          const uncachedClips = contextClips.filter(clip => 
+            clip.screenshot_url && getCacheStatus(clip.screenshot_url) !== 'loaded'
+          )
+          
+          if (uncachedClips.length > 0) {
+            preloadCooldown = true
+            const nextBatch = uncachedClips.slice(0, Math.min(batchSize, uncachedClips.length))
+            preloadClipImages(nextBatch, false).then(() => {
+              console.log(`Smart preload (speed: ${scrollSpeed.toFixed(2)}): ${nextBatch.length} images`)
+              setTimeout(() => { preloadCooldown = false }, 1000) // 1 second cooldown
+            })
+          }
+        }
+      }, 100) // Reduced debounce for faster response
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      clearTimeout(scrollTimeout)
+    }
+  }, [state.clips, getCacheStatus, preloadClipImages])
 
   // Progressive preloading as user scrolls
   useEffect(() => {
@@ -186,6 +257,26 @@ function DashboardContent() {
       }
     }
   }, [state.clips.length]) // Trigger when new clips are loaded
+
+  // Preload images when folder selection changes
+  useEffect(() => {
+    if (state.clips.length > 0) {
+      let clipsToPreload = state.clips
+      
+      // If a folder is selected, only preload clips from that folder
+      if (state.selectedFolder) {
+        clipsToPreload = state.clips.filter(clip => clip.folder_id === state.selectedFolder)
+      }
+      
+      // Preload first 25 clips in the current context
+      if (clipsToPreload.length > 0) {
+        const priorityClips = clipsToPreload.slice(0, 25)
+        preloadClipImages(priorityClips, false).then(() => {
+          console.log(`Context preload (${state.selectedFolder ? 'folder' : 'all'}): ${priorityClips.length} images`)
+        })
+      }
+    }
+  }, [state.selectedFolder, state.clips.length]) // Trigger when folder selection or clips change
 
   const checkAuth = async () => {
     try {
@@ -298,7 +389,26 @@ function DashboardContent() {
     if (state.isLoadingMore || !state.hasMoreClips) return
     
     setState(prev => ({ ...prev, isLoadingMore: true }))
+    
+    // Store current clips count to identify new clips
+    const currentClipsCount = state.clips.length
+    
+    // Load more data
     await loadData(false) // Don't reset, append to existing clips
+    
+    // Immediately start preloading the newly loaded images
+    setTimeout(() => {
+      const newClips = state.clips.slice(currentClipsCount) // Get only the new clips
+      const uncachedNewClips = newClips.filter(clip => 
+        clip.screenshot_url && getCacheStatus(clip.screenshot_url) !== 'loaded'
+      )
+      
+      if (uncachedNewClips.length > 0) {
+        preloadClipImages(uncachedNewClips, false).then(() => {
+          console.log(`Infinite scroll preload: ${uncachedNewClips.length} new images`)
+        })
+      }
+    }, 200) // Small delay to let the state update
   }
 
   const handleSearch = (query: string) => {
@@ -723,7 +833,17 @@ function DashboardContent() {
                   variant={!state.selectedFolder ? "secondary" : "ghost"}
                   size="sm"
                   className="w-full justify-start"
-                  onClick={() => setState(prev => ({ ...prev, selectedFolder: null }))}
+                  onClick={() => {
+                    setState(prev => ({ ...prev, selectedFolder: null }))
+                    // Trigger preloading for all clips when returning to full view
+                    setTimeout(() => {
+                      if (state.clips.length > 0) {
+                        preloadClipImages(state.clips.slice(0, 30), true).then(() => {
+                          console.log(`All clips preload: ${Math.min(30, state.clips.length)} images`)
+                        })
+                      }
+                    }, 100)
+                  }}
                 >
                   <Grid className="mr-2 h-4 w-4" />
                   All Clips ({state.totalClips})
@@ -737,7 +857,18 @@ function DashboardContent() {
                       variant={state.selectedFolder === folder.id ? "secondary" : "ghost"}
                       size="sm"
                       className="w-full justify-start group relative"
-                      onClick={() => setState(prev => ({ ...prev, selectedFolder: folder.id }))}
+                      onClick={() => {
+                        setState(prev => ({ ...prev, selectedFolder: folder.id }))
+                        // Trigger preloading for folder-filtered clips
+                        setTimeout(() => {
+                          const folderClips = state.clips.filter(clip => clip.folder_id === folder.id)
+                          if (folderClips.length > 0) {
+                            preloadClipImages(folderClips.slice(0, 30), true).then(() => {
+                              console.log(`Folder preload: ${Math.min(30, folderClips.length)} images for "${folder.name}"`)
+                            })
+                          }
+                        }, 100)
+                      }}
                     >
                       <div 
                         className="mr-2 h-3 w-3 rounded-sm" 
@@ -992,7 +1123,7 @@ function DashboardContent() {
                         onUpdate={handleClipUpdate}
                         onDelete={handleClipDelete}
                         onToggleFavorite={handleToggleFavorite}
-                        priority={index < 20} // Prioritize first 20 images for immediate loading
+                        priority={index < 20} // Prioritize first 20 images in current view (filtered or unfiltered)
                       />
                     ))}
                     

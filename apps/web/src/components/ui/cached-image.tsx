@@ -100,7 +100,7 @@ export function CachedImage({
         }
       },
       {
-        rootMargin: '200px', // Start loading 200px before the image comes into view for smoother scrolling
+        rootMargin: '400px', // Start loading 400px before the image comes into view for ultra-smooth scrolling
         threshold: 0.01, // Trigger as soon as any part is about to be visible
       }
     )
