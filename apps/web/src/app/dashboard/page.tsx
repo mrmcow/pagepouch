@@ -371,11 +371,7 @@ function DashboardContent() {
       const newClips = clipsData.clips || []
       const allClips = reset ? newClips : [...state.clips, ...newClips]
 
-      // Debug logging for folders
-      console.log('Dashboard - folders fetched:', foldersData.folders)
-      console.log('Dashboard - folders count:', foldersData.folders?.length || 0)
-      console.log('Dashboard - current user:', state.user?.id)
-      console.log('Dashboard - folders API response:', foldersData)
+      // Folders loaded successfully
       
       setState(prev => ({
         ...prev,

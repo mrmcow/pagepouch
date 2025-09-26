@@ -58,17 +58,11 @@ export async function GET(request: NextRequest) {
       user = cookieUser
     }
 
-    console.log('Folders API - user ID:', user.id)
-    console.log('Folders API - user email:', user.email)
-    
     const { data, error } = await supabase
       .from('folders')
       .select('id, name, color, created_at, updated_at')
       .eq('user_id', user.id)
       .order('name')
-
-    console.log('Folders API - query result:', data)
-    console.log('Folders API - folders count:', data?.length || 0)
 
     if (error) {
       console.error('Database error:', error)

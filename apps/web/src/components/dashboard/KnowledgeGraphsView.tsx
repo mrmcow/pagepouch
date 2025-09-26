@@ -680,9 +680,7 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
   const [graphTitle, setGraphTitle] = useState('')
   const [graphDescription, setGraphDescription] = useState('')
   
-  // Debug logging
-  console.log('CreateGraphModal - folders received:', folders)
-  console.log('CreateGraphModal - folders count:', folders.length)
+  // Modal initialized with folders
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

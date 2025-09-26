@@ -25,6 +25,7 @@ import {
   Link
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { ClipViewer } from './ClipViewer'
 
 // Enhanced data structure with rich evidence
 interface GraphNode {
@@ -258,6 +259,14 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
   const [isDragging, setIsDragging] = useState(false)
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 })
   const [isExporting, setIsExporting] = useState(false)
+  
+  // Clip viewer state
+  const [selectedClipId, setSelectedClipId] = useState<string | null>(null)
+  const [isClipViewerOpen, setIsClipViewerOpen] = useState(false)
+  
+  // Tooltip state
+  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null)
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
 
   // Load graph data
   useEffect(() => {
@@ -486,23 +495,48 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
     }
 
     function handleMouseMove(event: MouseEvent) {
-      if (!isDragging) return
-      
       const mousePos = getMousePos(event)
-      const deltaX = mousePos.x - lastMousePos.x
-      const deltaY = mousePos.y - lastMousePos.y
       
-      setPanOffset(prev => ({
-        x: prev.x + deltaX / zoom,
-        y: prev.y + deltaY / zoom
-      }))
-      
-      setLastMousePos(mousePos)
-      render()
+      if (isDragging) {
+        const deltaX = mousePos.x - lastMousePos.x
+        const deltaY = mousePos.y - lastMousePos.y
+        
+        setPanOffset(prev => ({
+          x: prev.x + deltaX / zoom,
+          y: prev.y + deltaY / zoom
+        }))
+        
+        setLastMousePos(mousePos)
+        render()
+      } else {
+        // Check for node hover when not dragging
+        const worldPos = screenToWorld(mousePos)
+        const hoveredNodeFound = graphData.nodes.find(node => {
+          if (node.x === undefined || node.y === undefined) return false
+          const distance = Math.sqrt((worldPos.x - node.x) ** 2 + (worldPos.y - node.y) ** 2)
+          return distance <= node.size
+        })
+        
+        if (hoveredNodeFound !== hoveredNode) {
+          setHoveredNode(hoveredNodeFound || null)
+          if (hoveredNodeFound) {
+            setTooltipPosition({ x: mousePos.x, y: mousePos.y })
+          }
+        }
+        
+        // Change cursor based on hover
+        canvas.style.cursor = hoveredNodeFound ? 'pointer' : isDragging ? 'grabbing' : 'grab'
+      }
     }
 
     function handleMouseUp() {
       setIsDragging(false)
+    }
+
+    function handleMouseLeave() {
+      setIsDragging(false)
+      setHoveredNode(null)
+      canvas.style.cursor = 'default'
     }
 
     function handleWheel(event: WheelEvent) {
@@ -528,17 +562,17 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
     canvas.addEventListener('mousedown', handleMouseDown)
     canvas.addEventListener('mousemove', handleMouseMove)
     canvas.addEventListener('mouseup', handleMouseUp)
-    canvas.addEventListener('mouseleave', handleMouseUp)
+    canvas.addEventListener('mouseleave', handleMouseLeave)
     canvas.addEventListener('wheel', handleWheel)
 
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown)
       canvas.removeEventListener('mousemove', handleMouseMove)
       canvas.removeEventListener('mouseup', handleMouseUp)
-      canvas.removeEventListener('mouseleave', handleMouseUp)
+      canvas.removeEventListener('mouseleave', handleMouseLeave)
       canvas.removeEventListener('wheel', handleWheel)
     }
-  }, [graphData, selectedNode, searchQuery, nodeTypeFilters, zoom, panOffset, isDragging, lastMousePos])
+  }, [graphData, selectedNode, searchQuery, nodeTypeFilters, zoom, panOffset, isDragging, lastMousePos, hoveredNode])
 
   if (!isOpen) return null
 
@@ -778,7 +812,10 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
                           variant="outline"
                           size="sm"
                           className="text-xs h-7"
-                          onClick={() => {/* TODO: Open clip viewer */}}
+                          onClick={() => {
+                            setSelectedClipId(evidence.clipId)
+                            setIsClipViewerOpen(true)
+                          }}
                         >
                           <Eye className="w-3 h-3 mr-1" />
                           View Clip
@@ -801,6 +838,41 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Hover Tooltip */}
+      {hoveredNode && (
+        <div 
+          className="fixed z-50 bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none max-w-xs"
+          style={{
+            left: tooltipPosition.x + 10,
+            top: tooltipPosition.y - 10,
+            transform: 'translateY(-100%)'
+          }}
+        >
+          <div className="font-medium mb-1">{hoveredNode.label}</div>
+          <div className="text-slate-300 capitalize mb-1">{hoveredNode.type}</div>
+          <div className="text-slate-400">
+            {hoveredNode.evidence.length} evidence clip{hoveredNode.evidence.length !== 1 ? 's' : ''}
+          </div>
+          <div className="text-slate-400 text-xs mt-1">
+            Click to explore connections
+          </div>
+        </div>
+      )}
+
+      {/* Clip Viewer Overlay */}
+      {isClipViewerOpen && selectedClipId && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-sm">
+          <ClipViewer
+            clipId={selectedClipId}
+            isOpen={isClipViewerOpen}
+            onClose={() => {
+              setIsClipViewerOpen(false)
+              setSelectedClipId(null)
+            }}
+          />
         </div>
       )}
     </div>
