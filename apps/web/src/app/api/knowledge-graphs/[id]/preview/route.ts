@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase-server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export async function PUT(
   request: NextRequest,
@@ -18,19 +18,20 @@ export async function PUT(
       // Extension authentication with Bearer token
       const token = authHeader.substring(7)
       
-      supabase = createServiceClient(
+      supabase = createSupabaseClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
         }
       )
       
       // Verify the token and get user
-      const { data: userData, error: authError } = await supabase.auth.getUser(token)
+      const { data: userData, error: authError } = await supabase.auth.getUser()
       
       if (authError || !userData.user) {
         return NextResponse.json(
