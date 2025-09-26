@@ -27,7 +27,9 @@ import {
   Star,
   Clock,
   Globe,
-  X
+  X,
+  Zap,
+  RefreshCw
 } from 'lucide-react'
 import { 
   DropdownMenu,
@@ -53,6 +55,7 @@ import { EditFolderModal } from '@/components/dashboard/EditFolderModal'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { ProfileModal } from '@/components/dashboard/ProfileModal'
 import { BillingModal } from '@/components/dashboard/BillingModal'
+import { CachedImage, useImageCache } from '@/components/ui/cached-image'
 
 interface DashboardState {
   clips: Clip[]
@@ -126,6 +129,14 @@ function DashboardContent() {
 
   const router = useRouter()
   const supabase = createClient()
+  const { preloadClipImages, clearCache, getCacheSize } = useImageCache()
+
+  const handleRefresh = () => {
+    // Clear image cache on refresh to ensure fresh content
+    clearCache()
+    console.log('Image cache cleared')
+    loadData(true) // Reset to first page
+  }
 
   useEffect(() => {
     // Show UI immediately, load data in background
@@ -228,9 +239,12 @@ function DashboardContent() {
       // Load clip tags lazily - only when needed for filtering
       const clipTagsMap: Record<string, string[]> = {}
 
+      const newClips = clipsData.clips || []
+      const allClips = reset ? newClips : [...state.clips, ...newClips]
+
       setState(prev => ({
         ...prev,
-        clips: reset ? (clipsData.clips || []) : [...prev.clips, ...(clipsData.clips || [])],
+        clips: allClips,
         folders: foldersData.folders || [],
         availableTags: tagsData || [],
         clipTags: clipTagsMap,
@@ -244,6 +258,13 @@ function DashboardContent() {
         clipsThisMonth: subscriptionData.clipsThisMonth,
         clipsLimit: subscriptionData.clipsLimit,
       }))
+
+      // Preload images for better performance
+      if (newClips.length > 0) {
+        preloadClipImages(newClips).then(() => {
+          console.log(`Preloaded ${newClips.length} clip images`)
+        })
+      }
       
       setIsInitialLoading(false)
     } catch (error) {
@@ -617,6 +638,17 @@ function DashboardContent() {
 
             {/* User Profile */}
             <div className="flex items-center space-x-3">
+              {/* Cache Refresh Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRefresh}
+                className="text-muted-foreground hover:text-foreground"
+                title="Refresh and clear image cache"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              
               {state.user && (
                 <UserAvatar
                   user={{
@@ -1088,11 +1120,14 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
       }`} onClick={onClick}>
         <div className="flex items-center space-x-3">
           {clip.screenshot_url && (
-            <div className="relative overflow-hidden rounded-md">
-              <img
+            <div className="relative overflow-hidden rounded-md w-14 h-10">
+              <CachedImage
                 src={clip.screenshot_url}
                 alt={clip.title}
-                className="w-14 h-10 object-top object-cover"
+                fill
+                sizes="56px"
+                className="object-top object-cover"
+                quality={75}
               />
             </div>
           )}
@@ -1183,10 +1218,14 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
     <Card className="overflow-hidden hover:shadow-xl hover:shadow-black/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer border border-white/20 shadow-lg bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md" onClick={onClick}>
       {clip.screenshot_url && (
         <div className="aspect-[4/3] bg-muted/30 relative overflow-hidden">
-          <img
+          <CachedImage
             src={clip.screenshot_url}
             alt={clip.title}
-            className="w-full h-full object-top object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1536px) 25vw, 16vw"
+            className="object-top object-cover group-hover:scale-105 transition-transform duration-300"
+            quality={85}
+            priority={false}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         </div>

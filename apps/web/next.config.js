@@ -5,6 +5,14 @@ const nextConfig = {
       'gwvsltgmjreructvbpzg.supabase.co', // Your Supabase storage domain
       'localhost',
     ],
+    // Enable aggressive caching for better performance
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
+    dangerouslyAllowSVG: false,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Image optimization settings
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -30,6 +38,29 @@ const nextConfig = {
     maxInactiveAge: 25 * 1000,
     // Number of pages that should be kept simultaneously without being disposed
     pagesBufferLength: 2,
+  },
+  // Add cache headers for better performance
+  async headers() {
+    return [
+      {
+        source: '/_next/image(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable', // 1 year cache for optimized images
+          },
+        ],
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0', // No cache for API routes
+          },
+        ],
+      },
+    ]
   },
 }
 
