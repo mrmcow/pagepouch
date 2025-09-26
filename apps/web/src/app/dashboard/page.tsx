@@ -731,8 +731,8 @@ function DashboardContent() {
               </CardContent>
             </Card>
 
-            {/* Test Upgrade Section */}
-            <Card>
+               {/* Test Upgrade Section - Stripe Integration */}
+               <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Upgrade to Pro</CardTitle>
               </CardHeader>
