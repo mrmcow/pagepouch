@@ -730,6 +730,62 @@ function DashboardContent() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Test Upgrade Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Upgrade to Pro</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-xs text-muted-foreground">
+                  Get 1,000 clips/month + 5GB storage
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/stripe/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          priceId: 'price_1SBSLeDFfW8f5SmSgQooVxsd',
+                          plan: 'monthly'
+                        }),
+                      });
+                      const { url } = await response.json();
+                      if (url) window.location.href = url;
+                    } catch (error) {
+                      console.error('Upgrade error:', error);
+                      alert('Upgrade failed. Check console.');
+                    }
+                  }}
+                  className="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
+                >
+                  Upgrade Monthly ($4)
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/stripe/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          priceId: 'price_1SBSNpDFfW8f5SmShv3v8v8Q',
+                          plan: 'annual'
+                        }),
+                      });
+                      const { url } = await response.json();
+                      if (url) window.location.href = url;
+                    } catch (error) {
+                      console.error('Upgrade error:', error);
+                      alert('Upgrade failed. Check console.');
+                    }
+                  }}
+                  className="w-full bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 transition-colors"
+                >
+                  Upgrade Annual ($40)
+                </button>
+              </CardContent>
+            </Card>
           </aside>
 
           {/* Main Content */}
