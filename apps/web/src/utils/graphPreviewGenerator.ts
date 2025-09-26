@@ -45,8 +45,8 @@ interface GraphData {
  */
 export function generateGraphPreview(
   graphData: GraphData,
-  width: number = 320,
-  height: number = 180
+  width: number = 160,
+  height: number = 90
 ): string {
   // Create offscreen canvas
   const canvas = document.createElement('canvas')
@@ -63,7 +63,7 @@ export function generateGraphPreview(
 
   // If no data, return empty preview
   if (!graphData.nodes.length) {
-    return canvas.toDataURL('image/png')
+    return canvas.toDataURL('image/jpeg', 0.7)
   }
 
   // Position nodes if they don't have coordinates
@@ -80,7 +80,7 @@ export function generateGraphPreview(
   ctx.lineWidth = 1
   ctx.strokeRect(0, 0, width, height)
 
-  return canvas.toDataURL('image/png')
+  return canvas.toDataURL('image/jpeg', 0.7)
 }
 
 /**
@@ -184,8 +184,8 @@ function drawNodes(
  */
 export function generateFallbackPreview(
   status: 'processing' | 'failed' | 'empty',
-  width: number = 320,
-  height: number = 180
+  width: number = 160,
+  height: number = 90
 ): string {
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -267,7 +267,7 @@ export function generateFallbackPreview(
   ctx.lineWidth = 1
   ctx.strokeRect(0, 0, width, height)
 
-  return canvas.toDataURL('image/png')
+  return canvas.toDataURL('image/jpeg', 0.7)
 }
 
 /**
@@ -276,8 +276,8 @@ export function generateFallbackPreview(
 export function generateStatsOverlay(
   nodeCount: number,
   connectionCount: number,
-  width: number = 320,
-  height: number = 180
+  width: number = 160,
+  height: number = 90
 ): string {
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -294,5 +294,5 @@ export function generateStatsOverlay(
   ctx.textAlign = 'left'
   ctx.fillText(`${nodeCount} nodes • ${connectionCount} connections`, 10, height - 20)
 
-  return canvas.toDataURL('image/png')
+  return canvas.toDataURL('image/jpeg', 0.7)
 }
