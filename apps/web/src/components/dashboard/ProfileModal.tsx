@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Mail, Calendar, User, AlertTriangle } from 'lucide-react'
+import { X, Mail, Calendar, User, AlertTriangle, CreditCard } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -41,8 +41,12 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
   const supabase = createClient()
 
   useEffect(() => {
-    setNewEmail(user.email)
-  }, [user.email])
+    if (isOpen) {
+      setNewEmail(user.email)
+      setShowDeleteConfirm(false)
+      setDeleteConfirmText('')
+    }
+  }, [user.email, isOpen])
 
   const handleEmailUpdate = async () => {
     if (newEmail === user.email) return
