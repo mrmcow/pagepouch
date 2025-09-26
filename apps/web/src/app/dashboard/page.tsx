@@ -88,6 +88,7 @@ interface DashboardState {
   subscriptionStatus: string
   clipsThisMonth: number
   clipsLimit: number
+  isSubscriptionLoading: boolean
 }
 
 function DashboardContent() {
@@ -117,11 +118,12 @@ function DashboardContent() {
     hasMoreClips: false,
     isLoadingMore: false,
     currentOffset: 0,
-    // Subscription state
+    // Subscription state - Start with loading state to prevent flash
     subscriptionTier: 'free',
     subscriptionStatus: 'inactive',
     clipsThisMonth: 0,
     clipsLimit: 50,
+    isSubscriptionLoading: true,
   })
   
   const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -299,35 +301,13 @@ function DashboardContent() {
       const offset = reset ? 0 : state.currentOffset
       const limit = 50 // Load 50 clips at a time for better performance
       
-      // Load clips, folders, tags, and subscription data in parallel
-      const [clipsResponse, foldersResponse, tagsResponse, subscriptionResponse] = await Promise.all([
-        fetch(`/api/clips?limit=${limit}&offset=${offset}`, { 
-          cache: 'no-store', // Always get fresh data
-          headers: { 'Cache-Control': 'no-cache' }
-        }),
-        fetch('/api/folders', { 
-          cache: 'force-cache', // Cache folders as they change less
-          headers: { 'Cache-Control': 'max-age=300' }
-        }),
-        fetch('/api/tags', { 
-          cache: 'force-cache', // Cache tags as they change less
-          headers: { 'Cache-Control': 'max-age=300' }
-        }),
-        fetch('/api/subscription', {
-          cache: 'no-store', // Always get fresh subscription data
-          headers: { 'Cache-Control': 'no-cache' }
-        })
-      ])
-
-      if (!clipsResponse.ok || !foldersResponse.ok || !tagsResponse.ok) {
-        throw new Error('Failed to fetch data')
-      }
-
-      const clipsData = await clipsResponse.json()
-      const foldersData = await foldersResponse.json()
-      const tagsData = await tagsResponse.json()
+      // Load subscription data first to prevent UI flash
+      const subscriptionResponse = await fetch('/api/subscription', {
+        cache: 'no-store', // Always get fresh subscription data
+        headers: { 'Cache-Control': 'no-cache' }
+      })
       
-      // Handle subscription data (may fail for unauthenticated users)
+      // Handle subscription data immediately
       let subscriptionData = {
         subscriptionTier: 'free',
         subscriptionStatus: 'inactive',
@@ -344,6 +324,40 @@ function DashboardContent() {
           clipsLimit: subData.subscription_tier === 'pro' ? 1000 : 50
         }
       }
+      
+      // Update subscription state immediately to prevent flash
+      setState(prev => ({
+        ...prev,
+        subscriptionTier: subscriptionData.subscriptionTier as 'free' | 'pro',
+        subscriptionStatus: subscriptionData.subscriptionStatus,
+        clipsThisMonth: subscriptionData.clipsThisMonth,
+        clipsLimit: subscriptionData.clipsLimit,
+        isSubscriptionLoading: false,
+      }))
+      
+      // Now load other data in parallel
+      const [clipsResponse, foldersResponse, tagsResponse] = await Promise.all([
+        fetch(`/api/clips?limit=${limit}&offset=${offset}`, { 
+          cache: 'no-store', // Always get fresh data
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch('/api/folders', { 
+          cache: 'force-cache', // Cache folders as they change less
+          headers: { 'Cache-Control': 'max-age=300' }
+        }),
+        fetch('/api/tags', { 
+          cache: 'force-cache', // Cache tags as they change less
+          headers: { 'Cache-Control': 'max-age=300' }
+        })
+      ])
+
+      if (!clipsResponse.ok || !foldersResponse.ok || !tagsResponse.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      const clipsData = await clipsResponse.json()
+      const foldersData = await foldersResponse.json()
+      const tagsData = await tagsResponse.json()
 
       // Load clip tags lazily - only when needed for filtering
       const clipTagsMap: Record<string, string[]> = {}
@@ -361,11 +375,6 @@ function DashboardContent() {
         hasMoreClips: clipsData.hasMore || false,
         currentOffset: offset + limit,
         isLoadingMore: false,
-        // Update subscription data
-        subscriptionTier: subscriptionData.subscriptionTier as 'free' | 'pro',
-        subscriptionStatus: subscriptionData.subscriptionStatus,
-        clipsThisMonth: subscriptionData.clipsThisMonth,
-        clipsLimit: subscriptionData.clipsLimit,
       }))
 
       // Preload images for better performance
@@ -380,7 +389,11 @@ function DashboardContent() {
     } catch (error) {
       console.error('Failed to load data:', error)
       setIsInitialLoading(false)
-      setState(prev => ({ ...prev, isLoadingMore: false }))
+      setState(prev => ({ 
+        ...prev, 
+        isLoadingMore: false,
+        isSubscriptionLoading: false 
+      }))
       // Show error state but don't block the UI
     }
   }
@@ -896,87 +909,110 @@ function DashboardContent() {
               </CardContent>
             </Card>
 
-            {/* Usage Stats */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Usage</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Clips this month</span>
-                    <span className="font-medium">{state.clipsThisMonth}/{state.clipsLimit}</span>
+            {/* Usage Stats - Only show when subscription data is loaded */}
+            {!state.isSubscriptionLoading && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Usage</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Clips this month</span>
+                      <span className="font-medium">{state.clipsThisMonth}/{state.clipsLimit}</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{ width: `${Math.min((state.clipsThisMonth / state.clipsLimit) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {state.clipsLimit - state.clipsThisMonth} clips remaining
+                    </p>
                   </div>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div 
-                      className="bg-primary h-2 rounded-full transition-all"
-                      style={{ width: `${Math.min((state.clipsThisMonth / state.clipsLimit) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {state.clipsLimit - state.clipsThisMonth} clips remaining
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
-               {/* Test Upgrade Section - Stripe Integration */}
-               {state.subscriptionTier === 'free' && (
-               <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Upgrade to Pro</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-xs text-muted-foreground">
-                  Get 1,000 clips/month + 5GB storage
-                </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/stripe/checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          priceId: 'price_1SBSLeDFfW8f5SmSgQooVxsd',
-                          plan: 'monthly'
-                        }),
-                      });
-                      const { url } = await response.json();
-                      if (url) window.location.href = url;
-                    } catch (error) {
-                      console.error('Upgrade error:', error);
-                      alert('Upgrade failed. Check console.');
-                    }
-                  }}
-                  className="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
-                >
-                  Upgrade Monthly ($4)
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/stripe/checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          priceId: 'price_1SBSNpDFfW8f5SmShv3v8v8Q',
-                          plan: 'annual'
-                        }),
-                      });
-                      const { url } = await response.json();
-                      if (url) window.location.href = url;
-                    } catch (error) {
-                      console.error('Upgrade error:', error);
-                      alert('Upgrade failed. Check console.');
-                    }
-                  }}
-                  className="w-full bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 transition-colors"
-                >
-                  Upgrade Annual ($40)
-                </button>
-              </CardContent>
-            </Card>
-               )}
+            {/* Subscription Loading State */}
+            {state.isSubscriptionLoading && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Loading...</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Clips this month</span>
+                      <div className="h-4 w-12 bg-secondary rounded animate-pulse"></div>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div className="bg-secondary h-2 rounded-full animate-pulse"></div>
+                    </div>
+                    <div className="h-3 w-24 bg-secondary rounded animate-pulse"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Upgrade Section - Only show for free users when subscription data is loaded */}
+            {!state.isSubscriptionLoading && state.subscriptionTier === 'free' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Upgrade to Pro</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="text-xs text-muted-foreground">
+                    Get 1,000 clips/month + 5GB storage
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/stripe/checkout', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            priceId: 'price_1SBSLeDFfW8f5SmSgQooVxsd',
+                            plan: 'monthly'
+                          }),
+                        });
+                        const { url } = await response.json();
+                        if (url) window.location.href = url;
+                      } catch (error) {
+                        console.error('Upgrade error:', error);
+                        alert('Upgrade failed. Check console.');
+                      }
+                    }}
+                    className="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
+                  >
+                    Upgrade Monthly ($4)
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/stripe/checkout', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            priceId: 'price_1SBSNpDFfW8f5SmShv3v8v8Q',
+                            plan: 'annual'
+                          }),
+                        });
+                        const { url } = await response.json();
+                        if (url) window.location.href = url;
+                      } catch (error) {
+                        console.error('Upgrade error:', error);
+                        alert('Upgrade failed. Check console.');
+                      }
+                    }}
+                    className="w-full bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 transition-colors"
+                  >
+                    Upgrade Annual ($40)
+                  </button>
+                </CardContent>
+              </Card>
+            )}
           </aside>
 
           {/* Main Content */}
