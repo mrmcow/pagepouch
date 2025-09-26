@@ -50,6 +50,9 @@ import { LogoWithText, LogoIcon } from '@/components/ui/logo'
 import { ClipViewer } from '@/components/dashboard/ClipViewer'
 import { CreateFolderModal } from '@/components/dashboard/CreateFolderModal'
 import { EditFolderModal } from '@/components/dashboard/EditFolderModal'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import { ProfileModal } from '@/components/dashboard/ProfileModal'
+import { BillingModal } from '@/components/dashboard/BillingModal'
 
 interface DashboardState {
   clips: Clip[]
@@ -70,6 +73,8 @@ interface DashboardState {
   isCreateFolderModalOpen: boolean
   selectedFolderForEdit: Folder | null
   isEditFolderModalOpen: boolean
+  isProfileModalOpen: boolean
+  isBillingModalOpen: boolean
   // Pagination state
   totalClips: number
   hasMoreClips: boolean
@@ -102,6 +107,8 @@ function DashboardContent() {
     isCreateFolderModalOpen: false,
     selectedFolderForEdit: null,
     isEditFolderModalOpen: false,
+    isProfileModalOpen: false,
+    isBillingModalOpen: false,
     // Pagination state
     totalClips: 0,
     hasMoreClips: false,
@@ -306,10 +313,6 @@ function DashboardContent() {
     }
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
 
   const handleClipClick = (clip: Clip) => {
     setState(prev => ({
@@ -612,51 +615,18 @@ function DashboardContent() {
               </nav>
             </div>
 
-            {/* User Menu and Sign Out */}
+            {/* User Profile */}
             <div className="flex items-center space-x-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <User className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {state.user?.user_metadata?.full_name || 'User'}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {state.user?.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Download className="mr-2 h-4 w-4" />
-                    <span>Export Data</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSignOut}
-                className="hidden sm:flex"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
+              {state.user && (
+                <UserAvatar
+                  user={{
+                    email: state.user.email,
+                    id: state.user.id
+                  }}
+                  onProfileClick={() => setState(prev => ({ ...prev, isProfileModalOpen: true }))}
+                  onBillingClick={() => setState(prev => ({ ...prev, isBillingModalOpen: true }))}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1038,6 +1008,39 @@ function DashboardContent() {
           ? state.clips.filter(clip => clip.folder_id === state.selectedFolderForEdit!.id).length 
           : 0
         }
+      />
+
+      {/* Profile Management Modal */}
+      <ProfileModal
+        isOpen={state.isProfileModalOpen}
+        onClose={() => setState(prev => ({ ...prev, isProfileModalOpen: false }))}
+        user={{
+          id: state.user?.id || '',
+          email: state.user?.email || '',
+          created_at: state.user?.created_at
+        }}
+        subscriptionData={{
+          subscriptionTier: state.subscriptionTier,
+          subscriptionStatus: state.subscriptionStatus,
+          clipsThisMonth: state.clipsThisMonth,
+          clipsLimit: state.clipsLimit
+        }}
+      />
+
+      {/* Billing Management Modal */}
+      <BillingModal
+        isOpen={state.isBillingModalOpen}
+        onClose={() => setState(prev => ({ ...prev, isBillingModalOpen: false }))}
+        user={{
+          id: state.user?.id || '',
+          email: state.user?.email || ''
+        }}
+        subscriptionData={{
+          subscriptionTier: state.subscriptionTier,
+          subscriptionStatus: state.subscriptionStatus,
+          clipsThisMonth: state.clipsThisMonth,
+          clipsLimit: state.clipsLimit
+        }}
       />
     </div>
   )
