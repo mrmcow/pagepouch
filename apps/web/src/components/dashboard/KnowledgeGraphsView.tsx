@@ -171,7 +171,7 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header with Search and Actions */}
-      <div className="flex items-center justify-between gap-4 p-6 pb-4">
+      <div className="flex items-center justify-between gap-4 px-1 py-3 mt-6">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -180,7 +180,7 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
               placeholder="Search knowledge graphs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-3 h-10 w-full bg-white border border-gray-200 hover:border-gray-300 focus:border-purple-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-lg"
+              className="pl-10 pr-3 h-11 w-full bg-white border border-gray-200 hover:border-gray-300 focus:border-purple-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl"
             />
           </div>
         </div>

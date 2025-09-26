@@ -76,7 +76,230 @@ const NODE_COLORS = {
   clip: '#8B5CF6'         // Purple
 }
 
-// Generate mock graph data with rich evidence - will be replaced with API call
+// Generate real graph data from user's clips and metadata
+function generateRealGraphData(clips: any[] = [], folders: any[] = []): { nodes: GraphNode[], edges: GraphEdge[] } {
+  if (!clips.length) {
+    return generateMockGraphData(clips); // Fallback to mock data if no clips
+  }
+
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+  
+  // Track domains and their clips
+  const domainMap = new Map<string, any[]>();
+  const folderMap = new Map<string, any[]>();
+  
+  // Process each clip into nodes and collect metadata
+  clips.forEach(clip => {
+    // Create clip node
+    const domain = extractDomain(clip.url);
+    const folderName = folders.find(f => f.id === clip.folder_id)?.name || 'Uncategorized';
+    
+    nodes.push({
+      id: clip.id,
+      label: truncateText(clip.title, 50),
+      type: 'clip',
+      size: 12,
+      color: getClipColor(domain),
+      evidence: [{
+        clipId: clip.id,
+        clipTitle: clip.title,
+        snippet: clip.notes || extractTextSnippet(clip.text_content) || 'No content available',
+        url: clip.url,
+        timestamp: clip.created_at,
+        folderName: folderName,
+        context: `Captured from ${domain}`
+      }]
+    });
+    
+    // Group clips by domain
+    if (!domainMap.has(domain)) {
+      domainMap.set(domain, []);
+    }
+    domainMap.get(domain)!.push(clip);
+    
+    // Group clips by folder
+    if (!folderMap.has(folderName)) {
+      folderMap.set(folderName, []);
+    }
+    folderMap.get(folderName)!.push(clip);
+  });
+  
+  // Create domain nodes for domains with multiple clips
+  domainMap.forEach((domainClips, domain) => {
+    if (domainClips.length > 1) {
+      nodes.push({
+        id: `domain-${domain}`,
+        label: domain,
+        type: 'domain',
+        size: Math.min(20 + domainClips.length * 2, 30),
+        color: NODE_COLORS.domain,
+        evidence: domainClips.map(clip => ({
+          clipId: clip.id,
+          clipTitle: clip.title,
+          snippet: extractTextSnippet(clip.text_content) || 'No content available',
+          url: clip.url,
+          timestamp: clip.created_at,
+          folderName: folders.find(f => f.id === clip.folder_id)?.name || 'Uncategorized',
+          context: `Source: ${domain}`
+        }))
+      });
+      
+      // Connect domain to its clips
+      domainClips.forEach(clip => {
+        edges.push({
+          id: `edge-${domain}-${clip.id}`,
+          source: `domain-${domain}`,
+          target: clip.id,
+          type: 'source',
+          weight: 0.7,
+          color: '#94a3b8'
+        });
+      });
+    }
+  });
+  
+  // Create folder nodes for folders with multiple clips
+  folderMap.forEach((folderClips, folderName) => {
+    if (folderClips.length > 1) {
+      nodes.push({
+        id: `folder-${folderName}`,
+        label: folderName,
+        type: 'tag',
+        size: Math.min(18 + folderClips.length * 1.5, 25),
+        color: NODE_COLORS.tag,
+        evidence: folderClips.map(clip => ({
+          clipId: clip.id,
+          clipTitle: clip.title,
+          snippet: extractTextSnippet(clip.text_content) || 'No content available',
+          url: clip.url,
+          timestamp: clip.created_at,
+          folderName: folderName,
+          context: `Topic: ${folderName}`
+        }))
+      });
+      
+      // Connect folder to its clips
+      folderClips.forEach(clip => {
+        edges.push({
+          id: `edge-${folderName}-${clip.id}`,
+          source: `folder-${folderName}`,
+          target: clip.id,
+          type: 'categorized_as',
+          weight: 0.6,
+          color: '#a855f7'
+        });
+      });
+    }
+  });
+  
+  // Create connections between clips based on similarity
+  generateClipConnections(clips, edges);
+  
+  return { nodes, edges };
+}
+
+// Helper functions for real data processing
+function extractDomain(url: string): string {
+  try {
+    const domain = new URL(url).hostname;
+    return domain.replace('www.', '');
+  } catch {
+    return 'unknown';
+  }
+}
+
+function extractTextSnippet(textContent: string | null | undefined): string {
+  if (!textContent) return '';
+  return textContent.slice(0, 150) + (textContent.length > 150 ? '...' : '');
+}
+
+function truncateText(text: string, maxLength: number): string {
+  return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+}
+
+function getClipColor(domain: string): string {
+  // Color clips based on domain type
+  if (domain.includes('twitter.com') || domain.includes('x.com')) return '#1da1f2';
+  if (domain.includes('youtube.com')) return '#ff0000';
+  if (domain.includes('github.com')) return '#333333';
+  if (domain.includes('linkedin.com')) return '#0077b5';
+  if (domain.includes('reddit.com')) return '#ff4500';
+  if (domain.includes('news') || domain.includes('bbc') || domain.includes('cnn')) return '#e11d48';
+  return NODE_COLORS.clip; // Default purple
+}
+
+function generateClipConnections(clips: any[], edges: GraphEdge[]): void {
+  clips.forEach((clip1, i) => {
+    clips.forEach((clip2, j) => {
+      if (i >= j) return; // Avoid duplicates and self-connections
+      
+      let connectionStrength = 0;
+      let connectionType = '';
+      
+      // Same domain connection
+      const domain1 = extractDomain(clip1.url);
+      const domain2 = extractDomain(clip2.url);
+      if (domain1 === domain2) {
+        connectionStrength += 0.4;
+        connectionType = 'same_source';
+      }
+      
+      // Same folder connection
+      if (clip1.folder_id && clip1.folder_id === clip2.folder_id) {
+        connectionStrength += 0.5;
+        connectionType = connectionType ? 'same_topic_and_source' : 'same_topic';
+      }
+      
+      // Title similarity
+      const titleSimilarity = calculateTitleSimilarity(clip1.title, clip2.title);
+      if (titleSimilarity > 0.3) {
+        connectionStrength += titleSimilarity * 0.4;
+        connectionType = connectionType || 'similar_content';
+      }
+      
+      // Temporal proximity (same day)
+      const date1 = new Date(clip1.created_at).toDateString();
+      const date2 = new Date(clip2.created_at).toDateString();
+      if (date1 === date2) {
+        connectionStrength += 0.2;
+        connectionType = connectionType || 'same_session';
+      }
+      
+      // Create edge if connection is strong enough
+      if (connectionStrength > 0.3) {
+        edges.push({
+          id: `edge-${clip1.id}-${clip2.id}`,
+          source: clip1.id,
+          target: clip2.id,
+          type: connectionType as any,
+          weight: Math.min(connectionStrength, 1.0),
+          color: getConnectionColor(connectionStrength)
+        });
+      }
+    });
+  });
+}
+
+function calculateTitleSimilarity(title1: string, title2: string): number {
+  const words1 = title1.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const words2 = title2.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  
+  if (words1.length === 0 || words2.length === 0) return 0;
+  
+  const intersection = words1.filter(word => words2.includes(word));
+  const union = [...new Set([...words1, ...words2])];
+  
+  return intersection.length / union.length;
+}
+
+function getConnectionColor(strength: number): string {
+  if (strength > 0.7) return '#059669'; // Strong - green
+  if (strength > 0.5) return '#d97706'; // Medium - orange  
+  return '#94a3b8'; // Weak - gray
+}
+
+// Keep mock data as fallback
 function generateMockGraphData(clips: any[] = []): { nodes: GraphNode[], edges: GraphEdge[] } {
   const nodes: GraphNode[] = [
     { 
@@ -260,11 +483,11 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
   // Load graph data
   useEffect(() => {
     if (isOpen) {
-      // TODO: Replace with actual API call
-      const mockData = generateMockGraphData(clips)
-      setGraphData(mockData)
+      // Generate real graph data from user's clips
+      const realData = generateRealGraphData(clips, folders)
+      setGraphData(realData)
     }
-  }, [isOpen, graphId, clips])
+  }, [isOpen, graphId, clips, folders])
 
   // Zoom functions
   const handleZoomIn = useCallback(() => {

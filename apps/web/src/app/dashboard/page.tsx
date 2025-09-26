@@ -783,17 +783,6 @@ function DashboardContent() {
                   <Clock className="mr-2 h-4 w-4" />
                   Recent
                 </Button>
-                {!state.isSubscriptionLoading && state.subscriptionTier === 'pro' && (
-                  <Button 
-                    variant={state.viewFilter === 'knowledge-graphs' ? 'default' : 'ghost'} 
-                    size="sm"
-                    className={state.viewFilter === 'knowledge-graphs' ? 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}
-                    onClick={() => setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))}
-                  >
-                    <Brain className="mr-2 h-4 w-4" />
-                    Knowledge Graphs
-                  </Button>
-                )}
               </nav>
             </div>
 
@@ -829,6 +818,37 @@ function DashboardContent() {
         <div className="flex flex-col lg:flex-row gap-6 h-full">
           {/* Sidebar */}
           <aside className="w-full lg:w-64 space-y-6">
+
+            {/* Knowledge Graphs - Pro Feature */}
+            {!state.isSubscriptionLoading && state.subscriptionTier === 'pro' && (
+              <div className="relative">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className={`w-full justify-start border transition-all duration-200 group ${
+                    state.viewFilter === 'knowledge-graphs' 
+                      ? 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white hover:text-white border-purple-500 shadow-lg shadow-purple-500/25' 
+                      : 'border-purple-200 text-purple-600 hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-blue-600 hover:border-purple-500 bg-white/90 backdrop-blur-sm hover:shadow-md hover:shadow-purple-500/20'
+                  }`}
+                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))}
+                >
+                  <Brain className="mr-2 h-4 w-4" />
+                  Knowledge Graphs
+                  <div className="ml-auto">
+                    <span className={`text-xs font-semibold transition-all duration-200 ${
+                      state.viewFilter === 'knowledge-graphs' 
+                        ? 'text-white/90' 
+                        : 'bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent group-hover:text-white/90 group-hover:bg-none'
+                    }`}>
+                      PRO
+                    </span>
+                  </div>
+                </Button>
+                {state.viewFilter === 'knowledge-graphs' && (
+                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg blur opacity-20 -z-10"></div>
+                )}
+              </div>
+            )}
 
             {/* Quick Actions */}
             <Card className="border border-white/20 shadow-md bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md">
