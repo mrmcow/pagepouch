@@ -126,9 +126,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
       subscription_tier: subscription.status === 'active' ? 'pro' : 'free',
       subscription_status: subscription.status,
-      subscription_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      subscription_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      subscription_cancel_at_period_end: subscription.cancel_at_period_end,
+      subscription_period_start: subscription.current_period_start ? new Date(subscription.current_period_start * 1000).toISOString() : null,
+      subscription_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null,
+      subscription_cancel_at_period_end: subscription.cancel_at_period_end || false,
     })
     .eq('id', user.id)
 
