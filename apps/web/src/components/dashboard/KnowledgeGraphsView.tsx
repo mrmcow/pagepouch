@@ -39,13 +39,14 @@ interface KnowledgeGraph {
   id: string
   title: string
   description?: string
-  folders: string[] // folder IDs
+  folder_ids: string[] // folder IDs
   nodeCount: number
   connectionCount: number
   createdAt: string
   updatedAt: string
+  status: 'processing' | 'completed' | 'failed'
   thumbnail?: string
-  isPublic: boolean
+  isPublic?: boolean
 }
 
 interface KnowledgeGraphsViewProps {
@@ -60,16 +61,80 @@ export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGrap
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  // Mock data for now - will be replaced with real API calls
+  // Load graphs from API
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setGraphs([
-        // Empty for now to show first-time experience
-      ])
-      setIsLoading(false)
-    }, 500)
+    loadGraphs()
   }, [])
+
+  const loadGraphs = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/knowledge-graphs')
+      if (response.ok) {
+        const data = await response.json()
+        setGraphs(data)
+      } else {
+        console.error('Failed to load knowledge graphs')
+      }
+    } catch (error) {
+      console.error('Error loading knowledge graphs:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const createGraph = async (graphData: { title: string; description: string; folders: string[] }) => {
+    try {
+      const response = await fetch('/api/knowledge-graphs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(graphData),
+      })
+
+      if (response.ok) {
+        const newGraph = await response.json()
+        setGraphs(prev => [newGraph, ...prev])
+        
+        // Poll for updates to show processing status
+        pollGraphStatus(newGraph.id)
+      } else {
+        console.error('Failed to create knowledge graph')
+      }
+    } catch (error) {
+      console.error('Error creating knowledge graph:', error)
+    }
+  }
+
+  const pollGraphStatus = (graphId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/knowledge-graphs')
+        if (response.ok) {
+          const data = await response.json()
+          const updatedGraph = data.find((g: any) => g.id === graphId)
+          
+          if (updatedGraph && updatedGraph.status === 'completed') {
+            setGraphs(prev => prev.map(g => g.id === graphId ? {
+              ...g,
+              status: updatedGraph.status,
+              nodeCount: updatedGraph.node_count,
+              connectionCount: updatedGraph.connection_count,
+              updatedAt: updatedGraph.updated_at
+            } : g))
+            clearInterval(pollInterval)
+          }
+        }
+      } catch (error) {
+        console.error('Error polling graph status:', error)
+        clearInterval(pollInterval)
+      }
+    }, 2000) // Poll every 2 seconds
+
+    // Stop polling after 30 seconds
+    setTimeout(() => clearInterval(pollInterval), 30000)
+  }
 
   const filteredGraphs = graphs.filter(graph =>
     graph.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -171,15 +236,14 @@ export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGrap
 
       {/* Create Graph Modal would go here */}
       {showCreateModal && (
-        <CreateGraphModal
-          folders={folders}
-          onClose={() => setShowCreateModal(false)}
-          onCreateGraph={(graphData) => {
-            // Handle graph creation
-            console.log('Creating graph:', graphData)
-            setShowCreateModal(false)
-          }}
-        />
+          <CreateGraphModal
+            folders={folders}
+            onClose={() => setShowCreateModal(false)}
+            onCreateGraph={(graphData) => {
+              createGraph(graphData)
+              setShowCreateModal(false)
+            }}
+          />
       )}
     </div>
   )
@@ -406,8 +470,15 @@ function GraphsGrid({ graphs, viewMode, folders }: {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <Brain className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center relative">
+                    {graph.status === 'processing' ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    ) : (
+                      <Brain className="w-6 h-6 text-white" />
+                    )}
+                    {graph.status === 'completed' && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{graph.title}</h3>
@@ -415,7 +486,7 @@ function GraphsGrid({ graphs, viewMode, folders }: {
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                       <span>{graph.nodeCount} nodes</span>
                       <span>{graph.connectionCount} connections</span>
-                      <span>Folders: {getFolderNames(graph.folders)}</span>
+                      <span>Folders: {getFolderNames(graph.folder_ids)}</span>
                     </div>
                   </div>
                 </div>
@@ -505,11 +576,30 @@ function GraphsGrid({ graphs, viewMode, folders }: {
           </CardHeader>
           <CardContent>
             {/* Graph Thumbnail/Preview */}
-            <div className="aspect-video bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg mb-4 flex items-center justify-center border border-purple-100">
+            <div className="aspect-video bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg mb-4 flex items-center justify-center border border-purple-100 relative">
               <div className="text-center">
-                <Brain className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                <p className="text-xs text-purple-600 font-medium">Interactive Graph</p>
+                {graph.status === 'processing' ? (
+                  <>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+                    <p className="text-xs text-purple-600 font-medium">Processing...</p>
+                  </>
+                ) : graph.status === 'failed' ? (
+                  <>
+                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-red-600 text-xs">!</span>
+                    </div>
+                    <p className="text-xs text-red-600 font-medium">Failed</p>
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <p className="text-xs text-purple-600 font-medium">Interactive Graph</p>
+                  </>
+                )}
               </div>
+              {graph.status === 'completed' && (
+                <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full"></div>
+              )}
             </div>
 
             {/* Graph Stats */}
@@ -534,7 +624,7 @@ function GraphsGrid({ graphs, viewMode, folders }: {
 
             {/* Folders */}
             <div className="text-xs text-gray-500">
-              <span className="font-medium">Folders:</span> {getFolderNames(graph.folders)}
+              <span className="font-medium">Folders:</span> {getFolderNames(graph.folder_ids)}
             </div>
 
             {/* Updated Date */}
