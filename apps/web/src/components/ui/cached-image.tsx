@@ -85,7 +85,7 @@ export function CachedImage({
         }
       },
       {
-        rootMargin: '50px', // Start loading 50px before the image comes into view
+        rootMargin: '100px', // Start loading 100px before the image comes into view (increased for better UX)
         threshold: 0.1,
       }
     )
@@ -95,16 +95,19 @@ export function CachedImage({
     return () => observer.disconnect()
   }, [priority])
 
-  // Check cache status
+  // Check cache status and set initial state
   useEffect(() => {
     const cacheStatus = imageCache.get(src)
     if (cacheStatus === 'loaded') {
       setIsLoading(false)
+      setIsInView(true) // Show cached images immediately
     } else if (cacheStatus === 'error') {
       setHasError(true)
       setIsLoading(false)
+    } else if (priority) {
+      setIsInView(true) // Priority images load immediately
     }
-  }, [src])
+  }, [src, priority])
 
   const handleLoad = () => {
     imageCache.set(src, 'loaded')

@@ -963,7 +963,7 @@ function DashboardContent() {
                       ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 pb-6"
                       : "space-y-2 pb-6"
                   }>
-                    {sortedClips.map((clip) => (
+                    {sortedClips.map((clip, index) => (
                       <ClipCard 
                         key={clip.id} 
                         clip={clip} 
@@ -973,6 +973,7 @@ function DashboardContent() {
                         onUpdate={handleClipUpdate}
                         onDelete={handleClipDelete}
                         onToggleFavorite={handleToggleFavorite}
+                        priority={index < 10} // Prioritize first 10 images for immediate loading
                       />
                     ))}
                     
@@ -1086,9 +1087,10 @@ interface ClipCardProps {
   onUpdate: (clipId: string, updates: Partial<Clip>) => Promise<void>
   onDelete: (clipId: string) => Promise<void>
   onToggleFavorite: (clipId: string, isFavorite: boolean) => Promise<void>
+  priority?: boolean
 }
 
-function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onToggleFavorite }: ClipCardProps) {
+function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onToggleFavorite, priority = false }: ClipCardProps) {
   const folder = folders.find(f => f.id === clip.folder_id)
   
   const handleDelete = async (e: React.MouseEvent) => {
@@ -1128,6 +1130,7 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
                 height={40}
                 className="w-14 h-10 object-top object-cover"
                 quality={75}
+                priority={priority}
               />
             </div>
           )}
@@ -1226,7 +1229,7 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1536px) 25vw, 16vw"
             className="w-full h-full object-top object-cover group-hover:scale-105 transition-transform duration-300"
             quality={85}
-            priority={false}
+            priority={priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         </div>
