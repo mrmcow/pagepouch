@@ -873,20 +873,28 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
       {isClipViewerOpen && selectedClipId && (() => {
         const selectedClip = clips.find(clip => clip.id === selectedClipId) || null
         return (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" style={{ zIndex: 100000 }}>
-            <ClipViewer
-              clip={selectedClip}
-              clips={clips}
-              folders={folders}
-              isOpen={isClipViewerOpen}
-              onClose={() => {
-                setIsClipViewerOpen(false)
-                setSelectedClipId(null)
-              }}
-              onUpdate={async () => {}} // Placeholder - no updates needed in graph context
-              onDelete={async () => {}} // Placeholder - no deletes needed in graph context
-              onNavigate={() => {}} // Placeholder - no navigation needed in graph context
-            />
+          <div 
+            style={{ 
+              position: 'fixed',
+              inset: 0,
+              zIndex: 100000,
+            }}
+          >
+            <div style={{ position: 'relative', zIndex: 100001 }}>
+              <ClipViewer
+                clip={selectedClip}
+                clips={clips}
+                folders={folders}
+                isOpen={isClipViewerOpen}
+                onClose={() => {
+                  setIsClipViewerOpen(false)
+                  setSelectedClipId(null)
+                }}
+                onUpdate={async () => {}} // Placeholder - no updates needed in graph context
+                onDelete={async () => {}} // Placeholder - no deletes needed in graph context
+                onNavigate={() => {}} // Placeholder - no navigation needed in graph context
+              />
+            </div>
           </div>
         )
       })()}
