@@ -46,9 +46,24 @@ const preloadImage = (src: string) => {
   })
 }
 
-// Batch preload multiple images
+// Batch preload multiple images with sequential loading for better UX
 export const preloadImages = (urls: string[]) => {
   return Promise.allSettled(urls.map(preloadImage))
+}
+
+// Sequential preload for smoother initial loading
+export const preloadImagesSequentially = async (urls: string[], batchSize: number = 5) => {
+  const results = []
+  for (let i = 0; i < urls.length; i += batchSize) {
+    const batch = urls.slice(i, i + batchSize)
+    const batchResults = await Promise.allSettled(batch.map(preloadImage))
+    results.push(...batchResults)
+    // Small delay between batches to prevent overwhelming the browser
+    if (i + batchSize < urls.length) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+  }
+  return results
 }
 
 export function CachedImage({
@@ -85,8 +100,8 @@ export function CachedImage({
         }
       },
       {
-        rootMargin: '100px', // Start loading 100px before the image comes into view (increased for better UX)
-        threshold: 0.1,
+        rootMargin: '200px', // Start loading 200px before the image comes into view for smoother scrolling
+        threshold: 0.01, // Trigger as soon as any part is about to be visible
       }
     )
 
@@ -159,10 +174,10 @@ export function CachedImage({
       {/* Loading placeholder */}
       {isLoading && (
         <div 
-          className="bg-gray-100 animate-pulse flex items-center justify-center"
+          className="bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse flex items-center justify-center rounded-sm"
           style={{ width, height }}
         >
-          <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin opacity-60" />
         </div>
       )}
       
@@ -181,8 +196,8 @@ export function CachedImage({
           onLoad={handleLoad}
           onError={handleError}
           className={cn(
-            'transition-opacity duration-300',
-            isLoading ? 'opacity-0' : 'opacity-100',
+            'transition-all duration-500 ease-out',
+            isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100',
             className
           )}
           style={{
@@ -210,11 +225,14 @@ export const useImageCache = () => {
 
   const getCacheStatus = (src: string) => imageCache.get(src)
 
-  const preloadClipImages = (clips: Array<{ screenshot_url?: string }>) => {
+  const preloadClipImages = (clips: Array<{ screenshot_url?: string }>, sequential: boolean = false) => {
     const urls = clips
       .map(clip => clip.screenshot_url)
       .filter(Boolean) as string[]
     
+    if (sequential) {
+      return preloadImagesSequentially(urls, 5) // Load 5 images at a time
+    }
     return preloadImages(urls)
   }
 

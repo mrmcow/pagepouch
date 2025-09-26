@@ -129,7 +129,7 @@ function DashboardContent() {
 
   const router = useRouter()
   const supabase = createClient()
-  const { preloadClipImages, clearCache, getCacheSize } = useImageCache()
+  const { preloadClipImages, clearCache, getCacheSize, getCacheStatus } = useImageCache()
 
   const handleRefresh = () => {
     // Clear image cache on refresh to ensure fresh content
@@ -145,7 +145,7 @@ function DashboardContent() {
     setTimeout(() => loadData(), 0)
   }, [])
 
-  // Infinite scrolling effect
+  // Infinite scrolling effect with progressive image preloading
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -154,7 +154,7 @@ function DashboardContent() {
           loadMoreClips()
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '300px' } // Start loading more clips earlier
     )
 
     const currentRef = loadMoreRef.current
@@ -168,6 +168,24 @@ function DashboardContent() {
       }
     }
   }, [state.hasMoreClips, state.isLoadingMore])
+
+  // Progressive preloading as user scrolls
+  useEffect(() => {
+    if (state.clips.length > 0) {
+      // Preload next batch of images that aren't cached yet
+      const uncachedClips = state.clips.filter(clip => 
+        clip.screenshot_url && getCacheStatus(clip.screenshot_url) !== 'loaded'
+      )
+      
+      if (uncachedClips.length > 0) {
+        // Take next 10 uncached images and preload them
+        const nextBatch = uncachedClips.slice(0, 10)
+        preloadClipImages(nextBatch, false).then(() => {
+          console.log(`Background preloaded ${nextBatch.length} additional images`)
+        })
+      }
+    }
+  }, [state.clips.length]) // Trigger when new clips are loaded
 
   const checkAuth = async () => {
     try {
@@ -261,8 +279,9 @@ function DashboardContent() {
 
       // Preload images for better performance
       if (newClips.length > 0) {
-        preloadClipImages(newClips).then(() => {
-          console.log(`Preloaded ${newClips.length} clip images`)
+        const isInitialLoad = reset && state.clips.length === 0
+        preloadClipImages(newClips, isInitialLoad).then(() => {
+          console.log(`${isInitialLoad ? 'Sequentially preloaded' : 'Preloaded'} ${newClips.length} clip images`)
         })
       }
       
@@ -973,7 +992,7 @@ function DashboardContent() {
                         onUpdate={handleClipUpdate}
                         onDelete={handleClipDelete}
                         onToggleFavorite={handleToggleFavorite}
-                        priority={index < 10} // Prioritize first 10 images for immediate loading
+                        priority={index < 20} // Prioritize first 20 images for immediate loading
                       />
                     ))}
                     
