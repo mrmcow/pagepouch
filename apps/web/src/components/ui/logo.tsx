@@ -70,5 +70,17 @@ export function LogoIcon({ size = 24, className = '' }: { size?: number; classNa
 }
 
 export function LogoWithText({ size = 48, className = '' }: { size?: number; className?: string }) {
-  return <Logo size={size} className={className} showText={true} />
+  const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  return (
+    <button 
+      onClick={handleClick}
+      className={`cursor-pointer hover:opacity-80 transition-opacity duration-200 ${className}`}
+      aria-label="Scroll to top"
+    >
+      <Logo size={size} className="" showText={true} />
+    </button>
+  )
 }
