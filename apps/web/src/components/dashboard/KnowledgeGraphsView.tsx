@@ -257,6 +257,8 @@ export function KnowledgeGraphsView({ folders, subscriptionTier }: KnowledgeGrap
           graphId={selectedGraphId}
           graphTitle={graphs.find(g => g.id === selectedGraphId)?.title || 'Knowledge Graph'}
           graphDescription={graphs.find(g => g.id === selectedGraphId)?.description}
+          clips={clips}
+          folders={folders}
         />
       )}
     </div>

@@ -62,6 +62,8 @@ interface KnowledgeGraphViewerProps {
   graphId: string
   graphTitle: string
   graphDescription?: string
+  clips?: any[] // Pass clips array to find clip by ID
+  folders?: any[] // Pass folders for ClipViewer
 }
 
 // Color scheme for different node types
@@ -246,7 +248,7 @@ function generateMockGraphData(): { nodes: GraphNode[], edges: GraphEdge[] } {
   return { nodes, edges }
 }
 
-export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, graphDescription }: KnowledgeGraphViewerProps) {
+export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, graphDescription, clips = [], folders = [] }: KnowledgeGraphViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[], edges: GraphEdge[] }>({ nodes: [], edges: [] })
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
@@ -863,18 +865,26 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
       )}
 
       {/* Clip Viewer Overlay */}
-      {isClipViewerOpen && selectedClipId && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-sm">
-          <ClipViewer
-            clipId={selectedClipId}
-            isOpen={isClipViewerOpen}
-            onClose={() => {
-              setIsClipViewerOpen(false)
-              setSelectedClipId(null)
-            }}
-          />
-        </div>
-      )}
+      {isClipViewerOpen && selectedClipId && (() => {
+        const selectedClip = clips.find(clip => clip.id === selectedClipId) || null
+        return (
+          <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-sm">
+            <ClipViewer
+              clip={selectedClip}
+              clips={clips}
+              folders={folders}
+              isOpen={isClipViewerOpen}
+              onClose={() => {
+                setIsClipViewerOpen(false)
+                setSelectedClipId(null)
+              }}
+              onUpdate={async () => {}} // Placeholder - no updates needed in graph context
+              onDelete={async () => {}} // Placeholder - no deletes needed in graph context
+              onNavigate={() => {}} // Placeholder - no navigation needed in graph context
+            />
+          </div>
+        )
+      })()}
     </div>
   )
 }
