@@ -351,17 +351,6 @@ function DashboardContent() {
       const newClips = clipsData.clips || []
       const allClips = reset ? newClips : [...state.clips, ...newClips]
 
-      // Debug logging
-      console.log('Clips data:', { 
-        clipsCount: newClips.length, 
-        totalClips: clipsData.total,
-        sampleClip: newClips[0] ? { id: newClips[0].id, folder_id: newClips[0].folder_id, title: newClips[0].title } : null
-      })
-      console.log('Folders data:', { 
-        foldersCount: (foldersData.folders || []).length, 
-        folders: (foldersData.folders || []).map(f => ({ id: f.id, name: f.name }))
-      })
-
       setState(prev => ({
         ...prev,
         clips: allClips,
@@ -378,15 +367,6 @@ function DashboardContent() {
         clipsThisMonth: subscriptionData.clipsThisMonth,
         clipsLimit: subscriptionData.clipsLimit,
       }))
-
-      // Debug folder counts after state update
-      setTimeout(() => {
-        const folders = foldersData.folders || []
-        folders.forEach(folder => {
-          const count = allClips.filter(clip => clip.folder_id === folder.id).length
-          console.log(`Folder "${folder.name}" (${folder.id}): ${count} clips`)
-        })
-      }, 100)
 
       // Preload images for better performance
       if (newClips.length > 0) {
