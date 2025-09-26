@@ -51,7 +51,7 @@ interface GraphEdge {
   id: string
   source: string
   target: string
-  type: 'mentions' | 'links_to' | 'affiliated_with' | 'appears_with'
+  type: 'mentions' | 'links_to' | 'affiliated_with' | 'appears_with' | 'source' | 'categorized_as' | 'same_source' | 'same_topic' | 'same_topic_and_source' | 'similar_content' | 'same_session'
   weight: number
   color: string
 }
