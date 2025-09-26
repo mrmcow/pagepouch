@@ -83,7 +83,31 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ clips: data || [] })
+    // Get total count for pagination
+    let countQuery = supabase
+      .from('clips')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    if (folderId) {
+      countQuery = countQuery.eq('folder_id', folderId)
+    }
+
+    const { count, error: countError } = await countQuery
+
+    if (countError) {
+      console.error('Count error:', countError)
+      // Return clips without count if count fails
+      return NextResponse.json({ clips: data || [], total: data?.length || 0 })
+    }
+
+    return NextResponse.json({ 
+      clips: data || [], 
+      total: count || 0,
+      limit,
+      offset,
+      hasMore: (offset + limit) < (count || 0)
+    })
   } catch (error) {
     console.error('Get clips error:', error)
     return NextResponse.json(

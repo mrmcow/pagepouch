@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
@@ -70,6 +70,11 @@ interface DashboardState {
   isCreateFolderModalOpen: boolean
   selectedFolderForEdit: Folder | null
   isEditFolderModalOpen: boolean
+  // Pagination state
+  totalClips: number
+  hasMoreClips: boolean
+  isLoadingMore: boolean
+  currentOffset: number
 }
 
 function DashboardContent() {
@@ -92,9 +97,15 @@ function DashboardContent() {
     isCreateFolderModalOpen: false,
     selectedFolderForEdit: null,
     isEditFolderModalOpen: false,
+    // Pagination state
+    totalClips: 0,
+    hasMoreClips: false,
+    isLoadingMore: false,
+    currentOffset: 0,
   })
   
   const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const router = useRouter()
   const supabase = createClient()
@@ -105,6 +116,30 @@ function DashboardContent() {
     // Don't wait for loadData - let it run in background
     setTimeout(() => loadData(), 0)
   }, [])
+
+  // Infinite scrolling effect
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0]
+        if (first.isIntersecting && state.hasMoreClips && !state.isLoadingMore) {
+          loadMoreClips()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    const currentRef = loadMoreRef.current
+    if (currentRef) {
+      observer.observe(currentRef)
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef)
+      }
+    }
+  }, [state.hasMoreClips, state.isLoadingMore])
 
   const checkAuth = async () => {
     try {
@@ -122,11 +157,14 @@ function DashboardContent() {
     }
   }
 
-  const loadData = async () => {
+  const loadData = async (reset: boolean = true) => {
     try {
+      const offset = reset ? 0 : state.currentOffset
+      const limit = 50 // Load 50 clips at a time for better performance
+      
       // Load clips, folders, and tags in parallel with caching
       const [clipsResponse, foldersResponse, tagsResponse] = await Promise.all([
-        fetch('/api/clips', { 
+        fetch(`/api/clips?limit=${limit}&offset=${offset}`, { 
           cache: 'no-store', // Always get fresh data
           headers: { 'Cache-Control': 'no-cache' }
         }),
@@ -153,18 +191,30 @@ function DashboardContent() {
 
       setState(prev => ({
         ...prev,
-        clips: clipsData.clips || [],
+        clips: reset ? (clipsData.clips || []) : [...prev.clips, ...(clipsData.clips || [])],
         folders: foldersData.folders || [],
         availableTags: tagsData || [],
         clipTags: clipTagsMap,
+        totalClips: clipsData.total || 0,
+        hasMoreClips: clipsData.hasMore || false,
+        currentOffset: offset + limit,
+        isLoadingMore: false,
       }))
       
       setIsInitialLoading(false)
     } catch (error) {
       console.error('Failed to load data:', error)
       setIsInitialLoading(false)
+      setState(prev => ({ ...prev, isLoadingMore: false }))
       // Show error state but don't block the UI
     }
+  }
+
+  const loadMoreClips = async () => {
+    if (state.isLoadingMore || !state.hasMoreClips) return
+    
+    setState(prev => ({ ...prev, isLoadingMore: true }))
+    await loadData(false) // Don't reset, append to existing clips
   }
 
   const handleSearch = (query: string) => {
@@ -618,7 +668,7 @@ function DashboardContent() {
                   onClick={() => setState(prev => ({ ...prev, selectedFolder: null }))}
                 >
                   <Grid className="mr-2 h-4 w-4" />
-                  All Clips ({state.clips.length})
+                  All Clips ({state.totalClips})
                 </Button>
                 
                 {state.folders.map((folder) => {
@@ -828,6 +878,29 @@ function DashboardContent() {
                         onToggleFavorite={handleToggleFavorite}
                       />
                     ))}
+                    
+                    {/* Infinite scroll trigger and loading indicator */}
+                    {state.hasMoreClips && (
+                      <div 
+                        ref={loadMoreRef}
+                        className={`${
+                          state.viewMode === 'grid' 
+                            ? 'col-span-full flex justify-center py-8' 
+                            : 'flex justify-center py-8'
+                        }`}
+                      >
+                        {state.isLoadingMore ? (
+                          <div className="flex items-center space-x-2 text-muted-foreground">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                            <span>Loading more clips...</span>
+                          </div>
+                        ) : (
+                          <div className="text-muted-foreground text-sm">
+                            Scroll to load more clips
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
