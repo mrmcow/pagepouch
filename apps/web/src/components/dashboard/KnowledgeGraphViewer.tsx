@@ -522,7 +522,6 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
         if (hoveredNodeFound !== hoveredNode) {
           setHoveredNode(hoveredNodeFound || null)
           if (hoveredNodeFound) {
-            console.log('Hovering over node:', hoveredNodeFound.label, 'at position:', mousePos)
             setTooltipPosition({ x: mousePos.x, y: mousePos.y })
           }
         }
@@ -868,13 +867,13 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
           </div>
         </div>
       )}
+      </div>
 
-
-      {/* Clip Viewer Overlay */}
+      {/* Clip Viewer Overlay - Rendered at root level for proper z-index */}
       {isClipViewerOpen && selectedClipId && (() => {
         const selectedClip = clips.find(clip => clip.id === selectedClipId) || null
         return (
-          <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" style={{ zIndex: 100000 }}>
             <ClipViewer
               clip={selectedClip}
               clips={clips}
@@ -891,7 +890,6 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
           </div>
         )
       })()}
-      </div>
     </>
   )
 }
