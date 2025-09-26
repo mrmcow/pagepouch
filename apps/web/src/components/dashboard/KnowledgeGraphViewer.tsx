@@ -77,7 +77,7 @@ const NODE_COLORS = {
 }
 
 // Generate mock graph data with rich evidence - will be replaced with API call
-function generateMockGraphData(): { nodes: GraphNode[], edges: GraphEdge[] } {
+function generateMockGraphData(clips: any[] = []): { nodes: GraphNode[], edges: GraphEdge[] } {
   const nodes: GraphNode[] = [
     { 
       id: 'trump', 
@@ -85,26 +85,15 @@ function generateMockGraphData(): { nodes: GraphNode[], edges: GraphEdge[] } {
       type: 'person', 
       size: 20, 
       color: NODE_COLORS.person, 
-      evidence: [
-        {
-          clipId: 'clip1',
-          clipTitle: 'Trump Rally Speech',
-          snippet: 'Former President Donald Trump announced his campaign plans...',
-          url: 'https://example.com/trump-rally',
-          timestamp: '2024-09-25T10:30:00Z',
-          folderName: 'Trump',
-          context: 'Political announcement during campaign rally'
-        },
-        {
-          clipId: 'clip2',
-          clipTitle: 'Truth Social Post',
-          snippet: 'Trump posted on Truth Social about upcoming events...',
-          url: 'https://truthsocial.com/post/123',
-          timestamp: '2024-09-24T15:45:00Z',
-          folderName: 'Trump',
-          context: 'Social media activity'
-        }
-      ]
+      evidence: clips.slice(0, 2).map((clip, index) => ({
+        clipId: clip.id,
+        clipTitle: clip.title,
+        snippet: clip.notes || 'No notes available',
+        url: clip.url,
+        timestamp: clip.created_at,
+        folderName: 'Trump',
+        context: 'Political announcement during campaign rally'
+      }))
     },
     { 
       id: 'truth-social', 
@@ -220,17 +209,15 @@ function generateMockGraphData(): { nodes: GraphNode[], edges: GraphEdge[] } {
       type: 'tag', 
       size: 13, 
       color: NODE_COLORS.tag, 
-      evidence: [
-        {
-          clipId: 'clip9',
-          clipTitle: '2024 Election Coverage',
-          snippet: 'Comprehensive coverage of 2024 election developments...',
-          url: 'https://example.com/election2024',
-          timestamp: '2024-09-17T12:00:00Z',
-          folderName: 'Trump',
-          context: 'Election news and analysis'
-        }
-      ]
+      evidence: clips.slice(8, 9).map((clip) => ({
+        clipId: clip.id,
+        clipTitle: clip.title,
+        snippet: clip.notes || 'Comprehensive coverage of 2024 election developments...',
+        url: clip.url,
+        timestamp: clip.created_at,
+        folderName: 'Trump',
+        context: 'Election news and analysis'
+      }))
     },
   ]
 
@@ -274,10 +261,10 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
   useEffect(() => {
     if (isOpen) {
       // TODO: Replace with actual API call
-      const mockData = generateMockGraphData()
+      const mockData = generateMockGraphData(clips)
       setGraphData(mockData)
     }
-  }, [isOpen, graphId])
+  }, [isOpen, graphId, clips])
 
   // Zoom functions
   const handleZoomIn = useCallback(() => {
