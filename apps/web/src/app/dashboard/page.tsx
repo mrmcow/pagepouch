@@ -374,6 +374,8 @@ function DashboardContent() {
       // Debug logging for folders
       console.log('Dashboard - folders fetched:', foldersData.folders)
       console.log('Dashboard - folders count:', foldersData.folders?.length || 0)
+      console.log('Dashboard - current user:', state.user?.id)
+      console.log('Dashboard - folders API response:', foldersData)
       
       setState(prev => ({
         ...prev,
