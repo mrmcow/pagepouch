@@ -124,39 +124,47 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
         <div className="space-y-6">
           {/* Account Information */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="h-5 w-5" />
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <User className="h-5 w-5 text-blue-600" />
+                </div>
                 Account Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="flex gap-2">
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                <div className="flex gap-3">
                   <Input
                     id="email"
                     type="email"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     disabled={isLoading}
+                    className="flex-1"
                   />
                   <Button
                     onClick={handleEmailUpdate}
                     disabled={isLoading || newEmail === user.email}
                     size="sm"
+                    className="px-4"
                   >
-                    Update
+                    {isLoading ? 'Updating...' : 'Update'}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Changing your email will require verification of both old and new addresses.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>Member since {formatDate(user.created_at)}</span>
+              <div className="pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="p-1.5 bg-gray-100 rounded-md">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <span>Member since {formatDate(user.created_at)}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -164,31 +172,47 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
           {/* Subscription Information */}
           {subscriptionData && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Subscription</CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CreditCard className="h-5 w-5 text-green-600" />
+                  </div>
+                  Subscription
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Current Plan</span>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">Current Plan</span>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {subscriptionData.subscriptionTier === 'pro' ? '1,000 clips/month + 5GB storage' : '50 clips/month + 100MB storage'}
+                    </p>
+                  </div>
                   <Badge variant={getSubscriptionBadgeVariant(subscriptionData.subscriptionTier, subscriptionData.subscriptionStatus)}>
                     {subscriptionData.subscriptionTier === 'pro' ? 'Pro' : 'Free'}
                   </Badge>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Usage this month</span>
-                  <span className="text-sm text-muted-foreground">
-                    {subscriptionData.clipsThisMonth}/{subscriptionData.clipsLimit} clips
-                  </span>
-                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Usage this month</span>
+                    <span className="text-sm font-mono text-muted-foreground">
+                      {subscriptionData.clipsThisMonth}/{subscriptionData.clipsLimit} clips
+                    </span>
+                  </div>
 
-                <div className="w-full bg-secondary rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ 
-                      width: `${Math.min((subscriptionData.clipsThisMonth / subscriptionData.clipsLimit) * 100, 100)}%` 
-                    }}
-                  />
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${Math.min((subscriptionData.clipsThisMonth / subscriptionData.clipsLimit) * 100, 100)}%` 
+                      }}
+                    />
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    {subscriptionData.clipsLimit - subscriptionData.clipsThisMonth} clips remaining this month
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -197,13 +221,15 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
           <div className="border-t my-6" />
 
           {/* Danger Zone */}
-          <Card className="border-destructive/50">
-            <CardHeader>
-              <CardTitle className="text-lg text-destructive flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
+          <Card className="border-red-200 bg-red-50/50">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl text-red-700 flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                </div>
                 Danger Zone
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-red-600/80">
                 Irreversible actions that will permanently affect your account
               </CardDescription>
             </CardHeader>
