@@ -96,18 +96,20 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Floating Header */}
-      <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-lg shadow-black/5">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <LogoWithText size={40} />
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" className="font-medium hover:bg-slate-100/50 dark:hover:bg-slate-800/50" asChild>
+      <header className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-2 sm:px-4">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-xl sm:rounded-2xl shadow-lg shadow-black/5">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+            <LogoWithText size={32} className="sm:hidden" />
+            <LogoWithText size={40} className="hidden sm:block" />
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Button variant="ghost" size="sm" className="font-medium hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hidden sm:inline-flex" asChild>
                 <Link href="/auth/login">Sign In</Link>
               </Button>
-              <Button className="font-medium group bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25" asChild>
+              <Button size="sm" className="font-medium group bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25" asChild>
                 <Link href="/auth/signup">
-                  <SparklesIcon className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                  Start Free
+                  <SparklesIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform" />
+                  <span className="hidden sm:inline">Start Free</span>
+                  <span className="sm:hidden">Free</span>
                 </Link>
               </Button>
             </div>
@@ -116,20 +118,20 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section - Premium & Unique */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+      <section className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 relative overflow-hidden">
         {/* Sophisticated Floating Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-500/15 to-indigo-500/15 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-20 left-4 sm:left-10 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-r from-blue-500/15 to-indigo-500/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-4 sm:right-10 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
           {/* Subtle geometric elements */}
-          <div className="absolute top-40 right-20 w-2 h-2 bg-blue-400/30 rounded-full animate-ping"></div>
-          <div className="absolute bottom-40 left-20 w-1 h-1 bg-indigo-400/40 rounded-full animate-ping delay-500"></div>
+          <div className="absolute top-40 right-8 sm:right-20 w-2 h-2 bg-blue-400/30 rounded-full animate-ping"></div>
+          <div className="absolute bottom-40 left-8 sm:left-20 w-1 h-1 bg-indigo-400/40 rounded-full animate-ping delay-500"></div>
         </div>
         
         <div className="pagepouch-container relative">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 sm:mb-16">
 
-            <h1 className="text-6xl lg:text-8xl font-bold mb-8 text-balance leading-tight">
+            <h1 className="text-4xl sm:text-6xl lg:text-8xl font-bold mb-6 sm:mb-8 text-balance leading-tight">
               <span className="bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent">
                 Capture the web
               </span>
@@ -139,13 +141,13 @@ export default function HomePage() {
               </span>
             </h1>
             
-            <p className="text-xl lg:text-2xl text-slate-600 dark:text-slate-300 mb-12 max-w-4xl mx-auto text-balance leading-relaxed">
+            <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 mb-8 sm:mb-12 max-w-4xl mx-auto text-balance leading-relaxed px-2">
               The only web archival tool built for researchers, analysts, and professionals who demand 
               <span className="font-semibold text-slate-800 dark:text-slate-200"> instant capture, intelligent search, and beautiful organization.</span>
             </p>
 
             {/* Social Proof */}
-            <div className="flex items-center justify-center gap-8 mb-12 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mb-8 sm:mb-12 text-sm text-slate-500 dark:text-slate-400">
               <div className="flex items-center gap-2">
                 <UsersIcon className="h-4 w-4" />
                 <span>10,000+ researchers</span>
@@ -162,11 +164,11 @@ export default function HomePage() {
           </div>
 
           {/* Elevated CTA Section - Clean & Integrated */}
-          <div className="max-w-2xl mx-auto text-center space-y-8">
+          <div className="max-w-2xl mx-auto text-center space-y-6 sm:space-y-8 px-2">
             {/* Free Trial Header - Floating Above */}
-            <div className="space-y-3">
-              <h3 className="text-4xl font-bold text-slate-800 dark:text-slate-200">Start Your Free Trial</h3>
-              <p className="text-xl text-slate-600 dark:text-slate-400">50 clips free • No credit card required • Instant setup</p>
+            <div className="space-y-2 sm:space-y-3">
+              <h3 className="text-2xl sm:text-4xl font-bold text-slate-800 dark:text-slate-200">Start Your Free Trial</h3>
+              <p className="text-base sm:text-xl text-slate-600 dark:text-slate-400">50 clips free • No credit card required • Instant setup</p>
             </div>
             
             {/* Browser Selector - Elevated & Prominent */}
@@ -191,12 +193,12 @@ export default function HomePage() {
               <Button 
                 variant="outline" 
                 size="lg"
-                className="font-medium bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-slate-200/60 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" 
+                className="font-medium bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-slate-200/60 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 px-6 sm:px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 w-full sm:w-auto" 
                 asChild
               >
                 <Link href="/auth/signup">
-                  <RocketIcon className="mr-2 h-5 w-5" />
-                  Start with web dashboard
+                  <RocketIcon className="mr-2 h-4 sm:h-5 w-4 sm:w-5" />
+                  <span className="text-sm sm:text-base">Start with web dashboard</span>
                 </Link>
               </Button>
             </div>
@@ -205,19 +207,19 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-white/50 to-slate-50/80 dark:from-slate-900/50 dark:to-slate-800/80">
+      <section className="py-16 sm:py-20 px-4 bg-gradient-to-b from-white/50 to-slate-50/80 dark:from-slate-900/50 dark:to-slate-800/80">
         <div className="pagepouch-container">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-balance">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-balance">
               <span className="text-slate-800 dark:text-slate-200">Choose your</span>
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> research power</span>
             </h2>
-            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto text-balance">
+            <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto text-balance px-2">
               Start free, upgrade when you need unlimited capturing for serious research work.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto items-start">
             {/* Free Tier - Enhanced Depth */}
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-slate-200/30 to-slate-300/30 rounded-3xl blur-sm group-hover:blur-md transition-all duration-300"></div>
@@ -262,14 +264,14 @@ export default function HomePage() {
             </div>
 
             {/* Pro Tier - Sophisticated Highlight */}
-            <div className="relative group transform scale-105">
+            <div className="relative group transform sm:scale-105">
               {/* Enhanced glow effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/40 to-indigo-500/40 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl p-8 shadow-2xl shadow-blue-500/30 border border-blue-400/40 hover:shadow-3xl hover:shadow-blue-500/40 transition-all duration-300">
+              <div className="relative bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-blue-500/30 border border-blue-400/40 hover:shadow-3xl hover:shadow-blue-500/40 transition-all duration-300">
                 {/* Refined Badge */}
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-white text-blue-600 rounded-2xl px-6 py-2 shadow-xl border border-blue-100/50 backdrop-blur-sm">
-                    <span className="text-sm font-semibold tracking-wide">RECOMMENDED</span>
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-white text-blue-600 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-1.5 sm:py-2 shadow-xl border border-blue-100/50 backdrop-blur-sm">
+                    <span className="text-xs sm:text-sm font-semibold tracking-wide">RECOMMENDED</span>
                   </div>
                 </div>
               
@@ -577,82 +579,82 @@ export default function HomePage() {
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {/* Feature 1 - Lightning Capture */}
             <div className="group">
-              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-8 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <ZapIcon className="h-8 w-8 text-white" />
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <ZapIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">Lightning Capture</h3>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6 flex-grow">
+                <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-slate-800 dark:text-slate-200">Lightning Capture</h3>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed mb-4 sm:mb-6 flex-grow">
                   One-click capture of any webpage with full screenshot, HTML source, metadata, and text extraction. Never lose content again with our reliable archival system.
                 </p>
-                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <span>Perfect capture every time</span>
-                  <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRightIcon className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
 
             {/* Feature 2 - Intelligent Search */}
             <div className="group">
-              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-8 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <SearchIcon className="h-8 w-8 text-white" />
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <SearchIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">Intelligent Search</h3>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6 flex-grow">
+                <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-slate-800 dark:text-slate-200">Intelligent Search</h3>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed mb-4 sm:mb-6 flex-grow">
                   Full-text search across all captured content with advanced filters, tags, and date ranges. Find any piece of information instantly with powerful search algorithms.
                 </p>
-                <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 font-medium">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-purple-600 dark:text-purple-400 font-medium">
                   <span>Search like a pro</span>
-                  <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRightIcon className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
 
             {/* Feature 3 - Smart Organization */}
-            <div className="group">
-              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-3xl p-8 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <DatabaseIcon className="h-8 w-8 text-white" />
+            <div className="group sm:col-span-2 lg:col-span-1">
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <DatabaseIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">Smart Organization</h3>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6 flex-grow">
+                <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-slate-800 dark:text-slate-200">Smart Organization</h3>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed mb-4 sm:mb-6 flex-grow">
                   Unlimited folders, custom tags, and rich notes with instant organization tools. Keep your research structured, accessible, and perfectly organized for maximum productivity.
                 </p>
-                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 font-medium">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
                   <span>Stay organized effortlessly</span>
-                  <ArrowRightIcon className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRightIcon className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Stats Section */}
-          <div className="mt-20 bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-700 dark:to-slate-800 rounded-3xl p-12 text-white">
-            <div className="text-center mb-12">
-              <h3 className="text-3xl font-bold mb-4">Trusted by researchers worldwide</h3>
-              <p className="text-slate-300 text-lg">Join thousands of professionals who rely on PagePouch for their most important work</p>
+          <div className="mt-16 sm:mt-20 bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-700 dark:to-slate-800 rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-white">
+            <div className="text-center mb-8 sm:mb-12">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Trusted by researchers worldwide</h3>
+              <p className="text-slate-300 text-base sm:text-lg">Join thousands of professionals who rely on PagePouch for their most important work</p>
             </div>
             
-            <div className="grid md:grid-cols-4 gap-8 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
               <div>
-                <div className="text-4xl font-bold mb-2 text-blue-400">10K+</div>
-                <div className="text-slate-300">Active Researchers</div>
+                <div className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-blue-400">10K+</div>
+                <div className="text-slate-300 text-sm sm:text-base">Active Researchers</div>
               </div>
               <div>
-                <div className="text-4xl font-bold mb-2 text-indigo-400">2M+</div>
-                <div className="text-slate-300">Pages Captured</div>
+                <div className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-indigo-400">2M+</div>
+                <div className="text-slate-300 text-sm sm:text-base">Pages Captured</div>
               </div>
               <div>
-                <div className="text-4xl font-bold mb-2 text-purple-400">99.9%</div>
-                <div className="text-slate-300">Uptime</div>
+                <div className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-purple-400">99.9%</div>
+                <div className="text-slate-300 text-sm sm:text-base">Uptime</div>
               </div>
               <div>
-                <div className="text-4xl font-bold mb-2 text-pink-400">4.9★</div>
-                <div className="text-slate-300">User Rating</div>
+                <div className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 text-pink-400">4.9★</div>
+                <div className="text-slate-300 text-sm sm:text-base">User Rating</div>
               </div>
             </div>
           </div>
