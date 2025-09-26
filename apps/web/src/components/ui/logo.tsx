@@ -69,9 +69,23 @@ export function LogoIcon({ size = 24, className = '' }: { size?: number; classNa
   return <Logo size={size} className={className} showText={false} />
 }
 
-export function LogoWithText({ size = 48, className = '' }: { size?: number; className?: string }) {
+export function LogoWithText({ 
+  size = 48, 
+  className = '', 
+  clickable = true 
+}: { 
+  size?: number; 
+  className?: string;
+  clickable?: boolean;
+}) {
   const handleClick = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (clickable) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  if (!clickable) {
+    return <Logo size={size} className={className} showText={true} />
   }
 
   return (

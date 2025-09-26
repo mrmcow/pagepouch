@@ -755,7 +755,7 @@ function DashboardContent() {
                 }}
                 className="hover:opacity-80 transition-opacity"
               >
-                <LogoWithText size={32} />
+                <LogoWithText size={32} clickable={false} />
               </button>
               
               <nav className="hidden md:flex items-center space-x-4">
