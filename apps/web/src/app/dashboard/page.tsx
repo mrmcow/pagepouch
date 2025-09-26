@@ -75,6 +75,11 @@ interface DashboardState {
   hasMoreClips: boolean
   isLoadingMore: boolean
   currentOffset: number
+  // Subscription state
+  subscriptionTier: 'free' | 'pro'
+  subscriptionStatus: string
+  clipsThisMonth: number
+  clipsLimit: number
 }
 
 function DashboardContent() {
@@ -102,6 +107,11 @@ function DashboardContent() {
     hasMoreClips: false,
     isLoadingMore: false,
     currentOffset: 0,
+    // Subscription state
+    subscriptionTier: 'free',
+    subscriptionStatus: 'inactive',
+    clipsThisMonth: 0,
+    clipsLimit: 50,
   })
   
   const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -162,8 +172,8 @@ function DashboardContent() {
       const offset = reset ? 0 : state.currentOffset
       const limit = 50 // Load 50 clips at a time for better performance
       
-      // Load clips, folders, and tags in parallel with caching
-      const [clipsResponse, foldersResponse, tagsResponse] = await Promise.all([
+      // Load clips, folders, tags, and subscription data in parallel
+      const [clipsResponse, foldersResponse, tagsResponse, subscriptionResponse] = await Promise.all([
         fetch(`/api/clips?limit=${limit}&offset=${offset}`, { 
           cache: 'no-store', // Always get fresh data
           headers: { 'Cache-Control': 'no-cache' }
@@ -175,6 +185,10 @@ function DashboardContent() {
         fetch('/api/tags', { 
           cache: 'force-cache', // Cache tags as they change less
           headers: { 'Cache-Control': 'max-age=300' }
+        }),
+        fetch('/api/subscription', {
+          cache: 'no-store', // Always get fresh subscription data
+          headers: { 'Cache-Control': 'no-cache' }
         })
       ])
 
@@ -185,6 +199,24 @@ function DashboardContent() {
       const clipsData = await clipsResponse.json()
       const foldersData = await foldersResponse.json()
       const tagsData = await tagsResponse.json()
+      
+      // Handle subscription data (may fail for unauthenticated users)
+      let subscriptionData = {
+        subscriptionTier: 'free',
+        subscriptionStatus: 'inactive',
+        clipsThisMonth: 0,
+        clipsLimit: 50
+      }
+      
+      if (subscriptionResponse.ok) {
+        const subData = await subscriptionResponse.json()
+        subscriptionData = {
+          subscriptionTier: subData.subscription_tier || 'free',
+          subscriptionStatus: subData.subscription_status || 'inactive',
+          clipsThisMonth: subData.clips_this_month || 0,
+          clipsLimit: subData.subscription_tier === 'pro' ? 1000 : 50
+        }
+      }
 
       // Load clip tags lazily - only when needed for filtering
       const clipTagsMap: Record<string, string[]> = {}
@@ -199,6 +231,11 @@ function DashboardContent() {
         hasMoreClips: clipsData.hasMore || false,
         currentOffset: offset + limit,
         isLoadingMore: false,
+        // Update subscription data
+        subscriptionTier: subscriptionData.subscriptionTier as 'free' | 'pro',
+        subscriptionStatus: subscriptionData.subscriptionStatus,
+        clipsThisMonth: subscriptionData.clipsThisMonth,
+        clipsLimit: subscriptionData.clipsLimit,
       }))
       
       setIsInitialLoading(false)
@@ -716,22 +753,23 @@ function DashboardContent() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Clips this month</span>
-                    <span className="font-medium">{state.clips.length}/100</span>
+                    <span className="font-medium">{state.clipsThisMonth}/{state.clipsLimit}</span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2">
                     <div 
                       className="bg-primary h-2 rounded-full transition-all"
-                      style={{ width: `${Math.min((state.clips.length / 100) * 100, 100)}%` }}
+                      style={{ width: `${Math.min((state.clipsThisMonth / state.clipsLimit) * 100, 100)}%` }}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {100 - state.clips.length} clips remaining
+                    {state.clipsLimit - state.clipsThisMonth} clips remaining
                   </p>
                 </div>
               </CardContent>
             </Card>
 
                {/* Test Upgrade Section - Stripe Integration */}
+               {state.subscriptionTier === 'free' && (
                <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Upgrade to Pro</CardTitle>
@@ -786,6 +824,7 @@ function DashboardContent() {
                 </button>
               </CardContent>
             </Card>
+               )}
           </aside>
 
           {/* Main Content */}
