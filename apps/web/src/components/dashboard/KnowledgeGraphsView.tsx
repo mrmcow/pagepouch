@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Folder } from '@pagepouch/shared'
-import { KnowledgeGraphViewer } from './KnowledgeGraphViewer'
+import { EnhancedKnowledgeGraphViewer } from './EnhancedKnowledgeGraphViewer'
 import { generateFallbackPreview } from '@/utils/graphPreviewGenerator'
 
 interface KnowledgeGraph {
@@ -254,7 +254,7 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
 
       {/* Knowledge Graph Viewer */}
       {selectedGraphId && (
-        <KnowledgeGraphViewer
+        <EnhancedKnowledgeGraphViewer
           isOpen={!!selectedGraphId}
           onClose={() => setSelectedGraphId(null)}
           graphId={selectedGraphId}
