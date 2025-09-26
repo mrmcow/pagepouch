@@ -8,15 +8,14 @@ interface CachedImageProps {
   src: string
   alt: string
   className?: string
-  width?: number
-  height?: number
+  width: number
+  height: number
   priority?: boolean
   quality?: number
   placeholder?: 'blur' | 'empty'
   blurDataURL?: string
   onLoad?: () => void
   onError?: () => void
-  fill?: boolean
   sizes?: string
   style?: React.CSSProperties
 }
@@ -64,7 +63,6 @@ export function CachedImage({
   blurDataURL,
   onLoad,
   onError,
-  fill = false,
   sizes,
   style,
   ...props
@@ -154,13 +152,13 @@ export function CachedImage({
   }
 
   return (
-    <div ref={imgRef} className={cn('relative', className)} style={style}>
+    <div ref={imgRef} className="relative">
       {/* Loading placeholder */}
       {isLoading && (
-        <div className={cn(
-          'absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center',
-          fill ? 'w-full h-full' : ''
-        )}>
+        <div 
+          className="bg-gray-100 animate-pulse flex items-center justify-center"
+          style={{ width, height }}
+        >
           <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
         </div>
       )}
@@ -170,9 +168,8 @@ export function CachedImage({
         <Image
           src={src}
           alt={alt}
-          width={fill ? undefined : width}
-          height={fill ? undefined : height}
-          fill={fill}
+          width={width}
+          height={height}
           priority={priority}
           quality={quality}
           placeholder={placeholder}
@@ -182,7 +179,8 @@ export function CachedImage({
           onError={handleError}
           className={cn(
             'transition-opacity duration-300',
-            isLoading ? 'opacity-0' : 'opacity-100'
+            isLoading ? 'opacity-0' : 'opacity-100',
+            className
           )}
           style={{
             objectFit: 'cover',
@@ -225,3 +223,4 @@ export const useImageCache = () => {
     preloadImages
   }
 }
+

@@ -1120,13 +1120,13 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
       }`} onClick={onClick}>
         <div className="flex items-center space-x-3">
           {clip.screenshot_url && (
-            <div className="relative overflow-hidden rounded-md w-14 h-10">
+            <div className="relative overflow-hidden rounded-md">
               <CachedImage
                 src={clip.screenshot_url}
                 alt={clip.title}
-                fill
-                sizes="56px"
-                className="object-top object-cover"
+                width={56}
+                height={40}
+                className="w-14 h-10 object-top object-cover"
                 quality={75}
               />
             </div>
@@ -1221,9 +1221,10 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
           <CachedImage
             src={clip.screenshot_url}
             alt={clip.title}
-            fill
+            width={400}
+            height={300}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1536px) 25vw, 16vw"
-            className="object-top object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-top object-cover group-hover:scale-105 transition-transform duration-300"
             quality={85}
             priority={false}
           />
