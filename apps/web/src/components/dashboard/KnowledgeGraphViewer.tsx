@@ -522,6 +522,7 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
         if (hoveredNodeFound !== hoveredNode) {
           setHoveredNode(hoveredNodeFound || null)
           if (hoveredNodeFound) {
+            console.log('Hovering over node:', hoveredNodeFound.label, 'at position:', mousePos)
             setTooltipPosition({ x: mousePos.x, y: mousePos.y })
           }
         }
@@ -584,7 +585,32 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
   }, {} as Record<string, number>)
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex">
+    <>
+      {/* Hover Tooltip - Rendered at root level for proper z-index */}
+      {hoveredNode && (
+        <div 
+          className="fixed bg-slate-900 text-white text-sm rounded-lg px-4 py-3 shadow-2xl pointer-events-none max-w-xs border border-slate-700"
+          style={{
+            left: Math.min(tooltipPosition.x + 15, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 300),
+            top: Math.max(tooltipPosition.y - 80, 10),
+            zIndex: 99999,
+          }}
+        >
+          <div className="font-semibold mb-2 text-white">{hoveredNode.label}</div>
+          <div className="text-slate-300 capitalize mb-2 text-xs">
+            <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: hoveredNode.color }}></span>
+            {hoveredNode.type}
+          </div>
+          <div className="text-slate-400 text-xs mb-2">
+            📎 {hoveredNode.evidence.length} evidence clip{hoveredNode.evidence.length !== 1 ? 's' : ''}
+          </div>
+          <div className="text-slate-500 text-xs">
+            💡 Click to explore connections
+          </div>
+        </div>
+      )}
+
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex">
       {/* Main Graph Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -843,26 +869,6 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
         </div>
       )}
 
-      {/* Hover Tooltip */}
-      {hoveredNode && (
-        <div 
-          className="fixed z-50 bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none max-w-xs"
-          style={{
-            left: tooltipPosition.x + 10,
-            top: tooltipPosition.y - 10,
-            transform: 'translateY(-100%)'
-          }}
-        >
-          <div className="font-medium mb-1">{hoveredNode.label}</div>
-          <div className="text-slate-300 capitalize mb-1">{hoveredNode.type}</div>
-          <div className="text-slate-400">
-            {hoveredNode.evidence.length} evidence clip{hoveredNode.evidence.length !== 1 ? 's' : ''}
-          </div>
-          <div className="text-slate-400 text-xs mt-1">
-            Click to explore connections
-          </div>
-        </div>
-      )}
 
       {/* Clip Viewer Overlay */}
       {isClipViewerOpen && selectedClipId && (() => {
@@ -885,6 +891,7 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
           </div>
         )
       })()}
-    </div>
+      </div>
+    </>
   )
 }
