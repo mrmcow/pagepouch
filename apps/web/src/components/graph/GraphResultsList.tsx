@@ -17,7 +17,9 @@ import {
   Eye,
   TrendingUp,
   Clock,
-  Shield
+  Shield,
+  List,
+  Star
 } from 'lucide-react'
 import { EnhancedGraphNode, EnhancedGraphEdge, Evidence } from '@/types/graph-filters'
 
@@ -102,22 +104,29 @@ export function GraphResultsList({
 
   return (
     <div className={`h-full flex flex-col ${className}`}>
-      <div className="p-4 border-b bg-gradient-to-r from-slate-50 to-slate-100/50">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-lg text-slate-900">Results</h3>
-          <Badge variant="default" className="bg-blue-100 text-blue-800 font-medium px-3 py-1">
-            {uniqueNodes.length} entities
-          </Badge>
+      <div className="p-3 border-b bg-gradient-to-r from-slate-50 to-slate-100/50">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold text-base text-slate-900">Knowledge Explorer</h3>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs px-2 py-1">
+              {uniqueNodes.length} entities
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-slate-500 hover:text-slate-700"
+              onClick={() => {
+                // TODO: Toggle view mode
+              }}
+            >
+              <List className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
         <div className="space-y-1">
-          <p className="text-sm text-slate-700 font-medium">
-            {searchQuery ? `Filtered results for "${searchQuery}"` : 'All entities in current view'}
+          <p className="text-xs text-slate-600">
+            {searchQuery ? `Filtered results for "${searchQuery}"` : 'Click any entity to explore connections and evidence'}
           </p>
-          {nodes.length !== uniqueNodes.length && (
-            <p className="text-xs text-slate-500">
-              {nodes.length - uniqueNodes.length} duplicate{nodes.length - uniqueNodes.length !== 1 ? 's' : ''} removed for clarity
-            </p>
-          )}
         </div>
       </div>
 
@@ -128,145 +137,140 @@ export function GraphResultsList({
             const connectionCount = getConnectedNodes(node.id)
             
             return (
-              <Card 
+              <div
                 key={node.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg border ${
+                className={`group cursor-pointer transition-all duration-200 hover:bg-slate-50 border-l-2 ${
                   isSelected 
-                    ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' 
-                    : 'hover:bg-slate-50 hover:border-slate-300 border-slate-200'
-                }`}
+                    ? 'bg-blue-50 border-l-blue-500' 
+                    : 'border-l-transparent hover:border-l-slate-300'
+                } p-2 border-b border-slate-100`}
                 onClick={() => onNodeSelect(node.id)}
                 onMouseEnter={() => onNodeHover(node.id)}
                 onMouseLeave={() => onNodeHover(null)}
               >
-                <CardHeader className="pb-1 px-2 pt-2">
-                  <div className="flex items-start justify-between gap-1">
-                    <div className="flex items-start gap-1 min-w-0 flex-1">
-                      <div 
-                        className="p-0.5 rounded flex-shrink-0"
-                        style={{ backgroundColor: `${node.color}15`, color: node.color, border: `1px solid ${node.color}30` }}
-                      >
-                        {getNodeIcon(node.type)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <CardTitle className="text-xs font-semibold text-slate-900 leading-tight mb-0.5 truncate">
-                          {highlightText(node.label, searchQuery)}
-                        </CardTitle>
-                        <div className="flex items-center gap-0.5">
-                          <Badge variant="outline" className="text-xs capitalize font-medium px-0.5 py-0">
-                            {node.type}
-                          </Badge>
-                          {getConfidenceBadge(node.confidence)}
-                        </div>
-                      </div>
+                {/* Entity Header */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div 
+                      className="p-1 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: `${node.color}20`, color: node.color }}
+                    >
+                      {getNodeIcon(node.type)}
                     </div>
-                    <div className="text-right text-xs text-slate-600 flex-shrink-0 min-w-[35px]">
-                      <div className="flex items-center gap-0.5 mb-0.5 justify-end">
-                        <TrendingUp className="h-2 w-2 text-emerald-600" />
-                        <span className="font-medium text-xs">{(node.importance * 100).toFixed(0)}%</span>
-                      </div>
-                      <div className="flex items-center gap-0.5 justify-end">
-                        <Users className="h-2 w-2 text-blue-600" />
-                        <span className="font-medium text-xs">{connectionCount}</span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-slate-900 truncate">
+                        {highlightText(node.label, searchQuery)}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                          {node.type}
+                        </Badge>
+                        {getConfidenceBadge(node.confidence)}
                       </div>
                     </div>
                   </div>
-                </CardHeader>
+                  <div className="flex items-center gap-1 text-xs text-slate-500">
+                    <Users className="h-3 w-3" />
+                    <span>{connectionCount}</span>
+                  </div>
+                </div>
 
-                <CardContent className="pt-0 px-2 pb-2">
-                  {/* Topics */}
-                  {node.topics.length > 0 && (
-                    <div className="mb-1.5">
-                      <div className="flex flex-wrap gap-0.5">
-                        {node.topics.slice(0, 1).map(topic => (
-                          <Badge key={topic} variant="secondary" className="text-xs px-1 py-0 bg-slate-100 text-slate-700">
-                            {topic}
-                          </Badge>
-                        ))}
-                        {node.topics.length > 1 && (
-                          <Badge variant="outline" className="text-xs px-1 py-0 text-slate-500">
-                            +{node.topics.length - 1}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                {/* Evidence Summary */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span className="flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      {node.evidence.length} evidence piece{node.evidence.length !== 1 ? 's' : ''}
+                    </span>
+                    <span>{new Date(node.lastMention).toLocaleDateString()}</span>
+                  </div>
 
-                  {/* Evidence Preview */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-0.5 text-slate-600 font-medium">
-                        <FileText className="h-2.5 w-2.5" />
-                        <span className="text-xs">{node.evidence.length}</span>
-                      </span>
-                      <span className="flex items-center gap-0.5 text-slate-500">
-                        <Clock className="h-2.5 w-2.5" />
-                        <span className="text-xs">{new Date(node.lastMention).toLocaleDateString()}</span>
-                      </span>
-                    </div>
-
-                    {/* Top Evidence - Micro Compact */}
-                    {node.evidence.slice(0, 1).map((evidence, index) => (
-                      <div key={index} className="bg-slate-50 rounded p-1 border border-slate-200/50">
-                        <div className="flex items-start gap-1 mb-1">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-slate-800 text-xs truncate">
-                              {evidence.clipTitle}
-                            </h4>
-                            <p className="text-slate-600 text-xs line-clamp-1 mt-0.5">
-                              {highlightText(evidence.snippet, searchQuery)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                  {/* Evidence List */}
+                  <div className="space-y-1">
+                    {node.evidence.slice(0, 2).map((evidence, index) => (
+                      <div key={index} className="group/evidence flex items-center gap-2 p-1.5 bg-slate-50 rounded hover:bg-slate-100 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-slate-700 truncate">
+                            {evidence.clipTitle}
+                          </p>
+                          <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                            {highlightText(evidence.snippet, searchQuery)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover/evidence:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 hover:bg-blue-100 hover:text-blue-600"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onEvidenceView(evidence.clipId)
+                            }}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          {evidence.url && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-4 w-4 p-0 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                              className="h-6 w-6 p-0 hover:bg-emerald-100 hover:text-emerald-600"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                onEvidenceView(evidence.clipId)
+                                window.open(evidence.url, '_blank')
                               }}
                             >
-                              <Eye className="h-2 w-2" />
+                              <ExternalLink className="h-3 w-3" />
                             </Button>
-                            {evidence.url && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-4 w-4 p-0 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  window.open(evidence.url, '_blank')
-                                }}
-                              >
-                                <ExternalLink className="h-2 w-2" />
-                              </Button>
-                            )}
-                          </div>
+                          )}
                         </div>
-                        <Badge variant="outline" className="text-xs px-1 py-0 bg-white/50 border-slate-300 truncate max-w-full">
-                          {evidence.folderName}
-                        </Badge>
                       </div>
                     ))}
-
-                    {node.evidence.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-xs h-5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors border border-dashed border-slate-300 hover:border-slate-400"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // This would expand to show all evidence
-                        }}
-                      >
-                        <FileText className="h-2 w-2 mr-0.5" />
-                        +{node.evidence.length - 1}
-                      </Button>
-                    )}
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Show More Evidence */}
+                  {node.evidence.length > 2 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs h-6 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // TODO: Show all evidence in drawer
+                      }}
+                    >
+                      View {node.evidence.length - 2} more evidence piece{node.evidence.length - 2 !== 1 ? 's' : ''}
+                    </Button>
+                  )}
+
+                  {/* Quick Actions */}
+                  <div className="flex items-center gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost" 
+                      size="sm"
+                      className="text-xs h-6 px-2 hover:bg-blue-100 hover:text-blue-600"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // TODO: Show connections
+                      }}
+                    >
+                      <Users className="h-3 w-3 mr-1" />
+                      Connections
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm" 
+                      className="text-xs h-6 px-2 hover:bg-emerald-100 hover:text-emerald-600"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // TODO: Add to collection
+                      }}
+                    >
+                      <Star className="h-3 w-3 mr-1" />
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              </div>
             )
           })}
 
