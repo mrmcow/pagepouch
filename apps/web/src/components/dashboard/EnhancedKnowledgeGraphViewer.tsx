@@ -52,17 +52,17 @@ interface EnhancedKnowledgeGraphViewerProps {
   folders?: any[]
 }
 
-// Default filter state
+// Default filter state - PERMISSIVE to show all data initially
 const DEFAULT_FILTERS: GraphFilters = {
   connections: {
-    edgeTypes: [],
+    edgeTypes: [], // Empty = include all types
     minStrength: 0,
-    minSources: 1,
-    maxPathLength: 3,
+    minSources: 0, // Changed from 1 to 0 to be more permissive
+    maxPathLength: 6, // Increased from 3
     includeMotifs: []
   },
   entities: {
-    includeTypes: [],
+    includeTypes: [], // Empty = include all types
     excludeEntities: [],
     minConfidence: 0,
     verifiedOnly: false,
@@ -73,13 +73,13 @@ const DEFAULT_FILTERS: GraphFilters = {
     includeTags: [],
     excludeTags: [],
     semanticQuery: '',
-    similarityThreshold: 0.3,
+    similarityThreshold: 0.1, // Lowered from 0.3 to be more permissive
     sentimentRange: { min: -1, max: 1 },
     topics: []
   },
   evidence: {
-    minExcerpts: 1,
-    minDistinctSources: 1,
+    minExcerpts: 0, // Changed from 1 to 0 to be more permissive
+    minDistinctSources: 0, // Changed from 1 to 0 to be more permissive
     requireProvenance: [],
     reviewStatus: ['pending', 'verified', 'disputed'],
     sourceTypes: ['primary', 'secondary', 'tertiary'],
@@ -310,12 +310,29 @@ export function EnhancedKnowledgeGraphViewer({
   // Load and process graph data
   useEffect(() => {
     if (isOpen) {
+      console.log('🔍 Debug: Loading graph data', { 
+        clipsLength: clips?.length || 0, 
+        foldersLength: folders?.length || 0,
+        clips: clips?.slice(0, 3) // Show first 3 clips for debugging
+      })
+      
       const enhanced = convertToEnhancedGraphData(clips, folders)
+      console.log('🔍 Debug: Enhanced graph data', { 
+        nodesLength: enhanced.nodes.length, 
+        edgesLength: enhanced.edges.length,
+        nodes: enhanced.nodes.slice(0, 3) // Show first 3 nodes for debugging
+      })
+      
       setRawGraphData(enhanced)
       
       // Apply default filters
       const engine = new GraphFilterEngine(enhanced.nodes, enhanced.edges)
       const filtered = engine.applyFilters(DEFAULT_FILTERS)
+      console.log('🔍 Debug: Filtered data', { 
+        filteredNodesLength: filtered.nodes.length, 
+        filteredEdgesLength: filtered.edges.length 
+      })
+      
       setFilteredData(filtered)
     }
   }, [isOpen, clips, folders, convertToEnhancedGraphData])
