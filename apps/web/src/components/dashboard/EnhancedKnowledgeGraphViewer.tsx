@@ -298,7 +298,61 @@ export function EnhancedKnowledgeGraphViewer({
       }
     })
 
-    return { nodes, edges }
+    // Deduplicate nodes by label and type, keeping the one with more evidence
+    const uniqueNodes = nodes.reduce((acc, node) => {
+      const existing = acc.find(n => 
+        n.label.toLowerCase() === node.label.toLowerCase() && 
+        n.type === node.type
+      )
+      
+      if (!existing) {
+        acc.push(node)
+      } else if (node.evidence.length > existing.evidence.length) {
+        // Replace with node that has more evidence
+        const index = acc.findIndex(n => n.id === existing.id)
+        // Update edge references to point to the kept node
+        edges.forEach(edge => {
+          if (edge.source === existing.id) edge.source = node.id
+          if (edge.target === existing.id) edge.target = node.id
+        })
+        acc[index] = node
+      } else {
+        // Update edge references to point to the existing node
+        edges.forEach(edge => {
+          if (edge.source === node.id) edge.source = existing.id
+          if (edge.target === node.id) edge.target = existing.id
+        })
+      }
+      return acc
+    }, [] as EnhancedGraphNode[])
+
+    // Remove duplicate edges after node deduplication
+    const uniqueEdges = edges.reduce((acc, edge) => {
+      const existing = acc.find(e => 
+        e.source === edge.source && 
+        e.target === edge.target && 
+        e.type === edge.type
+      )
+      
+      if (!existing) {
+        acc.push(edge)
+      } else {
+        // Merge evidence from duplicate edges
+        existing.evidence = [...existing.evidence, ...edge.evidence]
+        existing.strength = Math.max(existing.strength || 0, edge.strength || 0)
+      }
+      return acc
+    }, [] as EnhancedGraphEdge[])
+
+    console.log('🔍 Graph Generation Debug:', {
+      originalNodes: nodes.length,
+      uniqueNodes: uniqueNodes.length,
+      duplicatesRemoved: nodes.length - uniqueNodes.length,
+      originalEdges: edges.length,
+      uniqueEdges: uniqueEdges.length
+    })
+
+    return { nodes: uniqueNodes, edges: uniqueEdges }
   }, [])
 
   // Apply filters to graph data
@@ -940,24 +994,29 @@ export function EnhancedKnowledgeGraphViewer({
       </div>
 
       {/* Node Tooltip */}
-      {uiState.hoveredNode && (
-        <NodeTooltip
-          node={filteredData.nodes.find(n => n.id === uiState.hoveredNode)!}
-          position={tooltipPosition}
-          connectionCount={filteredData.edges.filter(e => 
-            e.source === uiState.hoveredNode || e.target === uiState.hoveredNode
-          ).length}
-          onViewEvidence={handleEvidenceView}
-          onAddNote={(nodeId) => {
-            // TODO: Implement add note functionality
-            console.log('Add note for node:', nodeId)
-          }}
-          onMarkImportant={(nodeId) => {
-            // TODO: Implement mark important functionality
-            console.log('Mark important:', nodeId)
-          }}
-        />
-      )}
+      {uiState.hoveredNode && (() => {
+        const hoveredNodeData = filteredData.nodes.find(n => n.id === uiState.hoveredNode)
+        if (!hoveredNodeData) return null
+        
+        return (
+          <NodeTooltip
+            node={hoveredNodeData}
+            position={tooltipPosition}
+            connectionCount={filteredData.edges.filter(e => 
+              e.source === uiState.hoveredNode || e.target === uiState.hoveredNode
+            ).length}
+            onViewEvidence={handleEvidenceView}
+            onAddNote={(nodeId) => {
+              // TODO: Implement add note functionality
+              console.log('Add note for node:', nodeId)
+            }}
+            onMarkImportant={(nodeId) => {
+              // TODO: Implement mark important functionality
+              console.log('Mark important:', nodeId)
+            }}
+          />
+        )
+      })()}
     </div>
   )
 }

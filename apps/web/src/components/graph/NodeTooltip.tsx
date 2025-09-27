@@ -154,7 +154,13 @@ export function NodeTooltip({
           {node.evidence.length > 0 && (
             <div>
               <div className="text-xs font-medium text-slate-700 mb-1">Recent Evidence</div>
-              <div className="bg-slate-50 rounded p-2 text-xs">
+              <div 
+                className="bg-slate-50 rounded p-2 text-xs cursor-pointer hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onViewEvidence(node.evidence[0].clipId)
+                }}
+              >
                 <div className="font-medium text-slate-700 truncate mb-1">
                   {node.evidence[0].clipTitle}
                 </div>
@@ -180,21 +186,21 @@ export function NodeTooltip({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 text-xs px-2"
+                className="h-6 text-xs px-2 hover:bg-blue-100 hover:text-blue-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation()
                   onViewEvidence(node.evidence[0].clipId)
                 }}
               >
                 <Eye className="h-3 w-3 mr-1" />
-                View
+                View Clip
               </Button>
             )}
             {onAddNote && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 text-xs px-2"
+                className="h-6 text-xs px-2 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation()
                   onAddNote(node.id)
@@ -208,7 +214,7 @@ export function NodeTooltip({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 text-xs px-2"
+                className="h-6 text-xs px-2 hover:bg-amber-100 hover:text-amber-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation()
                   onMarkImportant(node.id)
