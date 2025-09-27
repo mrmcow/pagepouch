@@ -664,15 +664,19 @@ export function EnhancedKnowledgeGraphViewer({
       const hoveredEdge = getEdgeAtPosition(x, y)
       
       if (hoveredNode) {
-        setUIState(prev => ({ ...prev, hoveredNode: hoveredNode.id }))
+        setUIState(prev => ({ ...prev, hoveredNode: hoveredNode.id, hoveredEdge: undefined }))
         if (canvasRef.current) {
           canvasRef.current.style.cursor = 'pointer'
         }
+        // Update tooltip position for node hover
+        setTooltipPosition({ x: e.clientX, y: e.clientY })
       } else if (hoveredEdge) {
-        setUIState(prev => ({ ...prev, hoveredEdge: hoveredEdge.id }))
+        setUIState(prev => ({ ...prev, hoveredEdge: hoveredEdge.id, hoveredNode: undefined }))
         if (canvasRef.current) {
           canvasRef.current.style.cursor = 'pointer'
         }
+        // Update tooltip position for edge hover
+        setTooltipPosition({ x: e.clientX, y: e.clientY })
       } else {
         setUIState(prev => ({ ...prev, hoveredNode: undefined, hoveredEdge: undefined }))
         if (canvasRef.current) {
@@ -680,9 +684,6 @@ export function EnhancedKnowledgeGraphViewer({
         }
       }
     }
-
-    // Update tooltip position for hover effects
-    setTooltipPosition({ x: e.clientX, y: e.clientY })
   }, [isDragging, lastMousePos, getNodeAtPosition, getEdgeAtPosition])
 
   const handleMouseUp = useCallback(() => {
@@ -944,7 +945,7 @@ export function EnhancedKnowledgeGraphViewer({
 
           {/* Results List */}
           {uiState.splitView.showResultsList && (
-            <div className="w-[400px] flex-shrink-0 border-l bg-white overflow-hidden">
+            <div className="w-[350px] flex-shrink-0 border-l bg-white overflow-hidden">
               <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}
