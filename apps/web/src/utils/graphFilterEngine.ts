@@ -232,14 +232,23 @@ export class GraphFilterEngine {
   ): { nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[] } {
     
     const filteredEdges = edges.filter(edge => {
+      console.log('🔍 Evidence Debug: Checking edge', { 
+        edgeId: edge.id, 
+        evidenceLength: edge.evidence?.length || 0,
+        minExcerpts: filters.minExcerpts,
+        evidence: edge.evidence?.slice(0, 1) // Show first evidence for debugging
+      })
+
       // Minimum excerpts per connection
-      if (edge.evidence.length < filters.minExcerpts) {
+      if ((edge.evidence?.length || 0) < filters.minExcerpts) {
+        console.log('🔍 Evidence Debug: Edge filtered out - not enough excerpts')
         return false
       }
 
       // Minimum distinct sources
-      const distinctSources = new Set(edge.evidence.map(e => e.url || e.clipId)).size
+      const distinctSources = new Set(edge.evidence?.map(e => e.url || e.clipId) || []).size
       if (distinctSources < filters.minDistinctSources) {
+        console.log('🔍 Evidence Debug: Edge filtered out - not enough distinct sources', { distinctSources, minRequired: filters.minDistinctSources })
         return false
       }
 
