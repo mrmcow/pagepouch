@@ -945,7 +945,7 @@ export function EnhancedKnowledgeGraphViewer({
 
           {/* Results List */}
           {uiState.splitView.showResultsList && (
-            <div className="w-[350px] flex-shrink-0 border-l bg-white overflow-hidden">
+            <div className="w-[320px] flex-shrink-0 border-l bg-white overflow-hidden">
               <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}

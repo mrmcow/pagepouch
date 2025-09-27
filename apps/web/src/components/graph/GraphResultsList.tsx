@@ -139,41 +139,41 @@ export function GraphResultsList({
                 onMouseEnter={() => onNodeHover(node.id)}
                 onMouseLeave={() => onNodeHover(null)}
               >
-                <CardHeader className="pb-1.5 px-2.5 pt-2.5">
-                  <div className="flex items-start justify-between gap-1.5">
-                    <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                <CardHeader className="pb-1 px-2 pt-2">
+                  <div className="flex items-start justify-between gap-1">
+                    <div className="flex items-start gap-1 min-w-0 flex-1">
                       <div 
-                        className="p-1 rounded flex-shrink-0"
+                        className="p-0.5 rounded flex-shrink-0"
                         style={{ backgroundColor: `${node.color}15`, color: node.color, border: `1px solid ${node.color}30` }}
                       >
                         {getNodeIcon(node.type)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <CardTitle className="text-xs font-semibold text-slate-900 leading-tight mb-1 truncate">
+                        <CardTitle className="text-xs font-semibold text-slate-900 leading-tight mb-0.5 truncate">
                           {highlightText(node.label, searchQuery)}
                         </CardTitle>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <Badge variant="outline" className="text-xs capitalize font-medium px-1 py-0">
+                        <div className="flex items-center gap-0.5">
+                          <Badge variant="outline" className="text-xs capitalize font-medium px-0.5 py-0">
                             {node.type}
                           </Badge>
                           {getConfidenceBadge(node.confidence)}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right text-xs text-slate-600 flex-shrink-0 min-w-[40px]">
+                    <div className="text-right text-xs text-slate-600 flex-shrink-0 min-w-[35px]">
                       <div className="flex items-center gap-0.5 mb-0.5 justify-end">
-                        <TrendingUp className="h-2.5 w-2.5 text-emerald-600" />
+                        <TrendingUp className="h-2 w-2 text-emerald-600" />
                         <span className="font-medium text-xs">{(node.importance * 100).toFixed(0)}%</span>
                       </div>
                       <div className="flex items-center gap-0.5 justify-end">
-                        <Users className="h-2.5 w-2.5 text-blue-600" />
+                        <Users className="h-2 w-2 text-blue-600" />
                         <span className="font-medium text-xs">{connectionCount}</span>
                       </div>
                     </div>
                   </div>
                 </CardHeader>
 
-                <CardContent className="pt-0 px-2.5 pb-2.5">
+                <CardContent className="pt-0 px-2 pb-2">
                   {/* Topics */}
                   {node.topics.length > 0 && (
                     <div className="mb-1.5">
@@ -205,46 +205,46 @@ export function GraphResultsList({
                       </span>
                     </div>
 
-                    {/* Top Evidence - Ultra Compact */}
+                    {/* Top Evidence - Micro Compact */}
                     {node.evidence.slice(0, 1).map((evidence, index) => (
-                      <div key={index} className="bg-slate-50 rounded p-1.5 border border-slate-200/50">
-                        <div className="flex items-start justify-between mb-1">
+                      <div key={index} className="bg-slate-50 rounded p-1 border border-slate-200/50">
+                        <div className="flex items-start gap-1 mb-1">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-slate-800 text-xs truncate mb-0.5">
+                            <h4 className="font-medium text-slate-800 text-xs truncate">
                               {evidence.clipTitle}
                             </h4>
-                            <p className="text-slate-600 text-xs line-clamp-1">
+                            <p className="text-slate-600 text-xs line-clamp-1 mt-0.5">
                               {highlightText(evidence.snippet, searchQuery)}
                             </p>
                           </div>
-                          <div className="flex items-center gap-0.5 ml-1 flex-shrink-0">
+                          <div className="flex items-center gap-0.5 flex-shrink-0">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-5 w-5 p-0 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                              className="h-4 w-4 p-0 hover:bg-blue-100 hover:text-blue-600 transition-colors"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 onEvidenceView(evidence.clipId)
                               }}
                             >
-                              <Eye className="h-2.5 w-2.5" />
+                              <Eye className="h-2 w-2" />
                             </Button>
                             {evidence.url && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-5 w-5 p-0 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
+                                className="h-4 w-4 p-0 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   window.open(evidence.url, '_blank')
                                 }}
                               >
-                                <ExternalLink className="h-2.5 w-2.5" />
+                                <ExternalLink className="h-2 w-2" />
                               </Button>
                             )}
                           </div>
                         </div>
-                        <Badge variant="outline" className="text-xs px-1 py-0 bg-white/50 border-slate-300">
+                        <Badge variant="outline" className="text-xs px-1 py-0 bg-white/50 border-slate-300 truncate max-w-full">
                           {evidence.folderName}
                         </Badge>
                       </div>
