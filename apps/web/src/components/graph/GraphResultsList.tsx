@@ -74,7 +74,20 @@ export function GraphResultsList({
     )
   }
 
-  const sortedNodes = nodes.sort((a, b) => {
+  // Deduplicate nodes by ID and label, keeping the one with more evidence
+  const uniqueNodes = nodes.reduce((acc, node) => {
+    const existing = acc.find(n => n.id === node.id || n.label.toLowerCase() === node.label.toLowerCase())
+    if (!existing) {
+      acc.push(node)
+    } else if (node.evidence.length > existing.evidence.length) {
+      // Replace with node that has more evidence
+      const index = acc.findIndex(n => n.id === existing.id)
+      acc[index] = node
+    }
+    return acc
+  }, [] as EnhancedGraphNode[])
+
+  const sortedNodes = uniqueNodes.sort((a, b) => {
     // Sort by importance, then by evidence count
     if (b.importance !== a.importance) return b.importance - a.importance
     return b.evidence.length - a.evidence.length
@@ -92,10 +105,15 @@ export function GraphResultsList({
       <div className="p-4 border-b bg-slate-50">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold text-lg">Results</h3>
-          <Badge variant="outline">{nodes.length} entities</Badge>
+          <Badge variant="outline">{uniqueNodes.length} entities</Badge>
         </div>
         <p className="text-sm text-slate-600">
           {searchQuery ? `Filtered results for "${searchQuery}"` : 'All entities in current view'}
+          {nodes.length !== uniqueNodes.length && (
+            <span className="text-xs text-slate-500 ml-1">
+              ({nodes.length - uniqueNodes.length} duplicates removed)
+            </span>
+          )}
         </p>
       </div>
 
@@ -115,20 +133,20 @@ export function GraphResultsList({
                 onMouseEnter={() => onNodeHover(node.id)}
                 onMouseLeave={() => onNodeHover(null)}
               >
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 px-3 pt-3">
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div 
-                        className="p-1.5 rounded-full"
+                        className="p-1 rounded-full flex-shrink-0"
                         style={{ backgroundColor: `${node.color}20`, color: node.color }}
                       >
                         {getNodeIcon(node.type)}
                       </div>
-                      <div>
-                        <CardTitle className="text-base">
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-sm truncate">
                           {highlightText(node.label, searchQuery)}
                         </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 mt-1 flex-wrap">
                           <Badge variant="outline" className="text-xs capitalize">
                             {node.type}
                           </Badge>
@@ -142,7 +160,7 @@ export function GraphResultsList({
                         </div>
                       </div>
                     </div>
-                    <div className="text-right text-xs text-slate-500">
+                    <div className="text-right text-xs text-slate-500 flex-shrink-0 ml-2">
                       <div className="flex items-center gap-1 mb-1">
                         <TrendingUp className="h-3 w-3" />
                         {(node.importance * 100).toFixed(0)}%
@@ -155,19 +173,19 @@ export function GraphResultsList({
                   </div>
                 </CardHeader>
 
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 px-3 pb-3">
                   {/* Topics */}
                   {node.topics.length > 0 && (
-                    <div className="mb-3">
+                    <div className="mb-2">
                       <div className="flex flex-wrap gap-1">
-                        {node.topics.slice(0, 3).map(topic => (
+                        {node.topics.slice(0, 2).map(topic => (
                           <Badge key={topic} variant="secondary" className="text-xs">
                             {topic}
                           </Badge>
                         ))}
-                        {node.topics.length > 3 && (
+                        {node.topics.length > 2 && (
                           <Badge variant="outline" className="text-xs">
-                            +{node.topics.length - 3} more
+                            +{node.topics.length - 2}
                           </Badge>
                         )}
                       </div>
@@ -179,7 +197,7 @@ export function GraphResultsList({
                     <div className="flex items-center justify-between text-xs text-slate-600">
                       <span className="flex items-center gap-1">
                         <FileText className="h-3 w-3" />
-                        {node.evidence.length} evidence piece{node.evidence.length !== 1 ? 's' : ''}
+                        {node.evidence.length} evidence
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
@@ -187,60 +205,60 @@ export function GraphResultsList({
                       </span>
                     </div>
 
-                    {/* Top Evidence */}
-                    {node.evidence.slice(0, 2).map((evidence, index) => (
+                    {/* Top Evidence - Compact */}
+                    {node.evidence.slice(0, 1).map((evidence, index) => (
                       <div key={index} className="bg-slate-50 rounded p-2 text-xs">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-slate-700 truncate">
+                          <span className="font-medium text-slate-700 truncate flex-1">
                             {evidence.clipTitle}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onEvidenceView(evidence.clipId)
-                            }}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <p className="text-slate-600 line-clamp-2">
-                          {highlightText(evidence.snippet, searchQuery)}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {evidence.folderName}
-                          </Badge>
-                          {evidence.url && (
+                          <div className="flex items-center gap-1 ml-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-4 w-4 p-0"
+                              className="h-5 w-5 p-0"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                window.open(evidence.url, '_blank')
+                                onEvidenceView(evidence.clipId)
                               }}
                             >
-                              <ExternalLink className="h-3 w-3" />
+                              <Eye className="h-3 w-3" />
                             </Button>
-                          )}
+                            {evidence.url && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.open(evidence.url, '_blank')
+                                }}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
+                        <p className="text-slate-600 line-clamp-1 mb-1">
+                          {highlightText(evidence.snippet, searchQuery)}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {evidence.folderName}
+                        </Badge>
                       </div>
                     ))}
 
-                    {node.evidence.length > 2 && (
+                    {node.evidence.length > 1 && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full text-xs"
+                        className="w-full text-xs h-6"
                         onClick={(e) => {
                           e.stopPropagation()
                           // This would expand to show all evidence
                         }}
                       >
-                        View {node.evidence.length - 2} more evidence pieces
+                        View {node.evidence.length - 1} more evidence pieces
                       </Button>
                     )}
                   </div>
@@ -249,7 +267,7 @@ export function GraphResultsList({
             )
           })}
 
-          {nodes.length === 0 && (
+          {uniqueNodes.length === 0 && (
             <div className="text-center py-8 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium mb-2">No results found</p>
