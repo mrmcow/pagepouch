@@ -571,14 +571,31 @@ export function EnhancedKnowledgeGraphViewer({
     if (!canvas) return null
 
     const rect = canvas.getBoundingClientRect()
+    
+    // Transform mouse coordinates to canvas coordinates
     const canvasX = (x - panOffset.x) / zoom
     const canvasY = (y - panOffset.y) / zoom
 
-    return filteredData.nodes.find(node => {
-      const nodeX = (node.x || 0) + canvas.width / 2
-      const nodeY = (node.y || 0) + canvas.height / 2
-      const distance = Math.sqrt((canvasX - nodeX) ** 2 + (canvasY - nodeY) ** 2)
-      return distance <= 20 // Node radius
+    // Position nodes if they don't have positions (same logic as rendering)
+    const nodesWithPositions = filteredData.nodes.map((node, index) => {
+      if (node.x === undefined || node.y === undefined) {
+        const angle = (index / filteredData.nodes.length) * 2 * Math.PI
+        const radius = Math.min(rect.width, rect.height) * 0.3
+        return {
+          ...node,
+          x: rect.width / 2 + radius * Math.cos(angle),
+          y: rect.height / 2 + radius * Math.sin(angle)
+        }
+      }
+      return node
+    })
+
+    return nodesWithPositions.find(node => {
+      if (node.x === undefined || node.y === undefined) return false
+      
+      const distance = Math.sqrt((canvasX - node.x) ** 2 + (canvasY - node.y) ** 2)
+      const nodeRadius = node.size || 12
+      return distance <= nodeRadius + 5 // Node radius plus small buffer
     })
   }, [filteredData.nodes, panOffset, zoom])
 
@@ -587,19 +604,34 @@ export function EnhancedKnowledgeGraphViewer({
     const canvas = canvasRef.current
     if (!canvas) return null
 
+    const rect = canvas.getBoundingClientRect()
     const canvasX = (x - panOffset.x) / zoom
     const canvasY = (y - panOffset.y) / zoom
 
-    return filteredData.edges.find(edge => {
-      const sourceNode = filteredData.nodes.find(n => n.id === edge.source)
-      const targetNode = filteredData.nodes.find(n => n.id === edge.target)
-      
-      if (!sourceNode || !targetNode) return false
+    // Position nodes if they don't have positions (same logic as rendering)
+    const nodesWithPositions = filteredData.nodes.map((node, index) => {
+      if (node.x === undefined || node.y === undefined) {
+        const angle = (index / filteredData.nodes.length) * 2 * Math.PI
+        const radius = Math.min(rect.width, rect.height) * 0.3
+        return {
+          ...node,
+          x: rect.width / 2 + radius * Math.cos(angle),
+          y: rect.height / 2 + radius * Math.sin(angle)
+        }
+      }
+      return node
+    })
 
-      const x1 = (sourceNode.x || 0) + canvas.width / 2
-      const y1 = (sourceNode.y || 0) + canvas.height / 2
-      const x2 = (targetNode.x || 0) + canvas.width / 2
-      const y2 = (targetNode.y || 0) + canvas.height / 2
+    return filteredData.edges.find(edge => {
+      const sourceNode = nodesWithPositions.find(n => n.id === edge.source)
+      const targetNode = nodesWithPositions.find(n => n.id === edge.target)
+      
+      if (!sourceNode || !targetNode || sourceNode.x === undefined || sourceNode.y === undefined || targetNode.x === undefined || targetNode.y === undefined) return false
+
+      const x1 = sourceNode.x
+      const y1 = sourceNode.y
+      const x2 = targetNode.x
+      const y2 = targetNode.y
 
       // Distance from point to line
       const A = canvasX - x1
@@ -626,7 +658,7 @@ export function EnhancedKnowledgeGraphViewer({
 
       const dx = canvasX - xx
       const dy = canvasY - yy
-      return Math.sqrt(dx * dx + dy * dy) <= 5 // Edge click tolerance
+      return Math.sqrt(dx * dx + dy * dy) <= 8 // Edge click tolerance
     })
   }, [filteredData.nodes, filteredData.edges, panOffset, zoom])
 
@@ -668,15 +700,11 @@ export function EnhancedKnowledgeGraphViewer({
         if (canvasRef.current) {
           canvasRef.current.style.cursor = 'pointer'
         }
-        // Update tooltip position for node hover
-        setTooltipPosition({ x: e.clientX, y: e.clientY })
       } else if (hoveredEdge) {
         setUIState(prev => ({ ...prev, hoveredEdge: hoveredEdge.id, hoveredNode: undefined }))
         if (canvasRef.current) {
           canvasRef.current.style.cursor = 'pointer'
         }
-        // Update tooltip position for edge hover
-        setTooltipPosition({ x: e.clientX, y: e.clientY })
       } else {
         setUIState(prev => ({ ...prev, hoveredNode: undefined, hoveredEdge: undefined }))
         if (canvasRef.current) {
@@ -684,6 +712,9 @@ export function EnhancedKnowledgeGraphViewer({
         }
       }
     }
+
+    // Always update tooltip position for any mouse movement
+    setTooltipPosition({ x: e.clientX, y: e.clientY })
   }, [isDragging, lastMousePos, getNodeAtPosition, getEdgeAtPosition])
 
   const handleMouseUp = useCallback(() => {
