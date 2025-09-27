@@ -89,7 +89,25 @@ export function GraphResultsList({
     return acc
   }, [] as EnhancedGraphNode[])
 
-  const sortedNodes = uniqueNodes.sort((a, b) => {
+  // Filter nodes based on search query
+  const filteredNodes = searchQuery 
+    ? uniqueNodes.filter(node => {
+        const query = searchQuery.toLowerCase()
+        // Search in node label
+        if (node.label.toLowerCase().includes(query)) return true
+        // Search in evidence snippets
+        if (node.evidence.some(evidence => 
+          evidence.snippet.toLowerCase().includes(query) ||
+          evidence.clipTitle.toLowerCase().includes(query) ||
+          evidence.folderName.toLowerCase().includes(query)
+        )) return true
+        // Search in node type
+        if (node.type.toLowerCase().includes(query)) return true
+        return false
+      })
+    : uniqueNodes
+
+  const sortedNodes = filteredNodes.sort((a, b) => {
     // Sort by importance, then by evidence count
     if (b.importance !== a.importance) return b.importance - a.importance
     return b.evidence.length - a.evidence.length
@@ -109,7 +127,7 @@ export function GraphResultsList({
           <h3 className="font-bold text-base text-slate-900">Knowledge Explorer</h3>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs px-2 py-1">
-              {uniqueNodes.length} entities
+              {filteredNodes.length} entities
             </Badge>
             <Button
               variant="ghost"
@@ -274,12 +292,17 @@ export function GraphResultsList({
             )
           })}
 
-          {uniqueNodes.length === 0 && (
+            {filteredNodes.length === 0 && (
             <div className="text-center py-8 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No results found</p>
+              <p className="text-lg font-medium mb-2">
+                {searchQuery ? `No results found for "${searchQuery}"` : 'No results found'}
+              </p>
               <p className="text-sm">
-                Try adjusting your filters or search query to see more results.
+                {searchQuery 
+                  ? 'Try a different search term or clear the search to see all entities.'
+                  : 'Try adjusting your filters to see more results.'
+                }
               </p>
             </div>
           )}

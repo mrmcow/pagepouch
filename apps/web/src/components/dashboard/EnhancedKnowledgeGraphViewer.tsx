@@ -34,6 +34,7 @@ import { GraphResultsList } from '@/components/graph/GraphResultsList'
 import { EvidenceDrawer } from '@/components/graph/EvidenceDrawer'
 import { NodeTooltip } from '@/components/graph/NodeTooltip'
 import { GraphFilterEngine } from '@/utils/graphFilterEngine'
+import { generateGraphPreview } from '@/utils/graphPreviewGenerator'
 import { 
   EnhancedGraphNode, 
   EnhancedGraphEdge, 
@@ -51,6 +52,7 @@ interface EnhancedKnowledgeGraphViewerProps {
   graphDescription?: string
   clips?: any[]
   folders?: any[]
+  onPreviewGenerated?: (previewImage: string) => void // Callback when preview is successfully generated
 }
 
 // Default filter state - PERMISSIVE to show all data initially
@@ -96,7 +98,8 @@ export function EnhancedKnowledgeGraphViewer({
   graphTitle,
   graphDescription,
   clips = [],
-  folders = []
+  folders = [],
+  onPreviewGenerated
 }: EnhancedKnowledgeGraphViewerProps) {
   // Canvas and rendering state
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -262,7 +265,7 @@ export function EnhancedKnowledgeGraphViewer({
             id: `edge-${domain}-${clip.id}`,
             source: `domain-${domain}`,
             target: clip.id,
-            type: 'source',
+            type: 'citation',
             weight: 0.7,
             color: '#94a3b8',
             evidence: [{
@@ -358,9 +361,62 @@ export function EnhancedKnowledgeGraphViewer({
   // Apply filters to graph data
   const applyFilters = useCallback((filters: GraphFilters) => {
     const engine = filterEngine()
-    const filtered = engine.applyFilters(filters)
+    let filtered = engine.applyFilters(filters)
+    
+    // Apply search query filtering to the graph visualization
+    if (uiState.searchQuery) {
+      const query = uiState.searchQuery.toLowerCase()
+      
+      // Filter nodes based on search query
+      const searchMatchedNodes = filtered.nodes.filter(node => {
+        // Search in node label
+        if (node.label.toLowerCase().includes(query)) return true
+        // Search in evidence snippets
+        if (node.evidence.some(evidence => 
+          evidence.snippet.toLowerCase().includes(query) ||
+          evidence.clipTitle.toLowerCase().includes(query) ||
+          evidence.folderName.toLowerCase().includes(query)
+        )) return true
+        // Search in node type
+        if (node.type.toLowerCase().includes(query)) return true
+        return false
+      })
+      
+      // Get IDs of matched nodes
+      const matchedNodeIds = new Set(searchMatchedNodes.map(n => n.id))
+      
+      // Include edges that connect to matched nodes (to show their connections)
+      const searchMatchedEdges = filtered.edges.filter(edge => 
+        matchedNodeIds.has(edge.source) || matchedNodeIds.has(edge.target)
+      )
+      
+      // Also include nodes that are connected to matched nodes (1-hop neighbors)
+      const connectedNodeIds = new Set<string>()
+      searchMatchedEdges.forEach(edge => {
+        connectedNodeIds.add(edge.source)
+        connectedNodeIds.add(edge.target)
+      })
+      
+      // Final set of nodes: matched nodes + their immediate neighbors
+      const finalNodes = filtered.nodes.filter(node => 
+        matchedNodeIds.has(node.id) || connectedNodeIds.has(node.id)
+      )
+      
+      filtered = {
+        ...filtered,
+        nodes: finalNodes,
+        edges: searchMatchedEdges,
+        metadata: {
+          ...filtered.metadata,
+          filteredNodes: finalNodes.length,
+          filteredEdges: searchMatchedEdges.length,
+          filterSummary: `Search: "${uiState.searchQuery}" (${searchMatchedNodes.length} matches, ${finalNodes.length} total nodes)`
+        }
+      }
+    }
+    
     setFilteredData(filtered)
-  }, [filterEngine])
+  }, [filterEngine, uiState.searchQuery])
 
   // Load and process graph data
   useEffect(() => {
@@ -409,8 +465,9 @@ export function EnhancedKnowledgeGraphViewer({
     canvas.height = rect.height * window.devicePixelRatio
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
-    // Clear canvas
-    ctx.clearRect(0, 0, rect.width, rect.height)
+    // Clear canvas with white background
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, rect.width, rect.height)
 
     // Apply transformations
     ctx.save()
@@ -528,11 +585,92 @@ export function EnhancedKnowledgeGraphViewer({
     ctx.restore()
   }, [filteredData, zoom, panOffset, uiState.selectedNodes, uiState.selectedEdges, uiState.hoveredNode, uiState.hoveredEdge, isOpen])
 
+  // Generate and save graph preview when graph is rendered with data
+  useEffect(() => {
+    if (isOpen && graphId && filteredData.nodes.length > 0 && canvasRef.current) {
+      console.log('🖼️ Preview Generation: Scheduling preview generation for graph', graphId)
+      // Delay to ensure canvas is fully rendered
+      const timer = setTimeout(() => {
+        console.log('🖼️ Preview Generation: Starting preview generation...')
+        generateAndSavePreview()
+      }, 5000) // Increased delay to ensure graph is fully rendered and positioned
+      
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, graphId, filteredData.nodes.length])
+
+  const generateAndSavePreview = async () => {
+    if (!graphId || !filteredData.nodes.length || !canvasRef.current) {
+      console.log('🖼️ Preview Generation: Skipping - missing requirements', { 
+        graphId, 
+        nodesLength: filteredData.nodes.length,
+        hasCanvas: !!canvasRef.current 
+      })
+      return
+    }
+    
+    console.log('🖼️ Preview Generation: Capturing actual canvas content')
+    
+    try {
+      // Capture the actual rendered canvas content
+      const canvas = canvasRef.current
+      
+      // Create a smaller preview canvas
+      const previewCanvas = document.createElement('canvas')
+      const previewWidth = 320
+      const previewHeight = 180
+      previewCanvas.width = previewWidth
+      previewCanvas.height = previewHeight
+      
+      const previewCtx = previewCanvas.getContext('2d')!
+      
+      // Set white background to match brand
+      previewCtx.fillStyle = '#ffffff'
+      previewCtx.fillRect(0, 0, previewWidth, previewHeight)
+      
+      // Draw the main canvas content scaled down to the preview size
+      previewCtx.drawImage(
+        canvas, 
+        0, 0, canvas.width, canvas.height,  // Source dimensions
+        0, 0, previewWidth, previewHeight   // Destination dimensions
+      )
+      
+      // Convert to base64 with good quality
+      const previewImage = previewCanvas.toDataURL('image/jpeg', 0.8)
+      console.log('🖼️ Preview Generation: Canvas captured, size:', previewImage.length, 'characters')
+      
+      // Save to database
+      console.log('🖼️ Preview Generation: Saving to database...')
+      const response = await fetch(`/api/knowledge-graphs/${graphId}/preview`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ preview_image: previewImage }),
+      })
+      
+      if (!response.ok) {
+        console.error('🖼️ Preview Generation: Failed to save graph preview', response.status, response.statusText)
+      } else {
+        console.log('🖼️ Preview Generation: Graph preview saved successfully! Updating thumbnail...')
+        // Notify parent component that preview was generated, pass the preview image
+        onPreviewGenerated?.(previewImage)
+      }
+    } catch (error) {
+      console.error('Error generating graph preview:', error)
+    }
+  }
+
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: GraphFilters) => {
     setUIState(prev => ({ ...prev, activeFilters: newFilters }))
     applyFilters(newFilters)
   }, [applyFilters])
+
+  // Reapply filters when search query changes
+  useEffect(() => {
+    applyFilters(uiState.activeFilters)
+  }, [uiState.searchQuery, applyFilters, uiState.activeFilters])
 
   // Handle node selection
   const handleNodeSelect = useCallback((nodeId: string) => {
@@ -559,8 +697,8 @@ export function EnhancedKnowledgeGraphViewer({
       ...prev,
       evidenceDrawer: {
         isOpen: true,
-        selectedNode,
-        selectedEdge
+        selectedNode: selectedNode?.id,
+        selectedEdge: selectedEdge?.id
       }
     }))
   }, [filteredData])
@@ -753,8 +891,8 @@ export function EnhancedKnowledgeGraphViewer({
         ...prev,
         evidenceDrawer: {
           isOpen: true,
-          selectedEdge: clickedEdge,
-          selectedNode: null
+          selectedEdge: clickedEdge.id,
+          selectedNode: undefined
         }
       }))
     }
@@ -946,7 +1084,7 @@ export function EnhancedKnowledgeGraphViewer({
             <canvas
               ref={canvasRef}
               className="w-full h-full cursor-grab active:cursor-grabbing"
-              style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}
+              style={{ background: '#ffffff' }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -975,9 +1113,9 @@ export function EnhancedKnowledgeGraphViewer({
           </div>
 
           {/* Results List */}
-          {uiState.splitView.showResultsList && (
-            <div className="w-[320px] flex-shrink-0 border-l bg-white overflow-hidden">
-              <GraphResultsList
+              {uiState.splitView.showResultsList && (
+                <div className="w-[400px] flex-shrink-0 border-l bg-white overflow-hidden">
+                  <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}
                 selectedNodes={uiState.selectedNodes}
@@ -994,8 +1132,8 @@ export function EnhancedKnowledgeGraphViewer({
         <EvidenceDrawer
           isOpen={uiState.evidenceDrawer.isOpen}
           onClose={() => setUIState(prev => ({ ...prev, evidenceDrawer: { ...prev.evidenceDrawer, isOpen: false } }))}
-          selectedNode={uiState.evidenceDrawer.selectedNode}
-          selectedEdge={uiState.evidenceDrawer.selectedEdge}
+          selectedNode={uiState.evidenceDrawer.selectedNode ? filteredData.nodes.find(n => n.id === uiState.evidenceDrawer.selectedNode) : undefined}
+          selectedEdge={uiState.evidenceDrawer.selectedEdge ? filteredData.edges.find(e => e.id === uiState.evidenceDrawer.selectedEdge) : undefined}
           onEvidenceView={handleEvidenceView}
           onNodeSelect={handleNodeSelect}
         />

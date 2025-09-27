@@ -54,11 +54,8 @@ export function generateGraphPreview(
   canvas.height = height
   const ctx = canvas.getContext('2d')!
 
-  // Clear canvas with gradient background
-  const gradient = ctx.createLinearGradient(0, 0, width, height)
-  gradient.addColorStop(0, '#faf5ff') // purple-50
-  gradient.addColorStop(1, '#eff6ff') // blue-50
-  ctx.fillStyle = gradient
+  // Clear canvas with white background to match brand
+  ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, width, height)
 
   // If no data, return empty preview
@@ -192,19 +189,8 @@ export function generateFallbackPreview(
   canvas.height = height
   const ctx = canvas.getContext('2d')!
 
-  // Background gradient
-  const gradient = ctx.createLinearGradient(0, 0, width, height)
-  if (status === 'failed') {
-    gradient.addColorStop(0, '#fef2f2') // red-50
-    gradient.addColorStop(1, '#fef2f2')
-  } else if (status === 'processing') {
-    gradient.addColorStop(0, '#faf5ff') // purple-50
-    gradient.addColorStop(1, '#eff6ff') // blue-50
-  } else {
-    gradient.addColorStop(0, '#f9fafb') // gray-50
-    gradient.addColorStop(1, '#f3f4f6') // gray-100
-  }
-  ctx.fillStyle = gradient
+  // White background to match brand
+  ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, width, height)
 
   // Draw status indicator

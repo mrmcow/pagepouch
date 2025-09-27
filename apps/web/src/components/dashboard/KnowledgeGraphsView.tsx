@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { 
   Brain, 
   Plus, 
@@ -25,7 +28,7 @@ import {
   FileText,
   Target
 } from 'lucide-react'
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -33,6 +36,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Folder } from '@pagepouch/shared'
 import { EnhancedKnowledgeGraphViewer } from './EnhancedKnowledgeGraphViewer'
 import { generateFallbackPreview } from '@/utils/graphPreviewGenerator'
@@ -65,6 +86,10 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedGraphId, setSelectedGraphId] = useState<string | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingGraph, setEditingGraph] = useState<any>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deletingGraph, setDeletingGraph] = useState<any>(null)
 
   // Load graphs from API
   useEffect(() => {
@@ -112,6 +137,63 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
     }
   }
 
+  const onEditGraph = (graph: any) => {
+    setEditingGraph(graph)
+    setIsEditModalOpen(true)
+  }
+
+  const onDeleteGraph = (graph: any) => {
+    setDeletingGraph(graph)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingGraph) return
+    
+    try {
+      const response = await fetch(`/api/knowledge-graphs/${deletingGraph.id}`, {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        // Remove from local state
+        setGraphs(prev => prev.filter(g => g.id !== deletingGraph.id))
+        setIsDeleteDialogOpen(false)
+        setDeletingGraph(null)
+      } else {
+        console.error('Failed to delete graph')
+      }
+    } catch (error) {
+      console.error('Error deleting graph:', error)
+    }
+  }
+
+  const handleEditSubmit = async (updatedData: { title: string; description: string; folder_ids: string[] }) => {
+    if (!editingGraph) return
+    
+    try {
+      const response = await fetch(`/api/knowledge-graphs/${editingGraph.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      })
+      
+      if (response.ok) {
+        const updatedGraph = await response.json()
+        // Update local state
+        setGraphs(prev => prev.map(g => g.id === editingGraph.id ? updatedGraph : g))
+        setIsEditModalOpen(false)
+        setEditingGraph(null)
+      } else {
+        console.error('Failed to update graph')
+      }
+    } catch (error) {
+      console.error('Error updating graph:', error)
+    }
+  }
+
   const pollGraphStatus = (graphId: string) => {
     const pollInterval = setInterval(async () => {
       try {
@@ -126,7 +208,8 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
               status: updatedGraph.status,
               nodeCount: updatedGraph.node_count,
               connectionCount: updatedGraph.connection_count,
-              updatedAt: updatedGraph.updated_at
+              updatedAt: updatedGraph.updated_at,
+              preview_image: updatedGraph.preview_image // Include preview image in updates
             } : g))
             clearInterval(pollInterval)
           }
@@ -236,6 +319,8 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
             viewMode={viewMode}
             folders={folders}
             onOpenGraph={setSelectedGraphId}
+            onEditGraph={onEditGraph}
+            onDeleteGraph={onDeleteGraph}
           />
         )}
       </div>
@@ -262,8 +347,57 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
           graphDescription={graphs.find(g => g.id === selectedGraphId)?.description}
           clips={clips}
           folders={folders}
+          onPreviewGenerated={(previewImage) => {
+            // Update just this graph's preview without refreshing the whole list
+            setGraphs(prev => prev.map(g => 
+              g.id === selectedGraphId 
+                ? { ...g, preview_image: previewImage }
+                : g
+            ))
+          }}
         />
       )}
+
+      {/* Edit Graph Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Knowledge Graph</DialogTitle>
+            <DialogDescription>
+              Update the title, description, and folder selection for your knowledge graph.
+            </DialogDescription>
+          </DialogHeader>
+          {editingGraph && (
+            <EditGraphForm
+              graph={editingGraph}
+              folders={folders}
+              onSubmit={handleEditSubmit}
+              onCancel={() => setIsEditModalOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Knowledge Graph</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingGraph?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -469,11 +603,13 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
   )
 }
 
-function GraphsGrid({ graphs, viewMode, folders, onOpenGraph }: { 
+function GraphsGrid({ graphs, viewMode, folders, onOpenGraph, onEditGraph, onDeleteGraph }: { 
   graphs: KnowledgeGraph[], 
   viewMode: 'grid' | 'list',
   folders: Folder[],
   onOpenGraph: (graphId: string) => void
+  onEditGraph: (graph: any) => void
+  onDeleteGraph: (graph: any) => void
 }) {
   const getFolderNames = (folderIds: string[]) => {
     return folderIds
@@ -531,7 +667,7 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph }: {
                         <Eye className="mr-2 h-4 w-4" />
                         Open Graph
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onEditGraph(graph)}>
                         <Edit3 className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
@@ -540,7 +676,7 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph }: {
                         Export
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">
+                      <DropdownMenuItem className="text-red-600" onClick={() => onDeleteGraph(graph)}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>
@@ -580,7 +716,7 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph }: {
                     <Eye className="mr-2 h-4 w-4" />
                     Open Graph
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onEditGraph(graph)}>
                     <Edit3 className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
@@ -589,7 +725,7 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph }: {
                     Export
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600">
+                  <DropdownMenuItem className="text-red-600" onClick={() => onDeleteGraph(graph)}>
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
@@ -823,5 +959,99 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function EditGraphForm({ 
+  graph, 
+  folders, 
+  onSubmit, 
+  onCancel 
+}: { 
+  graph: any
+  folders: Folder[]
+  onSubmit: (data: { title: string; description: string; folder_ids: string[] }) => void
+  onCancel: () => void
+}) {
+  const [title, setTitle] = useState(graph.title || '')
+  const [description, setDescription] = useState(graph.description || '')
+  const [selectedFolders, setSelectedFolders] = useState<string[]>(graph.folder_ids || [])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit({
+      title: title.trim(),
+      description: description.trim(),
+      folder_ids: selectedFolders
+    })
+  }
+
+  const toggleFolder = (folderId: string) => {
+    setSelectedFolders(prev => 
+      prev.includes(folderId) 
+        ? prev.filter(id => id !== folderId)
+        : [...prev, folderId]
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="title">Title</Label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter graph title"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Enter graph description (optional)"
+          rows={3}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Folders</Label>
+        <div className="max-h-32 overflow-y-auto border rounded-md p-2 space-y-1">
+          {folders.map(folder => (
+            <div key={folder.id} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id={`folder-${folder.id}`}
+                checked={selectedFolders.includes(folder.id)}
+                onChange={() => toggleFolder(folder.id)}
+                className="rounded border-gray-300"
+              />
+              <Label
+                htmlFor={`folder-${folder.id}`}
+                className="text-sm font-normal cursor-pointer flex-1"
+              >
+                {folder.name}
+              </Label>
+            </div>
+          ))}
+        </div>
+        {selectedFolders.length === 0 && (
+          <p className="text-sm text-red-600">Please select at least one folder.</p>
+        )}
+      </div>
+
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={!title.trim() || selectedFolders.length === 0}>
+          Save Changes
+        </Button>
+      </DialogFooter>
+    </form>
   )
 }
