@@ -310,9 +310,12 @@ export function EnhancedKnowledgeGraphViewer({
   // Load and process graph data
   useEffect(() => {
     if (isOpen) {
+      // TODO: Filter clips by the graph's selected folders
+      // For now, we'll use all clips, but this should be filtered based on the graph's folder_ids
       console.log('🔍 Debug: Loading graph data', { 
         clipsLength: clips?.length || 0, 
         foldersLength: folders?.length || 0,
+        graphId,
         clips: clips?.slice(0, 3) // Show first 3 clips for debugging
       })
       
@@ -335,7 +338,7 @@ export function EnhancedKnowledgeGraphViewer({
       
       setFilteredData(filtered)
     }
-  }, [isOpen, clips, folders, convertToEnhancedGraphData])
+  }, [isOpen, clips, folders, convertToEnhancedGraphData, graphId])
 
   // Canvas rendering
   useEffect(() => {
@@ -451,6 +454,55 @@ export function EnhancedKnowledgeGraphViewer({
       }
     }))
   }, [filteredData])
+
+  // Mouse event handlers for canvas interaction
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    
+    setIsDragging(true)
+    setLastMousePos({ x, y })
+  }, [])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    if (isDragging) {
+      // Pan the canvas
+      const deltaX = x - lastMousePos.x
+      const deltaY = y - lastMousePos.y
+      setPanOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }))
+      setLastMousePos({ x, y })
+    }
+
+    // Update tooltip position for hover effects
+    setTooltipPosition({ x: e.clientX, y: e.clientY })
+  }, [isDragging, lastMousePos])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsDragging(false)
+    setUIState(prev => ({ ...prev, hoveredNode: undefined }))
+  }, [])
+
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault()
+    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
+    setZoom(prev => Math.max(0.1, Math.min(3, prev * zoomFactor)))
+  }, [])
 
   // Zoom controls
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
@@ -625,13 +677,17 @@ export function EnhancedKnowledgeGraphViewer({
         <div className="flex-1 flex overflow-hidden">
           {/* Graph Canvas */}
           <div 
-            className="flex-1 relative bg-slate-50"
-            style={{ width: uiState.splitView.showResultsList ? `${uiState.splitView.graphWidth}%` : '100%' }}
+            className={`relative bg-slate-50 ${uiState.splitView.showResultsList ? 'flex-[2]' : 'flex-1'}`}
           >
             <canvas
               ref={canvasRef}
               className="w-full h-full cursor-grab active:cursor-grabbing"
               style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+              onWheel={handleWheel}
             />
             
             {/* Graph Stats Overlay */}
@@ -655,7 +711,7 @@ export function EnhancedKnowledgeGraphViewer({
 
           {/* Results List */}
           {uiState.splitView.showResultsList && (
-            <div className="w-[30%] border-l bg-white">
+            <div className="flex-1 min-w-[400px] max-w-[500px] border-l bg-white">
               <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}
