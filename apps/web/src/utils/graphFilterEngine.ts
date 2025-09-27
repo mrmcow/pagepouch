@@ -243,62 +243,9 @@ export class GraphFilterEngine {
       } : 'No edges'
     })
 
-    // TODO: Re-enable evidence filtering once basic graph works
-    /*
-    const filteredEdges = edges.filter(edge => {
-      // Minimum excerpts per connection
-      if ((edge.evidence?.length || 0) < filters.minExcerpts) {
-        return false
-      }
-
-      // Minimum distinct sources
-      const distinctSources = new Set(edge.evidence?.map(e => e.url || e.clipId) || []).size
-      if (distinctSources < filters.minDistinctSources) {
-        return false
-      }
-
-      // Provenance requirements
-      if (filters.requireProvenance.length > 0) {
-        const hasRequiredProvenance = edge.evidence.some(evidence => {
-          return filters.requireProvenance.every(requirement => {
-            switch (requirement) {
-              case 'quote': return evidence.provenance.hasQuote
-              case 'url': return evidence.provenance.hasUrl
-              case 'screenshot': return evidence.provenance.hasScreenshot
-              default: return false
-            }
-          })
-        })
-        if (!hasRequiredProvenance) return false
-      }
-
-      // Review status filtering
-      if (filters.reviewStatus.length > 0) {
-        const hasValidReviewStatus = edge.evidence.some(evidence => 
-          evidence.reviewStatus && filters.reviewStatus.includes(evidence.reviewStatus)
-        )
-        if (!hasValidReviewStatus) return false
-      }
-
-      // Source type filtering
-      if (filters.sourceTypes.length > 0) {
-        const hasValidSourceType = edge.evidence.some(evidence => 
-          filters.sourceTypes.includes(evidence.sourceType)
-        )
-        if (!hasValidSourceType) return false
-      }
-
-      // Confidence range
-      const avgConfidence = edge.evidence.reduce((sum, e) => sum + e.confidence, 0) / edge.evidence.length
-      if (avgConfidence < filters.confidenceRange.min || avgConfidence > filters.confidenceRange.max) {
-        return false
-      }
-
-      return true
-    })
-
-    // Filter nodes based on their evidence quality
+    // Filter nodes based on their evidence quality (simplified)
     const filteredNodes = nodes.filter(node => {
+      if (node.evidence.length === 0) return true // Allow nodes without evidence for now
       const avgConfidence = node.evidence.reduce((sum, e) => sum + e.confidence, 0) / node.evidence.length
       return avgConfidence >= filters.confidenceRange.min && avgConfidence <= filters.confidenceRange.max
     })
