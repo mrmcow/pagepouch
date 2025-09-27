@@ -32,6 +32,7 @@ import { ClipViewer } from './ClipViewer'
 import { AdvancedFilters } from '@/components/graph/AdvancedFilters'
 import { GraphResultsList } from '@/components/graph/GraphResultsList'
 import { EvidenceDrawer } from '@/components/graph/EvidenceDrawer'
+import { NodeTooltip } from '@/components/graph/NodeTooltip'
 import { GraphFilterEngine } from '@/utils/graphFilterEngine'
 import { 
   EnhancedGraphNode, 
@@ -376,39 +377,94 @@ export function EnhancedKnowledgeGraphViewer({
       return node
     })
 
-    // Draw edges
+    // Draw edges with enhanced visual feedback
     filteredData.edges.forEach(edge => {
       const sourceNode = nodesWithPositions.find(n => n.id === edge.source)
       const targetNode = nodesWithPositions.find(n => n.id === edge.target)
 
       if (sourceNode && targetNode && sourceNode.x !== undefined && sourceNode.y !== undefined && targetNode.x !== undefined && targetNode.y !== undefined) {
+        const isHovered = uiState.hoveredEdge === edge.id
+        const isSelected = uiState.selectedNodes.includes(edge.source) || uiState.selectedNodes.includes(edge.target)
+        
         ctx.beginPath()
         ctx.moveTo(sourceNode.x, sourceNode.y)
         ctx.lineTo(targetNode.x, targetNode.y)
-        ctx.strokeStyle = edge.color
-        ctx.lineWidth = Math.max(edge.weight * 3, 1)
-        ctx.globalAlpha = uiState.selectedEdges.includes(edge.id) ? 1 : 0.6
+        
+        // Edge thickness based on strength and state
+        const baseThickness = Math.max(1, (edge.strength || edge.weight || 0.5) * 4)
+        ctx.lineWidth = isHovered ? baseThickness * 2 : baseThickness
+        
+        // Edge color and opacity based on state
+        if (isHovered) {
+          ctx.strokeStyle = '#3b82f6'
+          ctx.globalAlpha = 1
+        } else if (isSelected) {
+          ctx.strokeStyle = '#8b5cf6'
+          ctx.globalAlpha = 0.8
+        } else {
+          ctx.strokeStyle = edge.color || '#94a3b8'
+          ctx.globalAlpha = 0.3 + (edge.strength || edge.weight || 0.5) * 0.5
+        }
+        
         ctx.stroke()
         ctx.globalAlpha = 1
       }
     })
 
-    // Draw nodes
+    // Draw nodes with enhanced visual feedback
     nodesWithPositions.forEach(node => {
       if (node.x !== undefined && node.y !== undefined) {
+        const isHovered = uiState.hoveredNode === node.id
+        const isSelected = uiState.selectedNodes.includes(node.id)
+        
+        // Node size based on importance and state
+        const baseRadius = node.size || (8 + (node.importance || 0.5) * 12)
+        const radius = isHovered ? baseRadius * 1.2 : baseRadius
+        
+        // Outer glow for hovered/selected nodes
+        if (isHovered || isSelected) {
+          ctx.beginPath()
+          ctx.arc(node.x, node.y, radius + 6, 0, 2 * Math.PI)
+          const glowColor = isSelected ? '#8b5cf6' : '#3b82f6'
+          ctx.fillStyle = `${glowColor}30`
+          ctx.fill()
+        }
+        
+        // Main node circle
         ctx.beginPath()
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI)
-        ctx.fillStyle = node.color
-        ctx.globalAlpha = uiState.selectedNodes.includes(node.id) ? 1 : (uiState.hoveredNode === node.id ? 0.8 : 0.7)
+        ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI)
+        
+        // Node color based on confidence
+        const confidence = node.confidence || 0.5
+        let nodeColor = node.color || '#3b82f6'
+        
+        if (confidence >= 0.8) {
+          nodeColor = '#10b981' // High confidence - green
+        } else if (confidence >= 0.6) {
+          nodeColor = '#f59e0b' // Medium confidence - amber  
+        } else if (confidence < 0.6) {
+          nodeColor = '#ef4444' // Low confidence - red
+        }
+        
+        ctx.fillStyle = isSelected ? '#8b5cf6' : nodeColor
+        ctx.globalAlpha = isSelected ? 1 : (isHovered ? 0.9 : 0.8)
         ctx.fill()
         
-        // Draw selection ring
-        if (uiState.selectedNodes.includes(node.id)) {
-          ctx.beginPath()
-          ctx.arc(node.x, node.y, node.size + 3, 0, 2 * Math.PI)
-          ctx.strokeStyle = '#3B82F6'
+        // Node border
+        ctx.strokeStyle = isHovered ? '#1f2937' : '#ffffff'
+        ctx.lineWidth = isHovered ? 3 : 2
+        ctx.globalAlpha = 1
+        ctx.stroke()
+        
+        // Draw node label with better visibility
+        if (isHovered || zoom > 0.8) {
+          ctx.fillStyle = '#1f2937'
+          ctx.font = `${isHovered ? '12px' : '10px'} Inter, sans-serif`
+          ctx.textAlign = 'center'
+          ctx.strokeStyle = '#ffffff'
           ctx.lineWidth = 2
-          ctx.stroke()
+          ctx.strokeText(node.label, node.x, node.y + radius + 15)
+          ctx.fillText(node.label, node.x, node.y + radius + 15)
         }
         
         ctx.globalAlpha = 1
@@ -416,7 +472,7 @@ export function EnhancedKnowledgeGraphViewer({
     })
 
     ctx.restore()
-  }, [filteredData, zoom, panOffset, uiState.selectedNodes, uiState.selectedEdges, uiState.hoveredNode, isOpen])
+  }, [filteredData, zoom, panOffset, uiState.selectedNodes, uiState.selectedEdges, uiState.hoveredNode, uiState.hoveredEdge, isOpen])
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: GraphFilters) => {
@@ -455,6 +511,71 @@ export function EnhancedKnowledgeGraphViewer({
     }))
   }, [filteredData])
 
+  // Helper function to detect node at position
+  const getNodeAtPosition = useCallback((x: number, y: number) => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+
+    const rect = canvas.getBoundingClientRect()
+    const canvasX = (x - panOffset.x) / zoom
+    const canvasY = (y - panOffset.y) / zoom
+
+    return filteredData.nodes.find(node => {
+      const nodeX = (node.x || 0) + canvas.width / 2
+      const nodeY = (node.y || 0) + canvas.height / 2
+      const distance = Math.sqrt((canvasX - nodeX) ** 2 + (canvasY - nodeY) ** 2)
+      return distance <= 20 // Node radius
+    })
+  }, [filteredData.nodes, panOffset, zoom])
+
+  // Helper function to detect edge at position
+  const getEdgeAtPosition = useCallback((x: number, y: number) => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+
+    const canvasX = (x - panOffset.x) / zoom
+    const canvasY = (y - panOffset.y) / zoom
+
+    return filteredData.edges.find(edge => {
+      const sourceNode = filteredData.nodes.find(n => n.id === edge.source)
+      const targetNode = filteredData.nodes.find(n => n.id === edge.target)
+      
+      if (!sourceNode || !targetNode) return false
+
+      const x1 = (sourceNode.x || 0) + canvas.width / 2
+      const y1 = (sourceNode.y || 0) + canvas.height / 2
+      const x2 = (targetNode.x || 0) + canvas.width / 2
+      const y2 = (targetNode.y || 0) + canvas.height / 2
+
+      // Distance from point to line
+      const A = canvasX - x1
+      const B = canvasY - y1
+      const C = x2 - x1
+      const D = y2 - y1
+
+      const dot = A * C + B * D
+      const lenSq = C * C + D * D
+      let param = -1
+      if (lenSq !== 0) param = dot / lenSq
+
+      let xx, yy
+      if (param < 0) {
+        xx = x1
+        yy = y1
+      } else if (param > 1) {
+        xx = x2
+        yy = y2
+      } else {
+        xx = x1 + param * C
+        yy = y1 + param * D
+      }
+
+      const dx = canvasX - xx
+      const dy = canvasY - yy
+      return Math.sqrt(dx * dx + dy * dy) <= 5 // Edge click tolerance
+    })
+  }, [filteredData.nodes, filteredData.edges, panOffset, zoom])
+
   // Mouse event handlers for canvas interaction
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect()
@@ -483,11 +604,32 @@ export function EnhancedKnowledgeGraphViewer({
         y: prev.y + deltaY
       }))
       setLastMousePos({ x, y })
+    } else {
+      // Check for node/edge hover
+      const hoveredNode = getNodeAtPosition(x, y)
+      const hoveredEdge = getEdgeAtPosition(x, y)
+      
+      if (hoveredNode) {
+        setUIState(prev => ({ ...prev, hoveredNode: hoveredNode.id }))
+        if (canvasRef.current) {
+          canvasRef.current.style.cursor = 'pointer'
+        }
+      } else if (hoveredEdge) {
+        setUIState(prev => ({ ...prev, hoveredEdge: hoveredEdge.id }))
+        if (canvasRef.current) {
+          canvasRef.current.style.cursor = 'pointer'
+        }
+      } else {
+        setUIState(prev => ({ ...prev, hoveredNode: undefined, hoveredEdge: undefined }))
+        if (canvasRef.current) {
+          canvasRef.current.style.cursor = isDragging ? 'grabbing' : 'grab'
+        }
+      }
     }
 
     // Update tooltip position for hover effects
     setTooltipPosition({ x: e.clientX, y: e.clientY })
-  }, [isDragging, lastMousePos])
+  }, [isDragging, lastMousePos, getNodeAtPosition, getEdgeAtPosition])
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false)
@@ -495,8 +637,42 @@ export function EnhancedKnowledgeGraphViewer({
 
   const handleMouseLeave = useCallback(() => {
     setIsDragging(false)
-    setUIState(prev => ({ ...prev, hoveredNode: undefined }))
+    setUIState(prev => ({ ...prev, hoveredNode: undefined, hoveredEdge: undefined }))
+    if (canvasRef.current) {
+      canvasRef.current.style.cursor = 'grab'
+    }
   }, [])
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    const clickedNode = getNodeAtPosition(x, y)
+    const clickedEdge = getEdgeAtPosition(x, y)
+
+    if (clickedNode) {
+      // Toggle node selection
+      setUIState(prev => ({
+        ...prev,
+        selectedNodes: prev.selectedNodes.includes(clickedNode.id)
+          ? prev.selectedNodes.filter(id => id !== clickedNode.id)
+          : [...prev.selectedNodes, clickedNode.id]
+      }))
+    } else if (clickedEdge) {
+      // Show edge details in evidence drawer
+      setUIState(prev => ({
+        ...prev,
+        evidenceDrawer: {
+          isOpen: true,
+          selectedEdge: clickedEdge,
+          selectedNode: null
+        }
+      }))
+    }
+  }, [getNodeAtPosition, getEdgeAtPosition])
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault()
@@ -690,6 +866,7 @@ export function EnhancedKnowledgeGraphViewer({
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseLeave}
               onWheel={handleWheel}
+              onClick={handleClick}
             />
             
             {/* Graph Stats Overlay */}
@@ -713,7 +890,7 @@ export function EnhancedKnowledgeGraphViewer({
 
           {/* Results List */}
           {uiState.splitView.showResultsList && (
-            <div className="flex-1 min-w-[550px] max-w-[650px] border-l bg-white">
+            <div className="w-[400px] flex-shrink-0 border-l bg-white overflow-hidden">
               <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}
@@ -761,6 +938,26 @@ export function EnhancedKnowledgeGraphViewer({
           )
         })()}
       </div>
+
+      {/* Node Tooltip */}
+      {uiState.hoveredNode && (
+        <NodeTooltip
+          node={filteredData.nodes.find(n => n.id === uiState.hoveredNode)!}
+          position={tooltipPosition}
+          connectionCount={filteredData.edges.filter(e => 
+            e.source === uiState.hoveredNode || e.target === uiState.hoveredNode
+          ).length}
+          onViewEvidence={handleEvidenceView}
+          onAddNote={(nodeId) => {
+            // TODO: Implement add note functionality
+            console.log('Add note for node:', nodeId)
+          }}
+          onMarkImportant={(nodeId) => {
+            // TODO: Implement mark important functionality
+            console.log('Mark important:', nodeId)
+          }}
+        />
+      )}
     </div>
   )
 }
