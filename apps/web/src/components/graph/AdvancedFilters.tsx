@@ -112,33 +112,34 @@ export function AdvancedFilters({
   }
 
   return (
-    <Card className={`w-full ${className}`}>
-      <CardHeader className="pb-3">
+    <Card className={`w-full ${className} shadow-sm`}>
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5 text-blue-600" />
-            <CardTitle className="text-lg">Advanced Filters</CardTitle>
+            <Filter className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-base">Advanced Filters</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={onResetFilters}
-              className="text-slate-500 hover:text-slate-700"
+              className="text-slate-500 hover:text-slate-700 h-8"
             >
-              <RotateCcw className="h-4 w-4 mr-1" />
+              <RotateCcw className="h-3 w-3 mr-1" />
               Reset
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
+              className="h-8"
             >
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             </Button>
           </div>
         </div>
-        <CardDescription>
+        <CardDescription className="text-sm">
           Filter your knowledge graph to focus on specific connections, entities, themes, and evidence
         </CardDescription>
       </CardHeader>
@@ -147,28 +148,28 @@ export function AdvancedFilters({
         <CollapsibleContent>
           <CardContent className="pt-0">
             <Tabs defaultValue="connections" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="connections" className="flex items-center gap-1">
-                  <Link className="h-4 w-4" />
+              <TabsList className="grid w-full grid-cols-4 h-9">
+                <TabsTrigger value="connections" className="flex items-center gap-1 text-xs">
+                  <Link className="h-3 w-3" />
                   <span className="hidden sm:inline">Connections</span>
                 </TabsTrigger>
-                <TabsTrigger value="entities" className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
+                <TabsTrigger value="entities" className="flex items-center gap-1 text-xs">
+                  <Users className="h-3 w-3" />
                   <span className="hidden sm:inline">Entities</span>
                 </TabsTrigger>
-                <TabsTrigger value="themes" className="flex items-center gap-1">
-                  <Tag className="h-4 w-4" />
+                <TabsTrigger value="themes" className="flex items-center gap-1 text-xs">
+                  <Tag className="h-3 w-3" />
                   <span className="hidden sm:inline">Themes</span>
                 </TabsTrigger>
-                <TabsTrigger value="evidence" className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
+                <TabsTrigger value="evidence" className="flex items-center gap-1 text-xs">
+                  <FileText className="h-3 w-3" />
                   <span className="hidden sm:inline">Evidence</span>
                 </TabsTrigger>
               </TabsList>
 
               {/* Connections Tab */}
-              <TabsContent value="connections" className="space-y-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TabsContent value="connections" className="space-y-3 mt-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Connection Types</Label>
                     <div className="flex flex-wrap gap-2">

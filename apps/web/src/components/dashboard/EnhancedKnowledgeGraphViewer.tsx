@@ -654,22 +654,24 @@ export function EnhancedKnowledgeGraphViewer({
 
         {/* Advanced Filters */}
         {showFilters && (
-          <div className="border-b">
-            <AdvancedFilters
-              filters={uiState.activeFilters}
-              onFiltersChange={handleFiltersChange}
-              savedLenses={uiState.savedLenses}
-              onSaveLens={(name, description) => {
-                // TODO: Implement save lens functionality
-                console.log('Save lens:', name, description)
-              }}
-              onLoadLens={(lensId) => {
-                // TODO: Implement load lens functionality
-                console.log('Load lens:', lensId)
-              }}
-              onResetFilters={() => handleFiltersChange(DEFAULT_FILTERS)}
-              className="m-4"
-            />
+          <div className="border-b bg-slate-50">
+            <div className="max-h-[400px] overflow-y-auto">
+              <AdvancedFilters
+                filters={uiState.activeFilters}
+                onFiltersChange={handleFiltersChange}
+                savedLenses={uiState.savedLenses}
+                onSaveLens={(name, description) => {
+                  // TODO: Implement save lens functionality
+                  console.log('Save lens:', name, description)
+                }}
+                onLoadLens={(lensId) => {
+                  // TODO: Implement load lens functionality
+                  console.log('Load lens:', lensId)
+                }}
+                onResetFilters={() => handleFiltersChange(DEFAULT_FILTERS)}
+                className="mx-6 my-4"
+              />
+            </div>
           </div>
         )}
 
@@ -711,7 +713,7 @@ export function EnhancedKnowledgeGraphViewer({
 
           {/* Results List */}
           {uiState.splitView.showResultsList && (
-            <div className="flex-1 min-w-[400px] max-w-[500px] border-l bg-white">
+            <div className="flex-1 min-w-[550px] max-w-[650px] border-l bg-white">
               <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}
