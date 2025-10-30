@@ -29,15 +29,19 @@ interface NodeTooltipProps {
   onViewEvidence: (clipId: string) => void
   onAddNote?: (nodeId: string) => void
   onMarkImportant?: (nodeId: string) => void
+  isPersistent?: boolean
+  isClipViewerOpen?: boolean
 }
 
 export function NodeTooltip({ 
   node, 
   position, 
   connectionCount, 
-  onViewEvidence,
-  onAddNote,
-  onMarkImportant 
+  onViewEvidence, 
+  onAddNote, 
+  onMarkImportant,
+  isPersistent = false,
+  isClipViewerOpen = false
 }: NodeTooltipProps) {
   
   const getNodeIcon = (type: string) => {
@@ -60,19 +64,74 @@ export function NodeTooltip({
 
   const confidenceBadge = getConfidenceBadge(node.confidence || 0.5)
 
-  // Position tooltip to avoid going off-screen
+  // Smart positioning to avoid going off-screen
+  const getTooltipPosition = () => {
+    const tooltipWidth = 320
+    const tooltipHeight = 300 // Estimated height
+    const margin = 10
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    let left = position.x + margin
+    let top = position.y - margin
+    
+    // Adjust horizontal position
+    if (left + tooltipWidth > viewportWidth) {
+      // Try positioning to the left of the cursor
+      left = position.x - tooltipWidth - margin
+      
+      // If still off-screen, clamp to viewport
+      if (left < margin) {
+        left = Math.max(margin, viewportWidth - tooltipWidth - margin)
+      }
+    }
+    
+    // Adjust vertical position
+    if (top + tooltipHeight > viewportHeight) {
+      // Try positioning above the cursor
+      top = position.y - tooltipHeight - margin
+      
+      // If still off-screen, clamp to viewport
+      if (top < margin) {
+        top = Math.max(margin, viewportHeight - tooltipHeight - margin)
+      }
+    }
+    
+    // Ensure minimum margins
+    left = Math.max(margin, Math.min(left, viewportWidth - tooltipWidth - margin))
+    top = Math.max(margin, Math.min(top, viewportHeight - tooltipHeight - margin))
+    
+    return { left, top }
+  }
+  
+  const { left, top } = getTooltipPosition()
+  
+  // Determine tooltip direction for arrow positioning
+  const isTooltipLeft = left < position.x - 160 // Tooltip is to the left of node
+  const isTooltipAbove = top < position.y - 150 // Tooltip is above the node
+  
   const tooltipStyle: React.CSSProperties = {
     position: 'fixed',
-    left: Math.min(position.x + 10, window.innerWidth - 320),
-    top: Math.min(position.y - 10, window.innerHeight - 300),
-    zIndex: 100000,
+    left,
+    top,
+    zIndex: isClipViewerOpen ? 99999 : 100000, // Lower z-index when clip viewer is open
     maxWidth: '300px',
-    pointerEvents: 'none'
+    pointerEvents: isPersistent ? 'auto' : 'none' // Allow interaction when persistent
   }
 
   return (
-    <div style={tooltipStyle}>
-      <Card className="shadow-lg border-2 bg-white/95 backdrop-blur-sm">
+    <div style={tooltipStyle} className="relative">
+      {/* Connection indicator */}
+      <div 
+        className={`absolute w-2 h-2 bg-white border-2 border-gray-300 rotate-45 ${
+          isTooltipLeft 
+            ? 'right-[-5px] top-4' 
+            : isTooltipAbove 
+              ? 'bottom-[-5px] left-4' 
+              : 'left-[-5px] top-4'
+        } ${isPersistent ? 'border-blue-400' : ''}`}
+      />
+      <Card className={`shadow-lg border-2 bg-white/95 backdrop-blur-sm ${isPersistent ? 'border-blue-400 shadow-blue-200/50' : ''}`}>
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">

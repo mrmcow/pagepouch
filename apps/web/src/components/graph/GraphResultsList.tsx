@@ -19,7 +19,8 @@ import {
   Clock,
   Shield,
   List,
-  Star
+  Star,
+  Folder
 } from 'lucide-react'
 import { EnhancedGraphNode, EnhancedGraphEdge, Evidence } from '@/types/graph-filters'
 
@@ -30,6 +31,7 @@ interface GraphResultsListProps {
   onNodeSelect: (nodeId: string) => void
   onNodeHover: (nodeId: string | null) => void
   onEvidenceView: (clipId: string) => void
+  onFolderNavigate?: (folderId: string | null) => void
   searchQuery: string
   className?: string
 }
@@ -41,6 +43,7 @@ export function GraphResultsList({
   onNodeSelect,
   onNodeHover,
   onEvidenceView,
+  onFolderNavigate,
   searchQuery,
   className = ''
 }: GraphResultsListProps) {
@@ -167,79 +170,101 @@ export function GraphResultsList({
                 onMouseLeave={() => onNodeHover(null)}
               >
                 {/* Entity Header */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="flex items-start justify-between mb-1.5">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
                     <div 
-                      className="p-1 rounded-full flex-shrink-0"
+                      className="p-1 rounded-full flex-shrink-0 mt-0.5"
                       style={{ backgroundColor: `${node.color}20`, color: node.color }}
                     >
                       {getNodeIcon(node.type)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-slate-900 truncate">
+                      <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-tight">
                         {highlightText(node.label, searchQuery)}
                       </h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Badge variant="outline" className="text-xs px-1 py-0.5 leading-none">
                           {node.type}
                         </Badge>
                         {getConfidenceBadge(node.confidence)}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-slate-500">
+                  <div className="flex items-center gap-1 text-xs text-slate-500 flex-shrink-0 mt-0.5">
                     <Users className="h-3 w-3" />
                     <span>{connectionCount}</span>
                   </div>
                 </div>
 
                 {/* Evidence Summary */}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-slate-600">
                     <span className="flex items-center gap-1">
                       <FileText className="h-3 w-3" />
-                      {node.evidence.length} evidence piece{node.evidence.length !== 1 ? 's' : ''}
+                      {node.evidence.length} evidence
                     </span>
-                    <span>{new Date(node.lastMention).toLocaleDateString()}</span>
+                    <span className="text-xs">{new Date(node.lastMention).toLocaleDateString()}</span>
                   </div>
 
                   {/* Evidence List */}
                   <div className="space-y-1">
                     {node.evidence.slice(0, 2).map((evidence, index) => (
-                      <div key={index} className="group/evidence flex items-center gap-2 p-1.5 bg-slate-50 rounded hover:bg-slate-100 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-slate-700 truncate">
-                            {evidence.clipTitle}
-                          </p>
-                          <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                            {highlightText(evidence.snippet, searchQuery)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover/evidence:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:bg-blue-100 hover:text-blue-600"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onEvidenceView(evidence.clipId)
-                            }}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          {evidence.url && (
+                      <div key={index} className="group/evidence p-1.5 bg-slate-50 rounded hover:bg-slate-100 transition-colors cursor-pointer"
+                           onClick={(e) => {
+                             e.stopPropagation()
+                             onEvidenceView(evidence.clipId)
+                           }}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-slate-700 line-clamp-1 leading-tight">
+                              {evidence.clipTitle}
+                            </p>
+                            {/* Folder badge */}
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (onFolderNavigate && evidence.folderId) {
+                                    onFolderNavigate(evidence.folderId)
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded text-xs transition-colors"
+                                title={`Navigate to ${evidence.folderName} folder`}
+                              >
+                                <Folder className="h-2.5 w-2.5" />
+                                {evidence.folderName}
+                              </button>
+                            </div>
+                            <p className="text-xs text-slate-500 line-clamp-2 mt-0.5 leading-tight">
+                              {highlightText(evidence.snippet, searchQuery)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover/evidence:opacity-100 transition-opacity flex-shrink-0">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 hover:bg-emerald-100 hover:text-emerald-600"
+                              className="h-5 w-5 p-0 hover:bg-blue-100 hover:text-blue-600"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                window.open(evidence.url, '_blank')
+                                onEvidenceView(evidence.clipId)
                               }}
                             >
-                              <ExternalLink className="h-3 w-3" />
+                              <Eye className="h-3 w-3" />
                             </Button>
-                          )}
+                            {evidence.url && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 hover:bg-emerald-100 hover:text-emerald-600"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.open(evidence.url, '_blank')
+                                }}
+                              >
+                                <ExternalLink className="h-2.5 w-2.5" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -265,25 +290,25 @@ export function GraphResultsList({
                     <Button
                       variant="ghost" 
                       size="sm"
-                      className="text-xs h-6 px-2 hover:bg-blue-100 hover:text-blue-600"
+                      className="text-xs h-5 px-1.5 hover:bg-blue-100 hover:text-blue-600"
                       onClick={(e) => {
                         e.stopPropagation()
                         // TODO: Show connections
                       }}
                     >
-                      <Users className="h-3 w-3 mr-1" />
-                      Connections
+                      <Users className="h-2.5 w-2.5 mr-1" />
+                      Links
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm" 
-                      className="text-xs h-6 px-2 hover:bg-emerald-100 hover:text-emerald-600"
+                      className="text-xs h-5 px-1.5 hover:bg-emerald-100 hover:text-emerald-600"
                       onClick={(e) => {
                         e.stopPropagation()
                         // TODO: Add to collection
                       }}
                     >
-                      <Star className="h-3 w-3 mr-1" />
+                      <Star className="h-2.5 w-2.5 mr-1" />
                       Save
                     </Button>
                   </div>

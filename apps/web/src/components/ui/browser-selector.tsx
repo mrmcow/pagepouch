@@ -51,10 +51,10 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
   const selectedBrowserData = browsers.find(b => b.id === selectedBrowser)!
 
   return (
-    <div className={`bg-white rounded-2xl shadow-xl border p-8 max-w-md w-full ${className}`}>
+    <div className={`${className}`}>
       {/* Browser Toggle */}
-      <div className="flex items-center justify-center mb-6">
-        <div className="bg-muted rounded-lg p-1 flex">
+      <div className="flex items-center justify-center mb-5">
+        <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-1 flex w-full sm:w-auto">
           {browsers.map((browser) => {
             const IconComponent = browser.icon
             const isSelected = selectedBrowser === browser.id
@@ -64,68 +64,41 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
                 key={browser.id}
                 onClick={() => setSelectedBrowser(browser.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
+                  flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all flex-1 sm:flex-initial
                   ${isSelected 
-                    ? 'bg-white shadow-sm text-foreground' 
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }
                 `}
               >
                 <IconComponent size={20} />
-                {browser.name}
+                <span className="whitespace-nowrap">{browser.name}</span>
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Selected Browser Info */}
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <selectedBrowserData.icon size={32} />
-        </div>
-        <h3 className="text-2xl font-bold mb-2">
-          Install for {selectedBrowserData.name}
-        </h3>
-        <p className="text-muted-foreground">
-          {selectedBrowserData.description}
-        </p>
-      </div>
-
       {/* Primary Action Button */}
       <Button 
         size="lg" 
-        className="w-full text-lg py-4 h-auto font-semibold group mb-4"
+        className="w-full text-base sm:text-lg py-5 sm:py-6 h-auto font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
         disabled={selectedBrowserData.status === 'coming-soon'}
         onClick={() => onDownloadClick?.(selectedBrowser)}
       >
-        <DownloadIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-        {selectedBrowserData.buttonText}
+        <DownloadIcon className="mr-2 h-5 w-5 flex-shrink-0" />
+        <span className="truncate">Add to {selectedBrowserData.name} – It's Free</span>
       </Button>
 
-      {/* Download Options */}
-      <div className="text-center mb-4">
-        <p className="text-xs text-muted-foreground mb-2">
-          or{' '}
-          <button 
-            onClick={() => onDownloadClick?.(selectedBrowser)}
-            className="text-primary hover:underline font-medium"
-          >
-            download directly
-          </button>
-          {' '}for manual installation
-        </p>
-      </div>
-
       {/* Features */}
-      <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <CheckIcon className="h-4 w-4 text-success" />
-          <span>No signup needed</span>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-4">
+        <div className="flex items-center gap-2">
+          <CheckIcon className="h-4 w-4 text-green-600 flex-shrink-0" />
+          <span className="whitespace-nowrap">Free trial</span>
         </div>
-        <div className="flex items-center gap-1">
-          <CheckIcon className="h-4 w-4 text-success" />
-          <span>Works instantly</span>
+        <div className="flex items-center gap-2">
+          <CheckIcon className="h-4 w-4 text-green-600 flex-shrink-0" />
+          <span className="whitespace-nowrap">Works instantly</span>
         </div>
       </div>
     </div>

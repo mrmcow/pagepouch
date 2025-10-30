@@ -10,13 +10,22 @@ export function Logo({ size = 48, className = '', showText = true }: LogoProps) 
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
       <div className="relative">
+        {/* Gradient background for icon */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg"
+          style={{ 
+            width: `${size}px`, 
+            height: `${size}px`,
+            opacity: 0.1
+          }}
+        />
         <svg 
           width={size} 
           height={size} 
           viewBox="0 0 48 48" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          className="drop-shadow-sm"
+          className="drop-shadow-sm relative z-10"
         >
           <defs>
             <filter id={`emboss-${size}`} x="-20%" y="-20%" width="140%" height="140%">

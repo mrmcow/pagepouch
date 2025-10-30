@@ -12,6 +12,7 @@ export interface Evidence {
   url?: string
   timestamp: string
   folderName: string
+  folderId?: string
   context: string
   confidence: number // 0-1 confidence score
   sentiment?: 'positive' | 'negative' | 'neutral'
@@ -84,6 +85,7 @@ export interface EnhancedGraphEdge {
 
 // Filter Configuration Types
 export interface ConnectionFilters {
+  viewMode?: 'all' | 'domains' | 'folders' | 'tags' | 'temporal' | 'content' // Connection view mode
   edgeTypes: string[] // Which edge types to include
   minStrength: number // Minimum connection strength (0-1)
   minSources: number // Minimum number of supporting sources
@@ -189,6 +191,10 @@ export interface GraphUIState {
   selectedEdges: string[]
   hoveredNode?: string
   hoveredEdge?: string
+  persistentTooltip?: {
+    nodeId: string
+    position: { x: number, y: number }
+  }
   activeFilters: GraphFilters
   savedLenses: SavedLens[]
   currentLens?: string

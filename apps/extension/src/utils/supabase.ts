@@ -4,8 +4,14 @@ import { createClient } from '@supabase/supabase-js'
 // Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://gwvsltgmjreructvbpzg.supabase.co'
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3dnNsdGdtanJlcnVjdHZicHpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3MjY2OTksImV4cCI6MjA3MzMwMjY5OX0.hdq5nlxw5v-zRZ2ZwogvDGzDC3eGZ9u13W0KBfQqeHs'
+// SECURITY: These values must be provided via environment variables at build time
+// Never hardcode production credentials in source code
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env file.')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 

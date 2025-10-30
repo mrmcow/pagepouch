@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +58,47 @@ import { Folder } from '@pagepouch/shared'
 import { EnhancedKnowledgeGraphViewer } from './EnhancedKnowledgeGraphViewer'
 import { generateFallbackPreview } from '@/utils/graphPreviewGenerator'
 
+// Utility function for safe date formatting
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'No date'
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'Invalid date'
+    
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch (error) {
+    return 'Invalid date'
+  }
+}
+
+// Utility function for relative time
+const formatRelativeTime = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'Unknown'
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'Invalid date'
+    
+    const now = new Date()
+    const diffInMs = now.getTime() - date.getTime()
+    const diffInHours = diffInMs / (1000 * 60 * 60)
+    const diffInDays = diffInHours / 24
+    
+    if (diffInHours < 1) return 'Just now'
+    if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`
+    if (diffInDays < 7) return `${Math.floor(diffInDays)}d ago`
+    
+    return formatDate(dateString)
+  } catch (error) {
+    return 'Invalid date'
+  }
+}
+
 interface KnowledgeGraph {
   id: string
   title: string
@@ -77,9 +118,10 @@ interface KnowledgeGraphsViewProps {
   folders: Folder[]
   subscriptionTier: 'free' | 'pro'
   clips: any[] // Add clips prop
+  onNavigateToFolder?: (folderId: string | null) => void
 }
 
-export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: KnowledgeGraphsViewProps) {
+export function KnowledgeGraphsView({ folders, subscriptionTier, clips, onNavigateToFolder }: KnowledgeGraphsViewProps) {
   const [graphs, setGraphs] = useState<KnowledgeGraph[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -102,7 +144,16 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
       const response = await fetch('/api/knowledge-graphs')
       if (response.ok) {
         const data = await response.json()
-        setGraphs(data)
+        // Map database fields to component expected fields
+        const mappedGraphs = data.map((graph: any) => ({
+          ...graph,
+          createdAt: graph.created_at,
+          updatedAt: graph.updated_at,
+          nodeCount: graph.node_count || 0,
+          connectionCount: graph.connection_count || 0,
+          folder_ids: graph.folder_ids || []
+        }))
+        setGraphs(mappedGraphs)
       } else {
         console.error('Failed to load knowledge graphs')
       }
@@ -124,7 +175,16 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
       })
 
       if (response.ok) {
-        const newGraph = await response.json()
+        const rawGraph = await response.json()
+        // Map database fields to component expected fields
+        const newGraph = {
+          ...rawGraph,
+          createdAt: rawGraph.created_at,
+          updatedAt: rawGraph.updated_at,
+          nodeCount: rawGraph.node_count || 0,
+          connectionCount: rawGraph.connection_count || 0,
+          folder_ids: rawGraph.folder_ids || []
+        }
         setGraphs(prev => [newGraph, ...prev])
         
         // Poll for updates to show processing status
@@ -254,78 +314,77 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Header with Search and Actions */}
-      <div className="flex items-center justify-between gap-4 px-1 py-3 mt-6">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search knowledge graphs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-3 h-11 w-full bg-white border border-gray-200 hover:border-gray-300 focus:border-purple-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl"
-            />
-          </div>
+    <div className="flex-1 flex flex-col space-y-6 overflow-hidden">
+      {/* Header with Search and Actions - Aligned with main content */}
+      <div className="flex items-center gap-3 w-full px-1 py-3">
+        {/* Search Bar */}
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search page graphs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-3 h-11 w-full bg-white border border-gray-200 hover:border-gray-300 focus:border-purple-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl"
+          />
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded transition-colors ${
-                viewMode === 'grid' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Grid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded transition-colors ${
-                viewMode === 'list' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Create New Graph Button */}
-          <Button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0"
+        {/* View Mode Toggle */}
+        <div className="flex items-center bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-1.5 rounded transition-colors ${
+              viewMode === 'grid' 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            New Graph
-          </Button>
+            <Grid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-1.5 rounded transition-colors ${
+              viewMode === 'list' 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <List className="h-4 w-4" />
+          </button>
         </div>
+
+        {/* Create New Graph Button */}
+        <Button 
+          onClick={() => setShowCreateModal(true)}
+          className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          New Graph
+        </Button>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto px-6">
-        {filteredGraphs.length === 0 ? (
-          <FirstTimeExperience 
-            onCreateGraph={() => setShowCreateModal(true)}
-            folders={folders}
-          />
-        ) : (
-          <GraphsGrid 
-            graphs={filteredGraphs}
-            viewMode={viewMode}
-            folders={folders}
-            onOpenGraph={setSelectedGraphId}
-            onEditGraph={onEditGraph}
-            onDeleteGraph={onDeleteGraph}
-          />
-        )}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto px-1">
+          {filteredGraphs.length === 0 ? (
+            <FirstTimeExperience 
+              onCreateGraph={() => setShowCreateModal(true)}
+              folders={folders}
+            />
+          ) : (
+            <GraphsGrid 
+              graphs={filteredGraphs}
+              viewMode={viewMode}
+              folders={folders}
+              onOpenGraph={setSelectedGraphId}
+              onEditGraph={onEditGraph}
+              onDeleteGraph={onDeleteGraph}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Create Graph Modal would go here */}
+      {/* Create Graph Modal */}
       {showCreateModal && (
           <CreateGraphModal
             folders={folders}
@@ -343,8 +402,9 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
           isOpen={!!selectedGraphId}
           onClose={() => setSelectedGraphId(null)}
           graphId={selectedGraphId}
-          graphTitle={graphs.find(g => g.id === selectedGraphId)?.title || 'Knowledge Graph'}
+          graphTitle={graphs.find(g => g.id === selectedGraphId)?.title || 'Page Graph'}
           graphDescription={graphs.find(g => g.id === selectedGraphId)?.description}
+          graphFolderIds={graphs.find(g => g.id === selectedGraphId)?.folder_ids || []}
           clips={clips}
           folders={folders}
           onPreviewGenerated={(previewImage) => {
@@ -355,6 +415,13 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
                 : g
             ))
           }}
+          onNavigateToFolder={(folderId) => {
+            // Close the knowledge graph and navigate to folder
+            setSelectedGraphId(null)
+            if (onNavigateToFolder) {
+              onNavigateToFolder(folderId)
+            }
+          }}
         />
       )}
 
@@ -362,9 +429,9 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit Knowledge Graph</DialogTitle>
+            <DialogTitle>Edit Page Graph</DialogTitle>
             <DialogDescription>
-              Update the title, description, and folder selection for your knowledge graph.
+              Update the title, description, and folder selection for your page graph.
             </DialogDescription>
           </DialogHeader>
           {editingGraph && (
@@ -382,7 +449,7 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips }: Knowle
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Knowledge Graph</AlertDialogTitle>
+            <AlertDialogTitle>Delete Page Graph</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{deletingGraph?.title}"? This action cannot be undone.
             </AlertDialogDescription>
@@ -694,7 +761,7 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph, onEditGraph, onDel
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {graphs.map((graph) => (
-        <Card key={graph.id} className="hover:shadow-lg transition-all duration-200 cursor-pointer group">
+        <Card key={graph.id} className="hover:shadow-lg transition-all duration-200 cursor-pointer group flex flex-col h-full">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -733,7 +800,7 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph, onEditGraph, onDel
               </DropdownMenu>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col h-full">
             {/* Graph Thumbnail/Preview */}
             <div 
               className="aspect-video rounded-lg mb-4 relative cursor-pointer overflow-hidden border border-purple-100 hover:border-purple-200 transition-all duration-200 group"
@@ -810,26 +877,40 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph, onEditGraph, onDel
               )}
             </div>
 
-            {/* Folders */}
-            <div className="text-xs text-gray-500">
-              <span className="font-medium">Folders:</span> {getFolderNames(graph.folder_ids)}
+            {/* Folders - with better overflow handling */}
+            <div className="text-xs text-gray-500 mb-3">
+              <span className="font-medium">Folders:</span>{' '}
+              <span className="line-clamp-2">{getFolderNames(graph.folder_ids)}</span>
             </div>
 
-            {/* Updated Date */}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-              <span className="text-xs text-gray-500 flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {new Date(graph.updatedAt).toLocaleDateString()}
-              </span>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                onClick={() => onOpenGraph(graph.id)}
-              >
-                <Eye className="w-4 h-4 mr-1" />
-                Open
-              </Button>
+            {/* Spacer to push footer to bottom */}
+            <div className="flex-1"></div>
+
+            {/* Footer with dates and action - anchored to bottom */}
+            <div className="mt-auto pt-3 border-t border-gray-100 space-y-2">
+              {/* Dates */}
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Created: {formatDate(graph.createdAt)}
+                </span>
+                <span className="flex items-center gap-1">
+                  Updated: {formatRelativeTime(graph.updatedAt)}
+                </span>
+              </div>
+              
+              {/* Action button */}
+              <div className="flex justify-end">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                  onClick={() => onOpenGraph(graph.id)}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  Open
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -855,7 +936,7 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl font-semibold">Create Knowledge Graph</CardTitle>
+              <CardTitle className="text-xl font-semibold">Create Page Graph</CardTitle>
               <CardDescription className="mt-1">
                 Select folders to analyze and create connections between your content
               </CardDescription>

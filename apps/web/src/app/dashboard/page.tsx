@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
@@ -60,6 +60,7 @@ import { BillingModal } from '@/components/dashboard/BillingModal'
 import { KnowledgeGraphUpgradeModal } from '@/components/dashboard/KnowledgeGraphUpgradeModal'
 import { KnowledgeGraphsView } from '@/components/dashboard/KnowledgeGraphsView'
 import { CachedImage, useImageCache } from '@/components/ui/cached-image'
+import { DownloadModal } from '@/components/ui/download-modal'
 
 interface DashboardState {
   clips: Clip[]
@@ -83,6 +84,7 @@ interface DashboardState {
   isProfileModalOpen: boolean
   isBillingModalOpen: boolean
   isKnowledgeGraphUpgradeModalOpen: boolean
+  isDownloadModalOpen: boolean
   // Pagination state
   totalClips: number
   hasMoreClips: boolean
@@ -97,6 +99,8 @@ interface DashboardState {
 }
 
 function DashboardContent() {
+  const [detectedBrowser, setDetectedBrowser] = useState<'chrome' | 'firefox'>('chrome')
+  
   const [state, setState] = useState<DashboardState>({
     clips: [],
     folders: [],
@@ -119,6 +123,7 @@ function DashboardContent() {
     isProfileModalOpen: false,
     isBillingModalOpen: false,
     isKnowledgeGraphUpgradeModalOpen: false,
+    isDownloadModalOpen: false,
     // Pagination state
     totalClips: 0,
     hasMoreClips: false,
@@ -139,6 +144,14 @@ function DashboardContent() {
   const supabase = createClient()
   const { preloadClipImages, clearCache, getCacheSize, getCacheStatus } = useImageCache()
 
+  // Detect browser on mount
+  useEffect(() => {
+    const userAgent = window.navigator.userAgent
+    if (userAgent.includes('Firefox')) {
+      setDetectedBrowser('firefox')
+    }
+  }, [])
+
   const handleRefresh = () => {
     // Clear image cache on refresh to ensure fresh content
     clearCache()
@@ -146,12 +159,89 @@ function DashboardContent() {
     loadData(true) // Reset to first page
   }
 
+  const refreshSubscriptionData = useCallback(async () => {
+    try {
+      const [subscriptionResponse, usageResponse] = await Promise.all([
+        fetch('/api/subscription', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch('/api/usage', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
+      ])
+      
+      if (subscriptionResponse.ok && usageResponse.ok) {
+        const [subData, usageData] = await Promise.all([
+          subscriptionResponse.json(),
+          usageResponse.json()
+        ])
+        
+        setState(prev => ({
+          ...prev,
+          subscriptionTier: subData.subscription_tier || usageData.subscription_tier || 'free',
+          subscriptionStatus: subData.subscription_status || 'inactive',
+          clipsThisMonth: usageData.clips_this_month || 0,
+          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 50),
+        }))
+        
+        console.log('📊 Subscription data refreshed:', {
+          tier: subData.subscription_tier || usageData.subscription_tier,
+          status: subData.subscription_status,
+          clipsThisMonth: usageData.clips_this_month,
+          clipsLimit: usageData.clips_limit
+        })
+      } else {
+        console.error('Failed to refresh subscription or usage data:', {
+          subscriptionOk: subscriptionResponse.ok,
+          usageOk: usageResponse.ok
+        })
+      }
+    } catch (error) {
+      console.error('Failed to refresh subscription data:', error)
+    }
+  }, [])
+
   useEffect(() => {
     // Show UI immediately, load data in background
     checkAuth()
     // Don't wait for loadData - let it run in background
     setTimeout(() => loadData(), 0)
   }, [])
+
+  // Refresh subscription data when window gains focus (user might have created clips via extension)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('🔄 Window focused, refreshing subscription data...')
+      refreshSubscriptionData()
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔄 Page became visible, refreshing subscription data...')
+        refreshSubscriptionData()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refreshSubscriptionData])
+
+  // Periodically refresh subscription data (every 30 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('⏰ Periodic subscription data refresh...')
+      refreshSubscriptionData()
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [refreshSubscriptionData])
 
   // Infinite scrolling effect with aggressive preloading
   useEffect(() => {
@@ -307,13 +397,19 @@ function DashboardContent() {
       const offset = reset ? 0 : state.currentOffset
       const limit = 50 // Load 50 clips at a time for better performance
       
-      // Load subscription data first to prevent UI flash
-      const subscriptionResponse = await fetch('/api/subscription', {
-        cache: 'no-store', // Always get fresh subscription data
-        headers: { 'Cache-Control': 'no-cache' }
-      })
+      // Load subscription and usage data first to prevent UI flash
+      const [subscriptionResponse, usageResponse] = await Promise.all([
+        fetch('/api/subscription', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch('/api/usage', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
+      ])
       
-      // Handle subscription data immediately
+      // Handle subscription and usage data
       let subscriptionData = {
         subscriptionTier: 'free',
         subscriptionStatus: 'inactive',
@@ -321,14 +417,30 @@ function DashboardContent() {
         clipsLimit: 50
       }
       
-      if (subscriptionResponse.ok) {
-        const subData = await subscriptionResponse.json()
+      if (subscriptionResponse.ok && usageResponse.ok) {
+        const [subData, usageData] = await Promise.all([
+          subscriptionResponse.json(),
+          usageResponse.json()
+        ])
+        
         subscriptionData = {
-          subscriptionTier: subData.subscription_tier || 'free',
+          subscriptionTier: subData.subscription_tier || usageData.subscription_tier || 'free',
           subscriptionStatus: subData.subscription_status || 'inactive',
-          clipsThisMonth: subData.clips_this_month || 0,
-          clipsLimit: subData.subscription_tier === 'pro' ? 1000 : 50
+          clipsThisMonth: usageData.clips_this_month || 0,
+          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 50)
         }
+        
+        console.log('📊 Loaded subscription and usage data:', {
+          tier: subscriptionData.subscriptionTier,
+          status: subscriptionData.subscriptionStatus,
+          clipsThisMonth: subscriptionData.clipsThisMonth,
+          clipsLimit: subscriptionData.clipsLimit
+        })
+      } else {
+        console.error('Failed to load subscription or usage data:', {
+          subscriptionOk: subscriptionResponse.ok,
+          usageOk: usageResponse.ok
+        })
       }
       
       // Update subscription state immediately to prevent flash
@@ -553,6 +665,24 @@ function DashboardContent() {
   }
 
   const handleToggleFavorite = async (clipId: string, isFavorite: boolean) => {
+    console.log(`🌟 Toggling favorite for clip ${clipId} to ${isFavorite}`)
+    
+    // Optimistic update - update UI immediately
+    setState(prev => {
+      console.log(`🔄 Optimistically updating clip ${clipId} favorite status to ${isFavorite}`)
+      return {
+        ...prev,
+        clips: prev.clips.map(clip => 
+          clip.id === clipId 
+            ? { ...clip, is_favorite: isFavorite }
+            : clip
+        ),
+        selectedClip: prev.selectedClip?.id === clipId 
+          ? { ...prev.selectedClip, is_favorite: isFavorite }
+          : prev.selectedClip,
+      }
+    })
+
     try {
       const response = await fetch(`/api/clips/${clipId}/favorite`, {
         method: 'PATCH',
@@ -563,24 +693,33 @@ function DashboardContent() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to toggle favorite')
+        const errorText = await response.text()
+        throw new Error(`Failed to toggle favorite: ${response.status} ${errorText}`)
       }
 
-      // Update the clip in state
-      setState(prev => ({
-        ...prev,
-        clips: prev.clips.map(clip => 
-          clip.id === clipId 
-            ? { ...clip, is_favorite: isFavorite }
-            : clip
-        ),
-        selectedClip: prev.selectedClip?.id === clipId 
-          ? { ...prev.selectedClip, is_favorite: isFavorite }
-          : prev.selectedClip,
-      }))
+      const result = await response.json()
+      console.log('✅ Favorite status updated successfully:', result)
     } catch (error) {
-      console.error('Failed to toggle favorite:', error)
-      throw error
+      console.error('❌ Failed to toggle favorite:', error)
+      
+      // Revert the optimistic update on error
+      setState(prev => {
+        console.log(`🔄 Reverting clip ${clipId} favorite status back to ${!isFavorite}`)
+        return {
+          ...prev,
+          clips: prev.clips.map(clip => 
+            clip.id === clipId 
+              ? { ...clip, is_favorite: !isFavorite }
+              : clip
+          ),
+          selectedClip: prev.selectedClip?.id === clipId 
+            ? { ...prev.selectedClip, is_favorite: !isFavorite }
+            : prev.selectedClip,
+        }
+      })
+      
+      // Show user-friendly error message
+      alert('Failed to update favorite status. Please try again.')
     }
   }
 
@@ -755,7 +894,7 @@ function DashboardContent() {
                 }}
                 className="hover:opacity-80 transition-opacity"
               >
-                <LogoWithText size={32} clickable={false} />
+                <LogoWithText size={40} clickable={false} />
               </button>
               
               <nav className="hidden md:flex items-center space-x-4">
@@ -788,17 +927,6 @@ function DashboardContent() {
 
             {/* User Profile */}
             <div className="flex items-center space-x-3">
-              {/* Cache Refresh Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRefresh}
-                className="text-muted-foreground hover:text-foreground"
-                title="Refresh and clear image cache"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-              
               {state.user && (
                 <UserAvatar
                   user={{
@@ -819,37 +947,6 @@ function DashboardContent() {
           {/* Sidebar */}
           <aside className="w-full lg:w-64 space-y-6">
 
-            {/* Knowledge Graphs - Pro Feature */}
-            {!state.isSubscriptionLoading && state.subscriptionTier === 'pro' && (
-              <div className="relative">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className={`w-full justify-start border transition-all duration-200 group ${
-                    state.viewFilter === 'knowledge-graphs' 
-                      ? 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white hover:text-white border-purple-500 shadow-lg shadow-purple-500/25' 
-                      : 'border-purple-200 text-purple-600 hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-blue-600 hover:border-purple-500 bg-white/90 backdrop-blur-sm hover:shadow-md hover:shadow-purple-500/20'
-                  }`}
-                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))}
-                >
-                  <Brain className="mr-2 h-4 w-4" />
-                  Knowledge Graphs
-                  <div className="ml-auto">
-                    <span className={`text-xs font-semibold transition-all duration-200 ${
-                      state.viewFilter === 'knowledge-graphs' 
-                        ? 'text-white/90' 
-                        : 'bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent group-hover:text-white/90 group-hover:bg-none'
-                    }`}>
-                      PRO
-                    </span>
-                  </div>
-                </Button>
-                {state.viewFilter === 'knowledge-graphs' && (
-                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg blur opacity-20 -z-10"></div>
-                )}
-              </div>
-            )}
-
             {/* Quick Actions */}
             <Card className="border border-white/20 shadow-md bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md">
               <CardHeader className="pb-3">
@@ -857,11 +954,12 @@ function DashboardContent() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button 
+                  variant="outline"
                   size="sm" 
                   className="w-full justify-start"
-                  onClick={() => router.push('/')}
+                  onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Download className="mr-2 h-4 w-4" />
                   Install Extension
                 </Button>
                 <Button 
@@ -873,6 +971,33 @@ function DashboardContent() {
                   <FolderPlus className="mr-2 h-4 w-4" />
                   New Folder
                 </Button>
+                
+                {/* Page Graphs - Pro Feature */}
+                {!state.isSubscriptionLoading && state.subscriptionTier === 'pro' && (
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className={`w-full justify-start border transition-all duration-200 group ${
+                      state.viewFilter === 'knowledge-graphs' 
+                        ? 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white hover:text-white border-purple-500 shadow-md' 
+                        : 'border-purple-200 text-purple-600 hover:text-purple-700 bg-white hover:bg-purple-50'
+                    }`}
+                    onClick={() => setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))}
+                  >
+                    <Brain className="mr-2 h-4 w-4" />
+                    <span className="flex-1 text-left">Page Graphs</span>
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs font-semibold transition-all ${
+                        state.viewFilter === 'knowledge-graphs' 
+                          ? 'bg-white/20 text-white border-white/30' 
+                          : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0'
+                      }`}
+                    >
+                      PRO
+                    </Badge>
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -887,7 +1012,11 @@ function DashboardContent() {
                   size="sm"
                   className="w-full justify-start"
                   onClick={() => {
-                    setState(prev => ({ ...prev, selectedFolder: null }))
+                    setState(prev => ({ 
+                      ...prev, 
+                      selectedFolder: null,
+                      viewFilter: 'library' // Switch back to library view if in knowledge graphs
+                    }))
                     // Trigger preloading for all clips when returning to full view
                     setTimeout(() => {
                       if (state.clips.length > 0) {
@@ -911,7 +1040,11 @@ function DashboardContent() {
                       size="sm"
                       className="w-full justify-start group relative"
                       onClick={() => {
-                        setState(prev => ({ ...prev, selectedFolder: folder.id }))
+                        setState(prev => ({ 
+                          ...prev, 
+                          selectedFolder: folder.id,
+                          viewFilter: 'library' // Switch back to library view if in knowledge graphs
+                        }))
                         // Trigger preloading for folder-filtered clips
                         setTimeout(() => {
                           const folderClips = state.clips.filter(clip => clip.folder_id === folder.id)
@@ -953,7 +1086,18 @@ function DashboardContent() {
             {!state.isSubscriptionLoading && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Usage</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm">Usage</CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                      onClick={refreshSubscriptionData}
+                      title="Refresh usage data"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -1060,6 +1204,15 @@ function DashboardContent() {
             {/* Search and Filters - Clean Simple Layout */}
             {state.viewFilter !== 'knowledge-graphs' && (
             <div className="flex items-center gap-3 w-full px-1 py-3">
+              {/* Refresh Button */}
+              <button
+                onClick={handleRefresh}
+                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 focus:outline-none transition-all duration-200 rounded-xl flex items-center justify-center"
+                title="Refresh and clear image cache"
+              >
+                <RefreshCw className="h-4 w-4 text-gray-600" />
+              </button>
+
               {/* Main Search Bar */}
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -1143,12 +1296,22 @@ function DashboardContent() {
             </div>
             )}
 
-            {/* Content Area - Clips or Knowledge Graphs */}
+            {/* Content Area - Clips or Page Graphs */}
             {state.viewFilter === 'knowledge-graphs' ? (
               <KnowledgeGraphsView 
                 folders={state.folders}
                 subscriptionTier={state.subscriptionTier}
                 clips={state.clips}
+                onNavigateToFolder={(folderId) => {
+                  // Navigate to the specified folder and switch to library view
+                  setState(prev => ({
+                    ...prev,
+                    viewFilter: 'library',
+                    selectedFolder: folderId,
+                    searchQuery: '', // Clear search when navigating
+                    selectedTag: null // Clear tag filter when navigating
+                  }))
+                }}
               />
             ) : (
               <div className="flex-1 overflow-hidden">
@@ -1316,6 +1479,13 @@ function DashboardContent() {
       <KnowledgeGraphUpgradeModal
         isOpen={state.isKnowledgeGraphUpgradeModalOpen}
         onClose={() => setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: false }))}
+      />
+
+      {/* Download Extension Modal */}
+      <DownloadModal
+        isOpen={state.isDownloadModalOpen}
+        onClose={() => setState(prev => ({ ...prev, isDownloadModalOpen: false }))}
+        selectedBrowser={detectedBrowser}
       />
     </div>
   )

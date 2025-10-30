@@ -29,7 +29,7 @@ import {
   Layers
 } from 'lucide-react'
 import { ClipViewer } from './ClipViewer'
-import { AdvancedFilters } from '@/components/graph/AdvancedFilters'
+import { SimpleGraphControls } from '@/components/graph/SimpleGraphControls'
 import { GraphResultsList } from '@/components/graph/GraphResultsList'
 import { EvidenceDrawer } from '@/components/graph/EvidenceDrawer'
 import { NodeTooltip } from '@/components/graph/NodeTooltip'
@@ -50,14 +50,17 @@ interface EnhancedKnowledgeGraphViewerProps {
   graphId: string
   graphTitle: string
   graphDescription?: string
+  graphFolderIds?: string[] // Folder IDs that this graph should include
   clips?: any[]
   folders?: any[]
   onPreviewGenerated?: (previewImage: string) => void // Callback when preview is successfully generated
+  onNavigateToFolder?: (folderId: string | null) => void // Callback to navigate to folder in dashboard
 }
 
 // Default filter state - PERMISSIVE to show all data initially
 const DEFAULT_FILTERS: GraphFilters = {
   connections: {
+    viewMode: 'all',
     edgeTypes: [], // Empty = include all types
     minStrength: 0,
     minSources: 0, // Changed from 1 to 0 to be more permissive
@@ -97,9 +100,11 @@ export function EnhancedKnowledgeGraphViewer({
   graphId,
   graphTitle,
   graphDescription,
+  graphFolderIds = [],
   clips = [],
   folders = [],
-  onPreviewGenerated
+  onPreviewGenerated,
+  onNavigateToFolder
 }: EnhancedKnowledgeGraphViewerProps) {
   // Canvas and rendering state
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -140,7 +145,6 @@ export function EnhancedKnowledgeGraphViewer({
   const [isClipViewerOpen, setIsClipViewerOpen] = useState(false)
 
   // Advanced features state
-  const [showFilters, setShowFilters] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
   // Initialize filter engine
@@ -149,7 +153,7 @@ export function EnhancedKnowledgeGraphViewer({
   }, [rawGraphData])
 
   // Convert clips to enhanced graph data
-  const convertToEnhancedGraphData = useCallback((clips: any[], folders: any[]): { nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[] } => {
+  const convertToEnhancedGraphData = useCallback((clips: any[], folders: any[], viewMode: string = 'all'): { nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[] } => {
     if (!clips.length) {
       return { nodes: [], edges: [] }
     }
@@ -175,6 +179,7 @@ export function EnhancedKnowledgeGraphViewer({
           url: clip.url,
           timestamp: clip.created_at,
           folderName: folderName,
+          folderId: clip.folder_id,
           context: `Captured from ${domain}`,
           confidence: 0.8,
           sentiment: 'neutral',
@@ -235,6 +240,7 @@ export function EnhancedKnowledgeGraphViewer({
             url: clip.url,
             timestamp: clip.created_at,
             folderName: folders.find(f => f.id === clip.folder_id)?.name || 'Uncategorized',
+            folderId: clip.folder_id,
             context: `Source: ${domain}`,
             confidence: 0.9,
             sentiment: 'neutral',
@@ -275,6 +281,7 @@ export function EnhancedKnowledgeGraphViewer({
               url: clip.url,
               timestamp: clip.created_at,
               folderName: folders.find(f => f.id === clip.folder_id)?.name || 'Uncategorized',
+              folderId: clip.folder_id,
               context: `Source relationship`,
               confidence: 0.9,
               sentiment: 'neutral',
@@ -300,6 +307,23 @@ export function EnhancedKnowledgeGraphViewer({
         })
       }
     })
+
+    // Generate additional connections based on view mode
+    if (viewMode === 'folders' || viewMode === 'all') {
+      generateFolderConnections(clips, folders, nodes, edges)
+    }
+    
+    if (viewMode === 'tags' || viewMode === 'all') {
+      generateTagConnections(clips, nodes, edges)
+    }
+    
+    if (viewMode === 'temporal' || viewMode === 'all') {
+      generateTemporalConnections(clips, nodes, edges)
+    }
+    
+    if (viewMode === 'content' || viewMode === 'all') {
+      generateContentConnections(clips, nodes, edges)
+    }
 
     // Deduplicate nodes by label and type, keeping the one with more evidence
     const uniqueNodes = nodes.reduce((acc, node) => {
@@ -357,6 +381,264 @@ export function EnhancedKnowledgeGraphViewer({
 
     return { nodes: uniqueNodes, edges: uniqueEdges }
   }, [])
+
+  // Helper functions for generating different types of connections
+  const generateFolderConnections = (clips: any[], folders: any[], nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[]) => {
+    // Group clips by folder and create connections between clips in the same folder
+    const folderGroups = new Map<string, any[]>()
+    
+    clips.forEach(clip => {
+      const folderId = clip.folder_id || 'uncategorized'
+      if (!folderGroups.has(folderId)) {
+        folderGroups.set(folderId, [])
+      }
+      folderGroups.get(folderId)!.push(clip)
+    })
+    
+    folderGroups.forEach((folderClips, folderId) => {
+      if (folderClips.length > 1) {
+        // Create connections between all clips in the same folder
+        for (let i = 0; i < folderClips.length; i++) {
+          for (let j = i + 1; j < folderClips.length; j++) {
+            const clip1 = folderClips[i]
+            const clip2 = folderClips[j]
+            
+            edges.push({
+              id: `folder-${clip1.id}-${clip2.id}`,
+              source: clip1.id,
+              target: clip2.id,
+              type: 'same_topic',
+              weight: 0.6,
+              color: '#a855f7',
+              evidence: [{
+                clipId: clip1.id,
+                clipTitle: `${clip1.title} ↔ ${clip2.title}`,
+                snippet: 'Both clips are in the same folder/topic',
+                url: '',
+                timestamp: new Date().toISOString(),
+                folderName: folders.find(f => f.id === folderId)?.name || 'Uncategorized',
+                folderId: folderId,
+                context: 'Folder relationship',
+                confidence: 0.8,
+                sentiment: 'neutral',
+                tags: ['folder', 'topic'],
+                sourceType: 'derived',
+                provenance: {
+                  hasQuote: false,
+                  hasUrl: false,
+                  hasScreenshot: false,
+                  captureMethod: 'automatic'
+                }
+              }],
+              strength: 0.6,
+              sourceCount: 1,
+              confidence: 0.8,
+              firstConnection: clip1.created_at,
+              lastConnection: clip2.created_at,
+              frequency: 1,
+              connectionReason: 'Same folder/topic',
+              topics: [folders.find(f => f.id === folderId)?.name || 'Uncategorized'],
+              sentiment: 0
+            })
+          }
+        }
+      }
+    })
+  }
+
+  const generateTagConnections = (clips: any[], nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[]) => {
+    // Create connections between clips that share tags
+    const tagGroups = new Map<string, any[]>()
+    
+    clips.forEach(clip => {
+      if (clip.tags && clip.tags.length > 0) {
+        clip.tags.forEach((tag: string) => {
+          if (!tagGroups.has(tag)) {
+            tagGroups.set(tag, [])
+          }
+          tagGroups.get(tag)!.push(clip)
+        })
+      }
+    })
+    
+    tagGroups.forEach((taggedClips, tag) => {
+      if (taggedClips.length > 1) {
+        for (let i = 0; i < taggedClips.length; i++) {
+          for (let j = i + 1; j < taggedClips.length; j++) {
+            const clip1 = taggedClips[i]
+            const clip2 = taggedClips[j]
+            
+            edges.push({
+              id: `tag-${clip1.id}-${clip2.id}-${tag}`,
+              source: clip1.id,
+              target: clip2.id,
+              type: 'tag_match',
+              weight: 0.5,
+              color: '#10b981',
+              evidence: [{
+                clipId: clip1.id,
+                clipTitle: `${clip1.title} ↔ ${clip2.title}`,
+                snippet: `Both clips are tagged with "${tag}"`,
+                url: '',
+                timestamp: new Date().toISOString(),
+                folderName: 'Tag Connection',
+                folderId: '',
+                context: 'Shared tag',
+                confidence: 0.7,
+                sentiment: 'neutral',
+                tags: [tag],
+                sourceType: 'derived',
+                provenance: {
+                  hasQuote: false,
+                  hasUrl: false,
+                  hasScreenshot: false,
+                  captureMethod: 'automatic'
+                }
+              }],
+              strength: 0.5,
+              sourceCount: 1,
+              confidence: 0.7,
+              firstConnection: clip1.created_at,
+              lastConnection: clip2.created_at,
+              frequency: 1,
+              connectionReason: `Shared tag: ${tag}`,
+              topics: [tag],
+              sentiment: 0
+            })
+          }
+        }
+      }
+    })
+  }
+
+  const generateTemporalConnections = (clips: any[], nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[]) => {
+    // Create connections between clips created within the same time period
+    const sortedClips = [...clips].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    
+    for (let i = 0; i < sortedClips.length - 1; i++) {
+      const clip1 = sortedClips[i]
+      const clip2 = sortedClips[i + 1]
+      
+      const timeDiff = new Date(clip2.created_at).getTime() - new Date(clip1.created_at).getTime()
+      const hoursDiff = timeDiff / (1000 * 60 * 60)
+      
+      // Connect clips created within 24 hours of each other
+      if (hoursDiff <= 24) {
+        edges.push({
+          id: `temporal-${clip1.id}-${clip2.id}`,
+          source: clip1.id,
+          target: clip2.id,
+          type: 'same_session',
+          weight: Math.max(0.2, 1 - (hoursDiff / 24)),
+          color: '#f59e0b',
+          evidence: [{
+            clipId: clip1.id,
+            clipTitle: `${clip1.title} → ${clip2.title}`,
+            snippet: `Clips created ${Math.round(hoursDiff)} hours apart`,
+            url: '',
+            timestamp: new Date().toISOString(),
+            folderName: 'Temporal Connection',
+            folderId: '',
+            context: 'Time proximity',
+            confidence: 0.6,
+            sentiment: 'neutral',
+            tags: ['temporal', 'session'],
+            sourceType: 'derived',
+            provenance: {
+              hasQuote: false,
+              hasUrl: false,
+              hasScreenshot: false,
+              captureMethod: 'automatic'
+            }
+          }],
+          strength: Math.max(0.2, 1 - (hoursDiff / 24)),
+          sourceCount: 1,
+          confidence: 0.6,
+          firstConnection: clip1.created_at,
+          lastConnection: clip2.created_at,
+          frequency: 1,
+          connectionReason: `Created within ${Math.round(hoursDiff)} hours`,
+          topics: ['temporal'],
+          sentiment: 0
+        })
+      }
+    }
+  }
+
+  const generateContentConnections = (clips: any[], nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[]) => {
+    // Create connections between clips with similar content
+    for (let i = 0; i < clips.length; i++) {
+      for (let j = i + 1; j < clips.length; j++) {
+        const clip1 = clips[i]
+        const clip2 = clips[j]
+        
+        const similarity = calculateContentSimilarity(clip1, clip2)
+        
+        if (similarity > 0.3) {
+          edges.push({
+            id: `content-${clip1.id}-${clip2.id}`,
+            source: clip1.id,
+            target: clip2.id,
+            type: 'similar_content',
+            weight: similarity,
+            color: '#3b82f6',
+            evidence: [{
+              clipId: clip1.id,
+              clipTitle: `${clip1.title} ↔ ${clip2.title}`,
+              snippet: `Content similarity: ${Math.round(similarity * 100)}%`,
+              url: '',
+              timestamp: new Date().toISOString(),
+              folderName: 'Content Connection',
+              folderId: '',
+              context: 'Content similarity',
+              confidence: similarity,
+              sentiment: 'neutral',
+              tags: ['content', 'similarity'],
+              sourceType: 'derived',
+              provenance: {
+                hasQuote: false,
+                hasUrl: false,
+                hasScreenshot: false,
+                captureMethod: 'automatic'
+              }
+            }],
+            strength: similarity,
+            sourceCount: 1,
+            confidence: similarity,
+            firstConnection: clip1.created_at,
+            lastConnection: clip2.created_at,
+            frequency: 1,
+            connectionReason: `Content similarity: ${Math.round(similarity * 100)}%`,
+            topics: ['content'],
+            sentiment: 0
+          })
+        }
+      }
+    }
+  }
+
+  const calculateContentSimilarity = (clip1: any, clip2: any): number => {
+    // Simple content similarity based on title and text content
+    const title1 = (clip1.title || '').toLowerCase()
+    const title2 = (clip2.title || '').toLowerCase()
+    const text1 = (clip1.text_content || '').toLowerCase()
+    const text2 = (clip2.text_content || '').toLowerCase()
+    
+    // Title similarity
+    const titleWords1 = title1.split(/\s+/).filter(w => w.length > 3)
+    const titleWords2 = title2.split(/\s+/).filter(w => w.length > 3)
+    const titleIntersection = titleWords1.filter(w => titleWords2.includes(w))
+    const titleSimilarity = titleWords1.length > 0 ? titleIntersection.length / Math.max(titleWords1.length, titleWords2.length) : 0
+    
+    // Text similarity (simple word overlap)
+    const textWords1 = text1.split(/\s+/).filter(w => w.length > 4).slice(0, 50) // Limit for performance
+    const textWords2 = text2.split(/\s+/).filter(w => w.length > 4).slice(0, 50)
+    const textIntersection = textWords1.filter(w => textWords2.includes(w))
+    const textSimilarity = textWords1.length > 0 ? textIntersection.length / Math.max(textWords1.length, textWords2.length) : 0
+    
+    // Weighted combination
+    return (titleSimilarity * 0.7) + (textSimilarity * 0.3)
+  }
 
   // Apply filters to graph data
   const applyFilters = useCallback((filters: GraphFilters) => {
@@ -421,16 +703,21 @@ export function EnhancedKnowledgeGraphViewer({
   // Load and process graph data
   useEffect(() => {
     if (isOpen) {
-      // TODO: Filter clips by the graph's selected folders
-      // For now, we'll use all clips, but this should be filtered based on the graph's folder_ids
+      // Filter clips by the graph's selected folders
+      const filteredClips = graphFolderIds.length > 0 
+        ? clips.filter(clip => graphFolderIds.includes(clip.folder_id))
+        : clips
+      
       console.log('🔍 Debug: Loading graph data', { 
-        clipsLength: clips?.length || 0, 
+        totalClipsLength: clips?.length || 0, 
+        graphFolderIds,
+        filteredClipsLength: filteredClips?.length || 0,
         foldersLength: folders?.length || 0,
         graphId,
-        clips: clips?.slice(0, 3) // Show first 3 clips for debugging
+        filteredClips: filteredClips?.slice(0, 3) // Show first 3 filtered clips for debugging
       })
       
-      const enhanced = convertToEnhancedGraphData(clips, folders)
+      const enhanced = convertToEnhancedGraphData(filteredClips, folders, uiState.activeFilters.connections.viewMode)
       console.log('🔍 Debug: Enhanced graph data', { 
         nodesLength: enhanced.nodes.length, 
         edgesLength: enhanced.edges.length,
@@ -449,7 +736,7 @@ export function EnhancedKnowledgeGraphViewer({
       
       setFilteredData(filtered)
     }
-  }, [isOpen, clips, folders, convertToEnhancedGraphData, graphId])
+  }, [isOpen, clips, folders, convertToEnhancedGraphData, graphId, graphFolderIds, uiState.activeFilters.connections.viewMode])
 
   // Canvas rendering
   useEffect(() => {
@@ -615,7 +902,7 @@ export function EnhancedKnowledgeGraphViewer({
       // Capture the actual rendered canvas content
       const canvas = canvasRef.current
       
-      // Create a smaller preview canvas
+      // Create a smaller preview canvas with proper aspect ratio
       const previewCanvas = document.createElement('canvas')
       const previewWidth = 320
       const previewHeight = 180
@@ -628,12 +915,41 @@ export function EnhancedKnowledgeGraphViewer({
       previewCtx.fillStyle = '#ffffff'
       previewCtx.fillRect(0, 0, previewWidth, previewHeight)
       
-      // Draw the main canvas content scaled down to the preview size
+      // Calculate aspect ratios to maintain proportions with padding
+      const padding = 20 // Add some padding around the graph
+      const availableWidth = previewWidth - (padding * 2)
+      const availableHeight = previewHeight - (padding * 2)
+      
+      const canvasAspect = canvas.width / canvas.height
+      const availableAspect = availableWidth / availableHeight
+      
+      let drawWidth, drawHeight, drawX, drawY
+      
+      if (canvasAspect > availableAspect) {
+        // Canvas is wider - fit to available width, center vertically
+        drawWidth = availableWidth
+        drawHeight = availableWidth / canvasAspect
+        drawX = padding
+        drawY = padding + (availableHeight - drawHeight) / 2
+      } else {
+        // Canvas is taller - fit to available height, center horizontally
+        drawHeight = availableHeight
+        drawWidth = availableHeight * canvasAspect
+        drawX = padding + (availableWidth - drawWidth) / 2
+        drawY = padding
+      }
+      
+      // Draw the main canvas content with proper aspect ratio
       previewCtx.drawImage(
         canvas, 
         0, 0, canvas.width, canvas.height,  // Source dimensions
-        0, 0, previewWidth, previewHeight   // Destination dimensions
+        drawX, drawY, drawWidth, drawHeight // Destination with proper aspect ratio
       )
+      
+      // Add a subtle border around the preview
+      previewCtx.strokeStyle = '#e5e7eb' // gray-200
+      previewCtx.lineWidth = 1
+      previewCtx.strokeRect(0.5, 0.5, previewWidth - 1, previewHeight - 1)
       
       // Convert to base64 with good quality
       const previewImage = previewCanvas.toDataURL('image/jpeg', 0.8)
@@ -736,6 +1052,34 @@ export function EnhancedKnowledgeGraphViewer({
       return distance <= nodeRadius + 5 // Node radius plus small buffer
     })
   }, [filteredData.nodes, panOffset, zoom])
+
+  // Helper function to get screen position of a node
+  const getNodeScreenPosition = useCallback((nodeId: string) => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+
+    const rect = canvas.getBoundingClientRect()
+    const node = filteredData.nodes.find(n => n.id === nodeId)
+    if (!node) return null
+
+    // Position nodes if they don't have positions (same logic as rendering)
+    let nodeX = node.x
+    let nodeY = node.y
+    
+    if (nodeX === undefined || nodeY === undefined) {
+      const nodeIndex = filteredData.nodes.findIndex(n => n.id === nodeId)
+      const angle = (nodeIndex / filteredData.nodes.length) * 2 * Math.PI
+      const radius = Math.min(rect.width, rect.height) * 0.3
+      nodeX = rect.width / 2 + radius * Math.cos(angle)
+      nodeY = rect.height / 2 + radius * Math.sin(angle)
+    }
+    
+    // Convert canvas coordinates to screen coordinates
+    const screenX = nodeX * zoom + panOffset.x + rect.left
+    const screenY = nodeY * zoom + panOffset.y + rect.top
+    
+    return { x: screenX, y: screenY }
+  }, [filteredData.nodes, zoom, panOffset])
 
   // Helper function to detect edge at position
   const getEdgeAtPosition = useCallback((x: number, y: number) => {
@@ -878,12 +1222,19 @@ export function EnhancedKnowledgeGraphViewer({
     const clickedEdge = getEdgeAtPosition(x, y)
 
     if (clickedNode) {
-      // Toggle node selection
+      // Get node screen position for persistent tooltip
+      const nodePosition = getNodeScreenPosition(clickedNode.id)
+      
       setUIState(prev => ({
         ...prev,
         selectedNodes: prev.selectedNodes.includes(clickedNode.id)
           ? prev.selectedNodes.filter(id => id !== clickedNode.id)
-          : [...prev.selectedNodes, clickedNode.id]
+          : [...prev.selectedNodes, clickedNode.id],
+        // Set persistent tooltip at node position
+        persistentTooltip: nodePosition ? {
+          nodeId: clickedNode.id,
+          position: nodePosition
+        } : undefined
       }))
     } else if (clickedEdge) {
       // Show edge details in evidence drawer
@@ -893,10 +1244,18 @@ export function EnhancedKnowledgeGraphViewer({
           isOpen: true,
           selectedEdge: clickedEdge.id,
           selectedNode: undefined
-        }
+        },
+        // Clear persistent tooltip when clicking elsewhere
+        persistentTooltip: undefined
+      }))
+    } else {
+      // Clear persistent tooltip when clicking empty space
+      setUIState(prev => ({
+        ...prev,
+        persistentTooltip: undefined
       }))
     }
-  }, [getNodeAtPosition, getEdgeAtPosition])
+  }, [getNodeAtPosition, getEdgeAtPosition, getNodeScreenPosition])
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault()
@@ -999,21 +1358,12 @@ export function EnhancedKnowledgeGraphViewer({
         <div className="flex items-center justify-between p-3 border-b bg-white">
           <div className="flex items-center gap-2">
             <Button
-              variant={showFilters ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-1" />
-              Filters
-            </Button>
-            
-            <Button
               variant="outline"
               size="sm"
               onClick={() => setUIState(prev => ({ ...prev, splitView: { ...prev.splitView, showResultsList: !prev.splitView.showResultsList } }))}
             >
               {uiState.splitView.showResultsList ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
-              Results
+              Results Panel
             </Button>
 
             <div className="flex items-center gap-1 ml-4">
@@ -1030,16 +1380,6 @@ export function EnhancedKnowledgeGraphViewer({
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search entities..."
-                value={uiState.searchQuery}
-                onChange={(e) => setUIState(prev => ({ ...prev, searchQuery: e.target.value }))}
-                className="pl-10 w-64"
-              />
-            </div>
-            
             <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
               <Download className="h-4 w-4 mr-1" />
               Export
@@ -1052,28 +1392,39 @@ export function EnhancedKnowledgeGraphViewer({
           </div>
         </div>
 
-        {/* Advanced Filters */}
-        {showFilters && (
-          <div className="border-b bg-slate-50">
-            <div className="max-h-[400px] overflow-y-auto">
-              <AdvancedFilters
-                filters={uiState.activeFilters}
-                onFiltersChange={handleFiltersChange}
-                savedLenses={uiState.savedLenses}
-                onSaveLens={(name, description) => {
-                  // TODO: Implement save lens functionality
-                  console.log('Save lens:', name, description)
-                }}
-                onLoadLens={(lensId) => {
-                  // TODO: Implement load lens functionality
-                  console.log('Load lens:', lensId)
-                }}
-                onResetFilters={() => handleFiltersChange(DEFAULT_FILTERS)}
-                className="mx-6 my-4"
-              />
-            </div>
-          </div>
-        )}
+        {/* Simple Graph Controls */}
+        <SimpleGraphControls
+          searchQuery={uiState.searchQuery}
+          onSearchChange={(query) => setUIState(prev => ({ ...prev, searchQuery: query }))}
+          viewMode={uiState.activeFilters.connections.viewMode || 'all'}
+          onViewModeChange={(mode) => {
+            const newFilters = {
+              ...uiState.activeFilters,
+              connections: {
+                ...uiState.activeFilters.connections,
+                viewMode: mode as any
+              }
+            }
+            handleFiltersChange(newFilters)
+          }}
+          connectionTypes={uiState.activeFilters.connections.edgeTypes}
+          onConnectionTypesChange={(types) => {
+            const newFilters = {
+              ...uiState.activeFilters,
+              connections: {
+                ...uiState.activeFilters.connections,
+                edgeTypes: types
+              }
+            }
+            handleFiltersChange(newFilters)
+          }}
+          onResetFilters={() => {
+            handleFiltersChange(DEFAULT_FILTERS)
+            setUIState(prev => ({ ...prev, searchQuery: '' }))
+          }}
+          nodeCount={filteredData.nodes.length}
+          connectionCount={filteredData.edges.length}
+        />
 
         {/* Main Content Area */}
         <div className="flex-1 flex overflow-hidden">
@@ -1114,15 +1465,31 @@ export function EnhancedKnowledgeGraphViewer({
 
           {/* Results List */}
               {uiState.splitView.showResultsList && (
-                <div className="w-[400px] flex-shrink-0 border-l bg-white overflow-hidden">
+                <div className="w-[480px] flex-shrink-0 border-l bg-white overflow-hidden">
                   <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}
                 selectedNodes={uiState.selectedNodes}
                 onNodeSelect={handleNodeSelect}
-                onNodeHover={(nodeId) => setUIState(prev => ({ ...prev, hoveredNode: nodeId || undefined }))}
-                onEvidenceView={handleEvidenceView}
-                searchQuery={uiState.searchQuery}
+                onNodeHover={(nodeId) => {
+                  if (nodeId) {
+                    // Get node screen position for tooltip
+                    const nodePosition = getNodeScreenPosition(nodeId)
+                    setUIState(prev => ({ 
+                      ...prev, 
+                      hoveredNode: nodeId,
+                    }))
+                    // Update tooltip position to node location
+                    if (nodePosition) {
+                      setTooltipPosition(nodePosition)
+                    }
+                  } else {
+                    setUIState(prev => ({ ...prev, hoveredNode: undefined }))
+                  }
+                }}
+            onEvidenceView={handleEvidenceView}
+            onFolderNavigate={onNavigateToFolder}
+            searchQuery={uiState.searchQuery}
               />
             </div>
           )}
@@ -1163,27 +1530,93 @@ export function EnhancedKnowledgeGraphViewer({
         })()}
       </div>
 
-      {/* Node Tooltip */}
-      {uiState.hoveredNode && (() => {
-        const hoveredNodeData = filteredData.nodes.find(n => n.id === uiState.hoveredNode)
-        if (!hoveredNodeData) return null
+      {/* Node Tooltip - Show persistent tooltip or hover tooltip */}
+      {(() => {
+        // Prioritize persistent tooltip over hover tooltip
+        const tooltipNodeId = uiState.persistentTooltip?.nodeId || uiState.hoveredNode
+        const currentTooltipPosition = uiState.persistentTooltip?.position || tooltipPosition
+        
+        if (!tooltipNodeId) return null
+        
+        const nodeData = filteredData.nodes.find(n => n.id === tooltipNodeId)
+        if (!nodeData) return null
         
         return (
           <NodeTooltip
-            node={hoveredNodeData}
-            position={tooltipPosition}
+            node={nodeData}
+            position={currentTooltipPosition}
             connectionCount={filteredData.edges.filter(e => 
-              e.source === uiState.hoveredNode || e.target === uiState.hoveredNode
+              e.source === tooltipNodeId || e.target === tooltipNodeId
             ).length}
             onViewEvidence={handleEvidenceView}
-            onAddNote={(nodeId) => {
-              // TODO: Implement add note functionality
-              console.log('Add note for node:', nodeId)
+            onAddNote={async (nodeId) => {
+              // Find the clip associated with this node
+              const node = filteredData.nodes.find(n => n.id === nodeId)
+              if (!node || node.evidence.length === 0) return
+              
+              const clipId = node.evidence[0].clipId
+              const currentNotes = node.evidence[0].snippet
+              
+              // Prompt user for note
+              const newNote = prompt('Add a note for this clip:', currentNotes)
+              if (newNote === null) return // User cancelled
+              
+              try {
+                const response = await fetch(`/api/clips/${clipId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ notes: newNote })
+                })
+                
+                if (response.ok) {
+                  // Update local data
+                  const updatedNode = { ...node }
+                  updatedNode.evidence[0].snippet = newNote
+                  
+                  // Update the graph data
+                  setRawGraphData(prev => ({
+                    ...prev,
+                    nodes: prev.nodes.map(n => n.id === nodeId ? updatedNode : n)
+                  }))
+                  
+                  console.log('Note updated successfully')
+                } else {
+                  console.error('Failed to update note')
+                }
+              } catch (error) {
+                console.error('Error updating note:', error)
+              }
             }}
-            onMarkImportant={(nodeId) => {
-              // TODO: Implement mark important functionality
-              console.log('Mark important:', nodeId)
+            onMarkImportant={async (nodeId) => {
+              // Find the clip associated with this node
+              const node = filteredData.nodes.find(n => n.id === nodeId)
+              if (!node || node.evidence.length === 0) return
+              
+              const clipId = node.evidence[0].clipId
+              
+              try {
+                const response = await fetch(`/api/clips/${clipId}/favorite`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ is_favorite: true })
+                })
+                
+                if (response.ok) {
+                  console.log('Clip marked as favorite successfully')
+                  // Optionally update local state to show visual feedback
+                } else {
+                  console.error('Failed to mark clip as favorite')
+                }
+              } catch (error) {
+                console.error('Error marking clip as favorite:', error)
+              }
             }}
+            isPersistent={!!uiState.persistentTooltip}
+            isClipViewerOpen={isClipViewerOpen}
           />
         )
       })()}

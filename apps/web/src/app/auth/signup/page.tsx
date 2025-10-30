@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Mail, Lock, User, ArrowLeft, Check } from 'lucide-react'
+import { Loader2, Mail, Lock, User, ArrowLeft, Check, Eye, EyeOff, Copy } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { LogoIcon } from '@/components/ui/logo'
 
@@ -21,10 +21,30 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [copied, setCopied] = useState(false)
   const router = useRouter()
   
   // Lazy initialization to avoid build-time issues
   const getSupabase = () => createClient()
+
+  // Password validation requirements
+  const passwordRequirements = [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'Contains uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'Contains lowercase letter', met: /[a-z]/.test(password) },
+    { label: 'Contains number', met: /[0-9]/.test(password) },
+  ]
+
+  const allRequirementsMet = passwordRequirements.every(req => req.met)
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
+
+  const handleCopyPassword = () => {
+    setConfirmPassword(password)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,14 +52,14 @@ export default function SignUpPage() {
     setError(null)
 
     // Validation
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
+    if (!allRequirementsMet) {
+      setError('Please meet all password requirements')
       setIsLoading(false)
       return
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long')
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
       setIsLoading(false)
       return
     }
@@ -52,6 +72,9 @@ export default function SignUpPage() {
 
     try {
       const supabase = getSupabase()
+      
+      console.log('🚀 Starting signup for:', email)
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -62,47 +85,33 @@ export default function SignUpPage() {
         },
       })
 
+      console.log('📧 Signup response:', { data, error })
+
       if (error) {
+        console.error('❌ Signup error:', error)
         setError(error.message)
         return
       }
 
       if (data.user) {
+        console.log('✅ User created:', data.user)
+        console.log('📮 Email confirmation status:', data.user.email_confirmed_at ? 'Confirmed' : 'Pending confirmation')
+        
         if (data.user.email_confirmed_at) {
           // Email already confirmed, redirect to dashboard
+          console.log('🎉 User already confirmed, redirecting to dashboard')
           router.push('/dashboard')
         } else {
           // Show success message for email confirmation
+          console.log('📬 Showing confirmation message, check your email!')
           setSuccess(true)
         }
+      } else {
+        console.warn('⚠️ No user data returned')
       }
     } catch (err) {
-      console.error('Signup error:', err)
+      console.error('💥 Signup error:', err)
       setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGoogleSignUp = async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const supabase = getSupabase()
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (error) {
-        setError(error.message)
-      }
-    } catch (err) {
-      console.error('Google signup error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to sign up with Google. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -139,9 +148,9 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Back to Home */}
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      {/* Back to Home - Fixed Top Left */}
+      <div className="fixed top-6 left-6 z-50">
         <Link 
           href="/" 
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -149,9 +158,12 @@ export default function SignUpPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Link>
+      </div>
 
-        {/* Header */}
-        <div className="text-center space-y-2">
+      <div className="min-h-screen flex items-center justify-center p-4 pt-20">
+        <div className="w-full max-w-md space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <LogoIcon size={48} />
           </div>
@@ -250,15 +262,58 @@ export default function SignUpPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
-                    placeholder="Create a password (8+ characters)"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a strong password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 pr-20"
                     required
                     disabled={isLoading}
                   />
+                  <div className="absolute right-3 top-3 flex items-center gap-1">
+                    {password && allRequirementsMet && (
+                      <button
+                        type="button"
+                        onClick={handleCopyPassword}
+                        className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                        title="Copy to confirm password"
+                      >
+                        {copied ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
+                {password && (
+                  <div className="mt-3 space-y-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800">
+                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">Password Requirements:</p>
+                    {passwordRequirements.map((req, index) => (
+                      <div key={index} className="flex items-center gap-2 text-xs">
+                        <div className={`flex-shrink-0 rounded-full p-0.5 ${req.met ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                          <Check className={`h-3 w-3 ${req.met ? 'text-white' : 'text-transparent'}`} />
+                        </div>
+                        <span className={req.met ? 'text-green-700 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}>
+                          {req.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -269,15 +324,37 @@ export default function SignUpPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 pr-10"
                     required
                     disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
+                {confirmPassword && (
+                  <div className="flex items-center gap-2 text-xs mt-2">
+                    <div className={`flex-shrink-0 rounded-full p-0.5 ${passwordsMatch ? 'bg-green-500' : 'bg-red-500'}`}>
+                      <Check className={`h-3 w-3 ${passwordsMatch ? 'text-white' : 'text-transparent'}`} />
+                    </div>
+                    <span className={passwordsMatch ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}>
+                      {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -302,7 +379,7 @@ export default function SignUpPage() {
                 </label>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading || !acceptTerms}>
+              <Button type="submit" className="w-full" disabled={isLoading || !acceptTerms || !allRequirementsMet || !passwordsMatch}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -313,58 +390,16 @@ export default function SignUpPage() {
                 )}
               </Button>
             </form>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleSignUp}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-              )}
-              Continue with Google
-            </Button>
           </CardContent>
         </Card>
 
-        {/* Sign In Link */}
-        <div className="text-center text-sm">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="text-primary hover:underline font-medium">
-            Sign in
-          </Link>
+          {/* Sign In Link */}
+          <div className="text-center text-sm">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="text-primary hover:underline font-medium">
+              Sign in
+            </Link>
+          </div>
         </div>
       </div>
     </div>

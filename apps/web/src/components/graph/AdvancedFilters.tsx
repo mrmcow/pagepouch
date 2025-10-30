@@ -170,24 +170,52 @@ export function AdvancedFilters({
               {/* Connections Tab */}
               <TabsContent value="connections" className="space-y-3 mt-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Connection Types</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {['co_mention', 'citation', 'user_link', 'semantic_similarity', 'temporal_proximity'].map(type => (
-                        <Badge
-                          key={type}
-                          variant={filters.connections.edgeTypes.includes(type) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => {
-                            const newTypes = filters.connections.edgeTypes.includes(type)
-                              ? filters.connections.edgeTypes.filter(t => t !== type)
-                              : [...filters.connections.edgeTypes, type]
-                            updateConnectionFilters({ edgeTypes: newTypes })
-                          }}
-                        >
-                          {type.replace('_', ' ')}
-                        </Badge>
-                      ))}
+                  <div className="space-y-3">
+                    <Label>Connection View Mode</Label>
+                    <Select 
+                      value={filters.connections.viewMode || 'all'} 
+                      onValueChange={(value) => updateConnectionFilters({ viewMode: value as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select connection type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Connections</SelectItem>
+                        <SelectItem value="domains">By Website Domain</SelectItem>
+                        <SelectItem value="folders">By Folder/Topic</SelectItem>
+                        <SelectItem value="tags">By Tags</SelectItem>
+                        <SelectItem value="temporal">By Time Period</SelectItem>
+                        <SelectItem value="content">By Content Similarity</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="space-y-2">
+                      <Label>Connection Types</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { id: 'citation', label: 'Source Links', icon: '🔗' },
+                          { id: 'same_topic', label: 'Same Folder', icon: '📁' },
+                          { id: 'same_source', label: 'Same Website', icon: '🌐' },
+                          { id: 'similar_content', label: 'Similar Content', icon: '📄' },
+                          { id: 'same_session', label: 'Same Session', icon: '⏰' },
+                          { id: 'tag_match', label: 'Shared Tags', icon: '🏷️' }
+                        ].map(type => (
+                          <Badge
+                            key={type.id}
+                            variant={filters.connections.edgeTypes.includes(type.id) ? "default" : "outline"}
+                            className="cursor-pointer hover:bg-slate-100 transition-colors"
+                            onClick={() => {
+                              const newTypes = filters.connections.edgeTypes.includes(type.id)
+                                ? filters.connections.edgeTypes.filter(t => t !== type.id)
+                                : [...filters.connections.edgeTypes, type.id]
+                              updateConnectionFilters({ edgeTypes: newTypes })
+                            }}
+                          >
+                            <span className="mr-1">{type.icon}</span>
+                            {type.label}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
