@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ExtensionAuth, supabase } from '../utils/supabase';
 
 // Beautiful PagePouch Logo component
 const Logo = ({ size = 32 }: { size?: number }) => (
@@ -345,20 +346,45 @@ function EnhancedPopupApp() {
 
   const checkAuthStatus = async () => {
     try {
-      const result = await chrome.storage.local.get(['isAuthenticated', 'userEmail', 'selectedFolderId']);
-      setState(prev => ({
-        ...prev,
-        isAuthenticated: result.isAuthenticated || false,
-        userEmail: result.userEmail,
-        selectedFolderId: result.selectedFolderId || null,
-      }));
+      console.log('🔐 Checking authentication status...')
       
-      // Load folders and usage if authenticated
-      if (result.isAuthenticated) {
+      // CRITICAL: Restore session first
+      const isAuthenticated = await ExtensionAuth.restoreSession()
+      
+      console.log('🔐 Session restoration result:', isAuthenticated)
+      
+      if (isAuthenticated) {
+        const { data } = await supabase.auth.getUser()
+        console.log('🔐 Current user:', data.user?.email)
+        
+        // Get stored folder preference
+        const result = await chrome.storage.local.get(['selectedFolderId']);
+        
+        setState(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          userEmail: data.user?.email,
+          showAuth: false,
+          selectedFolderId: result.selectedFolderId || null,
+        }))
+        
+        // Load folders and usage
         await Promise.all([loadFolders(), loadUsage()]);
+      } else {
+        console.log('🔐 No valid session, showing auth')
+        setState(prev => ({
+          ...prev,
+          isAuthenticated: false,
+          showAuth: true
+        }))
       }
     } catch (error) {
-      console.error('Error checking auth status:', error);
+      console.error('🔐 Auth check error:', error)
+      setState(prev => ({
+        ...prev,
+        isAuthenticated: false,
+        showAuth: true
+      }))
     }
   };
 

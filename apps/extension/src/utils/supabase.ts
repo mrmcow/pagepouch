@@ -86,7 +86,82 @@ export class ExtensionAuth {
     return { error }
   }
 
+  static async restoreSession(): Promise<boolean> {
+    try {
+      const stored = await new Promise<{
+        authToken: string | null
+        refreshToken: string | null
+        userId: string | null
+        userEmail: string | null
+      }>((resolve) => {
+        extensionAPI.storage.local.get(
+          ['authToken', 'refreshToken', 'userId', 'userEmail'], 
+          (result) => {
+            resolve({
+              authToken: result.authToken || null,
+              refreshToken: result.refreshToken || null,
+              userId: result.userId || null,
+              userEmail: result.userEmail || null,
+            })
+          }
+        )
+      })
+
+      // No stored session
+      if (!stored.authToken || !stored.refreshToken) {
+        console.log('🔐 No stored session found')
+        return false
+      }
+
+      console.log('🔐 Restoring session for user:', stored.userEmail)
+
+      // Restore session in Supabase client
+      const { data, error } = await supabase.auth.setSession({
+        access_token: stored.authToken,
+        refresh_token: stored.refreshToken,
+      })
+
+      if (error) {
+        console.error('🔐 Failed to restore session:', error.message)
+        // Clear invalid tokens
+        await this.signOut()
+        return false
+      }
+
+      // Session restored successfully
+      if (data.session) {
+        console.log('🔐 Session restored successfully')
+        
+        // Update stored tokens if they were refreshed
+        await extensionAPI.storage.local.set({
+          authToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+          userEmail: data.user?.email,
+          userId: data.user?.id,
+        })
+        return true
+      }
+
+      return false
+    } catch (err) {
+      console.error('🔐 Session restoration error:', err)
+      await this.signOut()
+      return false
+    }
+  }
+
   static async getSession() {
+    // First try to get from Supabase client (if session is active)
+    const { data } = await supabase.auth.getSession()
+    
+    if (data.session) {
+      return {
+        token: data.session.access_token,
+        userId: data.session.user.id,
+      }
+    }
+
+    // Fallback to storage (shouldn't happen if restoreSession is called)
     return new Promise<{token: string | null, userId: string | null}>((resolve) => {
       extensionAPI.storage.local.get(['authToken', 'userId'], (result) => {
         resolve({
@@ -135,6 +210,50 @@ export class ExtensionAPI {
       : 'http://localhost:3000'
   }
 
+  // Helper method to make authenticated requests with automatic retry
+  private static async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+    // Ensure session is valid before API call
+    await ExtensionAuth.restoreSession()
+    
+    const { token } = await ExtensionAuth.getSession()
+    
+    if (!token) {
+      throw new Error('Not authenticated')
+    }
+
+    // Make first request
+    let response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    // Handle 401 - token might have expired mid-request
+    if (response.status === 401) {
+      console.log('Token expired, refreshing and retrying...');
+      await ExtensionAuth.refreshSession();
+      
+      // Retry with new token
+      const { token: newToken } = await ExtensionAuth.getSession();
+      
+      if (!newToken) {
+        throw new Error('Authentication failed after refresh')
+      }
+      
+      response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${newToken}`,
+        },
+      })
+    }
+
+    return response
+  }
+
   static async saveClip(clipData: {
     url: string
     title: string
@@ -145,27 +264,18 @@ export class ExtensionAPI {
     folder_id?: string
     notes?: string
   }) {
-    const { token } = await ExtensionAuth.getSession()
-    
-    if (!token) {
-      throw new Error('Not authenticated')
-    }
-
     const apiUrl = `${this.getApiBaseUrl()}/api/clips`
-    console.log('Saving clip to API with token:', token ? 'present' : 'missing');
-    console.log('API endpoint:', apiUrl);
+    console.log('Saving clip to API endpoint:', apiUrl);
 
-    const response = await fetch(apiUrl, {
+    const response = await this.authenticatedFetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(clipData),
     })
 
     console.log('API response status:', response.status);
-    console.log('API response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -192,23 +302,15 @@ export class ExtensionAPI {
     folder_id?: string
     q?: string
   }) {
-    const { token } = await ExtensionAuth.getSession()
-    
-    if (!token) {
-      throw new Error('Not authenticated')
-    }
-
     const searchParams = new URLSearchParams()
     if (params?.limit) searchParams.set('limit', params.limit.toString())
     if (params?.offset) searchParams.set('offset', params.offset.toString())
     if (params?.folder_id) searchParams.set('folder_id', params.folder_id)
     if (params?.q) searchParams.set('q', params.q)
 
-    const response = await fetch(`${this.getApiBaseUrl()}/api/clips?${searchParams}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
+    const response = await this.authenticatedFetch(
+      `${this.getApiBaseUrl()}/api/clips?${searchParams}`
+    )
 
     if (!response.ok) {
       const error = await response.json()
@@ -219,17 +321,9 @@ export class ExtensionAPI {
   }
 
   static async getFolders() {
-    const { token } = await ExtensionAuth.getSession()
-    
-    if (!token) {
-      throw new Error('Not authenticated')
-    }
-
-    const response = await fetch(`${this.getApiBaseUrl()}/api/folders`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
+    const response = await this.authenticatedFetch(
+      `${this.getApiBaseUrl()}/api/folders`
+    )
 
     if (!response.ok) {
       const error = await response.json()
@@ -240,17 +334,9 @@ export class ExtensionAPI {
   }
 
   static async getUsage() {
-    const { token } = await ExtensionAuth.getSession()
-    
-    if (!token) {
-      throw new Error('Not authenticated')
-    }
-
-    const response = await fetch(`${this.getApiBaseUrl()}/api/usage`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
+    const response = await this.authenticatedFetch(
+      `${this.getApiBaseUrl()}/api/usage`
+    )
 
     if (!response.ok) {
       const error = await response.json()
@@ -261,20 +347,16 @@ export class ExtensionAPI {
   }
 
   static async createFolder(folderData: { name: string; color?: string }) {
-    const { token } = await ExtensionAuth.getSession()
-    
-    if (!token) {
-      throw new Error('Not authenticated')
-    }
-
-    const response = await fetch(`${this.getApiBaseUrl()}/api/folders`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(folderData),
-    })
+    const response = await this.authenticatedFetch(
+      `${this.getApiBaseUrl()}/api/folders`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(folderData),
+      }
+    )
 
     if (!response.ok) {
       const error = await response.json()

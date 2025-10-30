@@ -2,7 +2,7 @@
 // Service Worker for Manifest V3
 
 import { ExtensionMessage } from '@pagepouch/shared';
-import { ExtensionAuth, ExtensionAPI } from '../utils/supabase';
+import { ExtensionAuth, ExtensionAPI, supabase } from '../utils/supabase';
 import { FullPageCapture } from '../utils/fullPageCapture';
 
 console.log('PagePouch background script loaded');
@@ -10,6 +10,9 @@ console.log('PagePouch background script loaded');
 // Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
 console.log('🔧 Background using extension API:', typeof browser !== 'undefined' ? 'browser' : 'chrome');
+
+// Session monitor state
+let sessionRefreshInterval: NodeJS.Timeout | null = null;
 
 // Handle extension installation
 extensionAPI.runtime.onInstalled.addListener((details) => {
@@ -22,7 +25,64 @@ extensionAPI.runtime.onInstalled.addListener((details) => {
       captureCount: 0,
     });
   }
+  
+  // Restore session on installation
+  ExtensionAuth.restoreSession().then(() => {
+    startSessionMonitor();
+  });
 });
+
+// Restore session on browser startup
+if (extensionAPI.runtime.onStartup) {
+  extensionAPI.runtime.onStartup.addListener(async () => {
+    console.log('🔐 Extension startup - restoring session');
+    await ExtensionAuth.restoreSession();
+    startSessionMonitor();
+  });
+}
+
+// Session monitor - proactively refresh tokens before expiration
+function startSessionMonitor() {
+  // Clear existing interval
+  if (sessionRefreshInterval) {
+    clearInterval(sessionRefreshInterval);
+  }
+
+  // Check session every 5 minutes
+  sessionRefreshInterval = setInterval(async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      
+      if (data.session) {
+        // Check if token expires in next 10 minutes
+        const expiresAt = data.session.expires_at;
+        if (expiresAt) {
+          const now = Math.floor(Date.now() / 1000);
+          const timeUntilExpiry = expiresAt - now;
+
+          if (timeUntilExpiry < 600) { // Less than 10 minutes
+            console.log('🔄 Refreshing session proactively (expires in', timeUntilExpiry, 'seconds)');
+            await ExtensionAuth.refreshSession();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Session monitor error:', error);
+    }
+  }, 5 * 60 * 1000); // Every 5 minutes
+  
+  console.log('🔐 Session monitor started');
+}
+
+// Stop monitor on shutdown
+if (extensionAPI.runtime.onSuspend) {
+  extensionAPI.runtime.onSuspend.addListener(() => {
+    console.log('🔐 Stopping session monitor');
+    if (sessionRefreshInterval) {
+      clearInterval(sessionRefreshInterval);
+    }
+  });
+}
 
 // Handle extension icon click - open popup instead of direct capture
 // Note: Firefox uses browserAction, Chrome uses action
@@ -394,6 +454,9 @@ async function saveClipLocally(clipData: any) {
 
 async function handleGetAuthToken(sendResponse: (response: any) => void) {
   try {
+    // Restore session if needed to ensure token is valid
+    await ExtensionAuth.restoreSession();
+    
     const { token } = await ExtensionAuth.getSession();
     sendResponse({ token });
   } catch (error) {
