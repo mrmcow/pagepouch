@@ -1,9 +1,9 @@
-# PagePouch Authentication Testing Guide
+# PageStash Authentication Testing Guide
 
 ## 🔧 **Setup Requirements**
 
 ### 1. Environment Variables
-Create `/Users/michaelcouch/DEV/pagepouch/apps/web/.env.local` with:
+Create `/Users/michaelcouch/DEV/pagestash/apps/web/.env.local` with:
 
 ```env
 # Supabase Configuration
@@ -27,7 +27,7 @@ Ensure the Supabase database has been set up with the schema from `docs/database
 ### Phase 1: Basic Authentication
 1. **Start Development Server**
    ```bash
-   cd /Users/michaelcouch/DEV/pagepouch
+   cd /Users/michaelcouch/DEV/pagestash
    npm run dev
    ```
 

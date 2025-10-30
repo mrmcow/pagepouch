@@ -46,7 +46,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Clip, Folder as FolderType } from '@pagepouch/shared'
+import { Clip, Folder as FolderType } from '@pagestash/shared'
 
 interface ClipViewerProps {
   clip: Clip | null

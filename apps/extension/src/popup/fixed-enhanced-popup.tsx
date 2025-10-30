@@ -1,4 +1,4 @@
-// Fixed Enhanced PagePouch Extension Popup
+// Fixed Enhanced PageStash Extension Popup
 // Removed problematic imports and made Chrome API calls safer
 
 import React, { useState, useEffect } from 'react';
@@ -429,7 +429,7 @@ function FixedEnhancedPopupApp() {
     if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
       // Use production URL in production, localhost in development
       const webAppUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://pagepouch-web.vercel.app/dashboard'
+        ? 'https://pagestash-web.vercel.app/dashboard'
         : 'http://localhost:3000/dashboard';
       chrome.tabs.create({ url: webAppUrl });
     }
@@ -463,7 +463,7 @@ function FixedEnhancedPopupApp() {
             <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>
               {authForm.isSignUp 
                 ? 'Start capturing and organizing web content' 
-                : 'Access your PagePouch library'
+                : 'Access your PageStash library'
               }
             </p>
           </div>
@@ -737,7 +737,7 @@ function FixedEnhancedPopupApp() {
           fontSize: '11px',
           color: '#6b7280',
         }}>
-          <div>PagePouch v1.0.0</div>
+          <div>PageStash v1.0.0</div>
           <div style={{ marginTop: '2px' }}>
             Capture • Organize • Retrieve
           </div>

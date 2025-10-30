@@ -15,7 +15,7 @@ export function PricingTable({ currentTier = 'free', showFree = true }: PricingT
     ...(showFree ? [{
       id: 'free',
       name: 'Free',
-      description: 'Perfect for trying PagePouch',
+      description: 'Perfect for trying PageStash',
       price: '$0',
       period: 'forever',
       features: [

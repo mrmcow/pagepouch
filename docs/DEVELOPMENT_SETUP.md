@@ -1,6 +1,6 @@
 # Development Setup Guide
 
-This guide will help you set up the PagePouch development environment.
+This guide will help you set up the PageStash development environment.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ This guide will help you set up the PagePouch development environment.
 
 ```bash
 git clone <repository-url>
-cd pagepouch
+cd pagestash
 npm install
 ```
 
@@ -99,14 +99,14 @@ This will start:
    - Select the `apps/extension/dist` folder
 
 3. **Test the extension**:
-   - You should see the PagePouch icon in your toolbar
+   - You should see the PageStash icon in your toolbar
    - Click it to open the popup
    - Try capturing a page
 
 ## Project Structure
 
 ```
-pagepouch/
+pagestash/
 ├── apps/
 │   ├── extension/          # Browser extension
 │   │   ├── src/
@@ -175,7 +175,7 @@ cd apps/extension && npm run build
 
 ### Debugging the Extension
 
-1. **Background script**: Go to `chrome://extensions/`, find PagePouch, click "service worker"
+1. **Background script**: Go to `chrome://extensions/`, find PageStash, click "service worker"
 2. **Content script**: Open DevTools on any webpage, check Console
 3. **Popup**: Right-click the extension icon → "Inspect popup"
 

@@ -5,7 +5,7 @@ export const contentCreatorSystem: BlogPost = {
   title: 'Content Creator\'s Research System: Never Lose an Idea',
   description: 'Build a research system that fuels endless content ideas. Capture inspiration, organize examples, and create faster than ever.',
   excerpt: 'Build a research system that fuels endless content ideas. Capture inspiration, organize examples, and create faster than ever.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-09',
   readingTime: 6,
   category: 'use-cases',
@@ -43,7 +43,7 @@ But most creators treat research like this:
 
 ---
 
-💡 **Quick Tip**: PagePouch is perfect for creator research. [Try it free](/auth/signup) and organize your inspiration library.
+💡 **Quick Tip**: PageStash is perfect for creator research. [Try it free](/auth/signup) and organize your inspiration library.
 
 ---
 
@@ -280,7 +280,7 @@ Study their:
 
 ### Week 1: Setup
 
-- Install PagePouch
+- Install PageStash
 - Create 4 categories
 - Define your core tags
 - Start capturing everything
@@ -334,23 +334,23 @@ Study their:
 
 ## Integration with Tools
 
-**PagePouch + Notion:**
-- PagePouch: Raw inspiration and research
+**PageStash + Notion:**
+- PageStash: Raw inspiration and research
 - Notion: Structured content planning
 
-**PagePouch + Content Calendar:**
-- PagePouch: Idea generation
+**PageStash + Content Calendar:**
+- PageStash: Idea generation
 - Calendar: Scheduling and execution
 
-**PagePouch + Design Tools:**
-- PagePouch: Style references
+**PageStash + Design Tools:**
+- PageStash: Style references
 - Figma/Canva: Actual creation
 
 ---
 
 **Ready to level up your content creation?**
 
-[Try PagePouch free](/auth/signup) and build your inspiration library today.
+[Try PageStash free](/auth/signup) and build your inspiration library today.
 
 ---
 

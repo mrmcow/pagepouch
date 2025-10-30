@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Database Setup Script for PagePouch
+ * Database Setup Script for PageStash
  * 
  * This script helps set up the Supabase database with the required schema,
  * storage buckets, and initial configuration.
@@ -26,7 +26,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function setupDatabase() {
-  console.log('🚀 Setting up PagePouch database...\n');
+  console.log('🚀 Setting up PageStash database...\n');
 
   try {
     // Read the database schema
@@ -104,7 +104,7 @@ async function setupDatabase() {
 
 // Alternative method using direct SQL execution
 async function setupDatabaseDirect() {
-  console.log('🚀 Setting up PagePouch database (direct method)...\n');
+  console.log('🚀 Setting up PageStash database (direct method)...\n');
 
   try {
     const schemaPath = path.join(__dirname, '..', 'docs', 'database-schema.sql');

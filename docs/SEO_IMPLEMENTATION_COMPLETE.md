@@ -30,7 +30,7 @@
 - Summary large image card type
 - Title and description optimized for Twitter
 - Featured image for card preview
-- Creator attribution (@PagePouch)
+- Creator attribution (@PageStash)
 
 **d) JSON-LD Structured Data (Schema.org)**
 - Article schema with all required properties
@@ -50,7 +50,7 @@
 
 ```typescript
 {
-  title: `${post.title} | PagePouch Blog`,
+  title: `${post.title} | PageStash Blog`,
   description: post.description,
   authors: [{ name: post.author }],
   keywords: post.tags.join(', '),
@@ -62,14 +62,14 @@
     authors: [post.author],
     images: [{ url, width: 1200, height: 630 }],
     url: postUrl,
-    siteName: 'PagePouch',
+    siteName: 'PageStash',
   },
   twitter: {
     card: 'summary_large_image',
     title: post.title,
     description: post.description,
     images: [imageUrl],
-    creator: '@PagePouch',
+    creator: '@PageStash',
   },
   alternates: {
     canonical: postUrl,
@@ -93,7 +93,7 @@
   },
   "publisher": {
     "@type": "Organization",
-    "name": "PagePouch",
+    "name": "PageStash",
     "logo": {
       "@type": "ImageObject",
       "url": "Logo URL"
@@ -117,18 +117,18 @@
 
 ```typescript
 export const metadata = {
-  title: 'Blog - Web Clipping & Research Tips | PagePouch',
+  title: 'Blog - Web Clipping & Research Tips | PageStash',
   description: 'Learn how to save, organize, and retrieve web content efficiently...',
   keywords: 'web clipping, web capture, research organization...',
   openGraph: {
-    title: 'PagePouch Blog - Web Capture & Research Tips',
+    title: 'PageStash Blog - Web Capture & Research Tips',
     description: 'Expert guides on web clipping, research organization...',
     type: 'website',
-    siteName: 'PagePouch',
+    siteName: 'PageStash',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PagePouch Blog',
+    title: 'PageStash Blog',
     description: 'Expert guides on web clipping, research organization...',
   },
 }
@@ -158,7 +158,7 @@ export const metadata = {
 - `/auth/login` - Login page
 - `/auth/signup` - Signup page
 
-**Access:** `https://pagepouch.com/sitemap.xml`
+**Access:** `https://pagestash.com/sitemap.xml`
 
 ---
 
@@ -175,7 +175,7 @@ Disallow: /dashboard/*
 Disallow: /api/
 Disallow: /api/*
 
-Sitemap: https://pagepouch.com/sitemap.xml
+Sitemap: https://pagestash.com/sitemap.xml
 ```
 
 #### Rules:
@@ -184,7 +184,7 @@ Sitemap: https://pagepouch.com/sitemap.xml
 - Block crawling of API endpoints (prevents API abuse)
 - Reference to sitemap for efficient crawling
 
-**Access:** `https://pagepouch.com/robots.txt`
+**Access:** `https://pagestash.com/robots.txt`
 
 ---
 
@@ -231,7 +231,7 @@ Sitemap: https://pagepouch.com/sitemap.xml
 
 **5. Sitemap Validator:**
 - https://www.xml-sitemaps.com/validate-xml-sitemap.html
-- Test: `https://pagepouch.com/sitemap.xml`
+- Test: `https://pagestash.com/sitemap.xml`
 
 ---
 
@@ -262,8 +262,8 @@ Sitemap: https://pagepouch.com/sitemap.xml
 ### Immediate (After Launch):
 1. **Submit sitemap to Google Search Console**
    - Go to: https://search.google.com/search-console
-   - Add property: pagepouch.com
-   - Submit sitemap: https://pagepouch.com/sitemap.xml
+   - Add property: pagestash.com
+   - Submit sitemap: https://pagestash.com/sitemap.xml
 
 2. **Submit sitemap to Bing Webmaster Tools**
    - Go to: https://www.bing.com/webmasters
@@ -375,7 +375,7 @@ Beyond SEO, this implementation also provides security benefits:
 
 ### Environment Variables:
 - Uses `NEXT_PUBLIC_APP_URL` for canonical URLs
-- Falls back to `https://pagepouch.com` in production
+- Falls back to `https://pagestash.com` in production
 - Set in Vercel environment variables
 
 ---
@@ -403,7 +403,7 @@ Beyond SEO, this implementation also provides security benefits:
 
 ## 🎉 Impact Summary
 
-This implementation transforms PagePouch's blog from a basic content site to a fully SEO-optimized platform ready for search engine visibility and social media sharing. 
+This implementation transforms PageStash's blog from a basic content site to a fully SEO-optimized platform ready for search engine visibility and social media sharing. 
 
 **Key Achievements:**
 - ✅ All 25 blog posts have unique, optimized metadata

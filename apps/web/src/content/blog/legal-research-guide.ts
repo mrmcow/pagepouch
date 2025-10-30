@@ -106,7 +106,7 @@ Legal research demands precision:
 - Filter by date range
 - Full-text search for specific language
 
-PagePouch's full-text search works across thousands of captured pages—find that specific quote in seconds.
+PageStash's full-text search works across thousands of captured pages—find that specific quote in seconds.
 
 ## Collaboration Features
 
@@ -157,7 +157,7 @@ Use appropriate security measures for sensitive research.
 **Legal databases**: Essential for case law
 **Web archiving**: Critical for non-database sources
 
-PagePouch complements your Westlaw/LexisNexis by capturing:
+PageStash complements your Westlaw/LexisNexis by capturing:
 - News articles
 - Expert blogs
 - Regulatory websites
@@ -207,7 +207,7 @@ Time spent organizing research is time saved (billable time) later.
 
 ## Integration With Legal Tech
 
-PagePouch works alongside:
+PageStash works alongside:
 - **Case management**: Link research to matters
 - **Document management**: Complement firm DMS
 - **Legal research databases**: Capture what Westlaw doesn't have
@@ -231,14 +231,14 @@ PagePouch works alongside:
 
 ## Ready for Professional-Grade Legal Research?
 
-PagePouch provides the tools legal professionals need: complete page archiving, instant search, matter-based organization, and compliance-friendly storage.
+PageStash provides the tools legal professionals need: complete page archiving, instant search, matter-based organization, and compliance-friendly storage.
 
 [Start your free trial →](/auth/signup)
 
-*Note: PagePouch is a research organization tool. Always consult your jurisdiction's requirements for legal document retention and comply with applicable ethics rules.*
+*Note: PageStash is a research organization tool. Always consult your jurisdiction's requirements for legal document retention and comply with applicable ethics rules.*
 `,
   excerpt: 'How legal professionals can systematically organize online research, case law, and digital sources with proper attribution.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-11',
   readingTime: 5,
   featuredImage: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&h=600&fit=crop&auto=format',

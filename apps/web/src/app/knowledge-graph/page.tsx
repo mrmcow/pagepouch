@@ -112,7 +112,7 @@ function KnowledgeGraphDashboardContent() {
             <div className="flex items-center space-x-4">
               <Link href="/dashboard" className="flex items-center space-x-3">
                 <LogoIcon size={32} />
-                <span className="text-xl font-bold">PagePouch</span>
+                <span className="text-xl font-bold">PageStash</span>
               </Link>
               <div className="hidden md:flex items-center space-x-2">
                 <ArrowLeft className="h-4 w-4 text-slate-400" />

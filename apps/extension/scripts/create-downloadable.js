@@ -14,7 +14,7 @@ if (!validBrowsers.includes(browserTarget)) {
   process.exit(1);
 }
 
-console.log(`🚀 Creating downloadable PagePouch extension for ${browserTarget.toUpperCase()}...\n`);
+console.log(`🚀 Creating downloadable PageStash extension for ${browserTarget.toUpperCase()}...\n`);
 
 // Build the extension for the target browser
 console.log('📦 Building extension...');
@@ -34,18 +34,18 @@ if (!fs.existsSync(downloadsDir)) {
 }
 
 // Create installation guide
-const installationGuide = `# 📦 PagePouch Extension - Direct Installation
+const installationGuide = `# 📦 PageStash Extension - Direct Installation
 
 ## 🎯 **What is this?**
 
-This is the PagePouch browser extension that you can install directly without going through the Chrome Web Store. Perfect for beta testing and early access!
+This is the PageStash browser extension that you can install directly without going through the Chrome Web Store. Perfect for beta testing and early access!
 
 ## 🔧 **Installation Instructions**
 
 ### **For Chrome/Chromium browsers:**
 
 1. **Download the extension**
-   - Download \`pagepouch-extension.zip\`
+   - Download \`pagestash-extension.zip\`
    - Extract it to a folder on your computer
 
 2. **Enable Developer Mode**
@@ -55,19 +55,19 @@ This is the PagePouch browser extension that you can install directly without go
 3. **Load the extension**
    - Click "Load unpacked"
    - Select the extracted folder
-   - The PagePouch icon should appear in your toolbar!
+   - The PageStash icon should appear in your toolbar!
 
 ### **For Firefox:**
 
 1. **Download the extension**
-   - Download \`pagepouch-extension.zip\`
+   - Download \`pagestash-extension.zip\`
    - Keep it as a ZIP file (don't extract)
 
 2. **Install temporarily**
    - Open Firefox and go to \`about:debugging\`
    - Click "This Firefox"
    - Click "Load Temporary Add-on"
-   - Select the \`pagepouch-extension.zip\` file
+   - Select the \`pagestash-extension.zip\` file
 
    *Note: Temporary add-ons are removed when Firefox restarts*
 
@@ -93,20 +93,20 @@ If you encounter any issues:
 1. **Check browser compatibility** - Chrome 88+ or Firefox 78+
 2. **Refresh the page** - Try reloading the page you want to capture
 3. **Check permissions** - Make sure the extension has access to the current site
-4. **Contact support** - Email us at support@pagepouch.com
+4. **Contact support** - Email us at support@pagestash.com
 
 ## 🚀 **What's Next?**
 
 After installation:
 
-1. **Try capturing** - Click the PagePouch icon and capture a page
+1. **Try capturing** - Click the PageStash icon and capture a page
 2. **Sign up** - Create an account for cloud sync
 3. **Visit the web app** - Go to http://localhost:3000 to manage your clips
-4. **Give feedback** - Help us improve PagePouch!
+4. **Give feedback** - Help us improve PageStash!
 
 ---
 
-**PagePouch v1.0.0** - Capture • Organize • Retrieve
+**PageStash v1.0.0** - Capture • Organize • Retrieve
 
 *This is a beta version for testing. The official Chrome Web Store version will be available soon!*
 `;
@@ -119,7 +119,7 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'packa
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'dist', 'manifest.json'), 'utf8'));
 
 const versionInfo = {
-  name: 'PagePouch Extension',
+  name: 'PageStash Extension',
   version: manifest.version,
   buildDate: new Date().toISOString(),
   buildNumber: Date.now(),
@@ -144,7 +144,7 @@ fs.writeFileSync(
 
 // Copy dist folder contents for direct installation
 const distDir = path.join(__dirname, '..', browserTarget === 'firefox' ? 'dist-firefox' : 'dist');
-const unpackedDir = path.join(downloadsDir, `pagepouch-extension-${browserTarget}-unpacked`);
+const unpackedDir = path.join(downloadsDir, `pagestash-extension-${browserTarget}-unpacked`);
 
 // Remove existing unpacked directory
 if (fs.existsSync(unpackedDir)) {
@@ -182,7 +182,7 @@ fs.writeFileSync(manifestPath, JSON.stringify(unpackedManifest, null, 2));
 // Create ZIP file for the target browser
 console.log('📁 Creating ZIP package...');
 try {
-  const zipPath = path.join(downloadsDir, `pagepouch-extension-${browserTarget}.zip`);
+  const zipPath = path.join(downloadsDir, `pagestash-extension-${browserTarget}.zip`);
   
   // Remove existing zip
   if (fs.existsSync(zipPath)) {
@@ -190,7 +190,7 @@ try {
   }
   
   // Create zip using system zip command
-  execSync(`cd "${unpackedDir}" && zip -r "../pagepouch-extension-${browserTarget}.zip" .`, { stdio: 'inherit' });
+  execSync(`cd "${unpackedDir}" && zip -r "../pagestash-extension-${browserTarget}.zip" .`, { stdio: 'inherit' });
   
   console.log('✅ ZIP package created successfully\\n');
 } catch (error) {
@@ -204,7 +204,7 @@ const downloadPageHtml = `<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download PagePouch Extension</title>
+    <title>Download PageStash Extension</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -285,16 +285,16 @@ const downloadPageHtml = `<!DOCTYPE html>
                 <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
             </svg>
         </div>
-        <h1>PagePouch Extension</h1>
+        <h1>PageStash Extension</h1>
         <p>Capture, organize, and retrieve web content with zero friction</p>
         <span class="version-badge">v${versionInfo.version} Beta</span>
     </div>
 
     <div class="download-card">
         <h2>🚀 Download Extension</h2>
-        <p>Get early access to PagePouch before it hits the Chrome Web Store!</p>
+        <p>Get early access to PageStash before it hits the Chrome Web Store!</p>
         
-        <a href="pagepouch-extension.zip" class="download-button" download>
+        <a href="pagestash-extension.zip" class="download-button" download>
             📦 Download ZIP (Chrome & Firefox)
         </a>
         
@@ -316,7 +316,7 @@ const downloadPageHtml = `<!DOCTYPE html>
         </div>
         <div class="feature">
             <h3>🎨 Beautiful UI</h3>
-            <p>Modern, clean interface with the new PagePouch logo and smooth animations</p>
+            <p>Modern, clean interface with the new PageStash logo and smooth animations</p>
         </div>
         <div class="feature">
             <h3>⚡ Fast & Reliable</h3>
@@ -337,7 +337,7 @@ const downloadPageHtml = `<!DOCTYPE html>
     </div>
 
     <div style="text-align: center; margin-top: 40px; color: #6b7280;">
-        <p>PagePouch - Making web content capture effortless</p>
+        <p>PageStash - Making web content capture effortless</p>
         <p>This is a beta version for testing. Official store release coming soon!</p>
     </div>
 </body>
@@ -350,8 +350,8 @@ console.log('🎉 Downloadable extension created successfully!');
 console.log('📁 Files created in:', downloadsDir);
 console.log('');
 console.log('📦 Available files:');
-console.log('   • pagepouch-extension.zip - For Firefox or Chrome');
-console.log('   • pagepouch-extension-unpacked/ - For Chrome (Load unpacked)');
+console.log('   • pagestash-extension.zip - For Firefox or Chrome');
+console.log('   • pagestash-extension-unpacked/ - For Chrome (Load unpacked)');
 console.log('   • INSTALLATION_GUIDE.md - Step-by-step instructions');
 console.log('   • download.html - Beautiful download page');
 console.log('   • version-info.json - Build information');

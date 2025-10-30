@@ -1,8 +1,8 @@
-# PagePouch 📄
+# PageStash 📄
 
 > The most frictionless way to capture, organize, and retrieve web content
 
-PagePouch is a powerful browser extension and web application designed for researchers, analysts, and anyone who needs to archive web content reliably. Built with modern web technologies and focused on simplicity and reliability.
+PageStash is a powerful browser extension and web application designed for researchers, analysts, and anyone who needs to archive web content reliably. Built with modern web technologies and focused on simplicity and reliability.
 
 ## 🚀 Features
 
@@ -61,7 +61,7 @@ PagePouch is a powerful browser extension and web application designed for resea
 ## 📁 Project Structure
 
 ```
-pagepouch/
+pagestash/
 ├── apps/
 │   ├── extension/          # Browser extension
 │   │   ├── src/
@@ -92,8 +92,8 @@ pagepouch/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/mrmcow/pagepouch.git
-cd pagepouch
+git clone https://github.com/mrmcow/pagestash.git
+cd pagestash
 ```
 
 ### 2. Install Dependencies
@@ -255,10 +255,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: support@pagepouch.com
-- 💬 Discord: [Join our community](https://discord.gg/pagepouch)
-- 🐛 Issues: [GitHub Issues](https://github.com/mrmcow/pagepouch/issues)
-- 📖 Docs: [Documentation](https://docs.pagepouch.com)
+- 📧 Email: support@pagestash.com
+- 💬 Discord: [Join our community](https://discord.gg/pagestash)
+- 🐛 Issues: [GitHub Issues](https://github.com/mrmcow/pagestash/issues)
+- 📖 Docs: [Documentation](https://docs.pagestash.com)
 
 ---
 

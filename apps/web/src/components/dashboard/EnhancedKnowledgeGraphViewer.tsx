@@ -1292,7 +1292,7 @@ export function EnhancedKnowledgeGraphViewer({
       try {
         await navigator.share({
           title: graphTitle,
-          text: graphDescription || 'Knowledge Graph from PagePouch',
+          text: graphDescription || 'Knowledge Graph from PageStash',
           url: window.location.href
         })
       } catch (err) {

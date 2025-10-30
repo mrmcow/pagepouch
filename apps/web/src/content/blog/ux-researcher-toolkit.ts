@@ -84,7 +84,7 @@ Don't just screenshot—save the full page:
 - Maintains context
 - Captures copy, not just visuals
 
-PagePouch saves complete pages, letting you revisit the actual experience later.
+PageStash saves complete pages, letting you revisit the actual experience later.
 
 ### For Design Patterns
 
@@ -129,7 +129,7 @@ Visualize connections:
 - How patterns relate to each other
 - Where industry trends are heading
 
-PagePouch generates these automatically from your tags and captures.
+PageStash generates these automatically from your tags and captures.
 
 ## Collaboration Features
 
@@ -164,7 +164,7 @@ Your systematic capture becomes your competitive advantage.
 **For Bookmarks**: Fast but vulnerable to changes
 **For Full-Page Capture**: Professional approach that preserves everything
 
-PagePouch is designed for UX researchers who need:
+PageStash is designed for UX researchers who need:
 - Complete page captures
 - Fast search across thousands of examples
 - Flexible organization
@@ -221,12 +221,12 @@ Good research systems multiply team effectiveness.
 
 ## Ready to Build Your UX Research Library?
 
-PagePouch gives you professional-grade tools: full-page capture, instant search, pattern organization, and knowledge graphs.
+PageStash gives you professional-grade tools: full-page capture, instant search, pattern organization, and knowledge graphs.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'Professional workflows for capturing, organizing, and analyzing UX patterns and competitor research. Built for UX researchers.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-10',
   readingTime: 4,
   featuredImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop&auto=format',

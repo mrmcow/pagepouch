@@ -61,7 +61,7 @@ Tag by category:
 - Market commentary
 - Regulatory updates
 
-Use PagePouch's extension to capture full articles with one click—don't break your flow.
+Use PageStash's extension to capture full articles with one click—don't break your flow.
 
 ### Weekly Analysis (2-4 hours)
 
@@ -169,7 +169,7 @@ Even solo investors benefit from systematic organization:
 
 ### Insider Trading
 
-Only use publicly available information. PagePouch helps prove information source and timing.
+Only use publicly available information. PageStash helps prove information source and timing.
 
 ### MNPI (Material Non-Public Information)
 
@@ -229,7 +229,7 @@ Track narrative changes:
 
 **Fundamentals**: Bloomberg, FactSet, S&P Capital IQ
 **News**: Financial press, alerts, aggregators
-**Web Research**: PagePouch (captures what terminals miss)
+**Web Research**: PageStash (captures what terminals miss)
 **Portfolio Management**: Personal choice
 **Analysis**: Excel, specialized software
 
@@ -274,14 +274,14 @@ All enabled by systematic organization.
 
 ## Ready to Level Up Your Investment Research?
 
-PagePouch provides professional-grade tools: full-page archiving, instant search, systematic organization, and knowledge graphs for pattern recognition.
+PageStash provides professional-grade tools: full-page archiving, instant search, systematic organization, and knowledge graphs for pattern recognition.
 
 [Start your free trial →](/auth/signup)
 
 *Disclaimer: This article is about research organization, not investment advice. Consult a financial advisor for investment decisions.*
 `,
   excerpt: 'How investors and analysts can systematically organize market research, company intelligence, and financial data sources.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-17',
   readingTime: 5,
   featuredImage: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=600&fit=crop&auto=format',

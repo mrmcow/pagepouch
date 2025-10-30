@@ -1,4 +1,4 @@
-# 🔍 PagePouch Chrome Extension - Usability Assessment
+# 🔍 PageStash Chrome Extension - Usability Assessment
 
 **Date:** October 30, 2025  
 **Version:** v1.1.0  
@@ -422,7 +422,7 @@ static async saveClip(clipData) {
 
 1. **No Clear Onboarding**
    - Extension opens to login form immediately
-   - No explanation of what PagePouch does
+   - No explanation of what PageStash does
    - No "Get Started" guide
 
 2. **Sign Up vs Sign In Confusion**
@@ -440,7 +440,7 @@ static async saveClip(clipData) {
 
 ```typescript
 // First time users see:
-1. Welcome to PagePouch!
+1. Welcome to PageStash!
 2. "Capture web content with one click"
 3. [Sign Up] [Sign In] buttons (prominent)
 4. "How it works" quick guide (3 steps)
@@ -535,7 +535,7 @@ console.log('🔐 Supabase signIn response:', { ... });
 console.log('🔐 Storing session in chrome storage');
 
 // apps/extension/src/background/index.ts
-console.log('PagePouch background script loaded');
+console.log('PageStash background script loaded');
 console.log('Extension clicked on tab:', tab?.url);
 console.log('🔧 Background received message:', message);
 
@@ -553,13 +553,13 @@ const IS_DEV = process.env.NODE_ENV === 'development'
 
 export const logger = {
   log: (...args: any[]) => {
-    if (IS_DEV) console.log('[PagePouch]', ...args)
+    if (IS_DEV) console.log('[PageStash]', ...args)
   },
   error: (...args: any[]) => {
-    console.error('[PagePouch]', ...args)
+    console.error('[PageStash]', ...args)
   },
   warn: (...args: any[]) => {
-    if (IS_DEV) console.warn('[PagePouch]', ...args)
+    if (IS_DEV) console.warn('[PageStash]', ...args)
   }
 }
 
@@ -611,7 +611,7 @@ export const logger = {
 // Show detailed progress:
 "📸 Taking screenshot..." (0-30%)
 "📄 Extracting content..." (30-60%)
-"☁️ Uploading to PagePouch..." (60-90%)
+"☁️ Uploading to PageStash..." (60-90%)
 "✅ Saved successfully!" (100%)
 
 // Add preview thumbnail after screenshot
@@ -642,7 +642,7 @@ export const logger = {
       "default": "Ctrl+Shift+P",
       "mac": "Command+Shift+P"
     },
-    "description": "Open PagePouch dashboard"
+    "description": "Open PageStash dashboard"
   }
 }
 ```
@@ -654,7 +654,7 @@ export const logger = {
 ### What's Working Well:
 
 1. ✅ **Beautiful, Modern UI**
-   - Clean design with PagePouch logo
+   - Clean design with PageStash logo
    - Professional color scheme
    - Good visual hierarchy
 

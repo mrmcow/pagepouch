@@ -24,7 +24,7 @@ Everything interesting goes into your system:
 - Industry insights
 - Competitor analysis
 
-With PagePouch, click the extension button and the full page is saved instantly—no copy-pasting, no losing formatting.
+With PageStash, click the extension button and the full page is saved instantly—no copy-pasting, no losing formatting.
 
 ### Organize
 
@@ -67,7 +67,7 @@ Add notes when you save: "For Q2 marketing deck" or "Counterargument to our appr
 
 ### Link Your Thinking
 
-Connect related pages. PagePouch's knowledge graphs do this automatically, showing how your saved content relates.
+Connect related pages. PageStash's knowledge graphs do this automatically, showing how your saved content relates.
 
 ## The Collection Habit
 
@@ -104,8 +104,8 @@ Your second brain should make creating easier:
 ## The Tools That Work
 
 **For text**: Obsidian, Notion, Roam
-**For web content**: PagePouch
-**Together**: Capture full pages with PagePouch, extract key insights to your note-taking tool, link between both
+**For web content**: PageStash
+**Together**: Capture full pages with PageStash, extract key insights to your note-taking tool, link between both
 
 ## Common Mistakes
 
@@ -139,12 +139,12 @@ Your second brain grows in value over time. The question is: when will you start
 
 ## Build Your Second Brain for Web Content
 
-PagePouch gives you the foundation: full-page capture, instant search, automatic knowledge graphs, and organization built for scale.
+PageStash gives you the foundation: full-page capture, instant search, automatic knowledge graphs, and organization built for scale.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'Transform web content into a personal knowledge system using proven second brain principles. Capture, organize, distill, express.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-01',
   readingTime: 4,
   featuredImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=600&fit=crop&auto=format',

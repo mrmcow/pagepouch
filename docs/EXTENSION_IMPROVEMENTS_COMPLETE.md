@@ -140,8 +140,8 @@ private static async authenticatedFetch(url, options) {
 ```typescript
 // New logger utility
 export const logger = {
-  log: (...args) => IS_DEV && console.log('[PagePouch]', ...args),
-  error: (...args) => console.error('[PagePouch]', ...args),
+  log: (...args) => IS_DEV && console.log('[PageStash]', ...args),
+  error: (...args) => console.error('[PageStash]', ...args),
   auth: (...args) => IS_DEV && console.log('🔐', ...args),
   api: (...args) => IS_DEV && console.log('🌐', ...args),
   capture: (...args) => IS_DEV && console.log('📸', ...args),

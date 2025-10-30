@@ -1,4 +1,4 @@
-// PagePouch Extension Popup
+// PageStash Extension Popup
 // React-based popup interface with authentication
 
 import React, { useState, useEffect } from 'react';
@@ -202,7 +202,7 @@ function PopupApp() {
             color: '#2563eb',
             marginBottom: '4px'
           }}>
-            📎 PagePouch
+            📎 PageStash
           </div>
           <div style={{ fontSize: '14px', color: '#6b7280' }}>
             {authForm.isSignUp ? 'Create your free account' : 'Sign in to sync your clips'}
@@ -326,7 +326,7 @@ function PopupApp() {
           color: '#2563eb',
           marginBottom: '4px'
         }}>
-          📎 PagePouch
+          📎 PageStash
         </div>
         <div style={{ fontSize: '12px', color: '#6b7280' }}>
           {state.isAuthenticated ? `Welcome back, ${state.userEmail?.split('@')[0]}!` : 'Capture • Organize • Retrieve'}

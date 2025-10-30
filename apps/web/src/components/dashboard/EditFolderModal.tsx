@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Edit3, Palette, Trash2, AlertTriangle } from 'lucide-react'
-import { Folder } from '@pagepouch/shared'
+import { Folder } from '@pagestash/shared'
 
 interface EditFolderModalProps {
   folder: Folder | null

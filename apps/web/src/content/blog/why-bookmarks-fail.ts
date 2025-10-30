@@ -5,7 +5,7 @@ export const whyBookmarksFail: BlogPost = {
   title: 'Why Traditional Bookmarks Fail (And What to Use Instead)',
   description: 'Discover why browser bookmarks are inadequate for serious research and what modern alternatives work better for professionals.',
   excerpt: 'Discover why browser bookmarks are inadequate for serious research and what modern alternatives work better for professionals.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-10-31',
   readingTime: 8,
   category: 'productivity',
@@ -75,7 +75,7 @@ Or worse: the site requires login, your free trial expired, or they've implement
 
 ---
 
-💡 **Quick Tip**: PagePouch captures full content the moment you save it—no more broken links or paywall frustration. [Try it free](/auth/signup) and protect your research.
+💡 **Quick Tip**: PageStash captures full content the moment you save it—no more broken links or paywall frustration. [Try it free](/auth/signup) and protect your research.
 
 ---
 
@@ -184,7 +184,7 @@ Export your bookmarks and ask:
 - API access
 - Export options
 
-**Recommendation**: [PagePouch](/auth/signup) combines all essential features with advanced organization tools.
+**Recommendation**: [PageStash](/auth/signup) combines all essential features with advanced organization tools.
 
 ### Step 3: Build Your System
 
@@ -304,7 +304,7 @@ If you won't reference it in the next 90 days, delete it. You can always find it
 
 **Ready to transform your research workflow?**
 
-PagePouch is designed for professionals who outgrew bookmarks. [Start your free trial](/auth/signup) and experience proper content management—sign up free to get started.
+PageStash is designed for professionals who outgrew bookmarks. [Start your free trial](/auth/signup) and experience proper content management—sign up free to get started.
 
 ---
 
@@ -327,7 +327,7 @@ A: Choose tools with export features. Your data should always be yours.
 
 ---
 
-**Try PagePouch Today**
+**Try PageStash Today**
 
 Stop fighting with bookmarks. [Start your free trial](/auth/signup) and build a real research system—sign up free with 50 clips included.
 

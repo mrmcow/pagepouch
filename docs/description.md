@@ -1,8 +1,8 @@
-# PagePouch - Web Content Capture Extension
+# PageStash - Web Content Capture Extension
 
 **The most frictionless way to capture, organize, and retrieve web content**
 
-PagePouch is the perfect tool for researchers, analysts, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
+PageStash is the perfect tool for researchers, analysts, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
 
 ## ✨ Key Features
 
@@ -47,8 +47,8 @@ PagePouch is the perfect tool for researchers, analysts, and knowledge workers w
 
 ## 🚀 Getting Started
 
-1. **Install the Extension** - Add PagePouch to your browser in one click
-2. **Start Capturing** - Visit any webpage and click the PagePouch icon
+1. **Install the Extension** - Add PageStash to your browser in one click
+2. **Start Capturing** - Visit any webpage and click the PageStash icon
 3. **Organize & Search** - Use folders, tags, and powerful search to find anything
 
 ## 💰 Pricing
@@ -58,7 +58,7 @@ PagePouch is the perfect tool for researchers, analysts, and knowledge workers w
 
 ## 🛡️ Privacy & Security
 
-PagePouch takes your privacy seriously:
+PageStash takes your privacy seriously:
 - All data is encrypted in transit and at rest
 - Row-level security ensures your clips are private
 - No tracking or analytics on your browsing behavior
@@ -67,10 +67,10 @@ PagePouch takes your privacy seriously:
 ## 🆘 Support
 
 Need help? We're here for you:
-- Visit our help center at pagepouch.com/help
-- Email us at support@pagepouch.com
+- Visit our help center at pagestash.com/help
+- Email us at support@pagestash.com
 - Join our community Discord for tips and tricks
 
 ---
 
-**Start capturing the web today with PagePouch - where every webpage becomes searchable knowledge.**
+**Start capturing the web today with PageStash - where every webpage becomes searchable knowledge.**

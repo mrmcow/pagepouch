@@ -62,7 +62,7 @@ When monitoring competitors or markets, capture:
 **Blog posts**: Understand their narrative
 **Social media**: Capture campaigns before they're deleted
 
-Use PagePouch's extension to save complete pages with one click—no manual copying or losing formatting.
+Use PageStash's extension to save complete pages with one click—no manual copying or losing formatting.
 
 ## The Daily Workflow
 
@@ -100,7 +100,7 @@ Knowledge graphs reveal non-obvious connections:
 - How industry trends connect to regulatory changes
 - Which themes appear across multiple sources
 
-PagePouch automatically generates these visualizations from your saved content.
+PageStash automatically generates these visualizations from your saved content.
 
 ## Collaboration Features
 
@@ -171,12 +171,12 @@ Good systems give you:
 
 ## Ready for Professional-Grade Market Research?
 
-PagePouch is built for analysts who demand more from their tools. Full-page capture, unlimited storage, advanced search, and knowledge graphs.
+PageStash is built for analysts who demand more from their tools. Full-page capture, unlimited storage, advanced search, and knowledge graphs.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'Professional workflows for capturing, organizing, and analyzing competitive intelligence from the web. Built for market analysts.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-03',
   readingTime: 4,
   featuredImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop&auto=format',

@@ -67,7 +67,7 @@ export function Logo({ size = 48, className = '', showText = true }: LogoProps) 
           className="font-bold tracking-tight text-foreground" 
           style={{ fontSize: `${size * 0.4}px` }}
         >
-          PagePouch
+          PageStash
         </span>
       )}
     </div>

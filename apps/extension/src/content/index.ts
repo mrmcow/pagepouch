@@ -1,9 +1,9 @@
-// PagePouch Extension Content Script
+// PageStash Extension Content Script
 // Runs on all web pages to extract content
 
-import { ExtensionMessage, cleanHtmlContent, extractTextFromHtml } from '@pagepouch/shared';
+import { ExtensionMessage, cleanHtmlContent, extractTextFromHtml } from '@pagestash/shared';
 
-console.log('PagePouch content script loaded on:', window.location.href);
+console.log('PageStash content script loaded on:', window.location.href);
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {

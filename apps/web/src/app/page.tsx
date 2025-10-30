@@ -37,7 +37,7 @@ const getBrowserInfo = () => {
   if (typeof window === 'undefined') return { 
     name: 'Chrome', 
     icon: 'chrome', 
-    downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip',
+    downloadUrl: '/extension/downloads/pagestash-extension-chrome.zip',
     directDownload: true
   }
   
@@ -50,8 +50,8 @@ const getBrowserInfo = () => {
     return { 
       name: 'Firefox', 
       icon: 'firefox', 
-      downloadUrl: '/extension/downloads/pagepouch-extension-firefox.zip',
-      storeUrl: 'https://addons.mozilla.org/en-US/firefox/addon/pagepouch/',
+      downloadUrl: '/extension/downloads/pagestash-extension-firefox.zip',
+      storeUrl: 'https://addons.mozilla.org/en-US/firefox/addon/pagestash/',
       directDownload: true,
       installInstructions: 'Download and install via about:debugging'
     }
@@ -62,8 +62,8 @@ const getBrowserInfo = () => {
   return { 
     name: 'Chrome', 
     icon: 'chrome', 
-    downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip',
-    storeUrl: 'https://chrome.google.com/webstore/detail/pagepouch/extension-id',
+    downloadUrl: '/extension/downloads/pagestash-extension-chrome.zip',
+    storeUrl: 'https://chrome.google.com/webstore/detail/pagestash/extension-id',
     directDownload: true,
     installInstructions: 'Download and install via chrome://extensions'
   }
@@ -102,7 +102,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-white dark:bg-slate-950">
       {/* Clean Header - Fixed */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
-        <div className="pagepouch-container">
+        <div className="pagestash-container">
           <div className="px-4 py-4 flex items-center justify-between">
             <LogoWithText size={32} className="sm:hidden" />
             <LogoWithText size={40} className="hidden sm:block" />
@@ -123,7 +123,7 @@ export default function HomePage() {
 
       {/* Hero Section - Clean & Direct */}
       <section className="pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 lg:pb-24">
-        <div className="pagepouch-container">
+        <div className="pagestash-container">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Side - Hero Text */}
             <div className="text-center lg:text-left">
@@ -188,7 +188,7 @@ export default function HomePage() {
 
       {/* Pricing Section */}
       <section className="py-20 sm:py-24 px-4 bg-slate-50 dark:bg-slate-900">
-        <div className="pagepouch-container">
+        <div className="pagestash-container">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
               Simple, transparent pricing
@@ -204,7 +204,7 @@ export default function HomePage() {
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Free Trial</h3>
                 <div className="text-5xl font-bold mb-4 text-slate-900 dark:text-white">$0</div>
-                <p className="text-slate-600 dark:text-slate-400">Perfect for trying PagePouch</p>
+                <p className="text-slate-600 dark:text-slate-400">Perfect for trying PageStash</p>
               </div>
               
               <ul className="space-y-3 mb-8">
@@ -249,7 +249,7 @@ export default function HomePage() {
                 </div>
               
               <div className="text-center mb-8 text-white pt-4">
-                <h3 className="text-2xl font-bold mb-2">PagePouch Pro</h3>
+                <h3 className="text-2xl font-bold mb-2">PageStash Pro</h3>
                 <div className="flex items-baseline justify-center gap-2 mb-2">
                   <span className="text-5xl font-bold">$4</span>
                   <span className="text-xl">/month</span>
@@ -304,7 +304,7 @@ export default function HomePage() {
 
       {/* How it Works - MOVED UP for better sequencing */}
       <section className="py-20 sm:py-24 px-4 bg-white dark:bg-slate-950">
-        <div className="pagepouch-container">
+        <div className="pagestash-container">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
               Start capturing in 3 simple steps
@@ -321,7 +321,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Install Extension</h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                Add PagePouch to Chrome or Firefox in one click. Sign up free to start capturing instantly.
+                Add PageStash to Chrome or Firefox in one click. Sign up free to start capturing instantly.
               </p>
             </div>
 
@@ -331,7 +331,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Capture Content</h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                Click the PagePouch icon on any webpage. Full screenshot and text captured automatically.
+                Click the PageStash icon on any webpage. Full screenshot and text captured automatically.
               </p>
             </div>
             
@@ -353,7 +353,7 @@ export default function HomePage() {
         {/* Add subtle pattern for depth */}
         <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]" style={{backgroundImage: "radial-gradient(circle at 2px 2px, rgb(0 0 0) 1px, transparent 0)", backgroundSize: "32px 32px"}}></div>
         
-        <div className="pagepouch-container relative">
+        <div className="pagestash-container relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
               Everything you need to capture and organize
@@ -375,7 +375,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 text-center">
                     <div className="bg-slate-100 dark:bg-slate-800 rounded-lg px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
-                      pagepouch.com/dashboard
+                      pagestash.com/dashboard
                     </div>
                   </div>
                 </div>
@@ -509,7 +509,7 @@ export default function HomePage() {
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-md max-w-sm mx-auto">
                   <div className="flex items-center gap-3 mb-4">
                     <LogoIcon size={24} />
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">PagePouch</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">PageStash</span>
                   </div>
                   <div className="space-y-3">
                     <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
@@ -778,13 +778,13 @@ export default function HomePage() {
 
       {/* Final CTA Section */}
       <section className="py-20 sm:py-24 px-4 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="pagepouch-container">
+        <div className="pagestash-container">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-white">
               Ready to capture the web like a pro?
             </h2>
             <p className="text-xl mb-12 text-slate-300">
-              Join thousands of researchers who rely on PagePouch for their most critical work.
+              Join thousands of researchers who rely on PageStash for their most critical work.
             </p>
             
             {/* CTA Buttons */}
@@ -830,11 +830,11 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="pagepouch-container py-12">
+        <div className="pagestash-container py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center space-x-3">
               <LogoIcon size={32} />
-              <span className="text-xl font-bold text-slate-900 dark:text-white">PagePouch</span>
+              <span className="text-xl font-bold text-slate-900 dark:text-white">PageStash</span>
             </div>
 
             <div className="flex items-center gap-8 text-sm">
@@ -850,13 +850,13 @@ export default function HomePage() {
               <Link href="/terms" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 Terms
               </Link>
-              <a href="mailto:support@pagepouch.com" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+              <a href="mailto:support@pagestash.com" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 Support
               </a>
             </div>
 
             <div className="text-sm text-slate-500 dark:text-slate-400">
-              &copy; 2025 PagePouch
+              &copy; 2025 PageStash
             </div>
           </div>
         </div>

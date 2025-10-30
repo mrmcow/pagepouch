@@ -5,7 +5,7 @@ export const bestToolsStudents: BlogPost = {
   title: 'Best Web Clipping Tools for Students (2025 Review)',
   description: 'Compare the top web clipping tools for students. Find the best solution for organizing research, managing assignments, and building study resources.',
   excerpt: 'Compare the top web clipping tools for students. Find the best solution for organizing research, managing assignments, and building study resources.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-05',
   readingTime: 8,
   category: 'comparisons',
@@ -23,13 +23,13 @@ The right web clipping tool can be the difference between staying organized and 
 
 | Tool | Best For | Price | Key Feature |
 |------|----------|-------|-------------|
-| **PagePouch** | Serious students | Free / $9.99/mo | Organization + search |
+| **PageStash** | Serious students | Free / $9.99/mo | Organization + search |
 | **Pocket** | Light reading | Free / $4.99/mo | Reading list |
 | **Notion** | All-in-one | Free / $10/mo | Notes + wiki |
 | **Evernote** | Note-takers | Free / $14.99/mo | Rich notes |
 | **Raindrop** | Visual learners | Free / $3/mo | Visual bookmarks |
 
-## 1. PagePouch - Best for Serious Students
+## 1. PageStash - Best for Serious Students
 
 ### Why Students Love It:
 
@@ -55,7 +55,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 ---
 
-💡 **Student Tip**: Use folders for classes, tags for themes. [Try PagePouch free](/auth/signup) with 50 clips included.
+💡 **Student Tip**: Use folders for classes, tags for themes. [Try PageStash free](/auth/signup) with 50 clips included.
 
 ---
 
@@ -150,7 +150,7 @@ The right web clipping tool can be the difference between staying organized and 
 ## How to Choose the Right Tool
 
 ### For Research-Heavy Majors (STEM, Social Sciences, Literature):
-**Recommendation**: PagePouch or Evernote
+**Recommendation**: PageStash or Evernote
 **Why**: Need powerful search, organization, and citation support
 
 ### For Light Users (General Ed, Casual Research):
@@ -158,11 +158,11 @@ The right web clipping tool can be the difference between staying organized and 
 **Why**: Simple, focused on reading and collecting
 
 ### For Organization Lovers (Productivity Enthusiasts):
-**Recommendation**: Notion or PagePouch
+**Recommendation**: Notion or PageStash
 **Why**: Flexible systems, multiple views, deep organization
 
 ### For Budget-Conscious Students:
-**Recommendation**: PagePouch (50 free clips) or Notion (free for students)
+**Recommendation**: PageStash (50 free clips) or Notion (free for students)
 **Why**: Best value for features
 
 ## Student-Specific Features to Look For
@@ -191,7 +191,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 ### Case Study 1: Pre-Med Student
 
-**Tool**: PagePouch
+**Tool**: PageStash
 **Usage**: Organizing research for senior thesis
 **Result**: "Searched 200+ saved articles to find exact studies. Thesis committee was impressed."
 
@@ -203,17 +203,17 @@ The right web clipping tool can be the difference between staying organized and 
 
 ### Case Study 3: Engineering Student
 
-**Tool**: Pocket + PagePouch
-**Usage**: Pocket for tech articles, PagePouch for research papers
+**Tool**: Pocket + PageStash
+**Usage**: Pocket for tech articles, PageStash for research papers
 **Result**: "Right tool for each job. Stayed organized through capstone project."
 
 ## Budget Comparison
 
 **Most Affordable**: Raindrop ($3/mo) or Pocket ($4.99/mo)
 
-**Best Free Option**: Notion (unlimited for students) or PagePouch (50 clips)
+**Best Free Option**: Notion (unlimited for students) or PageStash (50 clips)
 
-**Best Value**: PagePouch ($9.99/mo unlimited with Pro features)
+**Best Value**: PageStash ($9.99/mo unlimited with Pro features)
 
 **Premium Option**: Evernote ($14.99/mo)
 
@@ -256,7 +256,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 ## Final Recommendations
 
-**Best Overall for Students**: **PagePouch**
+**Best Overall for Students**: **PageStash**
 - Powerful enough for serious research
 - Simple enough for quick use
 - Great free tier
@@ -270,7 +270,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 **Ready to get organized?**
 
-[Try PagePouch free](/auth/signup) and see why students love it—50 clips included, no credit card required.
+[Try PageStash free](/auth/signup) and see why students love it—50 clips included, no credit card required.
 
 ---
 

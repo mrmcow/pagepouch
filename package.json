@@ -1,5 +1,5 @@
 {
-  "name": "pagepouch",
+  "name": "pagestash",
   "version": "0.1.0",
   "private": true,
   "description": "The most frictionless way to capture, organize, and retrieve web content",
@@ -9,7 +9,7 @@
     "threat-intelligence",
     "research-tool"
   ],
-  "author": "PagePouch Team",
+  "author": "PageStash Team",
   "license": "MIT",
   "workspaces": [
     "apps/*",

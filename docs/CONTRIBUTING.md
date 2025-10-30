@@ -1,6 +1,6 @@
-# Contributing to PagePouch
+# Contributing to PageStash
 
-Thank you for your interest in contributing to PagePouch! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to PageStash! This document provides guidelines and information for contributors.
 
 ## Development Process
 
@@ -230,4 +230,4 @@ Contributors will be:
 - Create an issue with the `question` label
 - Join our community discussions
 
-Thank you for contributing to PagePouch! 🚀
+Thank you for contributing to PageStash! 🚀

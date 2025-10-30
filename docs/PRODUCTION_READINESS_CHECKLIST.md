@@ -1,4 +1,4 @@
-# 🚀 PagePouch Production Readiness Checklist
+# 🚀 PageStash Production Readiness Checklist
 
 **Date:** October 30, 2025  
 **Target Launch Date:** TBD  
@@ -80,7 +80,7 @@
   - `NEXT_PUBLIC_APP_URL`
   
 - [ ] **Set up custom domain**
-  - Configure DNS (pagepouch.com)
+  - Configure DNS (pagestash.com)
   - SSL certificate (auto via Vercel)
   - Update CORS settings for production domain
   
@@ -171,7 +171,7 @@
         allow: '/',
         disallow: ['/dashboard/', '/api/'],
       },
-      sitemap: 'https://pagepouch.com/sitemap.xml',
+      sitemap: 'https://pagestash.com/sitemap.xml',
     }
   }
   ```
@@ -200,12 +200,12 @@
 
 ### ⚠️ Before Launch
 - [ ] **Create Stripe products in production**
-  - PagePouch Pro - Monthly ($4/month)
-  - PagePouch Pro - Annual ($40/year)
+  - PageStash Pro - Monthly ($4/month)
+  - PageStash Pro - Annual ($40/year)
   - Save price IDs to environment variables
   
 - [ ] **Configure Stripe webhook endpoint**
-  - URL: `https://pagepouch.com/api/stripe/webhook`
+  - URL: `https://pagestash.com/api/stripe/webhook`
   - Events: `customer.subscription.*`, `invoice.*`
   - Verify webhook signature validation (SECURITY!)
   
@@ -329,7 +329,7 @@
   - [ ] Test from production domain
   
 - [ ] **Set up support email**
-  - support@pagepouch.com
+  - support@pagestash.com
   - Forward to team email or support system
   
 - [ ] **Configure email SPF/DKIM**
@@ -400,7 +400,7 @@
   - [ ] Blog announcement post
   
 - [ ] **Set up social media accounts**
-  - [ ] Twitter @PagePouch
+  - [ ] Twitter @PageStash
   - [ ] LinkedIn company page
   - [ ] GitHub organization
   - [ ] YouTube channel (tutorials)
@@ -571,9 +571,9 @@
 - Hosting issues: Vercel support
 
 **Communication Plan:**
-- Status page: (set up status.pagepouch.com)
-- Emergency email: admin@pagepouch.com
-- Twitter updates: @PagePouch
+- Status page: (set up status.pagestash.com)
+- Emergency email: admin@pagestash.com
+- Twitter updates: @PageStash
 
 ---
 

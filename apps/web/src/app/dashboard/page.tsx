@@ -49,7 +49,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase'
-import { Clip, Folder } from '@pagepouch/shared'
+import { Clip, Folder } from '@pagestash/shared'
 import { LogoWithText, LogoIcon } from '@/components/ui/logo'
 import { ClipViewer } from '@/components/dashboard/ClipViewer'
 import { CreateFolderModal } from '@/components/dashboard/CreateFolderModal'
@@ -1343,7 +1343,7 @@ function DashboardContent() {
                       <p className="text-muted-foreground">
                         {state.viewFilter === 'favorites' ? 'Star clips to add them to your favorites' :
                          state.viewFilter === 'recent' ? 'Clips from the last 7 days will appear here' :
-                         'Install the PagePouch extension to start capturing web content'}
+                         'Install the PageStash extension to start capturing web content'}
                       </p>
                     </div>
                     {state.viewFilter === 'library' && (

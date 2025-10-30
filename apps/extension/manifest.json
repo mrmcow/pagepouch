@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "PagePouch",
+  "name": "PageStash",
   "version": "1.2.0",
   "description": "Capture any webpage with one click. Perfect for researchers, analysts, and anyone who needs to archive web content reliably.",
-  "author": "PagePouch Team",
-  "homepage_url": "https://pagepouch.com",
+  "author": "PageStash Team",
+  "homepage_url": "https://pagestash.com",
   "permissions": [
     "activeTab",
     "storage",
@@ -26,7 +26,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "PagePouch - Capture this page",
+    "default_title": "PageStash - Capture this page",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",

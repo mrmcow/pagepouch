@@ -9,11 +9,11 @@ export default function PrivacyPolicyPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Header */}
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="pagepouch-container py-4">
+        <div className="pagestash-container py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
               <LogoIcon size={32} />
-              <span className="text-xl font-bold">PagePouch</span>
+              <span className="text-xl font-bold">PageStash</span>
             </Link>
             <Link 
               href="/" 
@@ -27,7 +27,7 @@ export default function PrivacyPolicyPage() {
       </header>
 
       {/* Main Content */}
-      <main className="pagepouch-container py-16">
+      <main className="pagestash-container py-16">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">
@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
                 <Users className="h-5 w-5 text-orange-500 mt-1" />
                 <div>
                   <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">Who Can Access It</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Only you and authorized PagePouch staff for support purposes.</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Only you and authorized PageStash staff for support purposes.</p>
                 </div>
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function PrivacyPolicyPage() {
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 mb-6">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3">Primary Purposes</h3>
                 <ul className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <li>• Provide and maintain the PagePouch service</li>
+                  <li>• Provide and maintain the PageStash service</li>
                   <li>• Store and organize your captured web content</li>
                   <li>• Enable search and retrieval of your saved content</li>
                   <li>• Process payments and manage subscriptions</li>
@@ -190,7 +190,7 @@ export default function PrivacyPolicyPage() {
               </div>
 
               <p className="text-slate-600 dark:text-slate-400 mb-4">
-                To exercise any of these rights, contact us at <a href="mailto:privacy@pagepouch.com" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@pagepouch.com</a>. 
+                To exercise any of these rights, contact us at <a href="mailto:privacy@pagestash.com" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@pagestash.com</a>. 
                 We'll respond within 30 days and may require identity verification.
               </p>
             </section>
@@ -201,7 +201,7 @@ export default function PrivacyPolicyPage() {
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 mb-6">
                 <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-3">We DO NOT sell your data</h3>
                 <p className="text-red-700 dark:text-red-300">
-                  PagePouch will never sell, rent, or trade your personal information or captured content to third parties for marketing purposes.
+                  PageStash will never sell, rent, or trade your personal information or captured content to third parties for marketing purposes.
                 </p>
               </div>
 
@@ -240,9 +240,9 @@ export default function PrivacyPolicyPage() {
                   If you have any questions about this Privacy Policy or our data practices, please contact us:
                 </p>
                 <div className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <p>📧 Email: <a href="mailto:privacy@pagepouch.com" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@pagepouch.com</a></p>
-                  <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagepouch.com/contact</Link></p>
-                  <p>📍 Address: PagePouch Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
+                  <p>📧 Email: <a href="mailto:privacy@pagestash.com" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@pagestash.com</a></p>
+                  <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.com/contact</Link></p>
+                  <p>📍 Address: PageStash Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
                 </div>
                 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">

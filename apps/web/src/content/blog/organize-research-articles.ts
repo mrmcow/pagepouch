@@ -5,7 +5,7 @@ export const organizeResearchArticles: BlogPost = {
   title: 'How to Organize Research Articles: A Step-by-Step System',
   description: 'A proven system for organizing research articles efficiently. Learn the exact steps professionals use to manage hundreds of papers.',
   excerpt: 'A proven system for organizing research articles efficiently. Learn the exact steps professionals use to manage hundreds of papers.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-06',
   readingTime: 6,
   category: 'how-to',
@@ -31,7 +31,7 @@ This triple organization lets you find articles three different ways—by projec
 
 ---
 
-💡 **Quick Tip**: PagePouch's folder + tag system makes this effortless. [Try it free](/auth/signup) and organize like a pro.
+💡 **Quick Tip**: PageStash's folder + tag system makes this effortless. [Try it free](/auth/signup) and organize like a pro.
 
 ---
 
@@ -213,16 +213,16 @@ Find all "qualitative-research" articles
 
 ## Tools Integration
 
-**PagePouch + Citation Manager:**
-- PagePouch: Organization and full-text search
+**PageStash + Citation Manager:**
+- PageStash: Organization and full-text search
 - Zotero/Mendeley: Citation formatting
 
-**PagePouch + Note-Taking:**
-- PagePouch: Article storage and retrieval
+**PageStash + Note-Taking:**
+- PageStash: Article storage and retrieval
 - Obsidian/Notion: Deep analysis notes
 
-**PagePouch + Writing:**
-- PagePouch: Quick reference lookup
+**PageStash + Writing:**
+- PageStash: Quick reference lookup
 - Google Docs/Word: Actual writing
 
 ## Success Metrics
@@ -240,7 +240,7 @@ Find all "qualitative-research" articles
 **Week 1: Setup**
 - [ ] Create folder structure
 - [ ] Define tag categories
-- [ ] Install tools (PagePouch, citation manager)
+- [ ] Install tools (PageStash, citation manager)
 - [ ] Set up weekly review time
 
 **Week 2: Build Habit**
@@ -264,7 +264,7 @@ Find all "qualitative-research" articles
 
 **Ready to organize your research?**
 
-[Try PagePouch free](/auth/signup) and implement this system today—50 clips included to get started.
+[Try PageStash free](/auth/signup) and implement this system today—50 clips included to get started.
 
 ---
 

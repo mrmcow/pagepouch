@@ -19,7 +19,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     chrome: {
       name: 'Chrome',
       icon: ChromeIcon,
-      downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip',
+        downloadUrl: '/extension/downloads/pagestash-extension-chrome.zip',
       instructions: [
         'Download the ZIP file below',
         'Extract to a folder on your computer',
@@ -31,7 +31,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     firefox: {
       name: 'Firefox',
       icon: FirefoxIcon,
-      downloadUrl: '/extension/downloads/pagepouch-extension-firefox.zip',
+        downloadUrl: '/extension/downloads/pagestash-extension-firefox.zip',
       instructions: [
         'Download the ZIP file below',
         'Open Firefox and go to about:debugging',
@@ -52,7 +52,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
           <div className="flex items-center gap-3 mb-4">
             <LogoIcon size={40} />
             <div>
-              <DialogTitle className="text-2xl">PagePouch Extension</DialogTitle>
+              <DialogTitle className="text-2xl">PageStash Extension</DialogTitle>
               <p className="text-muted-foreground">Direct download for {browser.name}</p>
             </div>
             <Badge className="ml-auto">v1.1.0</Badge>

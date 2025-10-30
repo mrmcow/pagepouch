@@ -1,4 +1,4 @@
--- PagePouch Storage Setup Instructions
+-- PageStash Storage Setup Instructions
 -- 
 -- IMPORTANT: Don't run this SQL directly. Instead, follow these steps in the Supabase Dashboard:
 --

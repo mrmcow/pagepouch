@@ -452,14 +452,14 @@ function renderAuthScreen() {
       <div style="${styles.header}">
         <div style="${styles.logoSection}">
           ${createLogo(32)}
-          <h1 style="${styles.brandName}">PagePouch</h1>
+          <h1 style="${styles.brandName}">PageStash</h1>
         </div>
         <button id="close-auth" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">×</button>
       </div>
       <div style="${styles.content}">
         <div style="text-align: center; margin-bottom: 24px;">
           <h2 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">${authState.isSignUp ? 'Create Account' : 'Sign In'}</h2>
-          <p style="margin: 0; color: #6b7280; font-size: 13px;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Access your PagePouch library'}</p>
+          <p style="margin: 0; color: #6b7280; font-size: 13px;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Access your PageStash library'}</p>
         </div>
         <input id="email-input" type="email" placeholder="Email" value="${authState.email}" style="${styles.input}">
         <input id="password-input" type="password" placeholder="Password" value="${authState.password}" style="${styles.input}">
@@ -481,7 +481,7 @@ function renderMainScreen() {
       <div style="${styles.header}">
         <div style="${styles.logoSection}">
           ${createLogo(40)}
-          <h1 style="${styles.brandName}">PagePouch</h1>
+          <h1 style="${styles.brandName}">PageStash</h1>
           ${appState.isAuthenticated ? `<div style="${getUsageBadgeStyle()}">${getUsageBadgeText()}</div>` : ''}
         </div>
       </div>
@@ -566,7 +566,7 @@ function renderMainScreen() {
         `}
         
         <div style="text-align: center; margin-top: auto; padding-top: 16px; padding-bottom: 16px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b;">
-          <div style="font-weight: 500; margin-bottom: 4px; color: #64748b;">PagePouch v1.1.0</div>
+          <div style="font-weight: 500; margin-bottom: 4px; color: #64748b;">PageStash v1.1.0</div>
           <div style="font-size: 11px; color: #94a3b8;">Capture • Organize • Retrieve</div>
         </div>
       </div>
@@ -631,10 +631,10 @@ function render() {
     });
     if (signOutBtn) signOutBtn.addEventListener('click', signOut);
     if (openWebappBtn) openWebappBtn.addEventListener('click', () => {
-      extensionAPI.tabs.create({ url: 'https://pagepouch-web.vercel.app/dashboard' });
+      extensionAPI.tabs.create({ url: 'https://pagestash-web.vercel.app/dashboard' });
     });
     if (upgradeProBtn) upgradeProBtn.addEventListener('click', () => {
-      extensionAPI.tabs.create({ url: 'https://pagepouch-web.vercel.app/pricing' });
+      extensionAPI.tabs.create({ url: 'https://pagestash-web.vercel.app/pricing' });
     });
     if (folderSelect) folderSelect.addEventListener('change', (e) => {
       handleFolderChange(e.target.value);

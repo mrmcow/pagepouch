@@ -1,4 +1,4 @@
-MARKETING:  PagePouch now has significant advantages over competitors:
+MARKETING:  PageStash now has significant advantages over competitors:
 * Faster onboarding than Evernote Web Clipper
 * Better capture fidelity than Raindrop.io
 * More analyst-focused than general productivity tools
@@ -62,7 +62,7 @@ Your positioning (“analyst-focused”) is strong. Double down:
 	•	Tailor messaging: “Capture the web like a research analyst.”
 
 2. Growth Loops
-	•	Built-in virality: Add shareable clip links (view-only, watermarked with “Saved with PagePouch”). Every shared clip = free marketing.
+	•	Built-in virality: Add shareable clip links (view-only, watermarked with “Saved with PageStash”). Every shared clip = free marketing.
 	•	Referrals: “Invite a friend, get 20 extra clips this month.”
 
 3. Distribution Channels
@@ -92,7 +92,7 @@ Your positioning (“analyst-focused”) is strong. Double down:
 ⸻
 
 👉 Question for you:
-Do you see PagePouch as a consumer productivity tool (broad, like Raindrop) or more of a professional/research-focused SaaS (analysts, consultants, journalists)?
+Do you see PageStash as a consumer productivity tool (broad, like Raindrop) or more of a professional/research-focused SaaS (analysts, consultants, journalists)?
 
 Your pricing/marketing will differ quite a bit depending on which direction you want to lean.
 
@@ -147,7 +147,7 @@ Instead of going head-to-head with Raindrop/Evernote on “everyone’s producti
 
 2. Content Strategy
 	•	Create case studies / blog posts:
-	•	“How a journalist can map sources with PagePouch”
+	•	“How a journalist can map sources with PageStash”
 	•	“OSINT workflows: from data collection to pattern recognition”
 	•	“How analysts connect dots across the web”
 	•	These draw in your professional segment and show your tool is not just for clipping.
@@ -180,11 +180,11 @@ Would you like me to sketch out a sample 12-month growth plan (feature + marketi
 
 12 MONTH ROADMAP GTM PLAN 
 
-Awesome — let’s map out a 12-month growth roadmap for PagePouch that balances traction now with building toward your professional research SaaS vision. I’ll break it into quarters so it feels actionable.
+Awesome — let’s map out a 12-month growth roadmap for PageStash that balances traction now with building toward your professional research SaaS vision. I’ll break it into quarters so it feels actionable.
 
 ⸻
 
-📅 12-Month Growth Plan for PagePouch
+📅 12-Month Growth Plan for PageStash
 
 Q1 (Months 1–3): Launch & Traction
 
@@ -199,7 +199,7 @@ Product
 
 Marketing
 	•	🚀 Launch on Product Hunt and Reddit/HN.
-	•	Post competitor comparisons (“PagePouch vs. Evernote / Raindrop / Memex”) for SEO.
+	•	Post competitor comparisons (“PageStash vs. Evernote / Raindrop / Memex”) for SEO.
 	•	Outreach to productivity & OSINT YouTubers.
 	•	Build Twitter/X presence around knowledge capture, research, PKM.
 	•	Simple referral loop: “Invite a friend → +20 clips.”
@@ -224,7 +224,7 @@ Product
 Marketing
 	•	Produce content marketing targeting researchers:
 	•	“How journalists map their sources”
-	•	“OSINT workflows with PagePouch”
+	•	“OSINT workflows with PageStash”
 	•	Partner with academic productivity bloggers / PhD YouTubers.
 	•	Offer student discount plan to capture academia.
 	•	Build email drip: “Tips for analysts — from clip to insight.”
@@ -238,7 +238,7 @@ Target KPIs
 
 Q3 (Months 7–9): Launch Knowledge Map
 
-Goal: Deliver killer feature that makes PagePouch unique.
+Goal: Deliver killer feature that makes PageStash unique.
 
 Product
 	•	Release Knowledge Map (graph visualization of clips, tags, notes).
@@ -249,7 +249,7 @@ Marketing
 	•	Relaunch on Product Hunt with Knowledge Map as the hook.
 	•	Webinars / demos: “See patterns across your research.”
 	•	Reach out to analyst firms, OSINT communities, investigative journalists.
-	•	Case studies: “How a consultant connected 200 sources in PagePouch.”
+	•	Case studies: “How a consultant connected 200 sources in PageStash.”
 
 Target KPIs
 	•	20K signups

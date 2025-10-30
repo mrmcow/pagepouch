@@ -37,7 +37,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      '@pagepouch/shared': path.resolve(__dirname, '../../packages/shared/src'),
+      '@pagestash/shared': path.resolve(__dirname, '../../packages/shared/src'),
     },
     fallback: {
       "process": require.resolve("process/browser"),

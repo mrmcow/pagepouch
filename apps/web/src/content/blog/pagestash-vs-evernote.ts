@@ -1,18 +1,18 @@
 import { BlogPost } from '@/types/blog'
 
-export const pagepouchVsEvernote: BlogPost = {
-  slug: 'pagepouch-vs-evernote-web-clipper',
-  title: 'PagePouch vs. Evernote Web Clipper: Features & Pricing Compared',
+export const pagestashVsEvernote: BlogPost = {
+  slug: 'pagestash-vs-evernote-web-clipper',
+  title: 'PageStash vs. Evernote Web Clipper: Features & Pricing Compared',
   description: 'An honest comparison of web clipping tools for researchers and professionals in 2025.',
   content: `
-# PagePouch vs. Evernote Web Clipper: Features & Pricing Compared
+# PageStash vs. Evernote Web Clipper: Features & Pricing Compared
 
 Evernote pioneered web clipping. But in 2025, is it still the best choice for researchers and analysts? Let's compare.
 
 ## The Quick Verdict
 
 **Evernote**: Better for general note-taking with occasional web clipping
-**PagePouch**: Better for serious web research and content archiving
+**PageStash**: Better for serious web research and content archiving
 
 ## Feature Comparison
 
@@ -23,12 +23,12 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - Sometimes loses formatting
 - Converts to Evernote's format
 
-**PagePouch**:
+**PageStash**:
 - Full-page capture preserving exact formatting
 - One-click complete archiving
 - Stores original HTML and rendered view
 
-**Winner**: PagePouch for accuracy, Evernote for flexibility
+**Winner**: PageStash for accuracy, Evernote for flexibility
 
 ### Search Capabilities
 
@@ -38,13 +38,13 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - Tag and notebook search
 - Can be slow with large databases
 
-**PagePouch**:
+**PageStash**:
 - Full-text search across all saved pages
 - Instant results even with thousands of captures
 - Search within specific folders or tags
 - Knowledge graph connections
 
-**Winner**: PagePouch for speed and scale
+**Winner**: PageStash for speed and scale
 
 ### Organization
 
@@ -54,7 +54,7 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - Saved searches
 - Can get complex quickly
 
-**PagePouch**:
+**PageStash**:
 - Folders and tags
 - Flat structure that scales
 - Knowledge graphs show connections automatically
@@ -66,9 +66,9 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 
 **Evernote**: Not available
 
-**PagePouch**: Automatic visualization of connections between saved pages
+**PageStash**: Automatic visualization of connections between saved pages
 
-**Winner**: PagePouch
+**Winner**: PageStash
 
 ### Collaboration
 
@@ -78,7 +78,7 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - Comments and mentions
 - Mature team features
 
-**PagePouch**:
+**PageStash**:
 - Currently individual-focused
 - Export and sharing features
 
@@ -91,7 +91,7 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - Mobile web clipping
 - Decades of polish
 
-**PagePouch**:
+**PageStash**:
 - Web-based dashboard (mobile responsive)
 - Extension for mobile browsers
 - Growing feature set
@@ -117,7 +117,7 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - AI features
 - Advanced search
 
-### PagePouch
+### PageStash
 
 **Free Trial**:
 - 50 clips included
@@ -131,7 +131,7 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - Knowledge graphs
 - Priority support
 
-**Winner**: PagePouch for price-conscious users
+**Winner**: PageStash for price-conscious users
 
 ## Use Case Scenarios
 
@@ -142,7 +142,7 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - Mobile app usage is primary
 - You're invested in the Evernote ecosystem
 
-### You Should Choose PagePouch If:
+### You Should Choose PageStash If:
 
 - Web archiving is your primary need
 - You save hundreds of pages monthly
@@ -152,9 +152,9 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 
 ## The Migration Question
 
-**Moving from Evernote to PagePouch**:
+**Moving from Evernote to PageStash**:
 - Export notes as HTML
-- Import to PagePouch (coming soon)
+- Import to PageStash (coming soon)
 - Start fresh and capture new content
 
 Most users who switch simply start fresh—historical data is less valuable than you think.
@@ -166,31 +166,31 @@ Most users who switch simply start fresh—historical data is less valuable than
 "Expensive for what I actually use"
 "Too many features I don't need"
 
-### PagePouch Users:
+### PageStash Users:
 "Finally, a tool focused on web archiving"
 "Search is dramatically faster"
 "Knowledge graphs revealed connections I missed"
 
 ## The Bottom Line
 
-Evernote is a Swiss Army knife—good at many things. PagePouch is a specialist—exceptional at web content capture and organization.
+Evernote is a Swiss Army knife—good at many things. PageStash is a specialist—exceptional at web content capture and organization.
 
 Choose based on your primary use case:
 - General productivity → Evernote
-- Web research and archiving → PagePouch
-- Budget-conscious → PagePouch
+- Web research and archiving → PageStash
+- Budget-conscious → PageStash
 - Team collaboration → Evernote
 
-## Try PagePouch Risk-Free
+## Try PageStash Risk-Free
 
 Sign up for your free trial with 50 clips included. No credit card required to start.
 
 [Start your free trial →](/auth/signup)
 
-See if PagePouch's focused approach to web archiving works better for your research workflow.
+See if PageStash's focused approach to web archiving works better for your research workflow.
 `,
-  excerpt: 'An honest comparison of Evernote Web Clipper and PagePouch in 2025. Features, pricing, and which tool is right for you.',
-  author: 'PagePouch Team',
+  excerpt: 'An honest comparison of Evernote Web Clipper and PageStash in 2025. Features, pricing, and which tool is right for you.',
+  author: 'PageStash Team',
   publishedAt: '2025-11-05',
   readingTime: 5,
   featuredImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&auto=format',

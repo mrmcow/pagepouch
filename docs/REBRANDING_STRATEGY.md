@@ -1,7 +1,7 @@
-# 🎯 PagePouch Rebranding Strategy & Name Alternatives (V2)
+# 🎯 PageStash Rebranding Strategy & Name Alternatives (V2)
 
 **Date:** October 30, 2025  
-**Current Brand:** PagePouch  
+**Current Brand:** PageStash  
 **Status:** Pre-Launch Rebranding Required  
 **Priority:** CRITICAL - Must complete before major launch  
 **Version:** 2.0 - Genuinely Unique Names
@@ -10,7 +10,7 @@
 
 ## 📋 Executive Summary
 
-**Challenge:** PagePouch conflicts with an existing small-scale app. Need genuinely unique, simple, memorable, professional name.
+**Challenge:** PageStash conflicts with an existing small-scale app. Need genuinely unique, simple, memorable, professional name.
 
 **Solution:** After deep brand analysis of homepage positioning ("Capture the web like a pro"), we developed 13 unique name alternatives focused on being ultra-simple, completely original, and perfectly aligned with your mission: clip, annotate, archive.
 
@@ -30,7 +30,7 @@
 ## 🚨 Why Rebrand?
 
 ### Issue Identified:
-There is an existing small-scale app called "PagePouch" which could create:
+There is an existing small-scale app called "PageStash" which could create:
 - **User confusion** during marketing campaigns
 - **SEO competition** and diluted search results
 - **Brand identity conflicts** 
@@ -51,7 +51,7 @@ Rebrand before launch to establish unique market identity.
 ✅ **Product functionality** - Web clipping and organization  
 
 ### What We're Changing:
-🔄 **Name only** - "PagePouch" → New Name  
+🔄 **Name only** - "PageStash" → New Name  
 🔄 **Tagline** (may need adjustment)  
 🔄 **Domain name**  
 🔄 **Social media handles**  
@@ -433,7 +433,7 @@ Based on your brand promise: **"Capture the web like a pro"** for researchers an
    - Domain: cliq.io, cliq.app, getcliq.com
 
 **Brand Story:**
-> "From PagePouch to Cliq - we stripped away everything unnecessary. Just like your workflow: see it, Cliq it, done. The fastest way to capture the web."
+> "From PageStash to Cliq - we stripped away everything unnecessary. Just like your workflow: see it, Cliq it, done. The fastest way to capture the web."
 
 **Tagline Options:**
 - **"Cliq - Capture the web in one click"** ⭐ (Primary)
@@ -795,7 +795,7 @@ Based on your brand promise: **"Capture the web like a pro"** for researchers an
 - **Clear value prop:** "Pin the pages that matter"
 
 #### 4. Brand Continuity
-- Keeps the "P" from PagePouch
+- Keeps the "P" from PageStash
 - Keeps "Page" prefix
 - Maintains brand recognition
 
@@ -948,7 +948,7 @@ By end of week, make GO/NO-GO decision on PagePin.
 
 ### Email to Beta Users:
 
-**Subject:** Introducing PagePin (formerly PagePouch)
+**Subject:** Introducing PagePin (formerly PageStash)
 
 **Body:**
 > Hi [Name],
@@ -958,7 +958,7 @@ By end of week, make GO/NO-GO decision on PagePin.
 > As we prepare for our official launch, we've refined our brand to better reflect what we do: help you **pin the pages that matter**.
 >
 > **What's changing:**
-> - Our name: PagePouch → PagePin
+> - Our name: PageStash → PagePin
 > - Our domain: [new domain]
 >
 > **What's NOT changing:**
@@ -998,7 +998,7 @@ By end of week, make GO/NO-GO decision on PagePin.
 
 ### Current Logo:
 ```
-[Document icon with paperclip] + "PagePouch"
+[Document icon with paperclip] + "PageStash"
 ```
 
 ### New Logo:

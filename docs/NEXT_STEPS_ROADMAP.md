@@ -1,4 +1,4 @@
-# 🚀 **PagePouch - Next Steps Roadmap**
+# 🚀 **PageStash - Next Steps Roadmap**
 
 ## ✅ **What We've Just Accomplished**
 
@@ -27,7 +27,7 @@
 ### **A. Complete Icon Setup**
 ```bash
 # Copy your PNG icons to complete the setup:
-cd /Users/michaelcouch/DEV/pagepouch
+cd /Users/michaelcouch/DEV/pagestash
 
 # Extension icons
 cp "page-pouch-icon-16 (1).png" apps/extension/icons/icon-16.png
@@ -51,8 +51,8 @@ npm run build:download
 ```
 
 This will create:
-- 📦 **pagepouch-extension.zip** - Ready for Firefox or Chrome
-- 📁 **pagepouch-extension-unpacked/** - For Chrome "Load unpacked"
+- 📦 **pagestash-extension.zip** - Ready for Firefox or Chrome
+- 📁 **pagestash-extension-unpacked/** - For Chrome "Load unpacked"
 - 📖 **INSTALLATION_GUIDE.md** - User instructions
 - 🌐 **download.html** - Beautiful download page
 
@@ -195,7 +195,7 @@ npm run lint         # Code quality checks
 ### **Recommended Next Commands**
 ```bash
 # After copying icons, test the full pipeline:
-cd /Users/michaelcouch/DEV/pagepouch
+cd /Users/michaelcouch/DEV/pagestash
 npm run dev                    # Start development
 cd apps/extension && npm run build:download  # Create downloadable
 
@@ -205,7 +205,7 @@ open apps/extension/downloads/download.html
 
 ## 🎉 **Ready to Rock!**
 
-PagePouch is now in an **excellent position** with:
+PageStash is now in an **excellent position** with:
 
 - ✅ **Professional branding** - Beautiful, consistent logo
 - ✅ **Modern architecture** - Scalable, maintainable codebase  
@@ -217,4 +217,4 @@ PagePouch is now in an **excellent position** with:
 
 ---
 
-*PagePouch v1.0.0 - Capture • Organize • Retrieve*
+*PageStash v1.0.0 - Capture • Organize • Retrieve*

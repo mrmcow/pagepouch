@@ -245,7 +245,7 @@ content: {
 │                                     │
 │    ────────────────────             │  ← Separator
 │                                     │
-│    PagePouch v1.1.0                 │  ← Fully visible
+│    PageStash v1.1.0                 │  ← Fully visible
 │    Capture • Organize • Retrieve    │  ← Fully visible
 │                                     │
 └─────────────────────────────────────┘

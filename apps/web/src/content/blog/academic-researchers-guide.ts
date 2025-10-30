@@ -2,10 +2,10 @@ import { BlogPost } from '@/types/blog'
 
 export const academicResearchersGuide: BlogPost = {
   slug: 'academic-researchers-literature-reviews',
-  title: 'How Academic Researchers Use PagePouch for Literature Reviews',
+  title: 'How Academic Researchers Use PageStash for Literature Reviews',
   description: 'Streamline your literature review process with smart web clipping. Organize papers, track citations, and build comprehensive research libraries.',
   excerpt: 'Streamline your literature review process with smart web clipping. Organize papers, track citations, and build comprehensive research libraries.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-04',
   readingTime: 7,
   category: 'use-cases',
@@ -13,13 +13,13 @@ export const academicResearchersGuide: BlogPost = {
   featuredImage: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop&auto=format',
   featured: false,
   content: `
-# How Academic Researchers Use PagePouch for Literature Reviews
+# How Academic Researchers Use PageStash for Literature Reviews
 
 **150 papers to review. Deadlines looming. Can't find that key study you read last week.**
 
 Literature reviews are the foundation of academic research—and often the most time-consuming part. **The right organization system can cut your review time in half.**
 
-Here's how academic researchers use PagePouch to streamline their literature review process.
+Here's how academic researchers use PageStash to streamline their literature review process.
 
 ## The Academic Research Challenge
 
@@ -35,11 +35,11 @@ Here's how academic researchers use PagePouch to streamline their literature rev
 
 ---
 
-💡 **Quick Tip**: PagePouch helps academics organize 200+ papers with smart tagging and full-text search. [Try it free](/auth/signup) for your next literature review.
+💡 **Quick Tip**: PageStash helps academics organize 200+ papers with smart tagging and full-text search. [Try it free](/auth/signup) for your next literature review.
 
 ---
 
-## The PagePouch Literature Review System
+## The PageStash Literature Review System
 
 ### Step 1: Capture Papers Immediately
 
@@ -127,7 +127,7 @@ Here's how academic researchers use PagePouch to streamline their literature rev
 
 ## Integration with Research Tools
 
-**PagePouch works with:**
+**PageStash works with:**
 
 ✅ **Zotero/Mendeley**: Export citations
 ✅ **Google Scholar**: Clip papers directly
@@ -195,7 +195,7 @@ Here's how academic researchers use PagePouch to streamline their literature rev
 - Citation formatting: 2 hours/week
 - **Total: 7 hours/week**
 
-**With PagePouch:**
+**With PageStash:**
 - Finding papers: 15 minutes/week
 - Locating quotes: 30 minutes/week
 - Citation export: 30 minutes/week
@@ -233,7 +233,7 @@ Here's how academic researchers use PagePouch to streamline their literature rev
 
 **Ready to streamline your literature review?**
 
-[Try PagePouch free](/auth/signup) and organize your research like a pro—sign up free to get started.
+[Try PageStash free](/auth/signup) and organize your research like a pro—sign up free to get started.
 
 ---
 

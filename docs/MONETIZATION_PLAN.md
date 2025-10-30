@@ -1,4 +1,4 @@
-# PagePouch Monetization Implementation Plan
+# PageStash Monetization Implementation Plan
 
 ## 🎯 **FOCUSED MVP PRICING STRATEGY**
 
@@ -10,13 +10,13 @@
 
 ## 💰 **Two-Tier Pricing Model (Keep It Simple)**
 
-### **🆓 Free Tier - "Try PagePouch"**
+### **🆓 Free Tier - "Try PageStash"**
 - **50 clips per month** (current implementation ✅)
 - **100MB storage** (current implementation ✅)
 - **Core features**: Capture, folders, basic search
 - **Purpose**: Generous trial that shows real value
 
-### **⭐ Pro Tier - "PagePouch Pro"**
+### **⭐ Pro Tier - "PageStash Pro"**
 - **$4/month** or **$40/year** (2 months free)
 - **1,000 clips per month** (20x increase)
 - **5GB storage** (50x increase)

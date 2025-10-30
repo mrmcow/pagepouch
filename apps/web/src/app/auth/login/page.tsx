@@ -78,7 +78,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
           <p className="text-muted-foreground">
-            Sign in to access your PagePouch library
+            Sign in to access your PageStash library
           </p>
         </div>
 

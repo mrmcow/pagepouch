@@ -5,7 +5,7 @@
 ### Step 1: Access Supabase Dashboard
 
 1. Go to https://app.supabase.com
-2. Select your PagePouch project
+2. Select your PageStash project
 3. Navigate to **Authentication** → **Email Templates**
 
 ### Step 2: Configure Site URL
@@ -15,13 +15,13 @@
 1. Go to **Authentication** → **URL Configuration**
 2. Set **Site URL**:
    - Development: `http://localhost:3001`
-   - Production: `https://pagepouch.com`
+   - Production: `https://pagestash.com`
 
 3. Add **Redirect URLs** (whitelist):
    ```
    http://localhost:3001/**
-   https://pagepouch.com/**
-   https://www.pagepouch.com/**
+   https://pagestash.com/**
+   https://www.pagestash.com/**
    ```
 
 ### Step 3: Update Email Templates
@@ -56,7 +56,7 @@ Follow this link to confirm your user:
 
 ### After
 ✨ Beautiful, branded email with:
-- PagePouch logo and colors
+- PageStash logo and colors
 - Professional gradient buttons
 - Clear call-to-action
 - Security notes
@@ -83,7 +83,7 @@ Update for production:
 
 ```bash
 # .env.production or Vercel environment variables
-NEXT_PUBLIC_APP_URL=https://pagepouch.com
+NEXT_PUBLIC_APP_URL=https://pagestash.com
 NEXT_PUBLIC_SUPABASE_URL=https://gwvsltgmjreructvbpzg.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
@@ -149,5 +149,5 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 ## ✅ Complete!
 
-Your PagePouch email templates are now beautifully branded and professional! 🎉
+Your PageStash email templates are now beautifully branded and professional! 🎉
 

@@ -48,9 +48,9 @@ If you rely on web content for research, work, or learning—you need an archivi
 - Makes content searchable
 - **This is what serious researchers use**
 
-## PagePouch's Archiving Approach
+## PageStash's Archiving Approach
 
-When you save a page with PagePouch:
+When you save a page with PageStash:
 
 1. **Complete HTML capture** of the entire page
 2. **All assets downloaded** (images, stylesheets, scripts)
@@ -127,7 +127,7 @@ Quick folder assignment and tagging when you save prevents chaos later.
 - Archive.is
 
 **For Personal Archives**:
-- PagePouch (full-page capture + organization)
+- PageStash (full-page capture + organization)
 - ArchiveBox (self-hosted, technical)
 
 **For Organizations**:
@@ -160,12 +160,12 @@ The math is simple.
 
 ## Ready to Build Your Permanent Web Archive?
 
-PagePouch gives you professional-grade archiving: complete page capture, perfect rendering, instant search, and organization built for researchers.
+PageStash gives you professional-grade archiving: complete page capture, perfect rendering, instant search, and organization built for researchers.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'Protect against link rot, paywalls, and deleted content. A complete guide to permanent web archiving for researchers.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-07',
   readingTime: 4,
   featuredImage: 'https://images.unsplash.com/photo-1544396821-4dd40b938ad3?w=800&h=600&fit=crop&auto=format',

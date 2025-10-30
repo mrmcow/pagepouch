@@ -34,7 +34,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       description: 'Free • 2-minute setup • Works offline',
       buttonText: 'Add to Chrome - It\'s Free',
       storeUrl: '#', // Will be Chrome Web Store URL
-      downloadUrl: '/extension/downloads/pagepouch-extension-chrome.zip'
+      downloadUrl: '/extension/downloads/pagestash-extension-chrome.zip'
     },
     {
       id: 'firefox' as const,
@@ -44,7 +44,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       description: 'Free • 2-minute setup • Works offline',
       buttonText: 'Add to Firefox - It\'s Free',
       storeUrl: '#', // Will be Firefox Add-ons URL
-      downloadUrl: '/extension/downloads/pagepouch-extension-firefox.zip'
+      downloadUrl: '/extension/downloads/pagestash-extension-firefox.zip'
     }
   ]
 

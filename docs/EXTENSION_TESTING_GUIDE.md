@@ -1,8 +1,8 @@
-# 🧪 **PagePouch Extension - Full Functionality Testing Guide**
+# 🧪 **PageStash Extension - Full Functionality Testing Guide**
 
 ## 🎯 **Testing Objectives**
 
-Ensure the PagePouch extension works flawlessly with:
+Ensure the PageStash extension works flawlessly with:
 - ✅ **Authentication** - Sign up, sign in, sign out
 - ✅ **Capture functionality** - Full page and visible area screenshots
 - ✅ **Supabase integration** - Clips saved to database and storage
@@ -14,7 +14,7 @@ Ensure the PagePouch extension works flawlessly with:
 ### **1. Reload Extension**
 ```bash
 # Go to chrome://extensions/
-# Find PagePouch extension
+# Find PageStash extension
 # Click the reload button (🔄)
 ```
 
@@ -22,7 +22,7 @@ Ensure the PagePouch extension works flawlessly with:
 ```bash
 # Check that web app is running on http://localhost:3002
 # If not, start it:
-cd /Users/michaelcouch/DEV/pagepouch
+cd /Users/michaelcouch/DEV/pagestash
 npm run dev
 ```
 
@@ -35,7 +35,7 @@ npm run dev
 ### **Phase 1: Extension UI & Layout** ✅
 - [ ] **Popup opens properly** - No blank screen
 - [ ] **Layout fits correctly** - No text cutoff on right side
-- [ ] **Logo displays** - Beautiful PagePouch logo in header
+- [ ] **Logo displays** - Beautiful PageStash logo in header
 - [ ] **Current tab info** - Shows page title, URL, and favicon
 - [ ] **Capture buttons visible** - "Capture Full Page" and "Capture Visible Area"
 - [ ] **Auth section present** - Sign in prompt or user info
@@ -64,7 +64,7 @@ npm run dev
 ### **Phase 3: Capture Functionality**
 - [ ] **Visible Area Capture**
   - [ ] Navigate to any webpage
-  - [ ] Open PagePouch extension
+  - [ ] Open PageStash extension
   - [ ] Click "📱 Capture Visible Area"
   - [ ] Progress indicator appears
   - [ ] Success message shows
@@ -72,7 +72,7 @@ npm run dev
 
 - [ ] **Full Page Capture**
   - [ ] Navigate to a long webpage (with scrolling)
-  - [ ] Open PagePouch extension
+  - [ ] Open PageStash extension
   - [ ] Click "📄 Capture Full Page"
   - [ ] Progress shows scrolling/stitching
   - [ ] Success message appears
@@ -130,7 +130,7 @@ npm run dev
 
 ### **Extension Console**
 ```bash
-# Right-click PagePouch icon → "Inspect popup"
+# Right-click PageStash icon → "Inspect popup"
 # Check Console tab for errors
 # Look for authentication and capture logs
 ```
@@ -138,7 +138,7 @@ npm run dev
 ### **Background Script Console**
 ```bash
 # Go to chrome://extensions/
-# Click "Inspect views: background page" under PagePouch
+# Click "Inspect views: background page" under PageStash
 # Check for background script errors
 ```
 

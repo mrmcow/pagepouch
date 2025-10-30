@@ -1,10 +1,10 @@
-# PagePouch Implementation Plan
+# PageStash Implementation Plan
 
 ## 🎯 Vision & Mission
 
 **Mission**: Create the most frictionless way for analysts and knowledge workers to capture, organize, and retrieve web content with perfect fidelity.
 
-**Vision**: PagePouch becomes the go-to tool for threat intelligence analysts, researchers, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
+**Vision**: PageStash becomes the go-to tool for threat intelligence analysts, researchers, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
 
 **Core Values**:
 - **Simplicity First**: One-click capture, zero configuration overhead

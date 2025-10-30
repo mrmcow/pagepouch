@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('🚀 Building PagePouch Extension for Chrome Web Store...\n');
+console.log('🚀 Building PageStash Extension for Chrome Web Store...\n');
 
 // Clean previous builds
 console.log('🧹 Cleaning previous builds...');
@@ -133,7 +133,7 @@ console.log('4. Submit to Chrome Web Store Developer Dashboard');
 // Create a zip file for easy upload
 console.log('\n📦 Creating zip file for store submission...');
 try {
-  const zipPath = path.join(__dirname, '..', 'pagepouch-extension-v' + manifest.version + '.zip');
+  const zipPath = path.join(__dirname, '..', 'pagestash-extension-v' + manifest.version + '.zip');
   execSync(`cd dist && zip -r "${zipPath}" .`, { stdio: 'inherit' });
   console.log(`✅ Created: ${path.basename(zipPath)}`);
 } catch (error) {

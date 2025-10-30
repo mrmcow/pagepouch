@@ -75,8 +75,8 @@ Go to your Supabase Dashboard:
 3. In Supabase Dashboard → Project Settings → Auth:
    ```
    Enable Custom SMTP: ON
-   Sender email: noreply@pagepouch.com
-   Sender name: PagePouch
+   Sender email: noreply@pagestash.com
+   Sender name: PageStash
    Host: smtp.sendgrid.net
    Port: 587
    Username: apikey
@@ -167,7 +167,7 @@ Before going to production:
 
 ### 1. Use Custom Domain
 
-Instead of `noreply@supabase.co`, use `noreply@pagepouch.com`
+Instead of `noreply@supabase.co`, use `noreply@pagestash.com`
 
 ### 2. Configure SPF Record
 

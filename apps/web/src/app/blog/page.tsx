@@ -51,7 +51,7 @@ export default function BlogPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
-        <div className="pagepouch-container">
+        <div className="pagestash-container">
           <div className="px-4 py-4 flex items-center justify-between">
             <Link href="/">
               <LogoWithText size={40} clickable={false} />
@@ -72,7 +72,7 @@ export default function BlogPage() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="pt-32 pb-16 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-          <div className="pagepouch-container px-4">
+          <div className="pagestash-container px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
                 Web Capture Blog
@@ -98,7 +98,7 @@ export default function BlogPage() {
 
         {/* Category Filter */}
         <section className="py-6 border-b border-slate-200 bg-white">
-          <div className="pagepouch-container px-4">
+          <div className="pagestash-container px-4">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
               <Button
                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
@@ -126,7 +126,7 @@ export default function BlogPage() {
         {/* Featured Post */}
         {selectedCategory === 'all' && searchQuery === '' && featuredPost && (
           <section className="py-12 bg-white">
-            <div className="pagepouch-container px-4">
+            <div className="pagestash-container px-4">
               <div className="mb-4">
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Featured</Badge>
               </div>
@@ -172,7 +172,7 @@ export default function BlogPage() {
 
         {/* Blog Posts Grid */}
         <section className="py-12">
-          <div className="pagepouch-container px-4">
+          <div className="pagestash-container px-4">
             {filteredPosts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-slate-600 text-lg">No articles found matching your criteria.</p>
@@ -272,7 +272,7 @@ export default function BlogPage() {
 
         {/* CTA Section */}
         <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600">
-          <div className="pagepouch-container px-4">
+          <div className="pagestash-container px-4">
             <div className="max-w-3xl mx-auto text-center text-white">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
                 Ready to Transform Your Research Workflow?
@@ -299,9 +299,9 @@ export default function BlogPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white">
-        <div className="pagepouch-container py-12 px-4">
+        <div className="pagestash-container py-12 px-4">
           <div className="text-center text-sm text-slate-500">
-            &copy; 2025 PagePouch. All rights reserved.
+            &copy; 2025 PageStash. All rights reserved.
           </div>
         </div>
       </footer>

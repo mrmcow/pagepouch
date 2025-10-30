@@ -35,7 +35,7 @@ A PKM system solves this.
 
 If it's interesting, save it. Don't rely on memory.
 
-**For Web Content**: Use PagePouch—one click saves the complete page
+**For Web Content**: Use PageStash—one click saves the complete page
 **For Ideas**: Quick notes in your preferred app
 **For People**: Contact info and context
 **For Tasks**: Task manager or to-do list
@@ -69,7 +69,7 @@ Organization only matters if you can find things.
 
 You need 2-3 tools, not 10:
 
-**For Web Content**: PagePouch (full-page capture + organization)
+**For Web Content**: PageStash (full-page capture + organization)
 **For Notes**: Obsidian, Notion, or Apple Notes
 **For Tasks**: Todoist, Things, or your notes app
 
@@ -124,7 +124,7 @@ Connect related knowledge:
 - Which sources support each other?
 - What patterns emerge?
 
-PagePouch's knowledge graphs do this automatically for web content.
+PageStash's knowledge graphs do this automatically for web content.
 
 ### The Zettelkasten Method
 
@@ -203,7 +203,7 @@ PKM isn't separate from your work—it enables it:
 ## Start Today
 
 **Right now**:
-1. Choose your capture tool (PagePouch for web content)
+1. Choose your capture tool (PageStash for web content)
 2. Create 4 folders (Projects, Areas, Resources, Archive)
 3. Capture one thing and file it
 
@@ -229,7 +229,7 @@ PKM isn't separate from your work—it enables it:
 - Obsidian community
 
 **Tools**:
-- PagePouch (web content)
+- PageStash (web content)
 - Obsidian or Notion (notes)
 - Your preferred task manager
 
@@ -244,12 +244,12 @@ The compound effect of good PKM is real. Start small, stay consistent, and let i
 
 ## Build Your PKM Foundation Today
 
-PagePouch provides the web content foundation for your PKM system: frictionless capture, powerful search, simple organization, and knowledge graphs.
+PageStash provides the web content foundation for your PKM system: frictionless capture, powerful search, simple organization, and knowledge graphs.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'Build a personal knowledge management (PKM) system from scratch. A practical guide for knowledge workers.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-12',
   readingTime: 5,
   featuredImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop&auto=format',

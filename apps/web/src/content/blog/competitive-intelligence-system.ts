@@ -59,7 +59,7 @@ Map your intelligence sources:
 ### 3. Build Capture Workflows
 
 **Daily Monitoring** (30 min):
-Check key competitor sites for changes. Use PagePouch's extension to capture full pages instantly—no copy-pasting, no losing context.
+Check key competitor sites for changes. Use PageStash's extension to capture full pages instantly—no copy-pasting, no losing context.
 
 **Weekly Analysis** (2 hours):
 Review week's captures, identify patterns, brief stakeholders.
@@ -155,7 +155,7 @@ Different audiences need different intelligence.
 
 ## Tools and Automation
 
-**For Capture**: PagePouch (full-page archiving with context)
+**For Capture**: PageStash (full-page archiving with context)
 **For Monitoring**: Set calendar reminders for key competitor checks
 **For Analysis**: Spreadsheets for quantitative tracking
 **For Sharing**: Regular briefings and shared folders
@@ -219,12 +219,12 @@ Companies without it fly blind.
 
 ## Ready to Build Your CI System?
 
-PagePouch provides the foundation: full-page capture, instant search, systematic organization, and long-term archiving.
+PageStash provides the foundation: full-page capture, instant search, systematic organization, and long-term archiving.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'Create a systematic approach to tracking competitors and market intelligence that drives strategic decisions.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-13',
   readingTime: 5,
   featuredImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&auto=format',

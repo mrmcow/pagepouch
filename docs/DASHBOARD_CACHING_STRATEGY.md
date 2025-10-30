@@ -140,7 +140,7 @@ self.addEventListener('fetch', (event) => {
 // Store clip metadata in IndexedDB for instant load
 import { openDB } from 'idb'
 
-const db = await openDB('pagepouch', 1, {
+const db = await openDB('pagestash', 1, {
   upgrade(db) {
     db.createObjectStore('clips', { keyPath: 'id' })
   }

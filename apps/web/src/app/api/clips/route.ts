@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { CreateClipRequestSchema } from '@pagepouch/shared'
+import { CreateClipRequestSchema } from '@pagestash/shared'
 import { 
   getSubscriptionLimits, 
   getClipsRemaining, 

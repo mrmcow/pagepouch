@@ -29,8 +29,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 #### **Option A: Using Stripe Dashboard**
 1. Go to Stripe Dashboard → Products
 2. Click "Add product"
-3. Create **PagePouch Pro**:
-   - Name: `PagePouch Pro`
+3. Create **PageStash Pro**:
+   - Name: `PageStash Pro`
    - Description: `1,000 clips per month, 5GB storage, advanced features`
 4. Add pricing:
    - **Monthly**: $4.00 USD, recurring monthly
@@ -47,7 +47,7 @@ stripe login
 
 # Create product
 stripe products create \
-  --name="PagePouch Pro" \
+  --name="PageStash Pro" \
   --description="1,000 clips per month, 5GB storage, advanced features"
 
 # Create monthly price (replace prod_xxx with your product ID)

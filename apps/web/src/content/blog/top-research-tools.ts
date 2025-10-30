@@ -9,7 +9,7 @@ export const topResearchTools: BlogPost = {
 
 Choosing the right research organization tool can transform your productivity. Here's an honest comparison of the top options.
 
-## 1. PagePouch
+## 1. PageStash
 
 **Best for**: Web content archiving and research
 **Pricing**: Free trial (50 clips), $4/month Pro
@@ -61,7 +61,7 @@ Excellent for organizing bookmarks, vulnerable to link rot.
 **Strengths**: Reference management, citation generation, research-focused
 **Weaknesses**: Learning curve, primarily academic
 
-The gold standard for academic researchers. Pairs well with PagePouch.
+The gold standard for academic researchers. Pairs well with PageStash.
 
 ## 7. Obsidian
 
@@ -103,7 +103,7 @@ Perfect for readers, insufficient for researchers.
 
 | Tool | Full-Page Capture | Search | Organization | Collaboration | Price |
 |------|------------------|---------|--------------|---------------|-------|
-| PagePouch | ✅ Excellent | ✅ Fast | ✅ Good | ⚠️ Basic | $4/mo |
+| PageStash | ✅ Excellent | ✅ Fast | ✅ Good | ⚠️ Basic | $4/mo |
 | Evernote | ⚠️ Okay | ✅ Good | ✅ Good | ✅ Excellent | $11/mo |
 | Notion | ❌ Basic | ⚠️ Okay | ✅ Excellent | ✅ Excellent | $8/mo |
 | Pocket | ❌ No | ❌ Weak | ❌ Weak | ❌ No | $5/mo |
@@ -118,15 +118,15 @@ Perfect for readers, insufficient for researchers.
 
 ### For Academic Researchers:
 **Primary**: Zotero (citations + references)
-**Secondary**: PagePouch (web content)
+**Secondary**: PageStash (web content)
 **Notes**: Obsidian or Notion
 
 ### For Market Analysts:
-**Primary**: PagePouch (competitive intelligence)
+**Primary**: PageStash (competitive intelligence)
 **Secondary**: Notion (team collaboration)
 
 ### For Journalists:
-**Primary**: PagePouch (source archiving)
+**Primary**: PageStash (source archiving)
 **Secondary**: Evernote (interview notes)
 
 ### For Casual Users:
@@ -135,12 +135,12 @@ Perfect for readers, insufficient for researchers.
 
 ### For Students:
 **Primary**: Notion (notes + organization)
-**Secondary**: PagePouch (research materials)
+**Secondary**: PageStash (research materials)
 
 ## The Multi-Tool Approach
 
 Most productive researchers use 2-3 tools:
-- One for web capture (PagePouch)
+- One for web capture (PageStash)
 - One for notes (Obsidian, Notion)
 - One specialized (Zotero for academics)
 
@@ -175,20 +175,20 @@ All these tools offer free trials or free tiers:
 ## Our Recommendation
 
 For web content research (our focus):
-1. **PagePouch** - Best specialized tool
+1. **PageStash** - Best specialized tool
 2. **DEVONthink** - If you're Mac-only and budget allows
 3. **Evernote** - If you need comprehensive productivity
 
 For other use cases, combinations vary.
 
-## Start With PagePouch
+## Start With PageStash
 
 If web content is your primary research source, start here. Full-page capture, instant search, knowledge graphs, and organization built for scale.
 
-[Try PagePouch free →](/auth/signup)
+[Try PageStash free →](/auth/signup)
 `,
   excerpt: 'Comprehensive comparison of the top 10 research and web clipping tools in 2025. Find the perfect tool for your workflow.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-08',
   readingTime: 5,
   featuredImage: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&h=600&fit=crop&auto=format',

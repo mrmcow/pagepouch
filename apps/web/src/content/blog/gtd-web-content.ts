@@ -26,7 +26,7 @@ Everything that catches your attention goes into your system:
 - Reference documents
 - Inspiration
 
-Use PagePouch's extension: one click captures the complete page. No friction = consistent capture habit.
+Use PageStash's extension: one click captures the complete page. No friction = consistent capture habit.
 
 ### 2. Clarify
 
@@ -110,7 +110,7 @@ Most web content is reference material:
 **Background Reference**: General knowledge, occasional use
 **Archive**: Historical, rare access
 
-PagePouch's search means deep archives stay accessible.
+PageStash's search means deep archives stay accessible.
 
 ### The Read/Review Lists
 
@@ -183,14 +183,14 @@ GTD is about trusted system, not perfect system:
 
 ## GTD Tools for Web Content
 
-**For Capture**: PagePouch extension (frictionless)
+**For Capture**: PageStash extension (frictionless)
 **For Organization**: Folders + tags (simple scales)
 **For Search**: Full-text search (find anything instantly)
 **For Review**: Weekly ritual (30-60 min blocked time)
 
 ## Integration with Complete GTD System
 
-PagePouch complements your task manager:
+PageStash complements your task manager:
 
 **Task Manager**: Actions, projects, next steps
 **Page Pouch**: Reference materials, research, background
@@ -225,12 +225,12 @@ When your web content system works:
 
 ## Ready for Stress-Free Web Research?
 
-PagePouch is built for GTD practitioners: frictionless capture, simple organization, powerful search, and review-friendly workflows.
+PageStash is built for GTD practitioners: frictionless capture, simple organization, powerful search, and review-friendly workflows.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'Apply Getting Things Done principles to web research and content management for stress-free productivity.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-14',
   readingTime: 4,
   featuredImage: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&h=600&fit=crop&auto=format',

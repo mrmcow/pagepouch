@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* PagePouch Brand Colors */
+    /* PageStash Brand Colors */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -108,36 +108,36 @@
 }
 
 @layer components {
-  /* PagePouch specific components */
-  .pagepouch-card {
+  /* PageStash specific components */
+  .pagestash-card {
     @apply bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200;
   }
   
-  .pagepouch-button-primary {
+  .pagestash-button-primary {
     @apply bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-lg font-medium transition-colors duration-200;
   }
   
-  .pagepouch-button-secondary {
+  .pagestash-button-secondary {
     @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border px-6 py-3 rounded-lg font-medium transition-colors duration-200;
   }
   
-  .pagepouch-input {
+  .pagestash-input {
     @apply bg-background border border-input rounded-md px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors duration-200;
   }
   
-  .pagepouch-gradient-text {
+  .pagestash-gradient-text {
     @apply bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent;
   }
   
-  .pagepouch-hero-section {
+  .pagestash-hero-section {
     @apply py-20 px-4 text-center;
   }
   
-  .pagepouch-feature-grid {
+  .pagestash-feature-grid {
     @apply grid md:grid-cols-2 lg:grid-cols-3 gap-8;
   }
   
-  .pagepouch-container {
+  .pagestash-container {
     @apply container mx-auto max-w-7xl;
   }
 }

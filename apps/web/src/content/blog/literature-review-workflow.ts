@@ -32,7 +32,7 @@ Traditional approaches don't scale past 20-30 papers.
 - Key author publications
 
 **Capture Everything**:
-Use PagePouch to save:
+Use PageStash to save:
 - Full paper pages (before they go behind paywalls)
 - Abstract pages with metadata
 - Author profiles
@@ -71,7 +71,7 @@ As patterns emerge, tag by theme:
 - #theme-empirical-findings
 - #gap-identified
 
-PagePouch's knowledge graphs automatically show connections between papers.
+PageStash's knowledge graphs automatically show connections between papers.
 
 ### Stage 4: Synthesis
 
@@ -90,7 +90,7 @@ Group papers by theme:
 3. Where do they conflict?
 4. What's missing?
 
-Use PagePouch's tag filtering to view all papers by theme.
+Use PageStash's tag filtering to view all papers by theme.
 
 ### Stage 5: Citation Management
 
@@ -101,15 +101,15 @@ For each paper, capture:
 - Page numbers for specific quotes
 - Original context for paraphrasing
 
-PagePouch captures complete pages—always have the source when you need to verify.
+PageStash captures complete pages—always have the source when you need to verify.
 
 **Integration with Citation Managers**:
 
 **Zotero**: Best for academics
 **Mendeley**: Good for collaboration
-**PagePouch**: Captures what citation managers miss (web-based research, grey literature, blog posts)
+**PageStash**: Captures what citation managers miss (web-based research, grey literature, blog posts)
 
-Use both: Citation manager for papers, PagePouch for everything else.
+Use both: Citation manager for papers, PageStash for everything else.
 
 ## The Weekly Workflow
 
@@ -185,7 +185,7 @@ Adjust based on scope, but stay systematic.
 
 **Paper Discovery**: Google Scholar, databases
 **Citation Management**: Zotero, Mendeley
-**Web Archiving**: PagePouch (captures papers, web research, grey lit)
+**Web Archiving**: PageStash (captures papers, web research, grey lit)
 **Writing**: Word, LaTeX, Google Docs
 **Analysis**: Matrix spreadsheets
 
@@ -220,12 +220,12 @@ A systematic capture and organization system makes this analysis possible.
 
 ## Ready to Transform Your Literature Review?
 
-PagePouch complements your academic workflow: capture papers before they disappear, full-text search across hundreds of sources, theme-based organization, and knowledge graphs that reveal connections.
+PageStash complements your academic workflow: capture papers before they disappear, full-text search across hundreds of sources, theme-based organization, and knowledge graphs that reveal connections.
 
 [Start your free trial →](/auth/signup)
 `,
   excerpt: 'A systematic approach to managing academic literature reviews from initial discovery through final citation.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-16',
   readingTime: 5,
   featuredImage: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop&auto=format',

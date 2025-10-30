@@ -16,17 +16,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   
   if (!post) {
     return {
-      title: 'Post Not Found | PagePouch Blog',
+      title: 'Post Not Found | PageStash Blog',
       description: 'The blog post you are looking for could not be found.',
     }
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pagepouch.com'
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.com'
   const postUrl = `${siteUrl}/blog/${post.slug}`
   const imageUrl = post.featuredImage || `${siteUrl}/icons/icon-128.png`
 
   return {
-    title: `${post.title} | PagePouch Blog`,
+    title: `${post.title} | PageStash Blog`,
     description: post.description,
     authors: [{ name: post.author }],
     keywords: post.tags.join(', '),
@@ -45,14 +45,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         },
       ],
       url: postUrl,
-      siteName: 'PagePouch',
+      siteName: 'PageStash',
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.description,
       images: [imageUrl],
-      creator: '@PagePouch',
+      creator: '@PageStash',
     },
     alternates: {
       canonical: postUrl,
@@ -78,7 +78,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const relatedPosts = getRelatedPosts(params.slug, 3)
 
   // JSON-LD structured data for SEO
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pagepouch.com'
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.com'
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -92,7 +92,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     },
     publisher: {
       '@type': 'Organization',
-      name: 'PagePouch',
+      name: 'PageStash',
       logo: {
         '@type': 'ImageObject',
         url: `${siteUrl}/icons/icon-128.png`,
@@ -116,7 +116,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       <div className="flex flex-col min-h-screen bg-white">
         {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
-        <div className="pagepouch-container">
+        <div className="pagestash-container">
           <div className="px-4 py-4 flex items-center justify-between">
             <Link href="/">
               <LogoWithText size={40} clickable={false} />
@@ -365,7 +365,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                   Put These Tips Into Action
                 </h3>
                 <p className="text-lg text-blue-100 mb-8">
-                  Start organizing your research with PagePouch. Sign up for your free trial—50 clips included.
+                  Start organizing your research with PageStash. Sign up for your free trial—50 clips included.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg" asChild>
@@ -426,9 +426,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white">
-        <div className="pagepouch-container py-12 px-4">
+        <div className="pagestash-container py-12 px-4">
           <div className="text-center text-sm text-slate-500">
-            &copy; 2025 PagePouch. All rights reserved.
+            &copy; 2025 PageStash. All rights reserved.
           </div>
         </div>
       </footer>

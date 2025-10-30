@@ -151,7 +151,7 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
           {/* Pricing Section */}
           <div className="bg-white rounded-2xl border-2 border-purple-200 p-8">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">Upgrade to PagePouch Pro</h3>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">Upgrade to PageStash Pro</h3>
               <p className="text-slate-600">Get Knowledge Graph + all Pro features</p>
             </div>
 

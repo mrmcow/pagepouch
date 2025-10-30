@@ -1,10 +1,10 @@
-# PagePouch Privacy Policy
+# PageStash Privacy Policy
 
 **Last Updated: September 13, 2025**
 
 ## Overview
 
-PagePouch ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our browser extension and web application.
+PageStash ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our browser extension and web application.
 
 ## Information We Collect
 
@@ -121,7 +121,7 @@ We never sell, rent, or trade your personal information to third parties.
 
 ## Children's Privacy
 
-PagePouch is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware of such data collection, we will delete it immediately.
+PageStash is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware of such data collection, we will delete it immediately.
 
 ## International Users
 
@@ -145,17 +145,17 @@ PagePouch is not intended for users under 13 years of age. We do not knowingly c
 - **Version History**: Previous versions available on request
 
 ### Your Continued Use
-Continued use of PagePouch after policy changes constitutes acceptance of the updated terms.
+Continued use of PageStash after policy changes constitutes acceptance of the updated terms.
 
 ## Contact Information
 
 ### Privacy Questions
-- **Email**: privacy@pagepouch.com
-- **Mail**: PagePouch Privacy Team, [Address]
+- **Email**: privacy@pagestash.com
+- **Mail**: PageStash Privacy Team, [Address]
 - **Response Time**: We respond to privacy inquiries within 72 hours
 
 ### Data Protection Officer
-For EU users, you may contact our Data Protection Officer at dpo@pagepouch.com
+For EU users, you may contact our Data Protection Officer at dpo@pagestash.com
 
 ### Regulatory Authorities
 EU users have the right to lodge complaints with their local data protection authority.

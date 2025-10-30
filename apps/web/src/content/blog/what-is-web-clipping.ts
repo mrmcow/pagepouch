@@ -5,7 +5,7 @@ export const whatIsWebClipping: BlogPost = {
   title: 'What is Web Clipping? A Complete Guide for Researchers',
   description: 'Discover what web clipping is, how it works, and why professionals use it for research. Learn the best practices for capturing and organizing web content.',
   excerpt: 'Discover what web clipping is, how it works, and why professionals use it for research. Learn the best practices for capturing and organizing web content.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-10-30',
   readingTime: 10,
   category: 'how-to',
@@ -61,7 +61,7 @@ Creates visual archives:
 
 ---
 
-💡 **Quick Tip**: PagePouch uses intelligent capture that combines the best of all three methods. [Try it free](/auth/signup) and see the difference yourself.
+💡 **Quick Tip**: PageStash uses intelligent capture that combines the best of all three methods. [Try it free](/auth/signup) and see the difference yourself.
 
 ---
 
@@ -224,7 +224,7 @@ Monthly maintenance:
 
 **Ready to transform your research workflow?**
 
-PagePouch combines powerful web clipping with intelligent organization. [Start your free trial](/auth/signup) and capture your first 50 pages—sign up free to get started.
+PageStash combines powerful web clipping with intelligent organization. [Start your free trial](/auth/signup) and capture your first 50 pages—sign up free to get started.
 
 ---
 
@@ -362,17 +362,17 @@ A: Most researchers need 1-5GB. Text is tiny; images and PDFs take more space.
 A: Yes, if you have legitimate access. Clips preserve your legal access for later reference.
 
 **Q: What happens if the clipping service shuts down?**
-A: Choose tools with export features. PagePouch lets you export all data anytime.
+A: Choose tools with export features. PageStash lets you export all data anytime.
 
 **Q: How is this different from screenshots?**
 A: Web clipping captures searchable text, preserves formatting, and includes metadata. Screenshots are just images.
 
 **Q: Can I share clips with my team?**
-A: Many tools offer team features. PagePouch Pro includes collaborative workspaces.
+A: Many tools offer team features. PageStash Pro includes collaborative workspaces.
 
 ---
 
-**Try PagePouch Today**
+**Try PageStash Today**
 
 Ready to build your research library? [Start your free trial](/auth/signup) and experience professional web clipping—sign up free to get started.
 

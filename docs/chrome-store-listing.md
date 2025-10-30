@@ -1,8 +1,8 @@
-# Chrome Web Store Listing - PagePouch
+# Chrome Web Store Listing - PageStash
 
 ## Basic Information
 
-**Name**: PagePouch
+**Name**: PageStash
 **Category**: Productivity
 **Language**: English (with plans for localization)
 
@@ -13,7 +13,7 @@ Capture any webpage with one click. Perfect for researchers, analysts, and anyon
 
 **The most frictionless way to capture, organize, and retrieve web content**
 
-PagePouch is the perfect tool for researchers, analysts, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
+PageStash is the perfect tool for researchers, analysts, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
 
 ### ✨ Key Features
 
@@ -38,13 +38,13 @@ Your data is encrypted and secure. Perfect for sensitive research and threat int
 
 ### 🚀 Getting Started
 1. Install the extension
-2. Click the PagePouch icon on any webpage
+2. Click the PageStash icon on any webpage
 3. Your content is captured and organized automatically
 
 **Free tier**: 100 clips/month
 **Pro tier**: Unlimited clips, advanced features ($6/month)
 
-Start capturing the web today with PagePouch!
+Start capturing the web today with PageStash!
 
 ## Screenshots Required
 1. **Extension popup in action** - Show the capture interface
@@ -59,7 +59,7 @@ Start capturing the web today with PagePouch!
 - **Marquee**: 1400x560 pixels
 
 ## Store Icon
-- **128x128 pixels** - High-quality PagePouch logo with paperclip
+- **128x128 pixels** - High-quality PageStash logo with paperclip
 
 ## Permissions Justification
 
@@ -106,10 +106,10 @@ Start capturing the web today with PagePouch!
 
 ## Support Information
 
-**Website**: https://pagepouch.com
-**Support Email**: support@pagepouch.com
-**Privacy Policy**: https://pagepouch.com/privacy
-**Terms of Service**: https://pagepouch.com/terms
+**Website**: https://pagestash.com
+**Support Email**: support@pagestash.com
+**Privacy Policy**: https://pagestash.com/privacy
+**Terms of Service**: https://pagestash.com/terms
 
 ## Version Information
 

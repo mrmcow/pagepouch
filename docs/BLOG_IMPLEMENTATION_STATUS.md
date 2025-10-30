@@ -45,7 +45,7 @@
 **Content Includes:**
 - Comprehensive introduction with statistics
 - 7 different methods explained in detail
-- Method 1: Web Clippers (PagePouch focus) - most detailed
+- Method 1: Web Clippers (PageStash focus) - most detailed
 - Method 2: PDF Archiving
 - Method 3: Screenshot Tools
 - Method 4: Note-Taking Apps
@@ -75,7 +75,7 @@
 
 ### High-Priority Articles (Week 1)
 
-#### Article 2: "PagePouch vs. Pocket: Which Web Clipper is Better?" 
+#### Article 2: "PageStash vs. Pocket: Which Web Clipper is Better?" 
 **Status:** Pending  
 **Priority:** HIGH (comparison keywords have high commercial intent)
 **Estimated:** 3,000 words
@@ -160,7 +160,7 @@
 ### Content Production Pipeline
 
 #### Week 1 Remaining (3 articles to complete):
-1. PagePouch vs. Pocket comparison
+1. PageStash vs. Pocket comparison
 2. What is Web Clipping guide
 3. Stop Tab Hoarding article
 
@@ -174,7 +174,7 @@
 1. "Building a Second Brain: Web Edition"
 2. "Market Research Made Easy: A Guide for Analysts"
 3. "The 5-Minute Research Capture System"
-4. "PagePouch vs. Evernote: Features & Pricing"
+4. "PageStash vs. Evernote: Features & Pricing"
 
 #### Week 4 (4 articles):
 1. "Knowledge Graphs: Connecting Your Research"

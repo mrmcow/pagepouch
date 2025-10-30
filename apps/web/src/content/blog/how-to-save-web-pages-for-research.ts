@@ -5,7 +5,7 @@ export const howToSaveWebPagesForResearch: BlogPost = {
   title: 'How to Save Web Pages for Research: Complete Guide 2025',
   description: 'Learn the most effective methods to save, organize, and manage web pages for research. Discover tools, techniques, and best practices used by professionals.',
   excerpt: 'Learn the most effective methods to save, organize, and manage web pages for research. Discover tools, techniques, and best practices used by professionals.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-10-29',
   readingTime: 12,
   category: 'guides',
@@ -55,9 +55,9 @@ A web clipper is a specialized tool designed to capture, save, and organize web 
 - ✅ Searchable text for easy retrieval
 - ✅ Organized structure with folders and tags
 
-### Why PagePouch is Built for Research
+### Why PageStash is Built for Research
 
-**PagePouch** is specifically designed for serious researchers, analysts, and professionals who need to:
+**PageStash** is specifically designed for serious researchers, analysts, and professionals who need to:
 
 1. **Capture instantly**: One-click browser extension saves pages in seconds
 2. **Organize intelligently**: Folder system + tagging for complex projects
@@ -69,7 +69,7 @@ A web clipper is a specialized tool designed to capture, save, and organize web 
 
 **Step 1: Install the Browser Extension**
 
-- Add PagePouch to Chrome or Firefox (takes 30 seconds)
+- Add PageStash to Chrome or Firefox (takes 30 seconds)
 - Sign up for your free trial to start capturing
 
 **Step 2: Create Your Folder Structure**
@@ -123,7 +123,7 @@ Create a consistent routine:
 
 ---
 
-💡 **Quick Tip**: PagePouch includes all these pro features built-in. [Try it free](/auth/signup) and see how much time you can save on research organization.
+💡 **Quick Tip**: PageStash includes all these pro features built-in. [Try it free](/auth/signup) and see how much time you can save on research organization.
 
 ---
 
@@ -173,7 +173,7 @@ Screenshots are ideal for:
 - **Lightshot**: Quick screenshots with annotation
 - **Snagit**: Professional screenshot tool with editing
 - **Nimbus**: Full-page screenshot with cloud storage
-- **PagePouch**: Captures full page + metadata automatically
+- **PageStash**: Captures full page + metadata automatically
 
 ### Screenshot Organization Tips
 
@@ -256,7 +256,7 @@ If you must use bookmarks, do it right:
 Many researchers use a combination:
 
 **For different content types:**
-- **Web pages & articles**: PagePouch
+- **Web pages & articles**: PageStash
 - **Academic papers**: Zotero + PDF storage
 - **Quick notes**: Note-taking app
 - **Visual inspiration**: Pinterest or Are.na
@@ -303,7 +303,7 @@ Many researchers use a combination:
 
 ### The 5-Minute Setup
 
-1. **Choose your primary tool** (PagePouch for comprehensive research)
+1. **Choose your primary tool** (PageStash for comprehensive research)
 2. **Install browser extension** (one-click access)
 3. **Create 3-5 main folders** (active projects + reference)
 4. **Define 10-15 core tags** (consistent taxonomy)
@@ -340,7 +340,7 @@ Many researchers use a combination:
 
 ### Creating Knowledge Connections
 
-**Use Page Graphs** (available in PagePouch Pro):
+**Use Page Graphs** (available in PageStash Pro):
 - Visualize relationships between sources
 - Discover patterns and themes
 - Identify knowledge gaps
@@ -366,7 +366,7 @@ Many researchers use a combination:
 
 ### Decision Matrix
 
-**Choose PagePouch if you need:**
+**Choose PageStash if you need:**
 - ✅ Comprehensive web content capture
 - ✅ Powerful organization and search
 - ✅ Cross-device synchronization
@@ -417,7 +417,7 @@ Many researchers use a combination:
 
 ## Conclusion
 
-Effective web research starts with a solid capture and organization system. Whether you choose PagePouch, PDFs, or a hybrid approach, the key is **consistency and simplicity**.
+Effective web research starts with a solid capture and organization system. Whether you choose PageStash, PDFs, or a hybrid approach, the key is **consistency and simplicity**.
 
 **Remember:**
 - Save with context, not just URLs
@@ -428,14 +428,14 @@ Effective web research starts with a solid capture and organization system. Whet
 
 **Ready to transform your research workflow?**
 
-Try PagePouch free—sign up for your free trial with 50 pages included. Experience the difference a purpose-built research tool makes.
+Try PageStash free—sign up for your free trial with 50 pages included. Experience the difference a purpose-built research tool makes.
 
 👉 **[Start Your Free Trial Now](/auth/signup)** — Set up in 2 minutes
 
 ## Frequently Asked Questions
 
 **Q: What's the best format to save web pages?**
-A: Full-page captures with a dedicated tool like PagePouch preserve content, formatting, and metadata. PDFs work for documents but require more manual management.
+A: Full-page captures with a dedicated tool like PageStash preserve content, formatting, and metadata. PDFs work for documents but require more manual management.
 
 **Q: How many web pages should I save?**
 A: Focus on quality over quantity. Save what's genuinely valuable. Most researchers actively reference 20-30% of what they save, so be selective.
@@ -444,17 +444,17 @@ A: Focus on quality over quantity. Save what's genuinely valuable. Most research
 A: Save the full page when possible—context matters. You can highlight or note specific sections while preserving the complete source.
 
 **Q: How do I avoid saving duplicates?**
-A: Use tools with duplicate detection (like PagePouch) and check before saving. Regular reviews help identify and remove duplicates.
+A: Use tools with duplicate detection (like PageStash) and check before saving. Regular reviews help identify and remove duplicates.
 
 **Q: What if a website changes or disappears?**
-A: This is why full-page capture is crucial. Tools like PagePouch archive the complete content, protecting you from link rot and content changes.
+A: This is why full-page capture is crucial. Tools like PageStash archive the complete content, protecting you from link rot and content changes.
 
 **Q: How should I organize sources for different projects?**
 A: Use folders for projects and tags for cross-cutting themes. This dual system provides structure and flexibility.
 
 ---
 
-**Try PagePouch Today**
+**Try PageStash Today**
 
 Ready to stop losing track of important research? [Start your free trial](/auth/signup) and capture your first 50 pages—sign up free to get started.
 

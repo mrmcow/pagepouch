@@ -5,7 +5,7 @@ export const fiveMinuteSystem: BlogPost = {
   title: 'The 5-Minute Research Capture System',
   description: 'Capture and organize research in just 5 minutes. A quick, effective system for busy professionals who need results fast.',
   excerpt: 'Capture and organize research in just 5 minutes. A quick, effective system for busy professionals who need results fast.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-07',
   readingTime: 5,
   category: 'productivity',
@@ -45,7 +45,7 @@ Pick your five most common themes. Examples:
 - Reference
 - Ideas
 
-### Minute 5: Install PagePouch
+### Minute 5: Install PageStash
 
 [Install the browser extension](/auth/signup). One click. Done.
 
@@ -114,7 +114,7 @@ Instead of complex folders:
 
 **Finding content:**
 1. Remember a keyword from the article
-2. Search PagePouch
+2. Search PageStash
 3. Find it in seconds
 
 **This beats scrolling through 20 folders.**
@@ -175,7 +175,7 @@ A: Yes. Tags handle the complexity. Folders are just broad categories.
 A: Add more tags, not folders. Tags are flexible, folders are rigid.
 
 **Q: Won't search be slow with everything mixed together?**
-A: No. PagePouch full-text search is instant, even with thousands of items.
+A: No. PageStash full-text search is instant, even with thousands of items.
 
 **Q: What about different projects?**
 A: Use project tags. All projects can live in "Work" folder.
@@ -230,7 +230,7 @@ A: Use project tags. All projects can live in "Work" folder.
 ## Your Action Plan
 
 **Today (5 minutes):**
-1. Install PagePouch
+1. Install PageStash
 2. Create 3 folders
 3. Define 5 tags
 4. Save your first source
@@ -251,7 +251,7 @@ A: Use project tags. All projects can live in "Work" folder.
 
 **Ready to start?**
 
-[Install PagePouch now](/auth/signup) and capture your first source in 30 seconds.
+[Install PageStash now](/auth/signup) and capture your first source in 30 seconds.
 
 ---
 

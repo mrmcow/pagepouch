@@ -1,4 +1,4 @@
-# 📦 PagePouch Extension Architecture & Cross-Browser Support
+# 📦 PageStash Extension Architecture & Cross-Browser Support
 
 ## 🎯 **Current Chrome Extension Overview**
 
@@ -10,7 +10,7 @@ Our Chrome extension (v1.1.0) is built with a modern, robust architecture:
 ```json
 {
   "manifest_version": 3,
-  "name": "PagePouch",
+  "name": "PageStash",
   "version": "1.1.0",
   "permissions": ["activeTab", "storage", "scripting"],
   "background": { "service_worker": "background.js" },
@@ -22,7 +22,7 @@ Our Chrome extension (v1.1.0) is built with a modern, robust architecture:
 #### **2. Core Components**
 
 - **🎨 Popup Interface** (`src/popup/enhanced-popup.tsx`)
-  - React-based UI with beautiful PagePouch logo
+  - React-based UI with beautiful PageStash logo
   - Authentication flow integration
   - Capture controls (Full Page / Visible Area)
   - Compact, professional design
@@ -45,7 +45,7 @@ Our Chrome extension (v1.1.0) is built with a modern, robust architecture:
   - Development and production builds
 
 #### **3. Key Features**
-- ✅ **Real PagePouch Logo** - SVG-based document + paperclip design
+- ✅ **Real PageStash Logo** - SVG-based document + paperclip design
 - ✅ **Smart Authentication** - Graceful login prompts
 - ✅ **Full Page Capture** - Scroll and stitch entire pages
 - ✅ **Visible Area Capture** - Quick screenshots
@@ -68,8 +68,8 @@ npm run build:download
 ```
 
 #### **Distribution Files**
-- `pagepouch-extension.zip` - For Firefox and Chrome manual installation
-- `pagepouch-extension-unpacked/` - For Chrome "Load unpacked"
+- `pagestash-extension.zip` - For Firefox and Chrome manual installation
+- `pagestash-extension-unpacked/` - For Chrome "Load unpacked"
 - `INSTALLATION_GUIDE.md` - Step-by-step instructions
 - `download.html` - Beautiful download page
 - `version-info.json` - Build metadata
@@ -122,13 +122,13 @@ Create Firefox-compatible manifest:
 ```json
 {
   "manifest_version": 2,
-  "name": "PagePouch",
+  "name": "PageStash",
   "version": "1.1.0",
   "description": "Capture any webpage with one click...",
   
   "browser_specific_settings": {
     "gecko": {
-      "id": "pagepouch@pagepouch.com",
+      "id": "pagestash@pagestash.com",
       "strict_min_version": "78.0"
     }
   },
@@ -147,7 +147,7 @@ Create Firefox-compatible manifest:
   
   "browser_action": {
     "default_popup": "popup.html",
-    "default_title": "PagePouch - Capture this page",
+    "default_title": "PageStash - Capture this page",
     "default_icon": { ... }
   },
   
@@ -243,9 +243,9 @@ Update package.json scripts:
 ### **Distribution Strategy**
 
 #### **Multi-Browser Downloads**
-- **Chrome**: `pagepouch-extension-chrome.zip`
-- **Firefox**: `pagepouch-extension-firefox.zip`
-- **Universal**: `pagepouch-extension-universal.zip` (if possible)
+- **Chrome**: `pagestash-extension-chrome.zip`
+- **Firefox**: `pagestash-extension-firefox.zip`
+- **Universal**: `pagestash-extension-universal.zip` (if possible)
 
 #### **Updated Download Modal**
 ```typescript
@@ -253,11 +253,11 @@ Update package.json scripts:
 const getBrowserSpecificDownload = (browser: 'chrome' | 'firefox') => {
   return {
     chrome: {
-      file: 'pagepouch-extension-chrome.zip',
+      file: 'pagestash-extension-chrome.zip',
       instructions: 'Chrome installation guide...'
     },
     firefox: {
-      file: 'pagepouch-extension-firefox.zip', 
+      file: 'pagestash-extension-firefox.zip', 
       instructions: 'Firefox installation guide...'
     }
   }[browser];
@@ -316,7 +316,7 @@ const getBrowserSpecificDownload = (browser: 'chrome' | 'firefox') => {
 ### **Business Goals**
 - 📈 Expand user base to Firefox users (~8-10% market share)
 - 🎯 Reduce browser-specific support requests
-- 🚀 Position PagePouch as truly cross-browser solution
+- 🚀 Position PageStash as truly cross-browser solution
 - 💪 Strengthen competitive advantage
 
 ---

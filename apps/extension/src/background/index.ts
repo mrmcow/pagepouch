@@ -1,11 +1,11 @@
-// PagePouch Extension Background Script
+// PageStash Extension Background Script
 // Service Worker for Manifest V3
 
-import { ExtensionMessage } from '@pagepouch/shared';
+import { ExtensionMessage } from '@pagestash/shared';
 import { ExtensionAuth, ExtensionAPI, supabase } from '../utils/supabase';
 import { FullPageCapture } from '../utils/fullPageCapture';
 
-console.log('PagePouch background script loaded');
+console.log('PageStash background script loaded');
 
 // Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
@@ -16,7 +16,7 @@ let sessionRefreshInterval: NodeJS.Timeout | null = null;
 
 // Handle extension installation
 extensionAPI.runtime.onInstalled.addListener((details) => {
-  console.log('PagePouch extension installed:', details.reason);
+  console.log('PageStash extension installed:', details.reason);
   
   if (details.reason === 'install') {
     // Set up initial extension state

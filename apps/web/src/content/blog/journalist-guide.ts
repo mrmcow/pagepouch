@@ -5,7 +5,7 @@ export const journalistGuide: BlogPost = {
   title: 'The Journalist\'s Guide to Web Research Organization',
   description: 'Essential strategies for journalists to capture, verify, and organize web sources. Never lose a source or quote again.',
   excerpt: 'Essential strategies for journalists to capture, verify, and organize web sources. Never lose a source or quote again.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-03',
   readingTime: 6,
   category: 'use-cases',
@@ -45,7 +45,7 @@ You don't have time for organization. You save everything in a mess. **Then spen
 
 ---
 
-💡 **Quick Tip**: PagePouch captures sources with timestamps and full content automatically. [Try it free](/auth/signup) and never lose a source again.
+💡 **Quick Tip**: PageStash captures sources with timestamps and full content automatically. [Try it free](/auth/signup) and never lose a source again.
 
 ---
 
@@ -169,7 +169,7 @@ Track how competitors cover your beat:
 
 ## Tools Integration
 
-**PagePouch works with your existing workflow:**
+**PageStash works with your existing workflow:**
 
 ✅ **Browser extension** for instant capture
 ✅ **Mobile access** for capturing on the move
@@ -213,7 +213,7 @@ Track how competitors cover your beat:
 
 **Ready to upgrade your research workflow?**
 
-[Try PagePouch free](/auth/signup) and experience professional source management—sign up free to get started.
+[Try PageStash free](/auth/signup) and experience professional source management—sign up free to get started.
 
 ---
 

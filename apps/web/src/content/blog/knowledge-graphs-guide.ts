@@ -5,7 +5,7 @@ export const knowledgeGraphsGuide: BlogPost = {
   title: 'Knowledge Graphs: Connecting Your Research',
   description: 'Discover how knowledge graphs transform isolated research into connected insights. Visualize relationships and uncover hidden patterns.',
   excerpt: 'Discover how knowledge graphs transform isolated research into connected insights. Visualize relationships and uncover hidden patterns.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-08',
   readingTime: 7,
   category: 'how-to',
@@ -39,7 +39,7 @@ Here's how to use knowledge graphs to supercharge your research.
 
 ---
 
-💡 **Quick Tip**: PagePouch Pro includes Page Graphs for visualizing research connections. [Try it free](/auth/signup) and see your research in a new way.
+💡 **Quick Tip**: PageStash Pro includes Page Graphs for visualizing research connections. [Try it free](/auth/signup) and see your research in a new way.
 
 ---
 
@@ -202,7 +202,7 @@ Look for:
 
 ## Tools for Knowledge Graphs
 
-### Built-in Solution: PagePouch Page Graphs
+### Built-in Solution: PageStash Page Graphs
 
 **Pros:**
 - Integrated with your clipped content
@@ -293,7 +293,7 @@ Look for:
 
 ### Intermediate Level (Week 1)
 
-1. Use PagePouch Page Graphs
+1. Use PageStash Page Graphs
 2. Add all your saved research
 3. Let it suggest connections
 4. Review and refine weekly
@@ -321,7 +321,7 @@ Look for:
 
 **Ready to see your research differently?**
 
-[Try PagePouch Pro free](/auth/signup) and start building knowledge graphs today.
+[Try PageStash Pro free](/auth/signup) and start building knowledge graphs today.
 
 ---
 

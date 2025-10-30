@@ -1,4 +1,4 @@
-# PagePouch Brand Design System
+# PageStash Brand Design System
 
 ## 🎨 Brand Identity
 
@@ -322,4 +322,4 @@ Use shadcn/ui as the base, customized with our design tokens for:
 
 ---
 
-*This design system ensures PagePouch feels delightfully simple, trustworthy, and joyful to use while maintaining the professional reliability that analysts and researchers need.*
+*This design system ensures PageStash feels delightfully simple, trustworthy, and joyful to use while maintaining the professional reliability that analysts and researchers need.*

@@ -60,7 +60,7 @@ export function Logo({ size = 32, showText = true, className = '' }: LogoProps) 
             fontFamily: 'system-ui, -apple-system, sans-serif'
           }}
         >
-          PagePouch
+          PageStash
         </span>
       )}
     </div>

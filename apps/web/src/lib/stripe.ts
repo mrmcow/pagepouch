@@ -14,7 +14,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 export const STRIPE_CONFIG = {
   products: {
     pro: {
-      name: 'PagePouch Pro',
+      name: 'PageStash Pro',
       description: '1,000 clips per month, 5GB storage, advanced features',
     }
   },

@@ -1,10 +1,10 @@
 # Email Template Setup Guide
 
-This guide explains how to configure beautiful, branded email templates in Supabase for PagePouch.
+This guide explains how to configure beautiful, branded email templates in Supabase for PageStash.
 
 ## Overview
 
-PagePouch uses custom HTML email templates that match our professional brand aesthetic. These templates are configured in the Supabase Dashboard.
+PageStash uses custom HTML email templates that match our professional brand aesthetic. These templates are configured in the Supabase Dashboard.
 
 ## Templates Included
 
@@ -27,11 +27,11 @@ PagePouch uses custom HTML email templates that match our professional brand aes
 1. Go to **Authentication** → **URL Configuration**
 2. Set **Site URL**:
    - **Development**: `http://localhost:3001`
-   - **Production**: `https://pagepouch.com` (or your production domain)
+   - **Production**: `https://pagestash.com` (or your production domain)
 3. Add **Redirect URLs** (whitelist):
    - `http://localhost:3001/**`
-   - `https://pagepouch.com/**`
-   - `https://www.pagepouch.com/**`
+   - `https://pagestash.com/**`
+   - `https://www.pagestash.com/**`
 
 ### 3. Update Email Templates
 
@@ -55,7 +55,7 @@ Update your `.env.local` file:
 ```bash
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3001  # Development
-# NEXT_PUBLIC_APP_URL=https://pagepouch.com  # Production
+# NEXT_PUBLIC_APP_URL=https://pagestash.com  # Production
 
 # Supabase will use this for email redirect URLs
 ```
@@ -116,7 +116,7 @@ Our templates are designed to work across all major email clients:
 
 ### Brand Colors
 
-The templates use PagePouch brand colors:
+The templates use PageStash brand colors:
 - **Primary Blue**: `#2563eb`
 - **Secondary Purple**: `#4f46e5`
 - **Text Dark**: `#0f172a`
@@ -168,7 +168,7 @@ When customizing:
 
 For additional help:
 - Supabase Email Documentation: https://supabase.com/docs/guides/auth/auth-email-templates
-- PagePouch Support: support@pagepouch.com
+- PageStash Support: support@pagestash.com
 
 ## Notes
 

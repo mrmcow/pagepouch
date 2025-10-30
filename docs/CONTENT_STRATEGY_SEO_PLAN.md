@@ -1,7 +1,7 @@
-# PagePouch Content Strategy & SEO Plan
+# PageStash Content Strategy & SEO Plan
 
 ## Executive Summary
-This comprehensive content strategy is designed to establish PagePouch as the authority in web content capture, organization, and research tools. The plan focuses on high-intent keywords, user pain points, and demonstrating clear value propositions to drive organic traffic and conversions.
+This comprehensive content strategy is designed to establish PageStash as the authority in web content capture, organization, and research tools. The plan focuses on high-intent keywords, user pain points, and demonstrating clear value propositions to drive organic traffic and conversions.
 
 ---
 
@@ -93,13 +93,13 @@ This comprehensive content strategy is designed to establish PagePouch as the au
    - "Building Research Connections with Page Graphs"
 
 ### Pillar 2: Professional Use Cases
-**Hub Page:** "PagePouch for Professionals: Use Cases & Workflows"
+**Hub Page:** "PageStash for Professionals: Use Cases & Workflows"
 
 **Supporting Content (15+ articles):**
 
 1. **By Profession:**
    - "The Journalist's Guide to Web Research Organization"
-   - "How Academic Researchers Use PagePouch for Literature Reviews"
+   - "How Academic Researchers Use PageStash for Literature Reviews"
    - "Market Research Made Easy: A Guide for Analysts"
    - "Content Creator's Research System: Never Lose an Idea"
    - "UX Researcher's Toolkit: Organizing Competitive Analysis"
@@ -148,11 +148,11 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 **Supporting Content (12+ articles):**
 
 1. **Direct Comparisons:**
-   - "PagePouch vs. Pocket: Which Web Clipper is Better in 2025?"
-   - "PagePouch vs. Evernote Web Clipper: Features & Pricing"
-   - "PagePouch vs. Notion Web Clipper: A Detailed Comparison"
-   - "PagePouch vs. Instapaper: Best for Researchers?"
-   - "PagePouch vs. Raindrop.io: Which Bookmark Manager Wins?"
+   - "PageStash vs. Pocket: Which Web Clipper is Better in 2025?"
+   - "PageStash vs. Evernote Web Clipper: Features & Pricing"
+   - "PageStash vs. Notion Web Clipper: A Detailed Comparison"
+   - "PageStash vs. Instapaper: Best for Researchers?"
+   - "PageStash vs. Raindrop.io: Which Bookmark Manager Wins?"
 
 2. **Category Comparisons:**
    - "Best Web Clipping Tools for Students (2025 Review)"
@@ -161,9 +161,9 @@ This comprehensive content strategy is designed to establish PagePouch as the au
    - "Chrome Extensions for Research: The Ultimate Guide"
 
 3. **Migration Guides:**
-   - "How to Migrate from Pocket to PagePouch"
+   - "How to Migrate from Pocket to PageStash"
    - "Switching from Evernote: A Smooth Transition Guide"
-   - "Import Your Bookmarks: Getting Started with PagePouch"
+   - "Import Your Bookmarks: Getting Started with PageStash"
 
 ---
 
@@ -177,11 +177,11 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 - "What is Web Clipping? A Complete Guide for Researchers"
 - "How to Save Web Pages for Research (Complete Guide 2025)"
 - "Why Traditional Bookmarks Fail (And What to Use Instead)"
-- "PagePouch vs. Pocket: Which Web Clipper is Better in 2025?"
+- "PageStash vs. Pocket: Which Web Clipper is Better in 2025?"
 
 **Week 3-4:**
 - "The Journalist's Guide to Web Research Organization"
-- "How Academic Researchers Use PagePouch for Literature Reviews"
+- "How Academic Researchers Use PageStash for Literature Reviews"
 - "Stop Tab Hoarding: A Better Way to Save Web Content"
 - "Best Web Clipping Tools for Students (2025 Review)"
 - "How to Organize Research Articles: A Step-by-Step System"
@@ -191,7 +191,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 - "Building a Second Brain: Web Edition"
 - "Market Research Made Easy: A Guide for Analysts"
 - "The 5-Minute Research Capture System"
-- "PagePouch vs. Evernote Web Clipper: Features & Pricing"
+- "PageStash vs. Evernote Web Clipper: Features & Pricing"
 
 **Week 7-8:**
 - "Knowledge Graphs: Connecting Your Research"
@@ -204,7 +204,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 **Focus:** Use cases + Workflow optimization
 
 **Week 9-10:**
-- Pillar Page: "PagePouch for Professionals: Use Cases & Workflows"
+- Pillar Page: "PageStash for Professionals: Use Cases & Workflows"
 - "UX Researcher's Toolkit: Organizing Competitive Analysis"
 - "Legal Research: Managing Case Law and Web Sources"
 - "Building a Competitive Intelligence System"
@@ -214,7 +214,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 - "Literature Review Workflow: From Discovery to Citation"
 - "Investment Research: Tracking Market Intelligence"
 - "Reducing Context Switching: The Cost of Poor Organization"
-- "PagePouch vs. Notion Web Clipper: A Detailed Comparison"
+- "PageStash vs. Notion Web Clipper: A Detailed Comparison"
 - "How to Tag and Categorize Web Content Effectively"
 
 **Week 13-14:**
@@ -228,7 +228,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 - "Due Diligence Documentation: Best Practices"
 - "Batch Processing Web Research: Work Smarter, Not Harder"
 - "Building a Team Knowledge Base from Web Content"
-- "PagePouch vs. Instapaper: Best for Researchers?"
+- "PageStash vs. Instapaper: Best for Researchers?"
 - "Advanced Tagging Systems for Complex Research"
 
 ### Month 5-6: Authority Building (20 articles)
@@ -245,7 +245,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 - "The 80/20 Rule for Managing Research Content"
 - "Cross-Referencing Web Content: Best Practices"
 - "Mobile Research: Capturing Content On-the-Go"
-- "PagePouch vs. Raindrop.io: Which Bookmark Manager Wins?"
+- "PageStash vs. Raindrop.io: Which Bookmark Manager Wins?"
 - "How to Create a Digital Research Library"
 
 **Week 21-22:**
@@ -259,7 +259,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 - "5 Research Organization Methods That Actually Work"
 - "The Digital Filing Cabinet: Modern Web Content Management"
 - "Integrating Web Capture into Your Existing Workflow"
-- "How to Migrate from Pocket to PagePouch"
+- "How to Migrate from Pocket to PageStash"
 - "Browser Extension vs. Web App: Which Research Tool is Right?"
 
 ---
@@ -307,7 +307,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 
 7. **Industry News & Updates (600-1000 words)**
    - Trending topics in research/productivity
-   - PagePouch feature announcements
+   - PageStash feature announcements
    - Publish: Bi-weekly
 
 8. **Video Content (Repurpose blog content)**
@@ -323,8 +323,8 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 ### On-Page SEO Elements:
 
 1. **Title Tag Formula:**
-   - Primary Keyword | Secondary Keyword | PagePouch
-   - Example: "How to Organize Research Articles | Step-by-Step Guide | PagePouch"
+   - Primary Keyword | Secondary Keyword | PageStash
+   - Example: "How to Organize Research Articles | Step-by-Step Guide | PageStash"
 
 2. **Meta Description Formula:**
    - Hook + Benefit + Call-to-Action
@@ -351,7 +351,7 @@ This comprehensive content strategy is designed to establish PagePouch as the au
 1. **In-Content CTAs:**
    - After introduction: "Start Free Trial"
    - Mid-content: "Download Free Template/Guide"
-   - End of article: "Try PagePouch Free"
+   - End of article: "Try PageStash Free"
 
 2. **Content Upgrades:**
    - Downloadable checklists
@@ -555,7 +555,7 @@ Content Upgrade: [Lead magnet, if applicable]
 
 1. **Week 1:**
    - "How to Save Web Pages for Research (Complete Guide 2025)" ← High search volume
-   - "PagePouch vs. Pocket: Which Web Clipper is Better?" ← Comparison intent
+   - "PageStash vs. Pocket: Which Web Clipper is Better?" ← Comparison intent
    
 2. **Week 2:**
    - "What is Web Clipping? A Complete Guide" ← Definitional keyword
@@ -708,7 +708,7 @@ Content Upgrade: [Lead magnet, if applicable]
 
 ## Conclusion
 
-This comprehensive content strategy positions PagePouch for sustainable organic growth through:
+This comprehensive content strategy positions PageStash for sustainable organic growth through:
 
 1. **SEO-optimized content** targeting high-intent keywords
 2. **User-focused articles** that solve real problems

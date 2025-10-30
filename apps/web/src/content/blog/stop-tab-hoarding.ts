@@ -5,7 +5,7 @@ export const stopTabHoarding: BlogPost = {
   title: 'Stop Tab Hoarding: A Better Way to Save Web Content',
   description: 'Break free from tab overload. Learn why keeping dozens of browser tabs open is hurting your productivity and discover a better system.',
   excerpt: 'Break free from tab overload. Learn why keeping dozens of browser tabs open is hurting your productivity and discover a better system.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-11-02',
   readingTime: 9,
   category: 'productivity',
@@ -63,7 +63,7 @@ Too many tabs. Browser freezes. **Everything crashes.**
 
 ---
 
-💡 **Quick Tip**: Save tabs to PagePouch before closing them. One click preserves the content forever. [Try it free](/auth/signup).
+💡 **Quick Tip**: Save tabs to PageStash before closing them. One click preserves the content forever. [Try it free](/auth/signup).
 
 ---
 
@@ -114,7 +114,7 @@ When you find something valuable:
 **Do**: Save the complete content immediately
 
 **Tools**:
-- Web clipper extension (PagePouch, etc.)
+- Web clipper extension (PageStash, etc.)
 - Read-later service
 - Note-taking app
 
@@ -206,7 +206,7 @@ Your system must:
 ### Recommended Setup
 
 **For Research/Work**:
-- Tool: PagePouch or similar web clipper
+- Tool: PageStash or similar web clipper
 - Structure: Folders by project, tags by theme
 - Habit: Clip immediately, close immediately
 
@@ -229,7 +229,7 @@ Your system must:
 - Computer constantly slow
 - Stress about losing information
 
-**After**: 3 tabs active, 200+ sources in PagePouch
+**After**: 3 tabs active, 200+ sources in PageStash
 - Find any source in seconds
 - Fast computer
 - Calm, focused work
@@ -350,7 +350,7 @@ A: Follow the rule: Save and close within 5 minutes of opening, or close without
 
 **Ready to break free from tab chaos?**
 
-[Try PagePouch free](/auth/signup) and experience the relief of saving content you trust. Sign up free to get started.
+[Try PageStash free](/auth/signup) and experience the relief of saving content you trust. Sign up free to get started.
 
 ---
 
@@ -381,7 +381,7 @@ A: Follow the rule: Save and close within 5 minutes of opening, or close without
 
 ---
 
-**Try PagePouch Today**
+**Try PageStash Today**
 
 Close tabs with confidence. [Start free](/auth/signup)—sign up free with 50 clips included.
 

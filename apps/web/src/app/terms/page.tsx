@@ -9,11 +9,11 @@ export default function TermsOfServicePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Header */}
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="pagepouch-container py-4">
+        <div className="pagestash-container py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
               <LogoIcon size={32} />
-              <span className="text-xl font-bold">PagePouch</span>
+              <span className="text-xl font-bold">PageStash</span>
             </Link>
             <Link 
               href="/" 
@@ -27,7 +27,7 @@ export default function TermsOfServicePage() {
       </header>
 
       {/* Main Content */}
-      <main className="pagepouch-container py-16">
+      <main className="pagestash-container py-16">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">
@@ -38,7 +38,7 @@ export default function TermsOfServicePage() {
               Terms of Service
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Clear, fair terms that protect both you and PagePouch. Read what you're agreeing to when you use our service.
+              Clear, fair terms that protect both you and PageStash. Read what you're agreeing to when you use our service.
             </p>
             <div className="mt-6 text-sm text-slate-500">
               <span>Last updated: January 15, 2025</span>
@@ -53,7 +53,7 @@ export default function TermsOfServicePage() {
                 <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
                 <div>
                   <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">What You Can Do</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Use PagePouch for personal or commercial research, capture unlimited content, and organize your data.</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Use PageStash for personal or commercial research, capture unlimited content, and organize your data.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -86,7 +86,7 @@ export default function TermsOfServicePage() {
             <section className="mb-12">
               <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6">1. Acceptance of Terms</h2>
               <p className="text-slate-600 dark:text-slate-400 mb-4">
-                By accessing or using PagePouch ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
+                By accessing or using PageStash ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
                 If you disagree with any part of these terms, you may not access the Service.
               </p>
               <p className="text-slate-600 dark:text-slate-400">
@@ -97,7 +97,7 @@ export default function TermsOfServicePage() {
             <section className="mb-12">
               <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6">2. Description of Service</h2>
               <p className="text-slate-600 dark:text-slate-400 mb-4">
-                PagePouch is a web archival tool that allows users to capture, store, organize, and search web content including:
+                PageStash is a web archival tool that allows users to capture, store, organize, and search web content including:
               </p>
               <ul className="space-y-2 text-slate-600 dark:text-slate-400 mb-6">
                 <li>• Full-page screenshots and HTML content</li>
@@ -164,7 +164,7 @@ export default function TermsOfServicePage() {
                 <AlertTriangle className="h-6 w-6 text-orange-600 dark:text-orange-400 mb-3" />
                 <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-3">Content Responsibility</h3>
                 <p className="text-orange-700 dark:text-orange-300 text-sm">
-                  You are solely responsible for the content you capture and store. Ensure you have the right to archive and store any content you capture through PagePouch. 
+                  You are solely responsible for the content you capture and store. Ensure you have the right to archive and store any content you capture through PageStash. 
                   We reserve the right to remove content that violates these terms or applicable laws.
                 </p>
               </div>
@@ -207,20 +207,20 @@ export default function TermsOfServicePage() {
               
               <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Your Content</h3>
               <p className="text-slate-600 dark:text-slate-400 mb-4">
-                You retain all rights to the content you capture and store in PagePouch. We do not claim ownership of your captured content, 
+                You retain all rights to the content you capture and store in PageStash. We do not claim ownership of your captured content, 
                 notes, or organizational data.
               </p>
 
               <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Our Service</h3>
               <p className="text-slate-600 dark:text-slate-400 mb-4">
-                PagePouch, including its software, design, and documentation, is protected by copyright, trademark, and other intellectual property laws. 
+                PageStash, including its software, design, and documentation, is protected by copyright, trademark, and other intellectual property laws. 
                 You may not copy, modify, or distribute our service without permission.
               </p>
 
               <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">License to Use</h3>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6">
                 <p className="text-slate-600 dark:text-slate-400">
-                  We grant you a limited, non-exclusive, non-transferable license to use PagePouch for its intended purpose. 
+                  We grant you a limited, non-exclusive, non-transferable license to use PageStash for its intended purpose. 
                   This license terminates when you stop using the service or violate these terms.
                 </p>
               </div>
@@ -277,7 +277,7 @@ export default function TermsOfServicePage() {
                 <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400 mb-3" />
                 <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-3">Service Disclaimer</h3>
                 <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  PagePouch is provided "as-is" without warranties of any kind. We strive for reliability but cannot guarantee 
+                  PageStash is provided "as-is" without warranties of any kind. We strive for reliability but cannot guarantee 
                   uninterrupted service or data integrity. Use the service at your own risk.
                 </p>
               </div>
@@ -342,14 +342,14 @@ export default function TermsOfServicePage() {
                   If you have any questions about these Terms of Service, please contact us:
                 </p>
                 <div className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <p>📧 Email: <a href="mailto:legal@pagepouch.com" className="text-blue-600 dark:text-blue-400 hover:underline">legal@pagepouch.com</a></p>
-                  <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagepouch.com/contact</Link></p>
-                  <p>📍 Address: PagePouch Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
+                  <p>📧 Email: <a href="mailto:legal@pagestash.com" className="text-blue-600 dark:text-blue-400 hover:underline">legal@pagestash.com</a></p>
+                  <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.com/contact</Link></p>
+                  <p>📍 Address: PageStash Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
                 </div>
                 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-slate-500">
-                    These Terms of Service are effective as of January 15, 2025, and govern your use of PagePouch services.
+                    These Terms of Service are effective as of January 15, 2025, and govern your use of PageStash services.
                   </p>
                 </div>
               </div>

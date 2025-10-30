@@ -7,10 +7,10 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PagePouch - Capture, Organize, Retrieve',
+  title: 'PageStash - Capture, Organize, Retrieve',
   description: 'The most frictionless way to capture, organize, and retrieve web content',
   keywords: ['web clipper', 'research tool', 'content capture', 'threat intelligence'],
-  authors: [{ name: 'PagePouch Team' }],
+  authors: [{ name: 'PageStash Team' }],
   icons: {
     icon: [
       { url: '/icons/icon-16.png', sizes: '16x16', type: 'image/png' },

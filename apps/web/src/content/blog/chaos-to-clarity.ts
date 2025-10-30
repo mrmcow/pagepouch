@@ -52,7 +52,7 @@ The key to maintaining order with high volume:
 
 With 1000+ pages, browsing is dead. Search is your interface.
 
-PagePouch indexes the full content of every saved page, so you can find that specific quote or data point instantly without remembering which folder it's in.
+PageStash indexes the full content of every saved page, so you can find that specific quote or data point instantly without remembering which folder it's in.
 
 ## Weekly Maintenance Ritual
 
@@ -74,7 +74,7 @@ For truly valuable content, create permanent notes:
 
 ## Use Knowledge Graphs
 
-Modern tools like PagePouch can automatically visualize connections between your saved content, revealing patterns and relationships you'd never spot manually.
+Modern tools like PageStash can automatically visualize connections between your saved content, revealing patterns and relationships you'd never spot manually.
 
 ## Batch Processing Days
 
@@ -95,7 +95,7 @@ Evernote: Struggles past 1000 notes
 Read-it-later apps: Great for consuming, terrible for organizing
 Dedicated web clippers: Built for scale
 
-PagePouch handles thousands of full-page captures with full-text search, folders, tags, and knowledge graphs—all designed for people who save everything.
+PageStash handles thousands of full-page captures with full-text search, folders, tags, and knowledge graphs—all designed for people who save everything.
 
 ## Your Action Plan
 
@@ -114,12 +114,12 @@ The goal isn't perfect organization—it's making your massive collection actual
 
 ## Ready to Transform Your Digital Chaos?
 
-PagePouch is purpose-built for people managing large web content collections. Sign up for your free trial—50 clips included.
+PageStash is purpose-built for people managing large web content collections. Sign up for your free trial—50 clips included.
 
 [Start organizing your research →](/auth/signup)
 `,
   excerpt: 'Real strategies for managing massive web content collections without losing your mind. From ruthless cleanup to knowledge graphs.',
-  author: 'PagePouch Team',
+  author: 'PageStash Team',
   publishedAt: '2025-10-31',
   readingTime: 4,
   featuredImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop&auto=format',

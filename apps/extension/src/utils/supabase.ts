@@ -206,7 +206,7 @@ export class ExtensionAPI {
     // In production, use the deployed web app URL
     // In development, use localhost
     return process.env.NODE_ENV === 'production' 
-      ? 'https://pagepouch-web.vercel.app'
+      ? 'https://pagestash-web.vercel.app'
       : 'http://localhost:3000'
   }
 

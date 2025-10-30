@@ -1,11 +1,11 @@
-// Enhanced PagePouch Extension Popup
+// Enhanced PageStash Extension Popup
 // Modern, beautiful UI with new logo and improved UX
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ExtensionAuth, supabase } from '../utils/supabase';
 
-// Beautiful PagePouch Logo component
+// Beautiful PageStash Logo component
 const Logo = ({ size = 32 }: { size?: number }) => (
   <div style={{ position: 'relative' }}>
     <svg 
@@ -604,7 +604,7 @@ function EnhancedPopupApp() {
   const openWebApp = () => {
     // Use production URL in production, localhost in development
     const webAppUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://pagepouch-web.vercel.app/dashboard'
+      ? 'https://pagestash-web.vercel.app/dashboard'
       : 'http://localhost:3000/dashboard';
     chrome.tabs.create({ url: webAppUrl });
   };
@@ -616,7 +616,7 @@ function EnhancedPopupApp() {
         <div style={styles.header}>
           <div style={styles.logoSection}>
             <Logo size={32} />
-            <h1 style={styles.brandName}>PagePouch</h1>
+            <h1 style={styles.brandName}>PageStash</h1>
           </div>
           <button
             onClick={() => setState(prev => ({ ...prev, showAuth: false }))}
@@ -649,7 +649,7 @@ function EnhancedPopupApp() {
             <p style={{ margin: 0, color: '#6b7280', fontSize: '13px' }}>
               {authForm.isSignUp 
                 ? 'Start capturing and organizing web content' 
-                : 'Access your PagePouch library'
+                : 'Access your PageStash library'
               }
             </p>
           </div>
@@ -712,7 +712,7 @@ function EnhancedPopupApp() {
       <div style={styles.header}>
         <div style={styles.logoSection}>
           <Logo size={40} />
-          <h1 style={styles.brandName}>PagePouch</h1>
+          <h1 style={styles.brandName}>PageStash</h1>
           {state.isAuthenticated && (
             <div style={getUsageBadgeStyle()}>
               {getUsageBadgeText()}
@@ -873,7 +873,7 @@ function EnhancedPopupApp() {
                   You've used all {state.clipsLimit} clips this month. Upgrade to Pro for unlimited clips!
                 </div>
                 <button
-                  onClick={() => window.open('https://pagepouch-web.vercel.app/pricing', '_blank')}
+                  onClick={() => window.open('https://pagestash-web.vercel.app/pricing', '_blank')}
                   style={{
                     ...styles.button,
                     ...styles.primaryButton,
@@ -973,7 +973,7 @@ function EnhancedPopupApp() {
           fontSize: '12px',
           color: '#64748b',
         }}>
-          <div style={{ fontWeight: '500', marginBottom: '4px', color: '#64748b' }}>PagePouch v1.1.0</div>
+          <div style={{ fontWeight: '500', marginBottom: '4px', color: '#64748b' }}>PageStash v1.1.0</div>
           <div style={{ fontSize: '11px', color: '#94a3b8' }}>Capture • Organize • Retrieve</div>
         </div>
       </div>

@@ -132,7 +132,7 @@ export default function SignUpPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              Click the link in the email to activate your account and start using PagePouch.
+              Click the link in the email to activate your account and start using PageStash.
             </p>
             <Button 
               variant="outline" 
@@ -169,7 +169,7 @@ export default function SignUpPage() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Start your free trial</h1>
           <p className="text-muted-foreground">
-            Create your PagePouch account in seconds
+            Create your PageStash account in seconds
           </p>
         </div>
 
@@ -205,7 +205,7 @@ export default function SignUpPage() {
           <CardHeader>
             <CardTitle>Create Account</CardTitle>
             <CardDescription>
-              Get started with your free PagePouch account
+              Get started with your free PageStash account
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -1,8 +1,8 @@
-# PagePouch 📎
+# PageStash 📎
 
 > The most frictionless way to capture, organize, and retrieve web content
 
-PagePouch is a browser extension and web application designed for analysts, researchers, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
+PageStash is a browser extension and web application designed for analysts, researchers, and knowledge workers who need to reliably archive web content with zero friction and maximum searchability.
 
 ## 🎯 Vision
 
@@ -45,7 +45,7 @@ This is a monorepo containing:
 1. **Clone and install dependencies**
    ```bash
    git clone <repository-url>
-   cd pagepouch
+   cd pagestash
    npm install
    ```
 

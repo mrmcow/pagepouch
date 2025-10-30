@@ -54,7 +54,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Folder } from '@pagepouch/shared'
+import { Folder } from '@pagestash/shared'
 import { EnhancedKnowledgeGraphViewer } from './EnhancedKnowledgeGraphViewer'
 import { generateFallbackPreview } from '@/utils/graphPreviewGenerator'
 
