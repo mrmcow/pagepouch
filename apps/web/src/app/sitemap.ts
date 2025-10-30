@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { getAllPosts } from '@/lib/blog'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.com'
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.pagestash.app'
   
   // Get all blog posts
   const posts = getAllPosts()

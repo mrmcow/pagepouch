@@ -92,3 +92,4 @@ apps/extension/downloads/version-info.json
 
 # Turbo
 .turbo/
+.vercel

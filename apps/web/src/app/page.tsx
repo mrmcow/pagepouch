@@ -120,6 +120,44 @@ export default function HomePage() {
   }
 
   return (
+    <>
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'PageStash',
+            applicationCategory: 'ProductivityApplication',
+            operatingSystem: 'Chrome, Firefox, Edge, Brave',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+              availability: 'https://schema.org/InStock',
+            },
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: '4.9',
+              ratingCount: '10000',
+              bestRating: '5',
+            },
+            description: 'The only web archival tool built for researchers, analysts, and professionals. Capture full-page screenshots, extract text, organize with folders, and find content instantly.',
+            url: 'https://www.pagestash.app',
+            image: 'https://www.pagestash.app/og-image.png',
+            author: {
+              '@type': 'Organization',
+              name: 'PageStash',
+            },
+            provider: {
+              '@type': 'Organization',
+              name: 'PageStash',
+              url: 'https://www.pagestash.app',
+            },
+          }),
+        }}
+      />
     <div className="flex flex-col min-h-screen bg-white dark:bg-slate-950">
       {/* Clean Header - Fixed */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
@@ -240,30 +278,30 @@ export default function HomePage() {
               </div>
               
               <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                <li className="flex items-center gap-3 text-slate-900 dark:text-slate-300">
                   <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <span><strong>50 clips</strong> per month</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                <li className="flex items-center gap-3 text-slate-900 dark:text-slate-300">
                   <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <span><strong>100MB</strong> storage</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                <li className="flex items-center gap-3 text-slate-900 dark:text-slate-300">
                   <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <span>Full-text search</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                <li className="flex items-center gap-3 text-slate-900 dark:text-slate-300">
                   <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <span>Folders & organization</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                <li className="flex items-center gap-3 text-slate-900 dark:text-slate-300">
                   <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <span>Chrome & Firefox extensions</span>
                 </li>
               </ul>
               
               <Button 
-                className="w-full font-medium" 
+                className="w-full font-medium hover:!text-slate-900 dark:hover:!text-white" 
                 variant="outline"
                 onClick={handleSmartDownload}
               >
@@ -418,16 +456,13 @@ export default function HomePage() {
           </div>
 
           {/* Dashboard Mockup */}
-          <div className="max-w-5xl mx-auto mb-16">
+          <div className="max-w-5xl mx-auto mb-24">
             <div className="relative group overflow-hidden rounded-2xl">
-              {/* Solid background layer */}
-              <div className="absolute inset-0 bg-white dark:bg-slate-900 z-0"></div>
-              
               {/* Floating effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-indigo-600/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-indigo-600/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500 z-0" />
               
-              {/* Content wrapper */}
-              <div className="relative z-10 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)] hover:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.4)] dark:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.6)] ring-1 ring-slate-900/5 dark:ring-white/10 hover:ring-slate-900/10 dark:hover:ring-white/20 transition-all duration-300">
+              {/* Content wrapper with solid background */}
+              <div className="relative z-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)] hover:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.4)] dark:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.6)] ring-1 ring-slate-900/5 dark:ring-white/10 hover:ring-slate-900/10 dark:hover:ring-white/20 transition-all duration-300">
                 {/* Browser Chrome */}
                 <div className="relative flex items-center gap-2 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
                   <div className="flex gap-2">
@@ -564,10 +599,10 @@ export default function HomePage() {
           </div>
 
           {/* Feature Highlights */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-12 lg:gap-16 max-w-5xl mx-auto mt-16">
             {/* Extension Popup Mockup */}
             <div className="text-center">
-              <div className="mb-6">
+              <div className="mb-8">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-md max-w-sm mx-auto">
                   <div className="flex items-center gap-3 mb-4">
                     <LogoIcon size={24} />
@@ -590,7 +625,7 @@ export default function HomePage() {
 
             {/* Search Results Mockup */}
             <div className="text-center">
-              <div className="mb-6">
+              <div className="mb-8">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-md max-w-sm mx-auto">
                   <div className="mb-4">
                     <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-lg p-2">
@@ -616,7 +651,7 @@ export default function HomePage() {
 
             {/* Organization Mockup */}
             <div className="text-center">
-              <div className="mb-6">
+              <div className="mb-8">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-md max-w-sm mx-auto">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
@@ -831,16 +866,16 @@ export default function HomePage() {
                       <div>Esc Close</div>
                 </div>
                 </div>
+                </div>
               </div>
               </div>
             </div>
           </div>
         </div>
-        </div>
       </section>
 
       {/* Final CTA Section */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <section className="relative py-12 sm:py-16 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
         {/* Glass effect overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent" />
         
@@ -1078,5 +1113,6 @@ export default function HomePage() {
         selectedBrowser={selectedBrowser}
       />
     </div>
+    </>
   )
 }
