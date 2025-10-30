@@ -165,15 +165,20 @@ export default function HomePage() {
 
             {/* Right Side - CTA Box */}
             <div className="w-full">
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-sm">
-                <div className="text-center mb-6 sm:mb-8">
+              <div className="relative group bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-2xl shadow-blue-500/5 dark:shadow-blue-900/20 ring-1 ring-slate-900/5 dark:ring-white/10 hover:shadow-blue-500/10 transition-all duration-300">
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20 dark:from-blue-900/10 dark:to-purple-900/10 rounded-2xl pointer-events-none" />
+                
+                <div className="relative text-center mb-6 sm:mb-8">
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">Start Your Free Trial</h3>
                   <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">50 clips free • Free trial • 2-minute setup</p>
             </div>
             
-                <BrowserSelector onDownloadClick={handleDownloadClick} />
+                <div className="relative">
+                  <BrowserSelector onDownloadClick={handleDownloadClick} />
+                </div>
                 
-                <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
+                <div className="relative mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
                     or start with the web dashboard
                   </p>
@@ -196,8 +201,14 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 sm:py-24 px-4 bg-slate-50 dark:bg-slate-900">
-        <div className="pagestash-container">
+      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-br from-slate-100/80 via-slate-50 to-blue-50/40 dark:from-slate-900 dark:via-slate-900/80 dark:to-blue-950/30">
+        {/* Floating orb */}
+        <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-3xl" />
+        
+        {/* Radial gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-blue-100/20 via-transparent to-transparent dark:from-blue-900/10" />
+        <div className="pagestash-container relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
               Simple, transparent pricing
@@ -209,8 +220,10 @@ export default function HomePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mt-8">
             {/* Free Tier */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-8">
-              <div className="text-center mb-8">
+            <div className="relative group bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-8 shadow-xl shadow-slate-900/5 dark:shadow-black/20 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300 ring-1 ring-slate-900/5 dark:ring-white/5">
+              {/* Subtle shimmer on hover */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-50/0 to-transparent group-hover:via-blue-50/50 dark:group-hover:via-blue-900/20 rounded-2xl pointer-events-none transition-all duration-500" />
+              <div className="relative text-center mb-8">
                 <h3 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Free Trial</h3>
                 <div className="text-5xl font-bold mb-4 text-slate-900 dark:text-white">$0</div>
                 <p className="text-slate-600 dark:text-slate-400">Perfect for trying PageStash</p>
@@ -250,14 +263,16 @@ export default function HomePage() {
             </div>
 
             {/* Pro Tier */}
-            <div className="relative bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg p-8 border border-blue-500 mt-6 transition-transform duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer">
+            <div className="relative group bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 border-2 border-blue-400/50 shadow-2xl shadow-blue-500/30 dark:shadow-blue-900/40 hover:shadow-3xl hover:shadow-blue-400/40 hover:scale-[1.02] transition-all duration-300 ring-2 ring-blue-400/20 dark:ring-blue-300/20">
+              {/* Glowing effect */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-300" />
               <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2 z-10">
-                <div className="bg-white text-blue-600 px-4 py-1.5 text-xs font-semibold tracking-wide shadow-sm border border-slate-200 whitespace-nowrap">
+                <div className="bg-white text-blue-600 px-4 py-1.5 text-xs font-semibold tracking-wide shadow-lg shadow-blue-500/20 border border-blue-200 whitespace-nowrap rounded-full">
                   MOST POPULAR
                   </div>
                 </div>
               
-              <div className="text-center mb-8 text-white pt-4">
+              <div className="relative text-center mb-8 text-white pt-4">
                 <h3 className="text-2xl font-bold mb-2">PageStash Pro</h3>
                 <div className="flex items-baseline justify-center gap-2 mb-2">
                   <span className="text-5xl font-bold">$4</span>
@@ -312,8 +327,11 @@ export default function HomePage() {
       </section>
 
       {/* How it Works - MOVED UP for better sequencing */}
-      <section className="py-20 sm:py-24 px-4 bg-white dark:bg-slate-950">
-        <div className="pagestash-container">
+      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-b from-white via-purple-50/20 to-white dark:from-slate-950 dark:via-purple-950/10 dark:to-slate-950">
+        {/* Subtle orbs */}
+        <div className="absolute top-0 left-1/3 w-80 h-80 bg-purple-500/10 dark:bg-purple-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/3 w-80 h-80 bg-green-500/10 dark:bg-green-600/10 rounded-full blur-3xl" />
+        <div className="pagestash-container relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
               Start capturing in 3 simple steps
@@ -325,8 +343,10 @@ export default function HomePage() {
             
           <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto mb-20">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">1</span>
+              <div className="relative group w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30 dark:shadow-blue-900/50 ring-2 ring-blue-400/20 ring-offset-2 ring-offset-white dark:ring-offset-slate-950 hover:shadow-2xl hover:shadow-blue-400/40 hover:scale-110 transition-all duration-300">
+                {/* Inner glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl" />
+                <span className="relative text-2xl font-bold text-white">1</span>
               </div>
               <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Install Extension</h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -335,8 +355,10 @@ export default function HomePage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">2</span>
+              <div className="relative group w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/30 dark:shadow-purple-900/50 ring-2 ring-purple-400/20 ring-offset-2 ring-offset-white dark:ring-offset-slate-950 hover:shadow-2xl hover:shadow-purple-400/40 hover:scale-110 transition-all duration-300">
+                {/* Inner glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl" />
+                <span className="relative text-2xl font-bold text-white">2</span>
               </div>
               <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Capture Content</h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -345,8 +367,10 @@ export default function HomePage() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">3</span>
+              <div className="relative group w-16 h-16 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30 dark:shadow-green-900/50 ring-2 ring-green-400/20 ring-offset-2 ring-offset-white dark:ring-offset-slate-950 hover:shadow-2xl hover:shadow-green-400/40 hover:scale-110 transition-all duration-300">
+                {/* Inner glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl" />
+                <span className="relative text-2xl font-bold text-white">3</span>
               </div>
               <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Search & Organize</h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -358,9 +382,16 @@ export default function HomePage() {
       </section>
 
       {/* Features Overview with Visual Depth */}
-      <section className="py-20 sm:py-24 px-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 relative">
-        {/* Add subtle pattern for depth */}
-        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]" style={{backgroundImage: "radial-gradient(circle at 2px 2px, rgb(0 0 0) 1px, transparent 0)", backgroundSize: "32px 32px"}}></div>
+      <section className="py-20 sm:py-24 px-4 relative overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100/80 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900/80">
+        {/* Enhanced floating orbs */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/15 dark:bg-indigo-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/15 dark:bg-blue-600/10 rounded-full blur-3xl" />
+        
+        {/* Mesh gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-200/30 via-transparent to-transparent dark:from-blue-900/20 pointer-events-none" />
+        
+        {/* Enhanced grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:32px_32px] dark:bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] pointer-events-none" />
         
         <div className="pagestash-container relative">
           <div className="text-center mb-16">
@@ -374,16 +405,18 @@ export default function HomePage() {
 
           {/* Dashboard Mockup */}
           <div className="max-w-5xl mx-auto mb-16">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-lg">
+            <div className="relative group bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.5)] ring-1 ring-slate-900/5 dark:ring-white/10">
+              {/* Floating effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-indigo-600/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500" />
                 {/* Browser Chrome */}
-                <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+                <div className="relative flex items-center gap-2 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
                   <div className="flex gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"></div>
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full shadow-lg shadow-yellow-500/50"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
                   </div>
                   <div className="flex-1 text-center">
-                    <div className="bg-slate-100 dark:bg-slate-800 rounded-lg px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                    <div className="bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-800/80 dark:to-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-slate-600 dark:text-slate-400 shadow-inner ring-1 ring-slate-200/50 dark:ring-slate-700/50">
                       pagestash.com/dashboard
                     </div>
                   </div>
@@ -786,8 +819,15 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 sm:py-24 px-4 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="pagestash-container">
+      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+        {/* Glass effect overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent" />
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{animationDuration: '7s'}} />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{animationDuration: '9s', animationDelay: '1s'}} />
+        
+        <div className="pagestash-container relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-white">
               Ready to capture the web like a pro?
