@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import * as analytics from '@/lib/analytics'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LogoWithText, LogoIcon } from '@/components/ui/logo'
@@ -88,11 +89,19 @@ export default function HomePage() {
     if (browser) {
       setSelectedBrowser(browser)
     }
+    
+    // Track extension download click
+    analytics.trackExtensionDownloadClicked({
+      browser: browser || selectedBrowser,
+      source: 'homepage'
+    })
+    
     setIsDownloadModalOpen(true)
   }
 
   const handleSmartDownload = () => {
     console.log('Smart download clicked, detected browser:', detectedBrowser) // Debug log
+    
     // Always use the modal for better UX with instructions
     const browserType = detectedBrowser?.name === 'Firefox' ? 'firefox' : 'chrome'
     handleDownloadClick(browserType)
