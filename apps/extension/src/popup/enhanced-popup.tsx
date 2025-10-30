@@ -89,8 +89,10 @@ interface AuthFormState {
 // Inline styles for the extension popup
 const styles = {
   container: {
-    width: '360px',
-    minHeight: '480px',
+    width: '380px',
+    minHeight: '520px',
+    maxHeight: '600px',
+    height: 'auto',
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     backgroundColor: '#ffffff',
     color: '#1f2937',
@@ -98,6 +100,7 @@ const styles = {
     lineHeight: '1.5',
     display: 'flex',
     flexDirection: 'column' as const,
+    overflow: 'hidden',
   },
   header: {
     padding: '16px 20px 12px 20px',
@@ -116,19 +119,21 @@ const styles = {
   },
   brandName: {
     fontSize: '20px',
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#1e293b',
     margin: 0,
     letterSpacing: '-0.025em',
     textAlign: 'center' as const,
   },
   content: {
-    padding: '16px 20px',
+    padding: '20px 24px',
     flex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '12px',
+    gap: '16px',
+    overflowY: 'auto' as const,
+    overflowX: 'hidden' as const,
   },
   button: {
     padding: '14px 24px',
@@ -143,7 +148,7 @@ const styles = {
     justifyContent: 'center',
     gap: '8px',
     width: '100%',
-    maxWidth: '280px',
+    maxWidth: '320px',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
   },
   primaryButton: {
@@ -163,7 +168,7 @@ const styles = {
   },
   input: {
     width: '100%',
-    maxWidth: '280px',
+    maxWidth: '320px',
     padding: '14px 16px',
     border: '1px solid #e2e8f0',
     borderRadius: '12px',
@@ -176,13 +181,14 @@ const styles = {
   },
   card: {
     backgroundColor: '#f8fafc',
-    border: '1px solid #f1f5f9',
+    border: '1px solid #e2e8f0',
     borderRadius: '12px',
     padding: '20px',
     width: '100%',
-    maxWidth: '280px',
+    maxWidth: '320px',
     textAlign: 'center' as const,
     boxSizing: 'border-box' as const,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
   },
   progressBar: {
     width: '100%',
@@ -225,10 +231,11 @@ const styles = {
     padding: '16px',
     backgroundColor: '#f8fafc',
     borderRadius: '12px',
-    border: '1px solid #f1f5f9',
+    border: '1px solid #e2e8f0',
     width: '100%',
-    maxWidth: '280px',
+    maxWidth: '320px',
     boxSizing: 'border-box' as const,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
   },
   tabIcon: {
     width: '16px',
@@ -960,13 +967,14 @@ function EnhancedPopupApp() {
         <div style={{ 
           textAlign: 'center', 
           marginTop: 'auto',
-          paddingTop: '24px', 
+          paddingTop: '16px',
+          paddingBottom: '16px',
           borderTop: '1px solid #f1f5f9',
           fontSize: '12px',
-          color: '#94a3b8',
+          color: '#64748b',
         }}>
-          <div style={{ fontWeight: '500', marginBottom: '4px' }}>PagePouch v1.1.0</div>
-          <div>Capture • Organize • Retrieve</div>
+          <div style={{ fontWeight: '500', marginBottom: '4px', color: '#64748b' }}>PagePouch v1.1.0</div>
+          <div style={{ fontSize: '11px', color: '#94a3b8' }}>Capture • Organize • Retrieve</div>
         </div>
       </div>
     </div>
