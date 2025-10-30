@@ -4,10 +4,10 @@
   "version": "1.1.0",
   "description": "Capture any webpage with one click. Perfect for researchers, analysts, and anyone who needs to archive web content reliably.",
   "author": "PageStash Team",
-  "homepage_url": "https://pagestash.com",
+  "homepage_url": "https://pagestash.app",
   "browser_specific_settings": {
     "gecko": {
-      "id": "pagestash@pagestash.com",
+      "id": "pagestash@pagestash.app",
       "strict_min_version": "78.0"
     }
   },

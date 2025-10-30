@@ -850,7 +850,7 @@ export default function HomePage() {
               <Link href="/terms" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 Terms
               </Link>
-              <a href="mailto:support@pagestash.com" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+              <a href="mailto:support@pagestash.app" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 Support
               </a>
             </div>

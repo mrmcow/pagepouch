@@ -4,7 +4,7 @@
   "version": "1.2.0",
   "description": "Capture any webpage with one click. Perfect for researchers, analysts, and anyone who needs to archive web content reliably.",
   "author": "PageStash Team",
-  "homepage_url": "https://pagestash.com",
+  "homepage_url": "https://pagestash.app",
   "permissions": [
     "activeTab",
     "storage",
