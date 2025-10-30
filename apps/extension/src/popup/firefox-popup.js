@@ -36,18 +36,18 @@ let authState = {
 
 // Styles
 const styles = {
-  container: 'width: 360px; min-height: 480px; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: #ffffff; color: #1f2937; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column;',
+  container: 'width: 380px; min-height: 520px; max-height: 600px; height: auto; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: #ffffff; color: #1f2937; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column; overflow: hidden;',
   header: 'padding: 16px 20px 12px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; border-bottom: 1px solid #f1f5f9;',
   logoSection: 'display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 8px;',
-  brandName: 'font-size: 20px; font-weight: 700; color: #1e293b; margin: 0; letter-spacing: -0.025em; text-align: center;',
-  content: 'padding: 16px 20px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px;',
-  button: 'padding: 14px 24px; border-radius: 12px; border: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 280px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);',
+  brandName: 'font-size: 20px; font-weight: 600; color: #1e293b; margin: 0; letter-spacing: -0.025em; text-align: center;',
+  content: 'padding: 20px 24px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 16px; overflow-y: auto; overflow-x: hidden;',
+  button: 'padding: 14px 24px; border-radius: 12px; border: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 320px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);',
   primaryButton: 'background-color: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);',
   secondaryButton: 'background-color: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
-  input: 'width: 100%; max-width: 280px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; margin-bottom: 16px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; text-align: center;',
-  card: 'background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 20px; width: 100%; max-width: 280px; text-align: center; box-sizing: border-box;',
+  input: 'width: 100%; max-width: 320px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; margin-bottom: 16px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; text-align: center;',
+  card: 'background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; width: 100%; max-width: 320px; text-align: center; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
   badge: 'display: inline-flex; align-items: center; padding: 4px 8px; background-color: #dbeafe; color: #1d4ed8; border-radius: 12px; font-size: 12px; font-weight: 500;',
-  tabInfo: 'display: flex; align-items: flex-start; gap: 12px; padding: 16px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; width: 100%; max-width: 280px; box-sizing: border-box; flex-direction: column; text-align: center;'
+  tabInfo: 'display: flex; align-items: flex-start; gap: 12px; padding: 16px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; max-width: 320px; box-sizing: border-box; flex-direction: column; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);'
 };
 
 // Logo SVG
@@ -512,7 +512,7 @@ function renderMainScreen() {
         
         ${/* Folder Selector - Always visible when authenticated and folders available */ ''}
         ${appState.isAuthenticated && appState.folders && appState.folders.length > 0 && !appState.isCapturing ? `
-          <div style="width: 100%; max-width: 280px; margin-bottom: 12px;">
+          <div style="width: 100%; max-width: 320px; margin-bottom: 12px;">
             <label style="display: block; font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 6px;">Save to folder:</label>
             ${appState.loadingFolders ? `
               <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 13px;">Loading folders...</div>
@@ -565,9 +565,9 @@ function renderMainScreen() {
           </div>
         `}
         
-        <div style="text-align: center; margin-top: auto; padding-top: 24px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
-          <div style="font-weight: 500; margin-bottom: 4px;">PagePouch v1.1.0</div>
-          <div>Capture • Organize • Retrieve</div>
+        <div style="text-align: center; margin-top: auto; padding-top: 16px; padding-bottom: 16px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b;">
+          <div style="font-weight: 500; margin-bottom: 4px; color: #64748b;">PagePouch v1.1.0</div>
+          <div style="font-size: 11px; color: #94a3b8;">Capture • Organize • Retrieve</div>
         </div>
       </div>
     </div>

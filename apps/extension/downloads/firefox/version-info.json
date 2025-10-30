@@ -1,8 +1,8 @@
 {
   "name": "PagePouch Extension",
   "version": "1.2.0",
-  "buildDate": "2025-10-30T04:24:51.275Z",
-  "buildNumber": 1761798291276,
+  "buildDate": "2025-10-30T08:09:18.377Z",
+  "buildNumber": 1761811758377,
   "features": [
     "Full page scroll capture",
     "Visible area capture",
