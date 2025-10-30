@@ -625,15 +625,15 @@ export function EnhancedKnowledgeGraphViewer({
     const text2 = (clip2.text_content || '').toLowerCase()
     
     // Title similarity
-    const titleWords1 = title1.split(/\s+/).filter(w => w.length > 3)
-    const titleWords2 = title2.split(/\s+/).filter(w => w.length > 3)
-    const titleIntersection = titleWords1.filter(w => titleWords2.includes(w))
+    const titleWords1 = title1.split(/\s+/).filter((w: string) => w.length > 3)
+    const titleWords2 = title2.split(/\s+/).filter((w: string) => w.length > 3)
+    const titleIntersection = titleWords1.filter((w: string) => titleWords2.includes(w))
     const titleSimilarity = titleWords1.length > 0 ? titleIntersection.length / Math.max(titleWords1.length, titleWords2.length) : 0
     
     // Text similarity (simple word overlap)
-    const textWords1 = text1.split(/\s+/).filter(w => w.length > 4).slice(0, 50) // Limit for performance
-    const textWords2 = text2.split(/\s+/).filter(w => w.length > 4).slice(0, 50)
-    const textIntersection = textWords1.filter(w => textWords2.includes(w))
+    const textWords1 = text1.split(/\s+/).filter((w: string) => w.length > 4).slice(0, 50) // Limit for performance
+    const textWords2 = text2.split(/\s+/).filter((w: string) => w.length > 4).slice(0, 50)
+    const textIntersection = textWords1.filter((w: string) => textWords2.includes(w))
     const textSimilarity = textWords1.length > 0 ? textIntersection.length / Math.max(textWords1.length, textWords2.length) : 0
     
     // Weighted combination

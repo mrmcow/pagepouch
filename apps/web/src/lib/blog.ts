@@ -76,9 +76,10 @@ export function getCategoryLabel(category: BlogCategory): string {
     'productivity': 'Productivity',
     'use-cases': 'Use Cases',
     'comparisons': 'Comparisons',
-    'guides': 'How-To Guides'
+    'guides': 'Guides',
+    'how-to': 'How-To'
   }
-  return labels[category]
+  return labels[category] || category
 }
 
 export function formatDate(dateString: string): string {

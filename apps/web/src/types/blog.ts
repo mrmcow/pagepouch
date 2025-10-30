@@ -18,13 +18,14 @@ export type BlogCategory =
   | 'use-cases'
   | 'comparisons'
   | 'guides'
+  | 'how-to'
 
 export interface BlogListItem {
   slug: string
   title: string
   description: string
   publishedAt: string
-  readingTime: string
+  readingTime: number
   category: BlogCategory
   tags: string[]
   featuredImage: string

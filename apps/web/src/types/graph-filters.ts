@@ -20,7 +20,7 @@ export interface Evidence {
   notes?: string
   reviewer?: string
   reviewStatus?: 'pending' | 'verified' | 'disputed'
-  sourceType: 'primary' | 'secondary' | 'tertiary'
+  sourceType: 'primary' | 'secondary' | 'tertiary' | 'derived'
   provenance: {
     hasQuote: boolean
     hasUrl: boolean
@@ -62,7 +62,7 @@ export interface EnhancedGraphEdge {
   id: string
   source: string
   target: string
-  type: 'co_mention' | 'citation' | 'user_link' | 'semantic_similarity' | 'temporal_proximity' | 'source_authority' | 'topic_bridge'
+  type: 'co_mention' | 'citation' | 'user_link' | 'semantic_similarity' | 'temporal_proximity' | 'source_authority' | 'topic_bridge' | 'same_topic' | 'tag_match' | 'same_session' | 'similar_content'
   weight: number
   color: string
   evidence: Evidence[]
@@ -123,7 +123,7 @@ export interface EvidenceFilters {
   minDistinctSources: number // Minimum distinct sources
   requireProvenance: ('quote' | 'url' | 'screenshot')[] // Required provenance elements
   reviewStatus: ('pending' | 'verified' | 'disputed')[] // Review statuses to include
-  sourceTypes: ('primary' | 'secondary' | 'tertiary')[] // Source types to include
+  sourceTypes: ('primary' | 'secondary' | 'tertiary' | 'derived')[] // Source types to include
   confidenceRange: {
     min: number // 0-1
     max: number // 0-1
