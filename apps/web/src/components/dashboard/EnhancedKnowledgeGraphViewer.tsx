@@ -371,14 +371,6 @@ export function EnhancedKnowledgeGraphViewer({
       return acc
     }, [] as EnhancedGraphEdge[])
 
-    console.log('🔍 Graph Generation Debug:', {
-      originalNodes: nodes.length,
-      uniqueNodes: uniqueNodes.length,
-      duplicatesRemoved: nodes.length - uniqueNodes.length,
-      originalEdges: edges.length,
-      uniqueEdges: uniqueEdges.length
-    })
-
     return { nodes: uniqueNodes, edges: uniqueEdges }
   }, [])
 
@@ -708,31 +700,14 @@ export function EnhancedKnowledgeGraphViewer({
         ? clips.filter(clip => graphFolderIds.includes(clip.folder_id))
         : clips
       
-      console.log('🔍 Debug: Loading graph data', { 
-        totalClipsLength: clips?.length || 0, 
-        graphFolderIds,
-        filteredClipsLength: filteredClips?.length || 0,
-        foldersLength: folders?.length || 0,
-        graphId,
-        filteredClips: filteredClips?.slice(0, 3) // Show first 3 filtered clips for debugging
-      })
       
       const enhanced = convertToEnhancedGraphData(filteredClips, folders, uiState.activeFilters.connections.viewMode)
-      console.log('🔍 Debug: Enhanced graph data', { 
-        nodesLength: enhanced.nodes.length, 
-        edgesLength: enhanced.edges.length,
-        nodes: enhanced.nodes.slice(0, 3) // Show first 3 nodes for debugging
-      })
       
       setRawGraphData(enhanced)
       
       // Apply default filters
       const engine = new GraphFilterEngine(enhanced.nodes, enhanced.edges)
       const filtered = engine.applyFilters(DEFAULT_FILTERS)
-      console.log('🔍 Debug: Filtered data', { 
-        filteredNodesLength: filtered.nodes.length, 
-        filteredEdgesLength: filtered.edges.length 
-      })
       
       setFilteredData(filtered)
     }
@@ -875,10 +850,8 @@ export function EnhancedKnowledgeGraphViewer({
   // Generate and save graph preview when graph is rendered with data
   useEffect(() => {
     if (isOpen && graphId && filteredData.nodes.length > 0 && canvasRef.current) {
-      console.log('🖼️ Preview Generation: Scheduling preview generation for graph', graphId)
       // Delay to ensure canvas is fully rendered
       const timer = setTimeout(() => {
-        console.log('🖼️ Preview Generation: Starting preview generation...')
         generateAndSavePreview()
       }, 5000) // Increased delay to ensure graph is fully rendered and positioned
       
@@ -953,10 +926,8 @@ export function EnhancedKnowledgeGraphViewer({
       
       // Convert to base64 with good quality
       const previewImage = previewCanvas.toDataURL('image/jpeg', 0.8)
-      console.log('🖼️ Preview Generation: Canvas captured, size:', previewImage.length, 'characters')
       
       // Save to database
-      console.log('🖼️ Preview Generation: Saving to database...')
       const response = await fetch(`/api/knowledge-graphs/${graphId}/preview`, {
         method: 'PUT',
         headers: {
@@ -968,7 +939,6 @@ export function EnhancedKnowledgeGraphViewer({
       if (!response.ok) {
         console.error('🖼️ Preview Generation: Failed to save graph preview', response.status, response.statusText)
       } else {
-        console.log('🖼️ Preview Generation: Graph preview saved successfully! Updating thumbnail...')
         // Notify parent component that preview was generated, pass the preview image
         onPreviewGenerated?.(previewImage)
       }

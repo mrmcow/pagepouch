@@ -30,8 +30,20 @@ import {
   RocketIcon,
   CameraIcon,
   CodeIcon,
-  FileTextIcon
+  FileTextIcon,
+  LifeBuoyIcon,
+  MessageCircleIcon,
+  HelpCircleIcon,
+  ChevronDownIcon,
+  MessageSquareIcon,
+  HeadphonesIcon
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 // Enhanced browser detection with download URLs
 const getBrowserInfo = () => {
@@ -131,7 +143,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section - Clean & Direct */}
-      <section className="pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 lg:pb-24">
+      <section className="relative pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 lg:pb-24 bg-gradient-to-b from-white via-blue-50/30 to-blue-50/60 dark:from-slate-950 dark:via-blue-950/20 dark:to-blue-950/40">
         <div className="pagestash-container">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Side - Hero Text */}
@@ -175,13 +187,10 @@ export default function HomePage() {
             </div>
             
                 <div className="relative">
-                  <BrowserSelector onDownloadClick={handleDownloadClick} />
+                <BrowserSelector onDownloadClick={handleDownloadClick} />
                 </div>
                 
                 <div className="relative mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
-                    or start with the web dashboard
-                  </p>
               <Button 
                 variant="outline" 
                 size="lg"
@@ -201,19 +210,20 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-br from-slate-100/80 via-slate-50 to-blue-50/40 dark:from-slate-900 dark:via-slate-900/80 dark:to-blue-950/30">
-        {/* Floating orb */}
-        <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-3xl" />
+      <section className="relative py-12 sm:py-16 px-4 overflow-hidden bg-gradient-to-b from-blue-50/50 via-indigo-50/40 to-purple-50/40 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30">
+        {/* Floating orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-500/5 dark:bg-purple-600/5 rounded-full blur-3xl" />
         
-        {/* Radial gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-blue-100/20 via-transparent to-transparent dark:from-blue-900/10" />
+        {/* Radial gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-blue-100/10 to-transparent dark:from-transparent dark:via-blue-900/10 dark:to-transparent" />
         <div className="pagestash-container relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 text-slate-900 dark:text-white">
               Simple, transparent pricing
             </h2>
-            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
               Start free, upgrade when you need more capacity for serious research work.
             </p>
           </div>
@@ -305,7 +315,7 @@ export default function HomePage() {
               </ul>
               
               <Button 
-                className="w-full font-medium bg-white text-blue-600 hover:bg-blue-50 hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl" 
+                className="w-full font-medium bg-white/90 text-blue-600 hover:bg-white hover:scale-105 group-hover:bg-white group-hover:shadow-2xl group-hover:scale-105 transition-all duration-300 shadow-lg" 
                 asChild
               >
                 <Link href="/auth/signup">
@@ -327,21 +337,25 @@ export default function HomePage() {
       </section>
 
       {/* How it Works - MOVED UP for better sequencing */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-b from-white via-purple-50/20 to-white dark:from-slate-950 dark:via-purple-950/10 dark:to-slate-950">
-        {/* Subtle orbs */}
-        <div className="absolute top-0 left-1/3 w-80 h-80 bg-purple-500/10 dark:bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/3 w-80 h-80 bg-green-500/10 dark:bg-green-600/10 rounded-full blur-3xl" />
+      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-b from-purple-50/40 via-violet-50/30 to-blue-50/20 dark:from-purple-950/30 dark:via-violet-950/25 dark:to-blue-950/20">
+        {/* Floating orbs for depth */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/8 dark:bg-purple-600/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/8 dark:bg-indigo-600/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-blue-500/8 dark:bg-blue-600/8 rounded-full blur-3xl" />
+        
+        {/* Radial gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-100/10 via-transparent to-transparent dark:from-purple-900/10 dark:via-transparent dark:to-transparent" />
         <div className="pagestash-container relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
+          <div className="text-center mb-28 sm:mb-32">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
               Start capturing in 3 simple steps
             </h2>
-            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
               From installation to your first captured page in under a minute.
             </p>
             </div>
             
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto mb-20">
+          <div className="grid md:grid-cols-3 gap-16 lg:gap-20 max-w-6xl mx-auto mb-16">
             <div className="text-center">
               <div className="relative group w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30 dark:shadow-blue-900/50 ring-2 ring-blue-400/20 ring-offset-2 ring-offset-white dark:ring-offset-slate-950 hover:shadow-2xl hover:shadow-blue-400/40 hover:scale-110 transition-all duration-300">
                 {/* Inner glow */}
@@ -382,7 +396,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Overview with Visual Depth */}
-      <section className="py-20 sm:py-24 px-4 relative overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100/80 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900/80">
+      <section className="py-20 sm:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-blue-50/30 via-slate-50 to-white dark:from-blue-950/30 dark:via-slate-900/50 dark:to-slate-900">
         {/* Enhanced floating orbs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/15 dark:bg-indigo-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/15 dark:bg-blue-600/10 rounded-full blur-3xl" />
@@ -390,7 +404,7 @@ export default function HomePage() {
         {/* Mesh gradient overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-200/30 via-transparent to-transparent dark:from-blue-900/20 pointer-events-none" />
         
-        {/* Enhanced grid */}
+        {/* Blueprint grid - strong technical aesthetic */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:32px_32px] dark:bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] pointer-events-none" />
         
         <div className="pagestash-container relative">
@@ -405,9 +419,15 @@ export default function HomePage() {
 
           {/* Dashboard Mockup */}
           <div className="max-w-5xl mx-auto mb-16">
-            <div className="relative group bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.5)] ring-1 ring-slate-900/5 dark:ring-white/10">
+            <div className="relative group overflow-hidden rounded-2xl">
+              {/* Solid background layer */}
+              <div className="absolute inset-0 bg-white dark:bg-slate-900 z-0"></div>
+              
               {/* Floating effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-indigo-600/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500" />
+              
+              {/* Content wrapper */}
+              <div className="relative z-10 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)] hover:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.4)] dark:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.6)] ring-1 ring-slate-900/5 dark:ring-white/10 hover:ring-slate-900/10 dark:hover:ring-white/20 transition-all duration-300">
                 {/* Browser Chrome */}
                 <div className="relative flex items-center gap-2 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
                   <div className="flex gap-2">
@@ -416,7 +436,7 @@ export default function HomePage() {
                     <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
                   </div>
                   <div className="flex-1 text-center">
-                    <div className="bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-800/80 dark:to-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-slate-600 dark:text-slate-400 shadow-inner ring-1 ring-slate-200/50 dark:ring-slate-700/50">
+                    <div className="bg-slate-100 dark:bg-slate-800 rounded-lg px-4 py-2 text-sm text-slate-600 dark:text-slate-400 shadow-inner ring-1 ring-slate-200 dark:ring-slate-700">
                       pagestash.com/dashboard
                     </div>
                   </div>
@@ -816,6 +836,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* Final CTA Section */}
@@ -877,6 +898,95 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 sm:py-24 px-4 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+        <div className="pagestash-container">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+              Everything you need to know about PageStash
+            </p>
+            </div>
+            
+          <div className="max-w-3xl mx-auto space-y-6">
+            {/* FAQ Item 1 */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                How does PageStash work?
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                PageStash is a browser extension that captures full-page screenshots and extracts text from any webpage with a single click. All your captures are automatically synced to your secure dashboard where you can search, organize, and access them from anywhere.
+              </p>
+            </div>
+
+            {/* FAQ Item 2 */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                Is my data secure and private?
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                Yes! Your data is encrypted in transit and at rest. We use industry-standard security practices and never share your data with third parties. You can delete your account and all associated data at any time.
+              </p>
+            </div>
+            
+            {/* FAQ Item 3 */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                What browsers are supported?
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                PageStash works on Google Chrome, Microsoft Edge, Brave, and Mozilla Firefox. Simply download the extension for your browser and sign up for a free account to get started.
+              </p>
+            </div>
+
+            {/* FAQ Item 4 */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                What's included in the free plan?
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                The free plan includes 50 clips per month, 100MB of storage, full-text search, folders & organization, and both Chrome & Firefox extensions. Perfect for trying PageStash and light usage.
+            </p>
+          </div>
+
+            {/* FAQ Item 5 */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                Can I upgrade or downgrade my plan?
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                Yes! You can upgrade to Pro at any time to get 1,000 clips per month and 5GB of storage. You can also cancel anytime with no fees or penalties. Your data will remain accessible even if you downgrade.
+                      </p>
+            </div>
+
+            {/* FAQ Item 6 */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                Can I export my captured content?
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                Yes! You can download your screenshots and extracted text at any time. Pro users also have access to bulk export features for easy backup and portability.
+              </p>
+            </div>
+          </div>
+
+          {/* Still have questions */}
+          <div className="text-center mt-16">
+            <p className="text-lg text-slate-600 dark:text-slate-400 mb-4">
+              Still have questions?
+            </p>
+            <Button variant="outline" size="lg" asChild>
+              <a href="mailto:support@pagestash.app">
+                <MessageCircleIcon className="mr-2 h-5 w-5" />
+                Contact Support
+              </a>
+                </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="pagestash-container py-12">
@@ -910,6 +1020,56 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Help Button - Bottom Right */}
+      <div className="fixed bottom-8 right-8 z-[9999]">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              size="lg"
+              className="h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:scale-110 transition-all duration-300 ring-4 ring-blue-400/30 hover:ring-blue-400/50 flex items-center justify-center"
+              title="Help & Support"
+            >
+              <span className="text-3xl text-white font-bold">?</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" className="w-64 mb-2">
+            <DropdownMenuItem asChild>
+              <Link href="#faq" className="flex items-center cursor-pointer py-3">
+                <HelpCircleIcon className="mr-3 h-5 w-5 text-blue-600" />
+                <div>
+                  <div className="font-medium">FAQs</div>
+                  <div className="text-xs text-slate-500">Common questions</div>
+                </div>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a 
+                href="mailto:support@pagestash.app?subject=Feedback&body=Hi PageStash team,%0D%0A%0D%0AI have some feedback to share:%0D%0A%0D%0A" 
+                className="flex items-center cursor-pointer py-3"
+              >
+                <MessageCircleIcon className="mr-3 h-5 w-5 text-green-600" />
+                <div>
+                  <div className="font-medium">Submit Feedback</div>
+                  <div className="text-xs text-slate-500">Share your thoughts</div>
+                </div>
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a 
+                href="mailto:support@pagestash.app?subject=Support Request&body=Hi PageStash support team,%0D%0A%0D%0AI need help with:%0D%0A%0D%0A" 
+                className="flex items-center cursor-pointer py-3"
+              >
+                <LifeBuoyIcon className="mr-3 h-5 w-5 text-orange-600" />
+                <div>
+                  <div className="font-medium">Contact Support</div>
+                  <div className="text-xs text-slate-500">Get help from our team</div>
+                </div>
+              </a>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Download Modal */}
       <DownloadModal 
