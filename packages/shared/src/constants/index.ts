@@ -1,11 +1,11 @@
 // Application constants
 
 export const APP_CONFIG = {
-  NAME: 'PagePouch',
+  NAME: 'PageStash',
   VERSION: '0.1.0',
   DESCRIPTION: 'The most frictionless way to capture, organize, and retrieve web content',
-  WEBSITE: 'https://pagepouch.com',
-  SUPPORT_EMAIL: 'support@pagepouch.com',
+  WEBSITE: 'https://pagestash.app',
+  SUPPORT_EMAIL: 'support@pagestash.app',
 } as const;
 
 export const SUBSCRIPTION_TIERS = {

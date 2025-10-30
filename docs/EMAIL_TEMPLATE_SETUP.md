@@ -168,7 +168,7 @@ When customizing:
 
 For additional help:
 - Supabase Email Documentation: https://supabase.com/docs/guides/auth/auth-email-templates
-- PageStash Support: support@pagestash.com
+- PageStash Support: support@pagestash.app
 
 ## Notes
 

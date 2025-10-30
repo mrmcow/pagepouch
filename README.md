@@ -255,7 +255,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: support@pagestash.com
+- 📧 Email: support@pagestash.app
 - 💬 Discord: [Join our community](https://discord.gg/pagestash)
 - 🐛 Issues: [GitHub Issues](https://github.com/mrmcow/pagestash/issues)
 - 📖 Docs: [Documentation](https://docs.pagestash.com)

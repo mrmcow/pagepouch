@@ -329,7 +329,7 @@
   - [ ] Test from production domain
   
 - [ ] **Set up support email**
-  - support@pagestash.com
+  - support@pagestash.app
   - Forward to team email or support system
   
 - [ ] **Configure email SPF/DKIM**

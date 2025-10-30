@@ -190,7 +190,7 @@ export default function PrivacyPolicyPage() {
               </div>
 
               <p className="text-slate-600 dark:text-slate-400 mb-4">
-                To exercise any of these rights, contact us at <a href="mailto:privacy@pagestash.com" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@pagestash.com</a>. 
+                To exercise any of these rights, contact us at <a href="mailto:support@pagestash.app" className="text-blue-600 dark:text-blue-400 hover:underline">support@pagestash.app</a>. 
                 We'll respond within 30 days and may require identity verification.
               </p>
             </section>
@@ -240,7 +240,7 @@ export default function PrivacyPolicyPage() {
                   If you have any questions about this Privacy Policy or our data practices, please contact us:
                 </p>
                 <div className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <p>📧 Email: <a href="mailto:privacy@pagestash.com" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@pagestash.com</a></p>
+                  <p>📧 Email: <a href="mailto:support@pagestash.app" className="text-blue-600 dark:text-blue-400 hover:underline">support@pagestash.app</a></p>
                   <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.com/contact</Link></p>
                   <p>📍 Address: PageStash Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
                 </div>

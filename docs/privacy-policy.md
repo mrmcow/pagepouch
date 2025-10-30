@@ -150,7 +150,7 @@ Continued use of PageStash after policy changes constitutes acceptance of the up
 ## Contact Information
 
 ### Privacy Questions
-- **Email**: privacy@pagestash.com
+- **Email**: support@pagestash.app
 - **Mail**: PageStash Privacy Team, [Address]
 - **Response Time**: We respond to privacy inquiries within 72 hours
 

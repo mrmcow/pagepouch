@@ -57,7 +57,7 @@ If you encounter any issues:
 1. **Check browser compatibility** - Chrome 88+ or Firefox 78+
 2. **Refresh the page** - Try reloading the page you want to capture
 3. **Check permissions** - Make sure the extension has access to the current site
-4. **Contact support** - Email us at support@pagestash.com
+4. **Contact support** - Email us at support@pagestash.app
 
 ## 🚀 **What's Next?**
 

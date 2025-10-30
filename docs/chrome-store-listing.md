@@ -107,7 +107,7 @@ Start capturing the web today with PageStash!
 ## Support Information
 
 **Website**: https://pagestash.com
-**Support Email**: support@pagestash.com
+**Support Email**: support@pagestash.app
 **Privacy Policy**: https://pagestash.com/privacy
 **Terms of Service**: https://pagestash.com/terms
 

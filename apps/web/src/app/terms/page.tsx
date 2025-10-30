@@ -342,7 +342,7 @@ export default function TermsOfServicePage() {
                   If you have any questions about these Terms of Service, please contact us:
                 </p>
                 <div className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <p>📧 Email: <a href="mailto:legal@pagestash.com" className="text-blue-600 dark:text-blue-400 hover:underline">legal@pagestash.com</a></p>
+                  <p>📧 Email: <a href="mailto:support@pagestash.app" className="text-blue-600 dark:text-blue-400 hover:underline">support@pagestash.app</a></p>
                   <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.com/contact</Link></p>
                   <p>📍 Address: PageStash Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
                 </div>

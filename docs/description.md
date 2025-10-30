@@ -68,7 +68,7 @@ PageStash takes your privacy seriously:
 
 Need help? We're here for you:
 - Visit our help center at pagestash.com/help
-- Email us at support@pagestash.com
+- Email us at support@pagestash.app
 - Join our community Discord for tips and tricks
 
 ---
