@@ -55,7 +55,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
               <DialogTitle className="text-2xl">PagePouch Extension</DialogTitle>
               <p className="text-muted-foreground">Direct download for {browser.name}</p>
             </div>
-            <Badge className="ml-auto">v1.1.0 Beta</Badge>
+            <Badge className="ml-auto">v1.1.0</Badge>
           </div>
         </DialogHeader>
 
@@ -151,22 +151,6 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
               <p className="text-xs text-muted-foreground">
                 Your data is encrypted and secure
               </p>
-            </div>
-          </div>
-
-          {/* Beta Notice */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                β
-              </div>
-              <div>
-                <h5 className="font-medium text-blue-900 mb-1">Beta Version</h5>
-                <p className="text-sm text-blue-700">
-                  This is a beta version for testing. The official store release is coming soon! 
-                  Report any issues to help us improve.
-                </p>
-              </div>
             </div>
           </div>
         </div>
