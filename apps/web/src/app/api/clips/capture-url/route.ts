@@ -166,52 +166,49 @@ export async function POST(request: NextRequest) {
     
     try {
       console.log('📸 Step 1: Getting Chromium executable path...')
-      const executablePath = await chromium.executablePath()
+      const executablePath = await chromium.executablePath({
+        installDependencies: true
+      })
       console.log('✅ Chromium path:', executablePath)
       
       console.log('📸 Step 2: Launching browser...')
       const browser = await puppeteer.launch({
-        args: [
-          ...chromium.args,
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-        ],
-        defaultViewport: {
-          width: 1280,
-          height: 720,
-        },
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
         executablePath: executablePath,
-        headless: true,
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true,
       })
       console.log('✅ Browser launched')
 
       console.log('📸 Step 3: Creating new page...')
       const page = await browser.newPage()
-      console.log('✅ Page created')
+      
+      // Set viewport for consistent screenshots
+      await page.setViewport({ width: 1280, height: 720 })
+      console.log('✅ Page created with viewport 1280x720')
       
       console.log('📸 Step 4: Navigating to URL:', url)
       await page.goto(url, { 
-        waitUntil: 'networkidle0',
+        waitUntil: 'domcontentloaded',
         timeout: 30000 
       })
       console.log('✅ Page loaded')
       
-      console.log('📸 Step 5: Waiting for dynamic content...')
-      // Use setTimeout Promise instead of deprecated waitForTimeout
+      console.log('📸 Step 5: Waiting for images to load...')
       await new Promise(resolve => setTimeout(resolve, 2000))
       console.log('✅ Wait complete')
       
       console.log('📸 Step 6: Taking screenshot...')
       const screenshot = await page.screenshot({ 
         type: 'jpeg',
-        quality: 85,
+        quality: 80,
         fullPage: true,
-        encoding: 'binary' // Return Buffer instead of base64 string
+        encoding: 'binary'
       }) as Buffer
       console.log('✅ Screenshot captured, size:', screenshot.length, 'bytes')
       
+      console.log('📸 Step 7: Closing browser...')
       await browser.close()
       console.log('✅ Browser closed')
       
