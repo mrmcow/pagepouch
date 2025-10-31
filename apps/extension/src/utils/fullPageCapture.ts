@@ -779,6 +779,13 @@ export class FullPageCapture {
           positions.push(currentPos);
         }
       }
+      
+      // CRITICAL FIX: Always capture the rightmost edge!
+      // This ensures we don't cut off the right side of the page
+      const rightmostPosition = Math.max(0, scrollWidth - viewportWidth);
+      if (!positions.includes(rightmostPosition) && rightmostPosition > 0) {
+        positions.push(rightmostPosition);
+      }
     }
     
     console.log('🔧 Horizontal positions calculated:', positions);
