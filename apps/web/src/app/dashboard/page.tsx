@@ -1444,7 +1444,7 @@ function DashboardContent() {
         onClose={() => setState(prev => ({ ...prev, isClipUrlModalOpen: false }))}
         onSuccess={() => {
           // Reload clips after successful capture
-          loadClips(state.searchQuery, state.selectedFolder, state.selectedTag)
+          loadData(true)
         }}
       />
 

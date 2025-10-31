@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { X, Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
 
 interface ClipUrlModalProps {
   isOpen: boolean
@@ -53,11 +54,20 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
     setProgress(10)
 
     try {
+      // Get auth token
+      const supabase = createClient()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        throw new Error('Please sign in to capture pages')
+      }
+
       // Call the capture API
       const response = await fetch('/api/clips/capture-url', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ url: processedUrl }),
       })
