@@ -30,6 +30,7 @@ import {
   StickyNote,
   Highlighter
 } from 'lucide-react'
+import { ScreenshotAnnotationCanvas, type Annotation } from './ScreenshotAnnotationCanvas'
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -546,7 +547,7 @@ export function ClipViewer({
                     {activeTab === 'screenshot' && (
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-purple-50 dark:bg-purple-950/30 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800 whitespace-nowrap">
                         <StickyNote className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                        <span className="font-medium">Annotation tools coming soon</span>
+                        <span className="font-medium">Draw rectangles to annotate</span>
                       </div>
                     )}
                   </div>
@@ -621,36 +622,23 @@ export function ClipViewer({
                 {/* Screenshot Tab */}
                 <TabsContent value="screenshot" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
                   {clip.screenshot_url ? (
-                    <div className="flex-1 bg-muted/30 p-4">
-                      <div className="bg-white rounded border shadow-sm overflow-auto" style={{ height: 'calc(100vh - 200px)' }}>
-                        <img
-                          src={clip.screenshot_url}
-                          alt={clip.title}
-                          className="block"
-                          style={{ 
-                            height: 'auto', 
-                            minHeight: '100%',
-                            // Allow full width display for full-page screenshots
-                            minWidth: '100%',
-                            width: 'auto'
-                          }}
-                          onLoad={(e) => {
-                            const img = e.target as HTMLImageElement;
-                            console.log('Screenshot loaded:', {
-                              naturalWidth: img.naturalWidth,
-                              naturalHeight: img.naturalHeight,
-                              displayWidth: img.width,
-                              displayHeight: img.height,
-                              aspectRatio: img.naturalWidth / img.naturalHeight,
-                              isWideImage: img.naturalWidth > img.naturalHeight * 1.5
-                            });
-                          }}
-                          onError={(e) => {
-                            console.error('Failed to load screenshot:', clip.screenshot_url);
-                          }}
-                        />
-                      </div>
-                    </div>
+                    <ScreenshotAnnotationCanvas
+                      imageUrl={clip.screenshot_url}
+                      imageAlt={clip.title}
+                      annotations={[]} // TODO: Load from clip notes
+                      onAddAnnotation={async (annotation) => {
+                        // TODO: Save annotation as note
+                        console.log('Add annotation:', annotation)
+                      }}
+                      onDeleteAnnotation={async (annotationId) => {
+                        // TODO: Delete annotation note
+                        console.log('Delete annotation:', annotationId)
+                      }}
+                      onClickAnnotation={(annotation) => {
+                        // TODO: Show annotation note in sidebar
+                        console.log('Click annotation:', annotation)
+                      }}
+                    />
                   ) : (
                     <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
