@@ -399,9 +399,31 @@ export function ClipViewer({
 
   // State for highlighted annotation
   const [highlightedAnnotation, setHighlightedAnnotation] = useState<{x: number, y: number} | null>(null)
+  // State for expanded annotations in notes
+  const [expandedAnnotations, setExpandedAnnotations] = useState<Set<number>>(new Set())
+
+  // Toggle annotation expansion in notes panel
+  const handleToggleAnnotation = (annotationIndex: number, event?: Event) => {
+    if (event) {
+      event.stopPropagation()
+    }
+    setExpandedAnnotations(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(annotationIndex)) {
+        newSet.delete(annotationIndex)
+      } else {
+        newSet.add(annotationIndex)
+      }
+      return newSet
+    })
+  }
 
   // Handle screenshot annotation click - scroll to annotation
-  const handleScreenshotAnnotationClick = (annotationIndex: number, x: number, y: number) => {
+  const handleScreenshotAnnotationClick = (annotationIndex: number, x: number, y: number, event?: Event) => {
+    if (event) {
+      event.stopPropagation()
+    }
+    
     // Switch to screenshot tab
     setActiveTab('screenshot')
     
@@ -422,35 +444,102 @@ export function ClipViewer({
     }, 100)
   }
 
-  // Expose navigation function to window for onclick handlers
+  // Expose functions to window for onclick handlers
   useEffect(() => {
     ;(window as any).navigateToAnnotation = handleScreenshotAnnotationClick
+    ;(window as any).toggleAnnotation = handleToggleAnnotation
+    ;(window as any).isAnnotationExpanded = (index: number) => expandedAnnotations.has(index)
     return () => {
       delete (window as any).navigateToAnnotation
+      delete (window as any).toggleAnnotation
+      delete (window as any).isAnnotationExpanded
     }
-  }, [handleScreenshotAnnotationClick])
+  }, [handleScreenshotAnnotationClick, handleToggleAnnotation, expandedAnnotations])
 
   const formatNotesDisplay = (notes: string) => {
     if (!notes) return notes
     
     let annotationIndex = 0
+    let result = notes
     
-    return notes
-      // Format screenshot annotations - unified pattern for both with and without thumbnail
-      .replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)(?:,thumb:([^\]]*))?\]/g, (match, x, y, w, h, thumb) => {
-        const index = annotationIndex++
-        // If thumbnail exists and is not empty, show it
-        if (thumb && thumb.trim()) {
-          return `<div class="inline-flex items-center gap-2 px-2 py-1.5 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><img src="${thumb}" alt="Annotation thumbnail" class="w-8 h-8 rounded border border-purple-300 object-cover" /><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
-        } else {
-          // Fallback to icon if no thumbnail
-          return `<div class="inline-flex items-center gap-1.5 px-2 py-1 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
-        }
-      })
-      // Format blockquotes (excerpts) - clean and tight
-      .replace(/^> "(.*?)"$/gm, '<div class="mb-1 p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r"><div class="text-sm italic text-gray-700 font-medium">"$1"</div></div>')
-      // Format line breaks
-      .replace(/\n/g, '<br>')
+    // First, extract and replace screenshot annotations with note text
+    result = result.replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)(?:,thumb:([^\]]*))?\]\n([^\n📍]+(?:\n(?!📍)[^\n]+)*)/g, (match, x, y, w, h, thumb, noteText) => {
+      const index = annotationIndex++
+      const isExpanded = expandedAnnotations.has(index)
+      const escapedNote = noteText.trim().replace(/'/g, '&#39;').replace(/"/g, '&quot;')
+      
+      // If thumbnail exists and is not empty, show it
+      if (thumb && thumb.trim()) {
+        return `
+          <div class="mb-2 bg-purple-50 border border-purple-200 rounded-md overflow-hidden" data-annotation-id="${index}">
+            <div class="relative group">
+              <div class="inline-flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-purple-100 transition-colors w-full" 
+                   onclick="window.toggleAnnotation?.(${index}, event)">
+                <div class="relative">
+                  <img src="${thumb}" alt="Annotation thumbnail" class="w-8 h-8 rounded border border-purple-300 object-cover" />
+                  <!-- Hover preview -->
+                  <div class="absolute left-full ml-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50">
+                    <div class="bg-white border-2 border-purple-300 rounded-lg shadow-xl p-1">
+                      <img src="${thumb}" alt="Preview" class="w-32 h-32 rounded object-cover" />
+                    </div>
+                  </div>
+                </div>
+                <span class="text-xs font-medium text-purple-700 flex-1">Screenshot Annotation</span>
+                <svg class="w-4 h-4 text-purple-600 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+              <!-- Jump to screenshot button (always visible) -->
+              <button onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y}, event)" 
+                      class="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded"
+                      title="Jump to screenshot">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </button>
+            </div>
+            ${isExpanded ? `<div class="px-3 py-2 text-sm text-gray-700 border-t border-purple-200 bg-white">${noteText.trim().replace(/\n/g, '<br>')}</div>` : ''}
+          </div>
+        `
+      } else {
+        // Fallback to icon if no thumbnail
+        return `
+          <div class="mb-2 bg-purple-50 border border-purple-200 rounded-md overflow-hidden" data-annotation-id="${index}">
+            <div class="relative group">
+              <div class="inline-flex items-center gap-1.5 px-2 py-1.5 cursor-pointer hover:bg-purple-100 transition-colors w-full" 
+                   onclick="window.toggleAnnotation?.(${index}, event)">
+                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                <span class="text-xs font-medium text-purple-700 flex-1">Screenshot Annotation</span>
+                <svg class="w-4 h-4 text-purple-600 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+              <!-- Jump to screenshot button -->
+              <button onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y}, event)" 
+                      class="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded"
+                      title="Jump to screenshot">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </button>
+            </div>
+            ${isExpanded ? `<div class="px-3 py-2 text-sm text-gray-700 border-t border-purple-200 bg-white">${noteText.trim().replace(/\n/g, '<br>')}</div>` : ''}
+          </div>
+        `
+      }
+    })
+    
+    // Format blockquotes (excerpts) - clean and tight
+    result = result.replace(/^> "(.*?)"$/gm, '<div class="mb-1 p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r"><div class="text-sm italic text-gray-700 font-medium">"$1"</div></div>')
+    
+    // Format line breaks
+    result = result.replace(/\n/g, '<br>')
+    
+    return result
   }
 
   if (!isOpen || !clip) return null
