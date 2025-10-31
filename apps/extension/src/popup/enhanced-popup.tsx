@@ -622,7 +622,7 @@ function EnhancedPopupApp() {
           height: '100%',
         }}>
           <div style={{ textAlign: 'center' }}>
-            {createLogo(48)}
+            <Logo size={48} />
             <p style={{ marginTop: '16px', color: '#64748b', fontSize: '14px' }}>
               Loading...
             </p>
