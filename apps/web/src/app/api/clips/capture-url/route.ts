@@ -61,10 +61,23 @@ export async function POST(request: NextRequest) {
 
     console.log(`🌐 Capturing URL: ${url} for user: ${user.id}`)
 
-    // Fetch the webpage HTML
+    // Fetch the webpage HTML with browser-like headers
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"macOS"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
       },
       signal: AbortSignal.timeout(20000) // 20 second timeout
     })
@@ -140,7 +153,10 @@ export async function POST(request: NextRequest) {
     let errorMessage = 'Failed to capture webpage'
     let statusCode = 500
 
-    if (error.message?.includes('timeout') || error.name === 'AbortError') {
+    if (error.message?.includes('403')) {
+      errorMessage = 'This website blocks automated access. Please use the browser extension to capture this page.'
+      statusCode = 403
+    } else if (error.message?.includes('timeout') || error.name === 'AbortError') {
       errorMessage = 'Page took too long to load. Please try again.'
       statusCode = 408
     } else if (error.message?.includes('ENOTFOUND') || error.message?.includes('ERR_NAME_NOT_RESOLVED')) {

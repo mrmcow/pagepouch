@@ -165,7 +165,7 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
               autoFocus
             />
             <p className="text-xs text-muted-foreground">
-              💡 Tip: Paste any URL and we'll capture the full page, including screenshots, text, and metadata
+              💡 <strong>Tip:</strong> Works great for most sites! If a site blocks automated access, use the browser extension instead.
             </p>
           </div>
 
