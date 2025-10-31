@@ -44,7 +44,7 @@ function handleCapturePage() {
 function handleExtractPageData(sendResponse: (response: any) => void) {
   try {
     const pageData = extractPageData();
-    console.log('Extracted page data:', {
+    console.log('✅ Content script extracted page data:', {
       url: pageData.url,
       title: pageData.title,
       htmlLength: pageData.html?.length || 0,
@@ -52,12 +52,21 @@ function handleExtractPageData(sendResponse: (response: any) => void) {
       favicon: pageData.favicon
     });
     
+    // DEBUG: Warn if content is empty
+    if (!pageData.html || pageData.html.length === 0) {
+      console.warn('⚠️ WARNING: Extracted HTML is empty!');
+      console.warn('⚠️ document.documentElement.outerHTML length:', document.documentElement.outerHTML?.length || 0);
+    }
+    if (!pageData.text || pageData.text.length === 0) {
+      console.warn('⚠️ WARNING: Extracted text is empty!');
+    }
+    
     sendResponse({
       success: true,
       data: pageData
     });
   } catch (error) {
-    console.error('Failed to extract page data:', error);
+    console.error('❌ Failed to extract page data:', error);
     sendResponse({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

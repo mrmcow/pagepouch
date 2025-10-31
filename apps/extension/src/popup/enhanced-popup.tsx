@@ -601,7 +601,7 @@ function EnhancedPopupApp() {
   const openWebApp = () => {
     // Use production URL in production, localhost in development
     const webAppUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://pagestash-web.vercel.app/dashboard'
+      ? 'https://pagestash.app/dashboard'
       : 'http://localhost:3000/dashboard';
     chrome.tabs.create({ url: webAppUrl });
   };
@@ -665,7 +665,8 @@ function EnhancedPopupApp() {
               flexDirection: 'column', 
               gap: '16px',
               width: '100%',
-              maxWidth: '100%'
+              maxWidth: '340px',
+              margin: '0 auto'
             }}
           >
             <div style={{ width: '100%' }}>
@@ -675,7 +676,7 @@ function EnhancedPopupApp() {
                 fontWeight: '500',
                 color: '#475569',
                 marginBottom: '6px',
-                textAlign: 'left'
+                textAlign: 'center'
               }}>
                 Email address
               </label>
@@ -705,7 +706,7 @@ function EnhancedPopupApp() {
                 fontWeight: '500',
                 color: '#475569',
                 marginBottom: '6px',
-                textAlign: 'left'
+                textAlign: 'center'
               }}>
                 Password
               </label>
@@ -731,7 +732,7 @@ function EnhancedPopupApp() {
             {authForm.error && (
               <div style={{
                 ...styles.errorText,
-                textAlign: 'left',
+                textAlign: 'center',
                 padding: '12px',
                 backgroundColor: '#fef2f2',
                 borderRadius: '8px',
@@ -955,7 +956,7 @@ function EnhancedPopupApp() {
                   You've used all {state.clipsLimit} clips this month. Upgrade to Pro for unlimited clips!
                 </div>
                 <button
-                  onClick={() => window.open('https://pagestash-web.vercel.app/pricing', '_blank')}
+                  onClick={() => window.open('https://pagestash.app/pricing', '_blank')}
                   style={{
                     ...styles.button,
                     ...styles.primaryButton,

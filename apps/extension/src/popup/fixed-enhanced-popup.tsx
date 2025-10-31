@@ -429,7 +429,7 @@ function FixedEnhancedPopupApp() {
     if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
       // Use production URL in production, localhost in development
       const webAppUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://pagestash-web.vercel.app/dashboard'
+        ? 'https://pagestash.app/dashboard'
         : 'http://localhost:3000/dashboard';
       chrome.tabs.create({ url: webAppUrl });
     }

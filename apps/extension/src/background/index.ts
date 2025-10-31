@@ -226,13 +226,21 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       
       if (response && response.success) {
         pageContent = response.data;
-        console.log('Page content extracted:', {
+        console.log('✅ Page content extracted from content script:', {
           htmlLength: pageContent.html?.length || 0,
           textLength: pageContent.text?.length || 0,
           title: pageContent.title
         });
+        
+        if (!pageContent.html || pageContent.html.length === 0) {
+          console.warn('⚠️ Content script returned empty HTML!');
+        }
+        if (!pageContent.text || pageContent.text.length === 0) {
+          console.warn('⚠️ Content script returned empty text!');
+        }
       } else {
-        console.warn('Failed to extract page content from content script:', response);
+        console.warn('⚠️ Failed to extract page content from content script:', response);
+        console.warn('⚠️ Using fallback data from popup (may be empty)');
         // Use fallback data from popup
         pageContent = {
           url: payload.url,
@@ -243,7 +251,9 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
         };
       }
     } catch (contentError) {
-      console.warn('Content script not available, using fallback data:', contentError);
+      console.warn('⚠️ Content script not available, using fallback data:', contentError);
+      console.warn('⚠️ Fallback HTML length:', (payload.html || '').length);
+      console.warn('⚠️ Fallback text length:', (payload.text || '').length);
       // Use fallback data from popup
       pageContent = {
         url: payload.url,
@@ -331,7 +341,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       ...(payload.folderId ? { folder_id: payload.folderId } : {}),
     };
 
-    console.log('Prepared clip data:', {
+    console.log('✅ Prepared clip data:', {
       url: clipData.url,
       title: clipData.title,
       hasScreenshot: !!clipData.screenshot_data,
@@ -339,6 +349,14 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       textLength: clipData.text_content.length,
       hasFavicon: !!clipData.favicon_url
     });
+    
+    // DEBUG: Check if content is actually empty
+    if (!clipData.html_content || clipData.html_content.length === 0) {
+      console.warn('⚠️ WARNING: html_content is empty!');
+    }
+    if (!clipData.text_content || clipData.text_content.length === 0) {
+      console.warn('⚠️ WARNING: text_content is empty!');
+    }
 
     // Check if user is authenticated
     const { token } = await ExtensionAuth.getSession();

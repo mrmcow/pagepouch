@@ -461,9 +461,9 @@ function renderAuthScreen() {
           <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 600; color: #1e293b;">${authState.isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
           <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Sign in to access your library'}</p>
         </div>
-        <form id="auth-form" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+        <form id="auth-form" style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 340px; margin: 0 auto;">
           <div style="width: 100%;">
-            <label for="email-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: left;">Email address</label>
+            <label for="email-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: center;">Email address</label>
             <input 
               id="email-input" 
               name="email"
@@ -475,7 +475,7 @@ function renderAuthScreen() {
               style="${styles.input}; margin-bottom: 0;">
           </div>
           <div style="width: 100%;">
-            <label for="password-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: left;">Password</label>
+            <label for="password-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: center;">Password</label>
             <input 
               id="password-input" 
               name="password"
@@ -486,7 +486,7 @@ function renderAuthScreen() {
               required
               style="${styles.input}; margin-bottom: 0;">
           </div>
-          ${authState.error ? `<div style="text-align: left; padding: 12px; background-color: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 13px;">${authState.error}</div>` : ''}
+          ${authState.error ? `<div style="text-align: center; padding: 12px; background-color: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 13px;">${authState.error}</div>` : ''}
           <button id="auth-submit" type="submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; max-width: 100%; margin-top: 4px; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.5'}; cursor: ${!authState.isLoading && authState.email && authState.password ? 'pointer' : 'not-allowed'};">
             ${authState.isLoading ? '⏳ Processing...' : (authState.isSignUp ? '✨ Create Account' : '🔓 Sign In')}
           </button>
@@ -660,10 +660,10 @@ function render() {
     });
     if (signOutBtn) signOutBtn.addEventListener('click', signOut);
     if (openWebappBtn) openWebappBtn.addEventListener('click', () => {
-      extensionAPI.tabs.create({ url: 'https://pagestash-web.vercel.app/dashboard' });
+      extensionAPI.tabs.create({ url: 'https://pagestash.app/dashboard' });
     });
     if (upgradeProBtn) upgradeProBtn.addEventListener('click', () => {
-      extensionAPI.tabs.create({ url: 'https://pagestash-web.vercel.app/pricing' });
+      extensionAPI.tabs.create({ url: 'https://pagestash.app/pricing' });
     });
     if (folderSelect) folderSelect.addEventListener('change', (e) => {
       handleFolderChange(e.target.value);
