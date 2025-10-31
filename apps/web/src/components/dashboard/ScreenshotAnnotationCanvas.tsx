@@ -302,8 +302,14 @@ export function ScreenshotAnnotationCanvas({
         </div>
       )}
 
-      {/* Canvas Container */}
-      <div ref={containerRef} className="flex-1 bg-muted/30 p-4 overflow-auto">
+      {/* Canvas Container - Scrollable for long screenshots */}
+      <div 
+        ref={containerRef} 
+        className="flex-1 bg-muted/30 p-4 overflow-auto"
+        style={{
+          maxHeight: 'calc(100vh - 200px)', // Ensure container has max height for scrolling
+        }}
+      >
         <div className="relative inline-block bg-white rounded border shadow-sm">
           {/* Image */}
           <img
@@ -314,7 +320,8 @@ export function ScreenshotAnnotationCanvas({
             style={{
               height: 'auto',
               width: 'auto',
-              maxWidth: '100%'
+              maxWidth: '100%',
+              display: 'block' // Prevent inline spacing issues
             }}
             onLoad={() => setImageLoaded(true)}
           />
