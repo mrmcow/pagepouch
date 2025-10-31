@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import * as cheerio from 'cheerio'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 
 export const runtime = 'nodejs'
-export const maxDuration = 30 // 30 seconds max execution time
+export const maxDuration = 60 // 60 seconds max execution time (screenshots take longer)
 
 interface CaptureRequestBody {
   url: string
@@ -156,24 +158,72 @@ export async function POST(request: NextRequest) {
       favicon = `${validatedUrl.protocol}//${validatedUrl.hostname}/favicon.ico`
     }
 
-    // Extract Open Graph image as a fallback screenshot
-    // Many websites have high-quality preview images we can use
-    let screenshotUrl = $('meta[property="og:image"]').attr('content') || 
-                        $('meta[name="twitter:image"]').attr('content') || 
-                        $('meta[property="og:image:secure_url"]').attr('content') || 
-                        null
+    console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars`)
+
+    // Capture screenshot using Puppeteer
+    console.log('📸 Launching headless browser for screenshot...')
+    let screenshotUrl = null
     
-    // Make sure the screenshot URL is absolute
-    if (screenshotUrl && !screenshotUrl.startsWith('http')) {
-      try {
-        screenshotUrl = new URL(screenshotUrl, url).href
-      } catch (err) {
-        console.warn('Failed to resolve screenshot URL:', err)
-        screenshotUrl = null
+    try {
+      const browser = await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      })
+
+      const page = await browser.newPage()
+      
+      // Set viewport for consistent screenshots
+      await page.setViewport({ width: 1280, height: 720 })
+      
+      // Navigate to the page
+      await page.goto(url, { 
+        waitUntil: 'networkidle0',
+        timeout: 30000 
+      })
+      
+      // Wait a bit for dynamic content to load
+      await page.waitForTimeout(2000)
+      
+      // Take full page screenshot
+      const screenshot = await page.screenshot({ 
+        type: 'jpeg',
+        quality: 85,
+        fullPage: true 
+      })
+      
+      await browser.close()
+      
+      console.log('📸 Screenshot captured, uploading to storage...')
+      
+      // Upload screenshot to Supabase storage
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('screenshots')
+        .upload(fileName, screenshot, {
+          contentType: 'image/jpeg',
+          cacheControl: '3600',
+        })
+      
+      if (uploadError) {
+        console.error('Screenshot upload error:', uploadError)
+      } else {
+        const { data: { publicUrl } } = supabase
+          .storage
+          .from('screenshots')
+          .getPublicUrl(fileName)
+        
+        screenshotUrl = publicUrl
+        console.log('✅ Screenshot uploaded successfully')
       }
+    } catch (screenshotError) {
+      console.error('Screenshot capture failed:', screenshotError)
+      // Continue without screenshot - we still have HTML and text
     }
 
-    console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars, Screenshot: ${screenshotUrl ? 'Found' : 'None'}`)
+    console.log(`📝 Final result - Screenshot: ${screenshotUrl ? 'Success' : 'Failed (continuing without)'}`)
 
     // Create clip in database
     const { data: clip, error: insertError } = await supabase
