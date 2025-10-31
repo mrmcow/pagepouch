@@ -1121,7 +1121,7 @@ export function ClipViewer({
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
                 <div className="relative">
                   {/* Rich text editor style - show formatted view with inline editing */}
-                  {editForm.notes && editForm.notes.includes('> "') ? (
+                  {editForm.notes && (editForm.notes.includes('> "') || editForm.notes.includes('📍 SCREENSHOT')) ? (
                     <div className="space-y-2">
                       {/* Formatted Preview */}
                       <div 

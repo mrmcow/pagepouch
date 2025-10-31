@@ -246,13 +246,8 @@ export function ScreenshotAnnotationCanvas({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center gap-4 p-3 border-b bg-background">
-        {/* Instructions */}
-        <div className="text-xs text-muted-foreground">
-          Click and drag to draw annotation • Click existing annotation to view note
-        </div>
-      </div>
+      {/* Toolbar - No instructions needed, just clean space */}
+      <div className="border-b bg-background" style={{ height: '1px' }} />
 
       {/* Add Note Modal */}
       {showAddNote && (
