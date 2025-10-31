@@ -190,8 +190,9 @@ export async function POST(request: NextRequest) {
       const screenshot = await page.screenshot({ 
         type: 'jpeg',
         quality: 85,
-        fullPage: true 
-      })
+        fullPage: true,
+        encoding: 'binary' // Return Buffer instead of base64 string
+      }) as Buffer
       
       await browser.close()
       
