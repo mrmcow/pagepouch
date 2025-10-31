@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Wait a bit for dynamic content
-      await page.waitForTimeout(2000)
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
       // Get page title
       const title = await page.title()
