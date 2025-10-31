@@ -640,10 +640,10 @@ function EnhancedPopupApp() {
         
         <div style={{ 
           ...styles.content, 
-          padding: '24px 28px',
+          padding: '24px 20px',
           gap: '20px'
         }}>
-          <div style={{ textAlign: 'center', marginBottom: '8px', width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '4px', width: '100%' }}>
             <h2 style={{ margin: '0 0 6px 0', fontSize: '20px', fontWeight: '600', color: '#1e293b' }}>
               {authForm.isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
@@ -660,39 +660,48 @@ function EnhancedPopupApp() {
               e.preventDefault();
               handleAuth();
             }}
+            action="#"
+            method="post"
             style={{ 
               display: 'flex', 
               flexDirection: 'column', 
-              gap: '16px',
+              gap: '14px',
               width: '100%',
-              maxWidth: '340px',
-              margin: '0 auto'
+              maxWidth: '100%',
+              padding: '0 10px'
             }}
           >
             <div style={{ width: '100%' }}>
-              <label htmlFor="pagestash-email" style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: '500',
-                color: '#475569',
-                marginBottom: '6px',
-                textAlign: 'center'
-              }}>
-                Email address
+              <label 
+                htmlFor="pagestash-email" 
+                style={{
+                  position: 'absolute',
+                  width: '1px',
+                  height: '1px',
+                  padding: 0,
+                  margin: '-1px',
+                  overflow: 'hidden',
+                  clip: 'rect(0,0,0,0)',
+                  whiteSpace: 'nowrap',
+                  border: 0
+                }}
+              >
+                Email
               </label>
               <input
                 id="pagestash-email"
                 name="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="Email address"
                 value={authForm.email}
                 onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
-                autoComplete={authForm.isSignUp ? "email" : "username"}
+                autoComplete={authForm.isSignUp ? "email" : "username email"}
                 required
                 style={{
                   ...styles.input,
+                  width: '100%',
                   maxWidth: '100%',
-                  marginBottom: 0,
+                  margin: 0,
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
@@ -700,29 +709,36 @@ function EnhancedPopupApp() {
             </div>
 
             <div style={{ width: '100%' }}>
-              <label htmlFor="pagestash-password" style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: '500',
-                color: '#475569',
-                marginBottom: '6px',
-                textAlign: 'center'
-              }}>
+              <label 
+                htmlFor="pagestash-password" 
+                style={{
+                  position: 'absolute',
+                  width: '1px',
+                  height: '1px',
+                  padding: 0,
+                  margin: '-1px',
+                  overflow: 'hidden',
+                  clip: 'rect(0,0,0,0)',
+                  whiteSpace: 'nowrap',
+                  border: 0
+                }}
+              >
                 Password
               </label>
               <input
                 id="pagestash-password"
                 name="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Password"
                 value={authForm.password}
                 onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
                 autoComplete={authForm.isSignUp ? "new-password" : "current-password"}
                 required
                 style={{
                   ...styles.input,
+                  width: '100%',
                   maxWidth: '100%',
-                  marginBottom: 0,
+                  margin: 0,
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}

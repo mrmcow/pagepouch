@@ -456,35 +456,35 @@ function renderAuthScreen() {
         </div>
         <button id="close-auth" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">×</button>
       </div>
-      <div style="padding: 24px 28px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; overflow-y: auto; overflow-x: hidden;">
-        <div style="text-align: center; margin-bottom: 8px; width: 100%;">
+      <div style="padding: 24px 20px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; overflow-y: auto; overflow-x: hidden;">
+        <div style="text-align: center; margin-bottom: 4px; width: 100%;">
           <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 600; color: #1e293b;">${authState.isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
           <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Sign in to access your library'}</p>
         </div>
-        <form id="auth-form" style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 340px; margin: 0 auto;">
+        <form id="auth-form" action="#" method="post" style="display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 100%; padding: 0 10px;">
           <div style="width: 100%;">
-            <label for="email-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: center;">Email address</label>
+            <label for="email-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Email</label>
             <input 
               id="email-input" 
               name="email"
               type="email" 
-              placeholder="you@example.com" 
+              placeholder="Email address" 
               value="${authState.email}" 
-              autocomplete="${authState.isSignUp ? 'email' : 'username'}"
+              autocomplete="${authState.isSignUp ? 'email' : 'username email'}"
               required
-              style="${styles.input}; margin-bottom: 0;">
+              style="${styles.input}; width: 100%; max-width: 100%; margin: 0;">
           </div>
           <div style="width: 100%;">
-            <label for="password-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: center;">Password</label>
+            <label for="password-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Password</label>
             <input 
               id="password-input" 
               name="password"
               type="password" 
-              placeholder="Enter your password" 
+              placeholder="Password" 
               value="${authState.password}" 
               autocomplete="${authState.isSignUp ? 'new-password' : 'current-password'}"
               required
-              style="${styles.input}; margin-bottom: 0;">
+              style="${styles.input}; width: 100%; max-width: 100%; margin: 0;">
           </div>
           ${authState.error ? `<div style="text-align: center; padding: 12px; background-color: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 13px;">${authState.error}</div>` : ''}
           <button id="auth-submit" type="submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; max-width: 100%; margin-top: 4px; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.5'}; cursor: ${!authState.isLoading && authState.email && authState.password ? 'pointer' : 'not-allowed'};">
