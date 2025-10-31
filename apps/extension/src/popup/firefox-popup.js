@@ -44,7 +44,7 @@ const styles = {
   button: 'padding: 14px 24px; border-radius: 12px; border: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 320px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);',
   primaryButton: 'background-color: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);',
   secondaryButton: 'background-color: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
-  input: 'width: 100%; max-width: 320px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; margin-bottom: 16px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; text-align: center;',
+  input: 'width: 100%; max-width: 320px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; color: #1f2937; font-family: inherit;',
   card: 'background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; width: 100%; max-width: 320px; text-align: center; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
   badge: 'display: inline-flex; align-items: center; padding: 4px 8px; background-color: #dbeafe; color: #1d4ed8; border-radius: 12px; font-size: 12px; font-weight: 500;',
   tabInfo: 'display: flex; align-items: flex-start; gap: 12px; padding: 16px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; max-width: 320px; box-sizing: border-box; flex-direction: column; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);'
@@ -456,38 +456,46 @@ function renderAuthScreen() {
         </div>
         <button id="close-auth" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">×</button>
       </div>
-      <div style="${styles.content}">
-        <div style="text-align: center; margin-bottom: 24px;">
-          <h2 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">${authState.isSignUp ? 'Create Account' : 'Sign In'}</h2>
-          <p style="margin: 0; color: #6b7280; font-size: 13px;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Access your PageStash library'}</p>
+      <div style="padding: 24px 28px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; overflow-y: auto; overflow-x: hidden;">
+        <div style="text-align: center; margin-bottom: 8px; width: 100%;">
+          <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 600; color: #1e293b;">${authState.isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
+          <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Sign in to access your library'}</p>
         </div>
-        <form id="auth-form" style="display: flex; flex-direction: column; gap: 12px;">
-          <input 
-            id="email-input" 
-            name="email"
-            type="email" 
-            placeholder="Email" 
-            value="${authState.email}" 
-            autocomplete="${authState.isSignUp ? 'email' : 'username'}"
-            required
-            style="${styles.input}">
-          <input 
-            id="password-input" 
-            name="password"
-            type="password" 
-            placeholder="Password" 
-            value="${authState.password}" 
-            autocomplete="${authState.isSignUp ? 'new-password' : 'current-password'}"
-            required
-            style="${styles.input}">
-          ${authState.error ? `<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">${authState.error}</div>` : ''}
-          <button id="auth-submit" type="submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.6'};">
-            ${authState.isLoading ? '⏳ Processing...' : authState.isSignUp ? 'Create Account' : 'Sign In'}
+        <form id="auth-form" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+          <div style="width: 100%;">
+            <label for="email-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: left;">Email address</label>
+            <input 
+              id="email-input" 
+              name="email"
+              type="email" 
+              placeholder="you@example.com" 
+              value="${authState.email}" 
+              autocomplete="${authState.isSignUp ? 'email' : 'username'}"
+              required
+              style="${styles.input}; margin-bottom: 0;">
+          </div>
+          <div style="width: 100%;">
+            <label for="password-input" style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; text-align: left;">Password</label>
+            <input 
+              id="password-input" 
+              name="password"
+              type="password" 
+              placeholder="Enter your password" 
+              value="${authState.password}" 
+              autocomplete="${authState.isSignUp ? 'new-password' : 'current-password'}"
+              required
+              style="${styles.input}; margin-bottom: 0;">
+          </div>
+          ${authState.error ? `<div style="text-align: left; padding: 12px; background-color: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 13px;">${authState.error}</div>` : ''}
+          <button id="auth-submit" type="submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; max-width: 100%; margin-top: 4px; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.5'}; cursor: ${!authState.isLoading && authState.email && authState.password ? 'pointer' : 'not-allowed'};">
+            ${authState.isLoading ? '⏳ Processing...' : (authState.isSignUp ? '✨ Create Account' : '🔓 Sign In')}
           </button>
         </form>
-        <button id="auth-toggle" style="${styles.button}; ${styles.secondaryButton}; margin-top: 12px;">
-          ${authState.isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-        </button>
+        <div style="width: 100%; text-align: center; padding-top: 8px; border-top: 1px solid #f1f5f9;">
+          <button id="auth-toggle" style="background: none; border: none; color: #3b82f6; font-size: 14px; font-weight: 500; cursor: pointer; padding: 8px; text-decoration: none;">
+            ${authState.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+          </button>
+        </div>
       </div>
     </div>
   `;

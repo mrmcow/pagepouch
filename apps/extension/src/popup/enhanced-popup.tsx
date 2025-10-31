@@ -62,6 +62,7 @@ interface PopupState {
   captureProgress?: {
     status: string;
     message: string;
+    progress?: number;
   };
   folders: Array<{
     id: string;
@@ -169,15 +170,16 @@ const styles = {
   input: {
     width: '100%',
     maxWidth: '320px',
-    padding: '14px 16px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
+    padding: '12px 16px',
+    border: '1.5px solid #e2e8f0',
+    borderRadius: '8px',
     fontSize: '14px',
-    marginBottom: '16px',
     boxSizing: 'border-box' as const,
     backgroundColor: '#ffffff',
     transition: 'all 0.2s ease',
     outline: 'none',
+    color: '#1f2937',
+    fontFamily: 'inherit',
   },
   card: {
     backgroundColor: '#f8fafc',
@@ -301,6 +303,7 @@ function EnhancedPopupApp() {
           captureProgress: {
             status: message.payload.status,
             message: message.payload.message,
+            progress: message.payload.progress,
           },
         }));
 
@@ -353,24 +356,19 @@ function EnhancedPopupApp() {
 
   const checkAuthStatus = async () => {
     try {
-      console.log('🔐 Checking authentication status...')
-      
-      // CRITICAL: Restore session first
+      // Restore session first
       const isAuthenticated = await ExtensionAuth.restoreSession()
-      
-      console.log('🔐 Session restoration result:', isAuthenticated)
       
       if (isAuthenticated) {
         const session = await ExtensionAuth.getSession()
-        console.log('🔐 Current user:', session?.userId)
         
-        // Get stored folder preference
-        const result = await chrome.storage.local.get(['selectedFolderId']);
+        // Get stored folder preference and user email
+        const result = await chrome.storage.local.get(['selectedFolderId', 'userEmail']);
         
         setState(prev => ({
           ...prev,
           isAuthenticated: true,
-          userEmail: data.user?.email,
+          userEmail: result.userEmail || '',
           showAuth: false,
           selectedFolderId: result.selectedFolderId || null,
         }))
@@ -378,7 +376,6 @@ function EnhancedPopupApp() {
         // Load folders and usage
         await Promise.all([loadFolders(), loadUsage()]);
       } else {
-        console.log('🔐 No valid session, showing auth')
         setState(prev => ({
           ...prev,
           isAuthenticated: false,
@@ -386,7 +383,7 @@ function EnhancedPopupApp() {
         }))
       }
     } catch (error) {
-      console.error('🔐 Auth check error:', error)
+      console.error('Auth check error:', error)
       setState(prev => ({
         ...prev,
         isAuthenticated: false,
@@ -641,15 +638,19 @@ function EnhancedPopupApp() {
           </button>
         </div>
         
-        <div style={styles.content}>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>
-              {authForm.isSignUp ? 'Create Account' : 'Sign In'}
+        <div style={{ 
+          ...styles.content, 
+          padding: '24px 28px',
+          gap: '20px'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '8px', width: '100%' }}>
+            <h2 style={{ margin: '0 0 6px 0', fontSize: '20px', fontWeight: '600', color: '#1e293b' }}>
+              {authForm.isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '13px' }}>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '14px', lineHeight: '1.4' }}>
               {authForm.isSignUp 
                 ? 'Start capturing and organizing web content' 
-                : 'Access your PageStash library'
+                : 'Sign in to access your library'
               }
             </p>
           </div>
@@ -659,40 +660,85 @@ function EnhancedPopupApp() {
               e.preventDefault();
               handleAuth();
             }}
-            style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '16px',
+              width: '100%',
+              maxWidth: '100%'
+            }}
           >
-            <input
-              id="pagestash-email"
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={authForm.email}
-              onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
-              autoComplete={authForm.isSignUp ? "email" : "username"}
-              required
-              style={{
-                ...styles.input,
-                textAlign: 'center' as const,
-              }}
-            />
+            <div style={{ width: '100%' }}>
+              <label htmlFor="pagestash-email" style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '500',
+                color: '#475569',
+                marginBottom: '6px',
+                textAlign: 'left'
+              }}>
+                Email address
+              </label>
+              <input
+                id="pagestash-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={authForm.email}
+                onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
+                autoComplete={authForm.isSignUp ? "email" : "username"}
+                required
+                style={{
+                  ...styles.input,
+                  maxWidth: '100%',
+                  marginBottom: 0,
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+            </div>
 
-            <input
-              id="pagestash-password"
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={authForm.password}
-              onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
-              autoComplete={authForm.isSignUp ? "new-password" : "current-password"}
-              required
-              style={{
-                ...styles.input,
-                textAlign: 'center' as const,
-              }}
-            />
+            <div style={{ width: '100%' }}>
+              <label htmlFor="pagestash-password" style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '500',
+                color: '#475569',
+                marginBottom: '6px',
+                textAlign: 'left'
+              }}>
+                Password
+              </label>
+              <input
+                id="pagestash-password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={authForm.password}
+                onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
+                autoComplete={authForm.isSignUp ? "new-password" : "current-password"}
+                required
+                style={{
+                  ...styles.input,
+                  maxWidth: '100%',
+                  marginBottom: 0,
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+            </div>
 
             {authForm.error && (
-              <div style={styles.errorText}>{authForm.error}</div>
+              <div style={{
+                ...styles.errorText,
+                textAlign: 'left',
+                padding: '12px',
+                backgroundColor: '#fef2f2',
+                borderRadius: '8px',
+                border: '1px solid #fecaca'
+              }}>
+                {authForm.error}
+              </div>
             )}
 
             <button
@@ -701,23 +747,40 @@ function EnhancedPopupApp() {
               style={{
                 ...styles.button,
                 ...styles.primaryButton,
-                opacity: authForm.isLoading || !authForm.email || !authForm.password ? 0.6 : 1,
+                maxWidth: '100%',
+                marginTop: '4px',
+                opacity: authForm.isLoading || !authForm.email || !authForm.password ? 0.5 : 1,
+                cursor: authForm.isLoading || !authForm.email || !authForm.password ? 'not-allowed' : 'pointer',
               }}
             >
-              {authForm.isLoading ? '⏳ Processing...' : (authForm.isSignUp ? 'Create Account' : 'Sign In')}
+              {authForm.isLoading ? '⏳ Processing...' : (authForm.isSignUp ? '✨ Create Account' : '🔓 Sign In')}
             </button>
           </form>
 
-          <button
-            onClick={() => setAuthForm(prev => ({ ...prev, isSignUp: !prev.isSignUp, error: undefined }))}
-            style={{
-              ...styles.button,
-              ...styles.secondaryButton,
-              marginTop: '12px',
-            }}
-          >
-            {authForm.isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-          </button>
+          <div style={{
+            width: '100%',
+            textAlign: 'center',
+            paddingTop: '8px',
+            borderTop: '1px solid #f1f5f9'
+          }}>
+            <button
+              onClick={() => setAuthForm(prev => ({ ...prev, isSignUp: !prev.isSignUp, error: undefined, email: '', password: '' }))}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#3b82f6',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                padding: '8px',
+                textDecoration: 'none'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+              onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+            >
+              {authForm.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -801,8 +864,10 @@ function EnhancedPopupApp() {
                   style={{
                     ...styles.progressFill,
                     width: state.captureProgress.status === 'complete' ? '100%' : 
-                           state.captureProgress.status === 'capturing' ? '75%' : '25%',
-                    backgroundColor: state.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb'
+                           state.captureProgress.progress ? `${state.captureProgress.progress}%` : 
+                           state.captureProgress.status === 'capturing' ? '10%' : '5%',
+                    backgroundColor: state.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb',
+                    transition: 'width 0.3s ease-out'
                   }}
                 />
               </div>

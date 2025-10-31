@@ -1,8 +1,8 @@
 {
   "name": "PageStash Extension",
   "version": "1.2.0",
-  "buildDate": "2025-10-31T08:22:58.971Z",
-  "buildNumber": 1761898978972,
+  "buildDate": "2025-10-31T08:37:21.796Z",
+  "buildNumber": 1761899841797,
   "features": [
     "Full page scroll capture",
     "Visible area capture",

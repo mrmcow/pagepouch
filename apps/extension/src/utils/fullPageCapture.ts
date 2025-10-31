@@ -110,7 +110,7 @@ export class FullPageCapture {
         horizontalPositionsArray: horizontalPositions
       });
 
-      console.log(`Capturing ${totalSections} sections (${horizontalPositions.length}x${verticalPositions.length} grid)...`);
+      console.log(`Capturing ${totalSections} sections...`);
 
       for (let vIndex = 0; vIndex < verticalPositions.length; vIndex++) {
         for (let hIndex = 0; hIndex < horizontalPositions.length; hIndex++) {
@@ -118,7 +118,20 @@ export class FullPageCapture {
           const scrollX = horizontalPositions[hIndex];
           const sectionIndex = vIndex * horizontalPositions.length + hIndex + 1;
           
-          console.log(`Capturing section ${sectionIndex}/${totalSections} at position (${scrollX}, ${scrollY})`);
+          // Send progress update to popup
+          try {
+            const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+            extensionAPI.runtime.sendMessage({
+              type: 'CAPTURE_PROGRESS',
+              payload: { 
+                status: 'capturing', 
+                message: `Capturing page... ${sectionIndex} of ${totalSections} sections`,
+                progress: Math.round((sectionIndex / totalSections) * 100)
+              }
+            });
+          } catch (e) {
+            // Ignore messaging errors
+          }
           
           // Scroll to position
           await this.scrollToPosition(tabId, scrollY, scrollX);
@@ -126,22 +139,19 @@ export class FullPageCapture {
           // Wait for scroll to complete and content to load
           await this.delay(opts.scrollDelay);
           
-          // Additional rate limiting delay between captures (Chrome quota protection)
+          // Rate limiting delay between captures (reduced from 800ms to 400ms)
           if (sectionIndex > 1) {
-            console.log('Waiting for Chrome rate limit...');
-            await this.delay(800); // More conservative 800ms between captures
+            await this.delay(400); 
           }
           
           try {
-            // Capture visible area with retry logic (increased retries)
+            // Capture visible area with retry logic
             const screenshot = await this.captureWithRetry(opts.format, opts.quality, 5);
             screenshots.push({dataUrl: screenshot, x: scrollX, y: scrollY});
             
-            console.log(`Section ${sectionIndex} captured successfully`);
-            
-            // Additional delay after successful capture to be extra safe
+            // Small delay after successful capture
             if (sectionIndex < totalSections) {
-              await this.delay(200);
+              await this.delay(150);
             }
           } catch (error) {
             console.error(`Failed to capture section ${sectionIndex}:`, error);
@@ -1220,16 +1230,15 @@ export class FullPageCapture {
    */
   private static async compressImage(dataUrl: string, quality: number = 0.7): Promise<string> {
     try {
-      // Create image from data URL
-      const img = new Image();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = dataUrl;
-      });
+      // Convert data URL to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      
+      // Create ImageBitmap (works in service workers, unlike Image())
+      const imageBitmap = await createImageBitmap(blob);
 
       // Create canvas for compression
-      const canvas = new OffscreenCanvas(img.width, img.height);
+      const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
       const ctx = canvas.getContext('2d');
       
       if (!ctx) {
@@ -1237,10 +1246,10 @@ export class FullPageCapture {
       }
 
       // Draw image to canvas
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(imageBitmap, 0, 0);
 
       // Convert to compressed JPEG
-      const blob = await canvas.convertToBlob({
+      const compressedBlob = await canvas.convertToBlob({
         type: 'image/jpeg',
         quality: quality
       });
@@ -1250,10 +1259,10 @@ export class FullPageCapture {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = reject;
-        reader.readAsDataURL(blob);
+        reader.readAsDataURL(compressedBlob);
       });
     } catch (error) {
-      console.warn('Image compression failed, using original:', error);
+      console.error('Image compression failed:', error);
       return dataUrl; // Fallback to original if compression fails
     }
   }

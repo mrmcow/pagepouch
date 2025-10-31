@@ -5,11 +5,17 @@ import { ExtensionMessage } from '@pagestash/shared';
 import { ExtensionAuth, ExtensionAPI } from '../utils/supabase';
 import { FullPageCapture } from '../utils/fullPageCapture';
 
+// Debug mode - set to true for verbose logging
+const DEBUG = false;
+
+const log = (...args: any[]) => {
+  if (DEBUG) console.log(...args);
+};
+
 console.log('PageStash background script loaded');
 
 // Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
-console.log('🔧 Background using extension API:', typeof browser !== 'undefined' ? 'browser' : 'chrome');
 
 // Session monitor state
 let sessionRefreshInterval: NodeJS.Timeout | null = null;
@@ -95,7 +101,7 @@ let currentCaptureController: AbortController | null = null;
 
 // Handle messages from content script and popup
 extensionAPI.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
-  console.log('🔧 Background received message:', message);
+  log('Background received message:', message);
   
   switch (message.type) {
     case 'CAPTURE_PAGE':
@@ -180,26 +186,24 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
   currentCaptureController = new AbortController();
   const signal = currentCaptureController.signal;
   
-  // Set up timeout (60 seconds for full page due to rate limiting, 10 seconds for visible)
+  // Set up timeout (120 seconds for full page, 15 seconds for visible)
   const captureType = payload.captureType || 'fullPage';
-  const timeoutMs = captureType === 'fullPage' ? 60000 : 10000;
+  const timeoutMs = captureType === 'fullPage' ? 120000 : 15000;
   const timeoutId = setTimeout(() => {
     if (currentCaptureController) {
       currentCaptureController.abort();
+      const errorMsg = captureType === 'fullPage' 
+        ? 'This page is very large and took too long to capture. Try capturing just the visible area instead.'
+        : 'Capture timed out. Please try again.';
       extensionAPI.runtime.sendMessage({
         type: 'CAPTURE_PROGRESS',
-        payload: { status: 'error', message: 'Capture timed out. Please try again.' }
+        payload: { status: 'error', message: errorMsg }
       } as ExtensionMessage);
     }
   }, timeoutMs);
   
   try {
-    console.log('Starting page capture:', { 
-      url: payload.url, 
-      captureType: payload.captureType,
-      favicon: payload.favicon,
-      faviconValid: payload.favicon && payload.favicon.startsWith('http')
-    });
+    log('Starting page capture:', payload.url);
     
     // Check if cancelled
     if (signal.aborted) {
@@ -506,19 +510,14 @@ async function handleSignOut(sendResponse: (response: any) => void) {
 
 async function handleGetFolders(sendResponse: (response: any) => void) {
   try {
-    console.log('🔧 Background: Getting user folders');
-    
-    // Debug: Check if we have a token
-    const { token } = await ExtensionAuth.getSession();
-    console.log('🔧 Background: Auth token available:', token ? 'YES' : 'NO');
+    log('Getting user folders');
     
     const folders = await ExtensionAPI.getFolders();
-    console.log('🔧 Background: Folders retrieved:', folders);
+    log('Folders retrieved:', folders.folders?.length || 0);
     
     sendResponse(folders);
   } catch (error) {
-    console.error('🔧 Background: Failed to get folders:', error);
-    // Return empty folders array on error - let clips save to default location
+    console.error('Failed to get folders:', error);
     sendResponse({ 
       folders: [] 
     });
@@ -527,19 +526,14 @@ async function handleGetFolders(sendResponse: (response: any) => void) {
 
 async function handleGetUsage(sendResponse: (response: any) => void) {
   try {
-    console.log('🔧 Background: Getting user usage data');
-    
-    // Debug: Check if we have a token
-    const { token } = await ExtensionAuth.getSession();
-    console.log('🔧 Background: Auth token available:', token ? 'YES' : 'NO');
+    log('Getting user usage data');
     
     const usage = await ExtensionAPI.getUsage();
-    console.log('🔧 Background: Usage retrieved:', usage);
+    log('Usage retrieved - remaining:', usage.clips_remaining);
     
     sendResponse(usage);
   } catch (error) {
-    console.error('🔧 Background: Failed to get usage:', error);
-    // Return default usage data on error
+    console.error('Failed to get usage:', error);
     sendResponse({ 
       error: 'Failed to load usage data',
       clips_remaining: 50,
@@ -552,18 +546,14 @@ async function handleGetUsage(sendResponse: (response: any) => void) {
 
 async function handleCreateFolder(payload: any, sendResponse: (response: any) => void) {
   try {
-    console.log('🔧 Background: Creating folder:', payload);
-    
-    // Debug: Check if we have a token
-    const { token } = await ExtensionAuth.getSession();
-    console.log('🔧 Background: Auth token available:', token ? 'YES' : 'NO');
+    log('Creating folder:', payload.name);
     
     const folder = await ExtensionAPI.createFolder(payload);
-    console.log('🔧 Background: Folder created:', folder);
+    log('Folder created successfully');
     
     sendResponse({ folder });
   } catch (error) {
-    console.error('🔧 Background: Failed to create folder:', error);
+    console.error('Failed to create folder:', error);
     sendResponse({ 
       error: 'Failed to create folder'
     });
