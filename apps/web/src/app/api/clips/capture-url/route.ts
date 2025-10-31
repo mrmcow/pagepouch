@@ -65,19 +65,9 @@ export async function POST(request: NextRequest) {
     // Configure Chromium for serverless environment (Vercel)
     const isProduction = process.env.NODE_ENV === 'production'
     
-    // Set font config to null to avoid brotli files error on Vercel
-    if (isProduction) {
-      await chromium.font('/tmp/chromium-fonts')
-    }
-    
     // Launch browser with serverless-compatible Chromium
     const browser = await puppeteer.launch({
-      args: isProduction ? [
-        ...chromium.args,
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins',
-        '--disable-site-isolation-trials',
-      ] : [
+      args: isProduction ? chromium.args : [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
@@ -88,7 +78,7 @@ export async function POST(request: NextRequest) {
         height: 1024,
       },
       executablePath: isProduction 
-        ? await chromium.executablePath('/opt/nodejs/node_modules/@sparticuz/chromium/bin')
+        ? await chromium.executablePath()
         : process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       headless: true, // Always headless for serverless
     })
