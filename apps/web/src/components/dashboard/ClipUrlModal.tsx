@@ -1,7 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { X, Download, Chrome, Sparkles } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { X, Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
 
 interface ClipUrlModalProps {
   isOpen: boolean
@@ -9,13 +12,108 @@ interface ClipUrlModalProps {
   onSuccess: () => void
 }
 
-export function ClipUrlModal({ isOpen, onClose }: ClipUrlModalProps) {
+export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) {
+  const [url, setUrl] = useState('')
+  const [isCapturing, setIsCapturing] = useState(false)
+  const [captureStatus, setCaptureStatus] = useState<'idle' | 'capturing' | 'processing' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [progress, setProgress] = useState(0)
+
   if (!isOpen) return null
 
-  const handleInstallExtension = () => {
-    // Open download in new tab
-    window.open('/extension/downloads/pagestash-extension-chrome.zip', '_blank')
+  const validateUrl = (urlString: string): boolean => {
+    try {
+      const urlObj = new URL(urlString)
+      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
+  const handleCapture = async () => {
+    // Validate URL
+    if (!url.trim()) {
+      setErrorMessage('Please enter a URL')
+      return
+    }
+
+    // Add https:// if protocol is missing
+    let processedUrl = url.trim()
+    if (!processedUrl.match(/^https?:\/\//i)) {
+      processedUrl = 'https://' + processedUrl
+    }
+
+    if (!validateUrl(processedUrl)) {
+      setErrorMessage('Please enter a valid URL (e.g., https://example.com)')
+      return
+    }
+
+    setIsCapturing(true)
+    setCaptureStatus('capturing')
+    setErrorMessage('')
+    setProgress(10)
+
+    try {
+      // Get auth token
+      const supabase = createClient()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        throw new Error('Please sign in to capture pages')
+      }
+
+      // Call the capture API
+      const response = await fetch('/api/clips/capture-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ url: processedUrl }),
+      })
+
+      setProgress(50)
+      setCaptureStatus('processing')
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to capture webpage')
+      }
+
+      setProgress(100)
+      setCaptureStatus('success')
+
+      // Close modal after a brief success message
+      setTimeout(() => {
+        onSuccess()
+        handleClose()
+      }, 1500)
+    } catch (error: any) {
+      console.error('Capture error:', error)
+      setCaptureStatus('error')
+      setErrorMessage(error.message || 'Failed to capture webpage. Please try again.')
+      setIsCapturing(false)
+    }
+  }
+
+  const handleClose = () => {
+    if (isCapturing) return // Prevent closing during capture
+    setUrl('')
+    setIsCapturing(false)
+    setCaptureStatus('idle')
+    setErrorMessage('')
+    setProgress(0)
     onClose()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isCapturing) {
+      handleCapture()
+    }
+    if (e.key === 'Escape' && !isCapturing) {
+      handleClose()
+    }
   }
 
   return (
@@ -25,82 +123,113 @@ export function ClipUrlModal({ isOpen, onClose }: ClipUrlModalProps) {
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-              <Chrome className="h-5 w-5 text-white" />
+              <Link2 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">Capture Webpages</h2>
+              <h2 className="text-lg font-semibold">Clip URL</h2>
               <p className="text-sm text-muted-foreground">
-                Use the browser extension for best results
+                Capture any webpage to your library
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-            title="Close (Esc)"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          {!isCapturing && (
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              title="Close (Esc)"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-4">
-          {/* Feature highlight */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-blue-900 mb-1">
-                  Full-Page Capture with Extension
-                </h3>
-                <p className="text-sm text-blue-800">
-                  The PageStash browser extension captures complete webpages including:
-                </p>
-                <ul className="text-sm text-blue-800 mt-2 space-y-1 ml-4">
-                  <li>• Full-page screenshots (even beyond viewport)</li>
-                  <li>• Complete HTML & text content</li>
-                  <li>• Page metadata & favicons</li>
-                  <li>• Works on any website you visit</li>
-                </ul>
+          {/* URL Input */}
+          <div className="space-y-2">
+            <label htmlFor="clip-url" className="text-sm font-medium">
+              Website URL
+            </label>
+            <Input
+              id="clip-url"
+              type="url"
+              placeholder="https://example.com/article"
+              value={url}
+              onChange={(e) => {
+                setUrl(e.target.value)
+                setErrorMessage('')
+              }}
+              onKeyDown={handleKeyDown}
+              disabled={isCapturing}
+              className="text-base"
+              autoFocus
+            />
+            <p className="text-xs text-muted-foreground">
+              💡 Tip: Paste any URL and we'll capture the full page, including screenshots, text, and metadata
+            </p>
+          </div>
+
+          {/* Progress Bar */}
+          {isCapturing && (
+            <div className="space-y-2">
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {captureStatus === 'capturing' && 'Capturing webpage...'}
+                {captureStatus === 'processing' && 'Processing content...'}
+                {captureStatus === 'success' && (
+                  <span className="flex items-center gap-1 text-green-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Captured successfully!
+                  </span>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Installation */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm">Quick Install:</h4>
-            <ol className="text-sm text-muted-foreground space-y-2 ml-4">
-              <li>1. Download the extension below</li>
-              <li>2. Unzip the downloaded file</li>
-              <li>3. Open Chrome Extensions (chrome://extensions)</li>
-              <li>4. Enable "Developer mode" (top right)</li>
-              <li>5. Click "Load unpacked" and select the unzipped folder</li>
-            </ol>
-          </div>
-
-          {/* Note */}
-          <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-            💡 <strong>Tip:</strong> Once installed, click the PageStash extension icon on any webpage to save it instantly!
-          </div>
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{errorMessage}</p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/30">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
+            disabled={isCapturing}
           >
             Cancel
           </Button>
           <Button
-            onClick={handleInstallExtension}
+            onClick={handleCapture}
+            disabled={isCapturing || !url.trim()}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
           >
-            <Download className="mr-2 h-4 w-4" />
-            Download Extension
+            {isCapturing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Capturing...
+              </>
+            ) : (
+              <>
+                <Link2 className="mr-2 h-4 w-4" />
+                Capture Page
+              </>
+            )}
           </Button>
         </div>
       </div>
     </div>
   )
 }
+
