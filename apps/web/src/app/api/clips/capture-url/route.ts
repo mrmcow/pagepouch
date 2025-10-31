@@ -247,6 +247,45 @@ export async function POST(request: NextRequest) {
 
     console.log(`📝 Final result - Screenshot: ${screenshotUrl ? 'Success ✅' : 'Failed ❌ (continuing without)'}`)
 
+    // If no folder specified, use or create "Inbox" folder
+    let targetFolderId = folderId
+    if (!targetFolderId) {
+      console.log('📁 No folder specified, checking for Inbox folder...')
+      
+      // Try to find existing Inbox folder
+      const { data: existingFolder } = await supabase
+        .from('folders')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('name', 'Inbox')
+        .single()
+      
+      if (existingFolder) {
+        targetFolderId = existingFolder.id
+        console.log('✅ Using existing Inbox folder:', targetFolderId)
+      } else {
+        // Create Inbox folder
+        console.log('📁 Creating new Inbox folder...')
+        const { data: newFolder, error: folderError } = await supabase
+          .from('folders')
+          .insert({
+            user_id: user.id,
+            name: 'Inbox',
+            color: '#3b82f6' // Blue color for Inbox
+          })
+          .select('id')
+          .single()
+        
+        if (folderError) {
+          console.error('Failed to create Inbox folder:', folderError)
+          // Continue without folder rather than failing
+        } else {
+          targetFolderId = newFolder.id
+          console.log('✅ Created new Inbox folder:', targetFolderId)
+        }
+      }
+    }
+
     // Create clip in database
     const { data: clip, error: insertError } = await supabase
       .from('clips')
@@ -258,7 +297,7 @@ export async function POST(request: NextRequest) {
         text_content: text,
         screenshot_url: screenshotUrl,
         favicon_url: favicon,
-        folder_id: folderId || null,
+        folder_id: targetFolderId || null,
         is_favorite: false,
       })
       .select()
