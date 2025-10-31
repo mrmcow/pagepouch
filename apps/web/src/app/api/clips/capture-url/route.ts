@@ -167,15 +167,15 @@ export async function POST(request: NextRequest) {
     try {
       const browser = await puppeteer.launch({
         args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
+        defaultViewport: {
+          width: 1280,
+          height: 720,
+        },
         executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
+        headless: true,
       })
 
       const page = await browser.newPage()
-      
-      // Set viewport for consistent screenshots
-      await page.setViewport({ width: 1280, height: 720 })
       
       // Navigate to the page
       await page.goto(url, { 
