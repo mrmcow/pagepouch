@@ -134,10 +134,10 @@ export async function POST(request: NextRequest) {
         fullPage: true,
         type: 'jpeg',
         quality: 85,
-      })
+      }) as Buffer
 
       // Convert screenshot to base64
-      const screenshotBase64 = `data:image/jpeg;base64,${screenshotBuffer.toString('base64')}`
+      const screenshotBase64 = `data:image/jpeg;base64,${Buffer.from(screenshotBuffer).toString('base64')}`
       console.log(`📸 Screenshot captured: ${screenshotBuffer.length} bytes`)
 
       // Upload screenshot to Supabase Storage
