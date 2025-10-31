@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       executablePath: isProduction 
         ? await chromium.executablePath() 
         : process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      headless: isProduction ? chromium.headless : true,
+      headless: true, // Always headless for serverless
     })
 
     try {
