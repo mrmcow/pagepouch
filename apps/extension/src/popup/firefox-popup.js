@@ -474,7 +474,7 @@ function renderAuthScreen() {
             type="email" 
             placeholder="Email address" 
             value="${authState.email}" 
-            autocomplete="${authState.isSignUp ? 'email' : 'username email'}"
+            autocomplete="${authState.isSignUp ? 'email' : 'username'}"
             required
             style="${styles.input}; margin: 0;">
           <label for="password-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Password</label>

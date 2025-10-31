@@ -718,7 +718,7 @@ function EnhancedPopupApp() {
               placeholder="Email address"
               value={authForm.email}
               onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
-              autoComplete={authForm.isSignUp ? "email" : "username email"}
+              autoComplete={authForm.isSignUp ? "email" : "username"}
               required
               style={{
                 ...styles.input,
