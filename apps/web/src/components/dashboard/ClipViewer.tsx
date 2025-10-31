@@ -405,7 +405,18 @@ export function ClipViewer({
   // State for focus mode
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false)
 
-  // Auto-expand all annotations when Focus Mode opens
+  // Auto-expand all annotations by default when notes change
+  useEffect(() => {
+    if (editForm.notes && editForm.notes.includes('📍 SCREENSHOT')) {
+      // Count how many annotations exist
+      const annotationCount = (editForm.notes.match(/📍 SCREENSHOT/g) || []).length
+      // Expand all of them by default
+      const allExpanded = new Set(Array.from({ length: annotationCount }, (_, i) => i))
+      setExpandedAnnotations(allExpanded)
+    }
+  }, [clip?.id, editForm.notes])
+
+  // Keep annotations expanded when Focus Mode opens (they're already expanded)
   useEffect(() => {
     if (isFocusModeOpen && editForm.notes && editForm.notes.includes('📍 SCREENSHOT')) {
       // Count how many annotations exist

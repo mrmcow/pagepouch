@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import * as cheerio from 'cheerio'
 
 export const runtime = 'nodejs'
@@ -23,16 +23,30 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.substring(7)
     
-    // Create Supabase client and verify user
-    const supabase = createClient()
+    // Create Supabase client with the user's auth token
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    })
+    
+    // Verify the token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
+      console.error('Auth error:', authError)
       return NextResponse.json(
         { error: 'Unauthorized - Invalid token' },
         { status: 401 }
       )
     }
+    
+    console.log(`✅ Authenticated user: ${user.id}`)
 
     // Parse request body
     const body: CaptureRequestBody = await request.json()
@@ -62,8 +76,14 @@ export async function POST(request: NextRequest) {
     console.log(`🌐 Capturing URL: ${url} for user: ${user.id}`)
 
     // Fetch the webpage HTML with browser-like headers
-    const response = await fetch(url, {
-      headers: {
+    let response: Response
+    let attemptCount = 0
+    const maxAttempts = 2
+    
+    while (attemptCount < maxAttempts) {
+      attemptCount++
+      
+      const headers: Record<string, string> = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
@@ -78,9 +98,30 @@ export async function POST(request: NextRequest) {
         'Sec-Fetch-Site': 'none',
         'Sec-Fetch-User': '?1',
         'Upgrade-Insecure-Requests': '1',
-      },
-      signal: AbortSignal.timeout(20000) // 20 second timeout
-    })
+      }
+      
+      // On retry, add Referer header (some sites require it)
+      if (attemptCount > 1) {
+        headers['Referer'] = validatedUrl.origin
+        console.log(`🔄 Retry attempt ${attemptCount} with Referer header`)
+      }
+      
+      response = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(20000) // 20 second timeout
+      })
+      
+      // If successful or not a 403, break out of retry loop
+      if (response.ok || response.status !== 403) {
+        break
+      }
+      
+      // If we get 403 and have more attempts, continue
+      if (attemptCount < maxAttempts) {
+        console.log(`⚠️ Got 403, retrying...`)
+        await new Promise(resolve => setTimeout(resolve, 500)) // Brief delay
+      }
+    }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`)
