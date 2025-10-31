@@ -973,7 +973,7 @@ function DashboardContent() {
                   onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
                 >
                   <Globe className="mr-2 h-4 w-4" />
-                  Clip URL
+                  Add Webpage
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1438,14 +1438,11 @@ function DashboardContent() {
         onCreateFolder={handleCreateFolder}
       />
 
-      {/* Clip URL Modal */}
+      {/* Add Webpage Modal (Extension Prompt) */}
       <ClipUrlModal
         isOpen={state.isClipUrlModalOpen}
         onClose={() => setState(prev => ({ ...prev, isClipUrlModalOpen: false }))}
-        onSuccess={() => {
-          // Reload clips after successful capture
-          loadData(true)
-        }}
+        onSuccess={() => {}}
       />
 
       {/* Edit Folder Modal */}
