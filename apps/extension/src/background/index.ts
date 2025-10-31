@@ -251,17 +251,63 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
         };
       }
     } catch (contentError) {
-      console.warn('⚠️ Content script not available, using fallback data:', contentError);
-      console.warn('⚠️ Fallback HTML length:', (payload.html || '').length);
-      console.warn('⚠️ Fallback text length:', (payload.text || '').length);
-      // Use fallback data from popup
-      pageContent = {
-        url: payload.url,
-        title: payload.title,
-        html: payload.html || '',
-        text: payload.text || '',
-        favicon: payload.favicon
-      };
+      console.warn('⚠️ Content script not available, trying dynamic injection:', contentError);
+      
+      // Try to dynamically inject and extract content
+      try {
+        const extractionResults = await extensionAPI.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: () => {
+            // Inline content extraction function
+            const html = document.documentElement.outerHTML;
+            const cleanedHtml = html
+              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+              .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+              .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
+            
+            const text = cleanedHtml
+              .replace(/<[^>]*>/g, ' ')
+              .replace(/&nbsp;/g, ' ')
+              .replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/\s+/g, ' ')
+              .trim();
+            
+            const faviconLink = document.querySelector('link[rel*="icon"]') as HTMLLinkElement;
+            const favicon = faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`;
+            
+            return {
+              url: window.location.href,
+              title: document.title || '',
+              html: cleanedHtml,
+              text: text,
+              favicon: favicon
+            };
+          }
+        });
+        
+        if (extractionResults && extractionResults[0]?.result) {
+          pageContent = extractionResults[0].result;
+          console.log('✅ Content extracted via dynamic injection:', {
+            htmlLength: pageContent.html?.length || 0,
+            textLength: pageContent.text?.length || 0,
+            title: pageContent.title
+          });
+        } else {
+          throw new Error('Dynamic extraction returned no results');
+        }
+      } catch (dynamicError) {
+        console.error('❌ Dynamic content extraction failed:', dynamicError);
+        // Final fallback
+        pageContent = {
+          url: payload.url,
+          title: payload.title,
+          html: '',
+          text: '',
+          favicon: payload.favicon
+        };
+      }
     }
 
     // Check if cancelled after content extraction

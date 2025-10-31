@@ -11,6 +11,7 @@ console.log('🦊 Using extension API:', typeof browser !== 'undefined' ? 'brows
 let appState = {
   isCapturing: false,
   isAuthenticated: false,
+  isCheckingAuth: true, // Start with checking auth
   showAuth: false,
   currentTab: null,
   userEmail: null,
@@ -259,6 +260,10 @@ async function checkAuthStatus() {
     // Set defaults on error
     appState.isAuthenticated = false;
     appState.userEmail = null;
+  } finally {
+    // Always set isCheckingAuth to false when done
+    appState.isCheckingAuth = false;
+    render(); // Re-render to show auth or main screen
   }
 }
 
@@ -489,12 +494,12 @@ function renderAuthScreen() {
           ${authState.error ? `<div style="text-align: center; padding: 12px; background-color: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 13px;">${authState.error}</div>` : ''}
           <button id="auth-submit" type="submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; max-width: 100%; margin-top: 4px; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.5'}; cursor: ${!authState.isLoading && authState.email && authState.password ? 'pointer' : 'not-allowed'};">
             ${authState.isLoading ? '⏳ Processing...' : (authState.isSignUp ? '✨ Create Account' : '🔓 Sign In')}
-          </button>
+        </button>
         </form>
         <div style="width: 100%; text-align: center; padding-top: 8px; border-top: 1px solid #f1f5f9;">
           <button id="auth-toggle" style="background: none; border: none; color: #3b82f6; font-size: 14px; font-weight: 500; cursor: pointer; padding: 8px; text-decoration: none;">
             ${authState.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-          </button>
+        </button>
         </div>
       </div>
     </div>
@@ -600,10 +605,29 @@ function renderMainScreen() {
   `;
 }
 
+function renderLoadingScreen() {
+  return `
+    <div style="${styles.container}">
+      <div style="${styles.content}; justify-content: center; align-items: center; height: 100%;">
+        <div style="text-align: center;">
+          ${createLogo(48)}
+          <p style="margin-top: 16px; color: #64748b; font-size: 14px;">Loading...</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function render() {
   const container = document.getElementById('popup-root');
   if (!container) {
     console.error('popup-root not found');
+    return;
+  }
+  
+  // Show loading screen while checking auth
+  if (appState.isCheckingAuth) {
+    container.innerHTML = renderLoadingScreen();
     return;
   }
   

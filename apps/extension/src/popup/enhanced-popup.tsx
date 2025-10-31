@@ -56,6 +56,7 @@ const Logo = ({ size = 32 }: { size?: number }) => (
 interface PopupState {
   isCapturing: boolean;
   isAuthenticated: boolean;
+  isCheckingAuth: boolean;
   currentTab?: chrome.tabs.Tab;
   showAuth: boolean;
   userEmail?: string;
@@ -265,6 +266,7 @@ function EnhancedPopupApp() {
   const [state, setState] = useState<PopupState>({
     isCapturing: false,
     isAuthenticated: false,
+    isCheckingAuth: true, // Start with checking auth
     showAuth: false,
     folders: [],
     selectedFolderId: null,
@@ -368,6 +370,7 @@ function EnhancedPopupApp() {
         setState(prev => ({
           ...prev,
           isAuthenticated: true,
+          isCheckingAuth: false,
           userEmail: result.userEmail || '',
           showAuth: false,
           selectedFolderId: result.selectedFolderId || null,
@@ -379,6 +382,7 @@ function EnhancedPopupApp() {
         setState(prev => ({
           ...prev,
           isAuthenticated: false,
+          isCheckingAuth: false,
           showAuth: true
         }))
       }
@@ -387,6 +391,7 @@ function EnhancedPopupApp() {
       setState(prev => ({
         ...prev,
         isAuthenticated: false,
+        isCheckingAuth: false,
         showAuth: true
       }))
     }
@@ -605,6 +610,27 @@ function EnhancedPopupApp() {
       : 'http://localhost:3000/dashboard';
     chrome.tabs.create({ url: webAppUrl });
   };
+
+  // Show loading state while checking authentication
+  if (state.isCheckingAuth) {
+    return (
+      <div style={styles.container}>
+        <div style={{
+          ...styles.content,
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            {createLogo(48)}
+            <p style={{ marginTop: '16px', color: '#64748b', fontSize: '14px' }}>
+              Loading...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Render authentication form
   if (state.showAuth) {
@@ -902,13 +928,14 @@ function EnhancedPopupApp() {
 
         {/* Folder Selector */}
         {state.isAuthenticated && state.folders && state.folders.length > 0 && !state.isCapturing && (
-          <div style={{ width: '100%', maxWidth: '280px', marginBottom: '12px' }}>
+          <div style={{ width: '100%', maxWidth: '320px' }}>
             <label style={{ 
               display: 'block', 
               fontSize: '12px', 
               fontWeight: '500', 
               color: '#6b7280', 
-              marginBottom: '6px' 
+              marginBottom: '8px',
+              textAlign: 'center' as const
             }}>
               Save to folder:
             </label>
@@ -958,12 +985,14 @@ function EnhancedPopupApp() {
           <>
             {state.warningLevel === 'exceeded' ? (
               <div style={{
+                width: '100%',
+                maxWidth: '320px',
                 padding: '16px',
                 backgroundColor: '#fef2f2',
                 border: '1px solid #fecaca',
                 borderRadius: '12px',
                 textAlign: 'center' as const,
-                marginBottom: '12px'
+                boxSizing: 'border-box' as const
               }}>
                 <div style={{ fontSize: '14px', fontWeight: '500', color: '#dc2626', marginBottom: '8px' }}>
                   Monthly limit reached
