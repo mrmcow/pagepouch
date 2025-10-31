@@ -20,7 +20,8 @@ interface ScreenshotAnnotationCanvasProps {
   imageUrl: string
   imageAlt: string
   annotations?: Annotation[]
-  onAddAnnotation?: (annotation: Omit<Annotation, 'id' | 'createdAt' | 'note'>, note: string) => Promise<void>
+  highlightedPosition?: {x: number, y: number} | null
+  onAddAnnotation?: (annotation: Omit<Annotation, 'id' | 'createdAt' | 'note'>, note: string, thumbnail: string) => Promise<void>
   onDeleteAnnotation?: (annotationId: string) => Promise<void>
   onClickAnnotation?: (annotation: Annotation) => void
 }
@@ -29,6 +30,7 @@ export function ScreenshotAnnotationCanvas({
   imageUrl,
   imageAlt,
   annotations = [],
+  highlightedPosition,
   onAddAnnotation,
   onDeleteAnnotation,
   onClickAnnotation
@@ -216,11 +218,46 @@ export function ScreenshotAnnotationCanvas({
     setCurrentAnnotation(null)
   }
 
+  // Generate thumbnail from annotation rectangle
+  const generateThumbnail = async (annotation: { x: number, y: number, width: number, height: number }): Promise<string> => {
+    if (!imageRef.current) return ''
+    
+    try {
+      // Create offscreen canvas for cropping
+      const canvas = document.createElement('canvas')
+      const maxThumbSize = 80 // Max thumbnail dimension
+      
+      // Calculate scaled dimensions (maintain aspect ratio)
+      const scale = Math.min(maxThumbSize / annotation.width, maxThumbSize / annotation.height)
+      canvas.width = annotation.width * scale
+      canvas.height = annotation.height * scale
+      
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return ''
+      
+      // Draw cropped area from image
+      ctx.drawImage(
+        imageRef.current,
+        annotation.x, annotation.y, annotation.width, annotation.height, // Source rectangle
+        0, 0, canvas.width, canvas.height // Destination (scaled)
+      )
+      
+      // Return as data URL
+      return canvas.toDataURL('image/jpeg', 0.8)
+    } catch (error) {
+      console.error('Failed to generate thumbnail:', error)
+      return ''
+    }
+  }
+
   // Handle add note submission
   const handleAddNote = async () => {
     if (!pendingAnnotation || !noteText.trim() || !onAddAnnotation) return
 
-    await onAddAnnotation(pendingAnnotation, noteText.trim())
+    // Generate thumbnail of annotated area
+    const thumbnail = await generateThumbnail(pendingAnnotation)
+    
+    await onAddAnnotation(pendingAnnotation, noteText.trim(), thumbnail)
     
     setShowAddNote(false)
     setNoteText('')

@@ -585,15 +585,16 @@ function DashboardContent() {
   const handleTagFilterChange = async (value: string) => {
     const selectedTag = value === 'all-tags' ? null : value
     
+    // Load clip tags BEFORE updating state if a tag is selected
+    if (selectedTag) {
+      await loadClipTagsForFilter(selectedTag)
+    }
+    
+    // Now update the selected tag state AFTER tags are loaded
     setState(prev => ({ 
       ...prev, 
       selectedTag 
     }))
-    
-    // Load clip tags when a tag filter is selected
-    if (selectedTag) {
-      await loadClipTagsForFilter(selectedTag)
-    }
   }
 
 
@@ -1347,8 +1348,8 @@ function DashboardContent() {
                       </p>
                     </div>
                     {state.viewFilter === 'library' && (
-                      <Button onClick={() => router.push('/')}>
-                        <Plus className="mr-2 h-4 w-4" />
+                      <Button onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}>
+                        <Download className="mr-2 h-4 w-4" />
                         Install Extension
                       </Button>
                     )}

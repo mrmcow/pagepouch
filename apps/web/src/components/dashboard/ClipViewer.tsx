@@ -396,13 +396,29 @@ export function ClipViewer({
     setShowAddNote(false)
   }
 
+  // State for highlighted annotation
+  const [highlightedAnnotation, setHighlightedAnnotation] = useState<{x: number, y: number} | null>(null)
+
   // Handle screenshot annotation click - scroll to annotation
-  const handleScreenshotAnnotationClick = (annotationIndex: number) => {
+  const handleScreenshotAnnotationClick = (annotationIndex: number, x: number, y: number) => {
     // Switch to screenshot tab
     setActiveTab('screenshot')
     
-    // TODO: Scroll to annotation position and highlight it
-    console.log('Navigate to annotation:', annotationIndex)
+    // Highlight the annotation
+    setHighlightedAnnotation({x, y})
+    
+    // Scroll to annotation after tab switch
+    setTimeout(() => {
+      // Find the screenshot container
+      const container = document.querySelector('[data-screenshot-container]') as HTMLElement
+      if (container) {
+        // Scroll to annotation Y position (with offset for visibility)
+        container.scrollTop = y - 100
+      }
+      
+      // Clear highlight after 2 seconds
+      setTimeout(() => setHighlightedAnnotation(null), 2000)
+    }, 100)
   }
 
   // Expose navigation function to window for onclick handlers
@@ -419,10 +435,15 @@ export function ClipViewer({
     let annotationIndex = 0
     
     return notes
-      // Format screenshot annotations - hide coordinates, show clean badge
+      // Format screenshot annotations with thumbnail
+      .replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+),thumb:([^\]]+)\]/g, (match, x, y, w, h, thumb) => {
+        const index = annotationIndex++
+        return `<div class="inline-flex items-center gap-2 px-2 py-1.5 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><img src="${thumb}" alt="Annotation thumbnail" class="w-8 h-8 rounded border border-purple-300 object-cover" /><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
+      })
+      // Fallback for old format without thumbnail
       .replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)\]/g, (match, x, y, w, h) => {
         const index = annotationIndex++
-        return `<div class="inline-flex items-center gap-1.5 px-2 py-1 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
+        return `<div class="inline-flex items-center gap-1.5 px-2 py-1 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
       })
       // Format blockquotes (excerpts) - clean and tight
       .replace(/^> "(.*?)"$/gm, '<div class="mb-1 p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r"><div class="text-sm italic text-gray-700 font-medium">"$1"</div></div>')
@@ -674,10 +695,11 @@ export function ClipViewer({
                       imageUrl={clip.screenshot_url}
                       imageAlt={clip.title}
                       annotations={parseScreenshotAnnotations(editForm.notes)}
-                      onAddAnnotation={async (annotation, note) => {
-                        // Format: 📍 SCREENSHOT [x:100,y:150,w:200,h:100]
+                      highlightedPosition={highlightedAnnotation}
+                      onAddAnnotation={async (annotation, note, thumbnail) => {
+                        // Format: 📍 SCREENSHOT [x:100,y:150,w:200,h:100,thumb:data:image/jpeg;base64,...]
                         // Note text here
-                        const annotationMeta = `📍 SCREENSHOT [x:${Math.round(annotation.x)},y:${Math.round(annotation.y)},w:${Math.round(annotation.width)},h:${Math.round(annotation.height)}]`
+                        const annotationMeta = `📍 SCREENSHOT [x:${Math.round(annotation.x)},y:${Math.round(annotation.y)},w:${Math.round(annotation.width)},h:${Math.round(annotation.height)},thumb:${thumbnail}]`
                         const noteWithAnnotation = `${annotationMeta}\n${note.trim()}`
                         const currentNotes = editForm.notes ? `${editForm.notes}\n\n${noteWithAnnotation}` : noteWithAnnotation
                         
