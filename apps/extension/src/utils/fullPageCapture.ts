@@ -950,7 +950,6 @@ export class FullPageCapture {
       });
 
       // Process each row
-      let canvasY = 0;
       const sortedRowKeys = Array.from(rows.keys()).sort((a, b) => a - b);
       
       for (let rowIndex = 0; rowIndex < sortedRowKeys.length; rowIndex++) {
@@ -960,8 +959,6 @@ export class FullPageCapture {
         // Sort screenshots in this row by x position
         rowScreenshots.sort((a, b) => a.x - b.x);
         
-        let canvasX = 0;
-        
         for (let colIndex = 0; colIndex < rowScreenshots.length; colIndex++) {
           const screenshot = rowScreenshots[colIndex];
           
@@ -970,55 +967,49 @@ export class FullPageCapture {
           const blob = await response.blob();
           const imageBitmap = await createImageBitmap(blob);
           
-          // Calculate source and destination areas to handle overlaps
+          // CRITICAL FIX: Use the screenshot's ACTUAL scroll position as the canvas position
+          // This properly handles irregular grids (like rightmost edge captures)
+          const canvasX = screenshot.x;
+          const canvasY = screenshot.y;
+          
+          // Calculate overlaps based on previous screenshots
           let sourceX = 0;
           let sourceY = 0;
           let sourceWidth = imageBitmap.width;
           let sourceHeight = imageBitmap.height;
-          let destWidth = sourceWidth;
-          let destHeight = sourceHeight;
           
-          // Handle horizontal overlap (not the first column)
+          // Handle horizontal overlap with previous column in same row
           if (colIndex > 0) {
-            sourceX = horizontalOverlap;
-            sourceWidth -= horizontalOverlap;
-            destWidth = sourceWidth;
+            const prevScreenshot = rowScreenshots[colIndex - 1];
+            const prevEndX = prevScreenshot.x + viewportWidth;
+            if (prevEndX > canvasX) {
+              // There's overlap - skip it from source
+              const overlap = prevEndX - canvasX;
+              sourceX = overlap;
+              sourceWidth -= overlap;
+            }
           }
           
-          // Handle vertical overlap (not the first row)
+          // Handle vertical overlap with previous row
           if (rowIndex > 0) {
-            sourceY = verticalOverlap;
-            sourceHeight -= verticalOverlap;
-            destHeight = sourceHeight;
+            const prevRowY = sortedRowKeys[rowIndex - 1];
+            const prevEndY = prevRowY + viewportHeight;
+            if (prevEndY > canvasY) {
+              // There's overlap - skip it from source
+              const overlap = prevEndY - canvasY;
+              sourceY = overlap;
+              sourceHeight -= overlap;
+            }
           }
           
-          // Draw the image section
+          // Draw the non-overlapping portion at the correct canvas position
           ctx.drawImage(
             imageBitmap,
-            sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle
-            canvasX, canvasY, destWidth, destHeight       // Destination rectangle
+            sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle (skip overlaps)
+            canvasX + sourceX, canvasY + sourceY, sourceWidth, sourceHeight // Destination rectangle
           );
           
-          // Update canvas X position for next column
-          canvasX += destWidth;
-          
           // Clean up ImageBitmap to free memory
-          imageBitmap.close();
-        }
-        
-        // Update canvas Y position for next row
-        // Use the height from the first image in the row, accounting for overlap
-        if (rowScreenshots.length > 0) {
-          const firstScreenshot = rowScreenshots[0];
-          const response = await fetch(firstScreenshot.dataUrl);
-          const blob = await response.blob();
-          const imageBitmap = await createImageBitmap(blob);
-          
-          const heightToAdd = rowIndex > 0 
-            ? imageBitmap.height - verticalOverlap 
-            : imageBitmap.height;
-          canvasY += heightToAdd;
-          
           imageBitmap.close();
         }
       }
