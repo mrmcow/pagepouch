@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import chromium from 'chrome-aws-lambda'
+import * as cheerio from 'cheerio'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60 // 60 seconds max execution time
+export const maxDuration = 30 // 30 seconds max execution time
 
 interface CaptureRequestBody {
   url: string
@@ -61,132 +61,78 @@ export async function POST(request: NextRequest) {
 
     console.log(`🌐 Capturing URL: ${url} for user: ${user.id}`)
 
-    // Launch browser with chrome-aws-lambda (works on Vercel)
-    const browser = await chromium.puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+    // Fetch the webpage HTML
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      signal: AbortSignal.timeout(20000) // 20 second timeout
     })
 
-    try {
-      const page = await browser.newPage()
-      
-      // Set user agent
-      await page.setUserAgent(
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      )
-
-      // Navigate to page with timeout
-      console.log(`📄 Loading page: ${url}`)
-      await page.goto(url, {
-        waitUntil: 'networkidle2',
-        timeout: 30000, // 30 second timeout
-      })
-
-      // Wait a bit for dynamic content
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Get page title
-      const title = await page.title()
-      console.log(`📝 Page title: ${title}`)
-
-      // Extract text content
-      const text = await page.evaluate(() => {
-        // Remove script, style, and noscript tags
-        const clone = document.body.cloneNode(true) as HTMLElement
-        clone.querySelectorAll('script, style, noscript').forEach(el => el.remove())
-        
-        // Get text content
-        const text = clone.textContent || ''
-        
-        // Clean up whitespace
-        return text
-          .replace(/\s+/g, ' ')
-          .replace(/\n+/g, '\n')
-          .trim()
-      })
-      console.log(`📄 Extracted text length: ${text.length} characters`)
-
-      // Get HTML content
-      const html = await page.content()
-      console.log(`📄 Extracted HTML length: ${html.length} characters`)
-
-      // Get favicon
-      const favicon = await page.evaluate(() => {
-        const faviconLink = document.querySelector('link[rel*="icon"]') as HTMLLinkElement
-        return faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`
-      })
-
-      // Take full-page screenshot
-      console.log(`📸 Capturing screenshot...`)
-      const screenshotBuffer = await page.screenshot({
-        fullPage: true,
-        type: 'jpeg',
-        quality: 85,
-      }) as Buffer
-
-      // Convert screenshot to base64
-      const screenshotBase64 = `data:image/jpeg;base64,${Buffer.from(screenshotBuffer).toString('base64')}`
-      console.log(`📸 Screenshot captured: ${screenshotBuffer.length} bytes`)
-
-      // Upload screenshot to Supabase Storage
-      const timestamp = Date.now()
-      const screenshotFileName = `${user.id}/${timestamp}.jpg`
-      
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('clips')
-        .upload(screenshotFileName, screenshotBuffer, {
-          contentType: 'image/jpeg',
-          upsert: false,
-        })
-
-      if (uploadError) {
-        console.error('Screenshot upload error:', uploadError)
-        throw new Error(`Failed to upload screenshot: ${uploadError.message}`)
-      }
-
-      // Get public URL for screenshot
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from('clips')
-        .getPublicUrl(screenshotFileName)
-
-      console.log(`✅ Screenshot uploaded: ${publicUrl}`)
-
-      // Create clip in database
-      const { data: clip, error: insertError } = await supabase
-        .from('clips')
-        .insert({
-          user_id: user.id,
-          url: url,
-          title: title || new URL(url).hostname,
-          html_content: html,
-          text_content: text,
-          screenshot_url: publicUrl,
-          favicon_url: favicon,
-          folder_id: folderId || null,
-          is_favorite: false,
-        })
-        .select()
-        .single()
-
-      if (insertError) {
-        console.error('Database insert error:', insertError)
-        throw new Error(`Failed to save clip: ${insertError.message}`)
-      }
-
-      console.log(`✅ Clip created successfully: ${clip.id}`)
-
-      return NextResponse.json({
-        success: true,
-        clip: clip,
-        message: 'Page captured successfully',
-      })
-    } finally {
-      await browser.close()
+    if (!response.ok) {
+      throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`)
     }
+
+    const html = await response.text()
+    console.log(`📄 Fetched HTML: ${html.length} bytes`)
+
+    // Parse HTML with cheerio
+    const $ = cheerio.load(html)
+
+    // Extract title
+    const title = $('title').text().trim() || $('meta[property="og:title"]').attr('content') || validatedUrl.hostname
+
+    // Extract text content
+    $('script, style, noscript').remove()
+    const text = $('body').text()
+      .replace(/\s+/g, ' ')
+      .replace(/\n+/g, '\n')
+      .trim()
+
+    // Extract favicon
+    let favicon = $('link[rel*="icon"]').attr('href') || ''
+    if (favicon && !favicon.startsWith('http')) {
+      favicon = new URL(favicon, url).href
+    }
+    if (!favicon) {
+      favicon = `${validatedUrl.protocol}//${validatedUrl.hostname}/favicon.ico`
+    }
+
+    console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars`)
+
+    // For now, we'll skip screenshot - can add later with a service like ScreenshotAPI
+    // Or implement with playwright-aws-lambda in the future
+    const screenshotUrl = null
+
+    // Create clip in database
+    const { data: clip, error: insertError } = await supabase
+      .from('clips')
+      .insert({
+        user_id: user.id,
+        url: url,
+        title: title || validatedUrl.hostname,
+        html_content: html,
+        text_content: text,
+        screenshot_url: screenshotUrl,
+        favicon_url: favicon,
+        folder_id: folderId || null,
+        is_favorite: false,
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Database insert error:', insertError)
+      throw new Error(`Failed to save clip: ${insertError.message}`)
+    }
+
+    console.log(`✅ Clip created successfully: ${clip.id}`)
+
+    return NextResponse.json({
+      success: true,
+      clip: clip,
+      message: 'Page captured successfully',
+    })
   } catch (error: any) {
     console.error('❌ Capture error:', error)
     
@@ -194,13 +140,13 @@ export async function POST(request: NextRequest) {
     let errorMessage = 'Failed to capture webpage'
     let statusCode = 500
 
-    if (error.message?.includes('timeout')) {
+    if (error.message?.includes('timeout') || error.name === 'AbortError') {
       errorMessage = 'Page took too long to load. Please try again.'
       statusCode = 408
-    } else if (error.message?.includes('ERR_NAME_NOT_RESOLVED')) {
+    } else if (error.message?.includes('ENOTFOUND') || error.message?.includes('ERR_NAME_NOT_RESOLVED')) {
       errorMessage = 'Could not find the website. Please check the URL.'
       statusCode = 404
-    } else if (error.message?.includes('ERR_CONNECTION')) {
+    } else if (error.message?.includes('ECONNREFUSED') || error.message?.includes('ERR_CONNECTION')) {
       errorMessage = 'Could not connect to the website. Please try again later.'
       statusCode = 503
     } else if (error.message) {
@@ -213,4 +159,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
