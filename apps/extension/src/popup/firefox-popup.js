@@ -45,7 +45,7 @@ const styles = {
   button: 'padding: 14px 24px; border-radius: 12px; border: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 320px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);',
   primaryButton: 'background-color: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);',
   secondaryButton: 'background-color: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
-  input: 'width: 100%; max-width: 320px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; color: #1f2937; font-family: inherit;',
+  input: 'width: 320px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; color: #1f2937; font-family: inherit;',
   card: 'background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; width: 100%; max-width: 320px; text-align: center; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
   badge: 'display: inline-flex; align-items: center; padding: 4px 8px; background-color: #dbeafe; color: #1d4ed8; border-radius: 12px; font-size: 12px; font-weight: 500;',
   tabInfo: 'display: flex; align-items: flex-start; gap: 12px; padding: 16px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; max-width: 320px; box-sizing: border-box; flex-direction: column; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);'

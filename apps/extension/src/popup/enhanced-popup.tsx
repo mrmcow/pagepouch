@@ -169,8 +169,7 @@ const styles = {
     color: 'white',
   },
   input: {
-    width: '100%',
-    maxWidth: '320px',
+    width: '320px',
     padding: '12px 16px',
     border: '1.5px solid #e2e8f0',
     borderRadius: '8px',
