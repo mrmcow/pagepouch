@@ -532,20 +532,20 @@ export function ClipViewer({
                     
                     {/* Helpful hints for each tab */}
                     {activeTab === 'html' && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
-                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 whitespace-nowrap">
+                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                         <span className="font-medium">Highlight text to annotate</span>
                       </div>
                     )}
                     {activeTab === 'text' && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
-                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 whitespace-nowrap">
+                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                         <span className="font-medium">Highlight text to annotate</span>
                       </div>
                     )}
                     {activeTab === 'screenshot' && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-purple-50 dark:bg-purple-950/30 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800">
-                        <StickyNote className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-purple-50 dark:bg-purple-950/30 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800 whitespace-nowrap">
+                        <StickyNote className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
                         <span className="font-medium">Annotation tools coming soon</span>
                       </div>
                     )}
