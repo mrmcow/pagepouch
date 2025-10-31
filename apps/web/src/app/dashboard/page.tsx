@@ -53,6 +53,7 @@ import { Clip, Folder } from '@pagestash/shared'
 import { LogoWithText, LogoIcon } from '@/components/ui/logo'
 import { ClipViewer } from '@/components/dashboard/ClipViewer'
 import { CreateFolderModal } from '@/components/dashboard/CreateFolderModal'
+import { ClipUrlModal } from '@/components/dashboard/ClipUrlModal'
 import { EditFolderModal } from '@/components/dashboard/EditFolderModal'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { ProfileModal } from '@/components/dashboard/ProfileModal'
@@ -79,6 +80,7 @@ interface DashboardState {
   selectedClip: Clip | null
   isClipViewerOpen: boolean
   isCreateFolderModalOpen: boolean
+  isClipUrlModalOpen: boolean
   selectedFolderForEdit: Folder | null
   isEditFolderModalOpen: boolean
   isProfileModalOpen: boolean
@@ -118,6 +120,7 @@ function DashboardContent() {
     selectedClip: null,
     isClipViewerOpen: false,
     isCreateFolderModalOpen: false,
+    isClipUrlModalOpen: false,
     selectedFolderForEdit: null,
     isEditFolderModalOpen: false,
     isProfileModalOpen: false,
@@ -972,6 +975,15 @@ function DashboardContent() {
                   <FolderPlus className="mr-2 h-4 w-4" />
                   New Folder
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
+                >
+                  <Globe className="mr-2 h-4 w-4" />
+                  Clip URL
+                </Button>
                 
                 {/* Page Graphs - Pro Feature */}
                 {!state.isSubscriptionLoading && state.subscriptionTier === 'pro' && (
@@ -1424,6 +1436,16 @@ function DashboardContent() {
         isOpen={state.isCreateFolderModalOpen}
         onClose={() => setState(prev => ({ ...prev, isCreateFolderModalOpen: false }))}
         onCreateFolder={handleCreateFolder}
+      />
+
+      {/* Clip URL Modal */}
+      <ClipUrlModal
+        isOpen={state.isClipUrlModalOpen}
+        onClose={() => setState(prev => ({ ...prev, isClipUrlModalOpen: false }))}
+        onSuccess={() => {
+          // Reload clips after successful capture
+          loadClips(state.searchQuery, state.selectedFolder, state.selectedTag)
+        }}
       />
 
       {/* Edit Folder Modal */}
