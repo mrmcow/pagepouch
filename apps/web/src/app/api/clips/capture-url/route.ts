@@ -156,11 +156,24 @@ export async function POST(request: NextRequest) {
       favicon = `${validatedUrl.protocol}//${validatedUrl.hostname}/favicon.ico`
     }
 
-    console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars`)
+    // Extract Open Graph image as a fallback screenshot
+    // Many websites have high-quality preview images we can use
+    let screenshotUrl = $('meta[property="og:image"]').attr('content') || 
+                        $('meta[name="twitter:image"]').attr('content') || 
+                        $('meta[property="og:image:secure_url"]').attr('content') || 
+                        null
+    
+    // Make sure the screenshot URL is absolute
+    if (screenshotUrl && !screenshotUrl.startsWith('http')) {
+      try {
+        screenshotUrl = new URL(screenshotUrl, url).href
+      } catch (err) {
+        console.warn('Failed to resolve screenshot URL:', err)
+        screenshotUrl = null
+      }
+    }
 
-    // For now, we'll skip screenshot - can add later with a service like ScreenshotAPI
-    // Or implement with playwright-aws-lambda in the future
-    const screenshotUrl = null
+    console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars, Screenshot: ${screenshotUrl ? 'Found' : 'None'}`)
 
     // Create clip in database
     const { data: clip, error: insertError } = await supabase
