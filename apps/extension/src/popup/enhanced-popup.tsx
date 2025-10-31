@@ -691,85 +691,76 @@ function EnhancedPopupApp() {
             style={{ 
               display: 'flex', 
               flexDirection: 'column', 
+              alignItems: 'center',
               gap: '14px',
-              width: '100%',
-              maxWidth: '100%',
-              padding: '0 10px'
+              width: '100%'
             }}
           >
-            <div style={{ width: '100%' }}>
-              <label 
-                htmlFor="pagestash-email" 
-                style={{
-                  position: 'absolute',
-                  width: '1px',
-                  height: '1px',
-                  padding: 0,
-                  margin: '-1px',
-                  overflow: 'hidden',
-                  clip: 'rect(0,0,0,0)',
-                  whiteSpace: 'nowrap',
-                  border: 0
-                }}
-              >
-                Email
-              </label>
-              <input
-                id="pagestash-email"
-                name="email"
-                type="email"
-                placeholder="Email address"
-                value={authForm.email}
-                onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
-                autoComplete={authForm.isSignUp ? "email" : "username email"}
-                required
-                style={{
-                  ...styles.input,
-                  width: '100%',
-                  maxWidth: '100%',
-                  margin: 0,
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-              />
-            </div>
+            <label 
+              htmlFor="pagestash-email" 
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0,0,0,0)',
+                whiteSpace: 'nowrap',
+                border: 0
+              }}
+            >
+              Email
+            </label>
+            <input
+              id="pagestash-email"
+              name="email"
+              type="email"
+              placeholder="Email address"
+              value={authForm.email}
+              onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
+              autoComplete={authForm.isSignUp ? "email" : "username email"}
+              required
+              style={{
+                ...styles.input,
+                margin: 0,
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+            />
 
-            <div style={{ width: '100%' }}>
-              <label 
-                htmlFor="pagestash-password" 
-                style={{
-                  position: 'absolute',
-                  width: '1px',
-                  height: '1px',
-                  padding: 0,
-                  margin: '-1px',
-                  overflow: 'hidden',
-                  clip: 'rect(0,0,0,0)',
-                  whiteSpace: 'nowrap',
-                  border: 0
-                }}
-              >
-                Password
-              </label>
-              <input
-                id="pagestash-password"
-                name="password"
-                type="password"
-                placeholder="Password"
-                value={authForm.password}
-                onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
-                autoComplete={authForm.isSignUp ? "new-password" : "current-password"}
-                required
-                style={{
-                  ...styles.input,
-                  width: '100%',
-                  maxWidth: '100%',
-                  margin: 0,
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-              />
-            </div>
+            <label 
+              htmlFor="pagestash-password" 
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0,0,0,0)',
+                whiteSpace: 'nowrap',
+                border: 0
+              }}
+            >
+              Password
+            </label>
+            <input
+              id="pagestash-password"
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={authForm.password}
+              onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
+              autoComplete={authForm.isSignUp ? "new-password" : "current-password"}
+              required
+              style={{
+                ...styles.input,
+                margin: 0,
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+            />
 
             {authForm.error && (
               <div style={{
