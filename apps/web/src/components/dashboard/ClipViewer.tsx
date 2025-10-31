@@ -1486,13 +1486,50 @@ export function ClipViewer({
                       {editForm.notes.length} characters · {editForm.notes.split(/\s+/).filter(Boolean).length} words
                     </div>
                   </div>
-                  <Textarea
-                    value={editForm.notes}
-                    onChange={(e) => handleFormChange('notes', e.target.value)}
-                    placeholder="Write your detailed notes here... ✍️"
-                    className="flex-1 resize-none text-base leading-relaxed min-h-[400px] font-mono"
-                    autoFocus
-                  />
+                  
+                  {/* Show formatted view if has annotations or blockquotes */}
+                  {editForm.notes && (editForm.notes.includes('> "') || editForm.notes.includes('📍 SCREENSHOT')) ? (
+                    <div className="flex-1 flex flex-col gap-2 border rounded-lg p-4 bg-background">
+                      {/* Formatted Preview */}
+                      <div 
+                        className="text-base leading-relaxed overflow-y-auto"
+                        dangerouslySetInnerHTML={{
+                          __html: formatNotesDisplay(editForm.notes)
+                        }}
+                        onClick={() => {
+                          // Focus the textarea when clicking on the preview
+                          const textarea = document.getElementById('focus-notes-textarea') as HTMLTextAreaElement;
+                          if (textarea) {
+                            textarea.style.display = 'block';
+                            textarea.previousElementSibling?.setAttribute('style', 'display: none');
+                            setTimeout(() => textarea.focus(), 0);
+                          }
+                        }}
+                      />
+                      {/* Hidden editable textarea */}
+                      <Textarea
+                        id="focus-notes-textarea"
+                        value={editForm.notes}
+                        onChange={(e) => handleFormChange('notes', e.target.value)}
+                        placeholder="Write your detailed notes here... ✍️"
+                        className="flex-1 resize-none text-base leading-relaxed min-h-[400px] hidden"
+                        onBlur={(e) => {
+                          // Hide textarea and show formatted view when losing focus
+                          e.target.style.display = 'none';
+                          const preview = e.target.previousElementSibling as HTMLElement;
+                          if (preview) preview.style.display = 'block';
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <Textarea
+                      value={editForm.notes}
+                      onChange={(e) => handleFormChange('notes', e.target.value)}
+                      placeholder="Write your detailed notes here... ✍️"
+                      className="flex-1 resize-none text-base leading-relaxed min-h-[400px] border rounded-lg p-4"
+                      autoFocus
+                    />
+                  )}
                 </div>
               </div>
 
