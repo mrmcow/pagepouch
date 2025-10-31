@@ -626,9 +626,9 @@ export function ClipViewer({
                       imageUrl={clip.screenshot_url}
                       imageAlt={clip.title}
                       annotations={[]} // TODO: Load from clip notes
-                      onAddAnnotation={async (annotation) => {
-                        // TODO: Save annotation as note
-                        console.log('Add annotation:', annotation)
+                      onAddAnnotation={async (annotation, note) => {
+                        // TODO: Save annotation as note with coordinates
+                        console.log('Add annotation:', annotation, 'Note:', note)
                       }}
                       onDeleteAnnotation={async (annotationId) => {
                         // TODO: Delete annotation note

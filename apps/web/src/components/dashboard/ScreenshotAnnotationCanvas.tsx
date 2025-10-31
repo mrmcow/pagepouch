@@ -2,7 +2,8 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Square, MousePointer, Trash2, Save } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { X, Trash2 } from 'lucide-react'
 
 export interface Annotation {
   id: string
@@ -19,7 +20,7 @@ interface ScreenshotAnnotationCanvasProps {
   imageUrl: string
   imageAlt: string
   annotations?: Annotation[]
-  onAddAnnotation?: (annotation: Omit<Annotation, 'id' | 'createdAt'>) => Promise<void>
+  onAddAnnotation?: (annotation: Omit<Annotation, 'id' | 'createdAt' | 'note'>, note: string) => Promise<void>
   onDeleteAnnotation?: (annotationId: string) => Promise<void>
   onClickAnnotation?: (annotation: Annotation) => void
 }
@@ -36,7 +37,6 @@ export function ScreenshotAnnotationCanvas({
   const imageRef = useRef<HTMLImageElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
-  const [mode, setMode] = useState<'select' | 'draw'>('select')
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentAnnotation, setCurrentAnnotation] = useState<{
     startX: number
@@ -44,10 +44,20 @@ export function ScreenshotAnnotationCanvas({
     currentX: number
     currentY: number
   } | null>(null)
+  const [pendingAnnotation, setPendingAnnotation] = useState<{
+    x: number
+    y: number
+    width: number
+    height: number
+    color: string
+  } | null>(null)
   const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
   const [annotationColor, setAnnotationColor] = useState('#3b82f6')
+  const [showAddNote, setShowAddNote] = useState(false)
+  const [noteText, setNoteText] = useState('')
+  const [selectedText, setSelectedText] = useState('')
 
   // Update canvas size when image loads or window resizes
   useEffect(() => {
@@ -134,36 +144,25 @@ export function ScreenshotAnnotationCanvas({
 
   // Handle mouse down
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (mode !== 'draw') {
-      // Check if clicking on existing annotation
-      const rect = canvasRef.current!.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
+    const rect = canvasRef.current!.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
 
-      // Find annotation at click position (reverse order to get topmost)
-      const clickedAnnotation = [...annotations].reverse().find(ann => {
-        return x >= ann.x && x <= ann.x + ann.width &&
-               y >= ann.y && y <= ann.y + ann.height
-      })
+    // Check if clicking on existing annotation first
+    const clickedAnnotation = [...annotations].reverse().find(ann => {
+      return x >= ann.x && x <= ann.x + ann.width &&
+             y >= ann.y && y <= ann.y + ann.height
+    })
 
-      if (clickedAnnotation) {
-        setSelectedAnnotation(clickedAnnotation.id)
-        if (onClickAnnotation) {
-          onClickAnnotation(clickedAnnotation)
-        }
-        redrawAnnotations()
-      } else {
-        setSelectedAnnotation(null)
-        redrawAnnotations()
+    if (clickedAnnotation) {
+      // Show note for existing annotation
+      if (onClickAnnotation) {
+        onClickAnnotation(clickedAnnotation)
       }
       return
     }
 
     // Start drawing new annotation
-    const rect = canvasRef.current!.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
     setIsDrawing(true)
     setCurrentAnnotation({
       startX: x,
@@ -191,7 +190,7 @@ export function ScreenshotAnnotationCanvas({
   }
 
   // Handle mouse up
-  const handleMouseUp = async () => {
+  const handleMouseUp = () => {
     if (!isDrawing || !currentAnnotation) return
 
     const { startX, startY, currentX, currentY } = currentAnnotation
@@ -200,20 +199,41 @@ export function ScreenshotAnnotationCanvas({
     const width = Math.abs(currentX - startX)
     const height = Math.abs(currentY - startY)
 
-    // Only save if annotation is big enough (at least 10x10 pixels)
-    if (width > 10 && height > 10 && onAddAnnotation) {
-      await onAddAnnotation({
+    // Only show note dialog if annotation is big enough (at least 10x10 pixels)
+    if (width > 10 && height > 10) {
+      setPendingAnnotation({
         x,
         y,
         width,
         height,
         color: annotationColor
       })
+      setSelectedText(`Rectangle annotation (${Math.round(width)}x${Math.round(height)}px)`)
+      setShowAddNote(true)
     }
 
     setIsDrawing(false)
     setCurrentAnnotation(null)
-    setMode('select') // Switch back to select mode after drawing
+  }
+
+  // Handle add note submission
+  const handleAddNote = async () => {
+    if (!pendingAnnotation || !noteText.trim() || !onAddAnnotation) return
+
+    await onAddAnnotation(pendingAnnotation, noteText.trim())
+    
+    setShowAddNote(false)
+    setNoteText('')
+    setPendingAnnotation(null)
+    setSelectedText('')
+  }
+
+  // Handle cancel note
+  const handleCancelNote = () => {
+    setShowAddNote(false)
+    setNoteText('')
+    setPendingAnnotation(null)
+    setSelectedText('')
   }
 
   // Delete selected annotation
@@ -227,67 +247,78 @@ export function ScreenshotAnnotationCanvas({
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 p-3 border-b bg-background">
-        <div className="flex items-center gap-1 border rounded-lg p-1">
-          <Button
-            variant={mode === 'select' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setMode('select')}
-            className="h-8"
-          >
-            <MousePointer className="h-4 w-4 mr-1" />
-            Select
-          </Button>
-          <Button
-            variant={mode === 'draw' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setMode('draw')}
-            className="h-8"
-          >
-            <Square className="h-4 w-4 mr-1" />
-            Draw
-          </Button>
-        </div>
-
+      <div className="flex items-center gap-4 p-3 border-b bg-background">
         {/* Color picker */}
-        {mode === 'draw' && (
-          <div className="flex items-center gap-2 ml-2">
-            <span className="text-xs text-muted-foreground">Color:</span>
-            <div className="flex gap-1">
-              {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'].map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setAnnotationColor(color)}
-                  className={`w-6 h-6 rounded border-2 ${
-                    color === annotationColor ? 'border-foreground' : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Color:</span>
+          <div className="flex gap-1.5">
+            {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'].map((color) => (
+              <button
+                key={color}
+                onClick={() => setAnnotationColor(color)}
+                className={`w-7 h-7 rounded-md border-2 transition-all ${
+                  color === annotationColor ? 'border-foreground scale-110' : 'border-border hover:border-foreground/50'
+                }`}
+                style={{ backgroundColor: color }}
+                title={color === '#3b82f6' ? 'Blue' : color === '#10b981' ? 'Green' : color === '#f59e0b' ? 'Orange' : color === '#ef4444' ? 'Red' : 'Purple'}
+              />
+            ))}
           </div>
-        )}
-
-        {/* Delete button */}
-        {selectedAnnotation && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDeleteAnnotation}
-            className="h-8 ml-auto text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete
-          </Button>
-        )}
+        </div>
 
         {/* Instructions */}
         <div className="ml-auto text-xs text-muted-foreground">
-          {mode === 'draw' 
-            ? 'Click and drag to draw annotation' 
-            : 'Click annotation to view note'}
+          Click and drag to draw • Click annotation to view note
         </div>
       </div>
+
+      {/* Add Note Modal */}
+      {showAddNote && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="bg-background border rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-lg">Add Note for Selection</h3>
+                <p className="text-xs text-muted-foreground mt-1">Selected: {selectedText}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelNote}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">Your Note:</label>
+              <Textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Add your thoughts about this selection..."
+                className="min-h-[120px] resize-none"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={handleCancelNote}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddNote}
+                disabled={!noteText.trim()}
+              >
+                Add Note
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Canvas Container */}
       <div ref={containerRef} className="flex-1 bg-muted/30 p-4 overflow-auto">
@@ -310,9 +341,9 @@ export function ScreenshotAnnotationCanvas({
           {imageLoaded && (
             <canvas
               ref={canvasRef}
-              className="absolute top-0 left-0 cursor-crosshair"
+              className="absolute top-0 left-0"
               style={{
-                cursor: mode === 'draw' ? 'crosshair' : 'pointer'
+                cursor: 'crosshair'
               }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
