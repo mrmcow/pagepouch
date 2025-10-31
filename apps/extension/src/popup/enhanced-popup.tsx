@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ExtensionAuth, supabase } from '../utils/supabase';
+import { ExtensionAuth } from '../utils/supabase';
 
 // Beautiful PageStash Logo component
 const Logo = ({ size = 32 }: { size?: number }) => (
@@ -361,8 +361,8 @@ function EnhancedPopupApp() {
       console.log('🔐 Session restoration result:', isAuthenticated)
       
       if (isAuthenticated) {
-        const { data } = await supabase.auth.getUser()
-        console.log('🔐 Current user:', data.user?.email)
+        const session = await ExtensionAuth.getSession()
+        console.log('🔐 Current user:', session?.userId)
         
         // Get stored folder preference
         const result = await chrome.storage.local.get(['selectedFolderId']);
@@ -654,49 +654,66 @@ function EnhancedPopupApp() {
             </p>
           </div>
 
-          <input
-            type="email"
-            placeholder="Email"
-            value={authForm.email}
-            onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
-            style={{
-              ...styles.input,
-              textAlign: 'center' as const,
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAuth();
             }}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            value={authForm.password}
-            onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
-            style={{
-              ...styles.input,
-              textAlign: 'center' as const,
-            }}
-          />
-
-          {authForm.error && (
-            <div style={styles.errorText}>{authForm.error}</div>
-          )}
-
-          <button
-            onClick={handleAuth}
-            disabled={authForm.isLoading || !authForm.email || !authForm.password}
-            style={{
-              ...styles.button,
-              ...styles.primaryButton,
-              opacity: authForm.isLoading || !authForm.email || !authForm.password ? 0.6 : 1,
-            }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
           >
-            {authForm.isLoading ? '⏳ Processing...' : (authForm.isSignUp ? 'Create Account' : 'Sign In')}
-          </button>
+            <input
+              id="pagestash-email"
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={authForm.email}
+              onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
+              autoComplete={authForm.isSignUp ? "email" : "username"}
+              required
+              style={{
+                ...styles.input,
+                textAlign: 'center' as const,
+              }}
+            />
+
+            <input
+              id="pagestash-password"
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={authForm.password}
+              onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
+              autoComplete={authForm.isSignUp ? "new-password" : "current-password"}
+              required
+              style={{
+                ...styles.input,
+                textAlign: 'center' as const,
+              }}
+            />
+
+            {authForm.error && (
+              <div style={styles.errorText}>{authForm.error}</div>
+            )}
+
+            <button
+              type="submit"
+              disabled={authForm.isLoading || !authForm.email || !authForm.password}
+              style={{
+                ...styles.button,
+                ...styles.primaryButton,
+                opacity: authForm.isLoading || !authForm.email || !authForm.password ? 0.6 : 1,
+              }}
+            >
+              {authForm.isLoading ? '⏳ Processing...' : (authForm.isSignUp ? 'Create Account' : 'Sign In')}
+            </button>
+          </form>
 
           <button
             onClick={() => setAuthForm(prev => ({ ...prev, isSignUp: !prev.isSignUp, error: undefined }))}
             style={{
               ...styles.button,
               ...styles.secondaryButton,
+              marginTop: '12px',
             }}
           >
             {authForm.isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}

@@ -461,13 +461,31 @@ function renderAuthScreen() {
           <h2 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">${authState.isSignUp ? 'Create Account' : 'Sign In'}</h2>
           <p style="margin: 0; color: #6b7280; font-size: 13px;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Access your PageStash library'}</p>
         </div>
-        <input id="email-input" type="email" placeholder="Email" value="${authState.email}" style="${styles.input}">
-        <input id="password-input" type="password" placeholder="Password" value="${authState.password}" style="${styles.input}">
-        ${authState.error ? `<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">${authState.error}</div>` : ''}
-        <button id="auth-submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.6'};">
-          ${authState.isLoading ? '⏳ Processing...' : authState.isSignUp ? 'Create Account' : 'Sign In'}
-        </button>
-        <button id="auth-toggle" style="${styles.button}; ${styles.secondaryButton};">
+        <form id="auth-form" style="display: flex; flex-direction: column; gap: 12px;">
+          <input 
+            id="email-input" 
+            name="email"
+            type="email" 
+            placeholder="Email" 
+            value="${authState.email}" 
+            autocomplete="${authState.isSignUp ? 'email' : 'username'}"
+            required
+            style="${styles.input}">
+          <input 
+            id="password-input" 
+            name="password"
+            type="password" 
+            placeholder="Password" 
+            value="${authState.password}" 
+            autocomplete="${authState.isSignUp ? 'new-password' : 'current-password'}"
+            required
+            style="${styles.input}">
+          ${authState.error ? `<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">${authState.error}</div>` : ''}
+          <button id="auth-submit" type="submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.6'};">
+            ${authState.isLoading ? '⏳ Processing...' : authState.isSignUp ? 'Create Account' : 'Sign In'}
+          </button>
+        </form>
+        <button id="auth-toggle" style="${styles.button}; ${styles.secondaryButton}; margin-top: 12px;">
           ${authState.isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
         </button>
       </div>
@@ -588,7 +606,7 @@ function render() {
     const closeAuth = document.getElementById('close-auth');
     const emailInput = document.getElementById('email-input');
     const passwordInput = document.getElementById('password-input');
-    const authSubmit = document.getElementById('auth-submit');
+    const authForm = document.getElementById('auth-form');
     const authToggle = document.getElementById('auth-toggle');
     
     if (closeAuth) closeAuth.addEventListener('click', () => {
@@ -606,7 +624,10 @@ function render() {
       updateAuthButtonState();
     });
     
-    if (authSubmit) authSubmit.addEventListener('click', handleAuth);
+    if (authForm) authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleAuth();
+    });
     
     if (authToggle) authToggle.addEventListener('click', () => {
       authState.isSignUp = !authState.isSignUp;

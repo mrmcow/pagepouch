@@ -64,6 +64,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.BROWSER_TARGET': JSON.stringify('firefox'),
       'process.env.MANIFEST_VERSION': JSON.stringify(2),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
     }),
   ],
   devtool: 'cheap-module-source-map',

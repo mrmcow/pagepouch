@@ -2,7 +2,7 @@
 // Service Worker for Manifest V3
 
 import { ExtensionMessage } from '@pagestash/shared';
-import { ExtensionAuth, ExtensionAPI, supabase } from '../utils/supabase';
+import { ExtensionAuth, ExtensionAPI } from '../utils/supabase';
 import { FullPageCapture } from '../utils/fullPageCapture';
 
 console.log('PageStash background script loaded');
@@ -41,7 +41,7 @@ if (extensionAPI.runtime.onStartup) {
   });
 }
 
-// Session monitor - proactively refresh tokens before expiration
+// Session monitor - checks if session exists
 function startSessionMonitor() {
   // Clear existing interval
   if (sessionRefreshInterval) {
@@ -51,20 +51,14 @@ function startSessionMonitor() {
   // Check session every 5 minutes
   sessionRefreshInterval = setInterval(async () => {
     try {
-      const { data } = await supabase.auth.getSession();
+      const { token } = await ExtensionAuth.getSession();
       
-      if (data.session) {
-        // Check if token expires in next 10 minutes
-        const expiresAt = data.session.expires_at;
-        if (expiresAt) {
-          const now = Math.floor(Date.now() / 1000);
-          const timeUntilExpiry = expiresAt - now;
-
-          if (timeUntilExpiry < 600) { // Less than 10 minutes
-            console.log('🔄 Refreshing session proactively (expires in', timeUntilExpiry, 'seconds)');
-            await ExtensionAuth.refreshSession();
-          }
-        }
+      if (token) {
+        console.log('🔐 Session is active');
+        // Token validation happens on API calls
+        // If token is expired, API will return 401 and user will need to sign in again
+      } else {
+        console.log('🔐 No active session');
       }
     } catch (error) {
       console.error('Session monitor error:', error);

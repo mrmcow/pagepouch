@@ -1,81 +1,113 @@
 // Supabase client for browser extension
-import { createClient } from '@supabase/supabase-js'
+// SECURITY NOTE: Extension does NOT include Supabase credentials
+// All authentication and data operations go through the web app's API
 
 // Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
 
-// SECURITY: These values must be provided via environment variables at build time
-// Never hardcode production credentials in source code
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env file.')
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Get the API base URL based on environment
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://pagestash.app'
+  : 'http://localhost:3000'
 
 // Extension-specific auth helpers
 export class ExtensionAuth {
   static async signIn(email: string, password: string) {
     console.log('🔐 ExtensionAuth.signIn called for:', email);
-    console.log('🔐 Supabase URL:', supabaseUrl);
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    console.log('🔐 Supabase signIn response:', { 
-      hasData: !!data, 
-      hasSession: !!data.session,
-      hasUser: !!data.user,
-      hasError: !!error,
-      errorMessage: error?.message 
-    });
-
-    if (data.session) {
-      console.log('🔐 Storing session in chrome storage');
-      // Store session in extension storage
-      await extensionAPI.storage.local.set({
-        authToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
-        userEmail: data.user?.email,
-        userId: data.user?.id,
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       })
-    }
 
-    return { data, error }
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('🔐 Login error:', result.error);
+        return { data: null, error: { message: result.error } }
+      }
+
+      console.log('🔐 Login successful:', { 
+        hasSession: !!result.session,
+        hasUser: !!result.user,
+      });
+
+      if (result.session) {
+        console.log('🔐 Storing session in extension storage');
+        // Store session in extension storage
+        await extensionAPI.storage.local.set({
+          authToken: result.session.access_token,
+          refreshToken: result.session.refresh_token,
+          userEmail: result.user?.email,
+          userId: result.user?.id,
+        })
+      }
+
+      return { 
+        data: { 
+          session: result.session, 
+          user: result.user 
+        }, 
+        error: null 
+      }
+    } catch (err: any) {
+      console.error('🔐 Login request failed:', err);
+      return { 
+        data: null, 
+        error: { message: err.message || 'Network error' } 
+      }
+    }
   }
 
   static async signUp(email: string, password: string, fullName?: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      },
-    })
-
-    if (data.session) {
-      // Store session in extension storage
-      await extensionAPI.storage.local.set({
-        authToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
-        userEmail: data.user?.email,
-        userId: data.user?.id,
+        body: JSON.stringify({ email, password, fullName }),
       })
-    }
 
-    return { data, error }
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('🔐 Signup error:', result.error);
+        return { data: null, error: { message: result.error } }
+      }
+
+      if (result.session) {
+        // Store session in extension storage
+        await extensionAPI.storage.local.set({
+          authToken: result.session.access_token,
+          refreshToken: result.session.refresh_token,
+          userEmail: result.user?.email,
+          userId: result.user?.id,
+        })
+      }
+
+      return { 
+        data: { 
+          session: result.session, 
+          user: result.user 
+        }, 
+        error: null 
+      }
+    } catch (err: any) {
+      console.error('🔐 Signup request failed:', err);
+      return { 
+        data: null, 
+        error: { message: err.message || 'Network error' } 
+      }
+    }
   }
 
   static async signOut() {
-    const { error } = await supabase.auth.signOut()
-    
-    // Clear extension storage
+    // Just clear local storage - no need to call API for logout
     await extensionAPI.storage.local.remove([
       'authToken',
       'refreshToken',
@@ -83,7 +115,8 @@ export class ExtensionAuth {
       'userId',
     ])
 
-    return { error }
+    console.log('🔐 Signed out and cleared local storage');
+    return { error: null }
   }
 
   static async restoreSession(): Promise<boolean> {
@@ -108,41 +141,16 @@ export class ExtensionAuth {
       })
 
       // No stored session
-      if (!stored.authToken || !stored.refreshToken) {
+      if (!stored.authToken) {
         console.log('🔐 No stored session found')
         return false
       }
 
-      console.log('🔐 Restoring session for user:', stored.userEmail)
-
-      // Restore session in Supabase client
-      const { data, error } = await supabase.auth.setSession({
-        access_token: stored.authToken,
-        refresh_token: stored.refreshToken,
-      })
-
-      if (error) {
-        console.error('🔐 Failed to restore session:', error.message)
-        // Clear invalid tokens
-        await this.signOut()
-        return false
-      }
-
-      // Session restored successfully
-      if (data.session) {
-        console.log('🔐 Session restored successfully')
-        
-        // Update stored tokens if they were refreshed
-        await extensionAPI.storage.local.set({
-          authToken: data.session.access_token,
-          refreshToken: data.session.refresh_token,
-          userEmail: data.user?.email,
-          userId: data.user?.id,
-        })
-        return true
-      }
-
-      return false
+      console.log('🔐 Session found for user:', stored.userEmail)
+      
+      // Token validation will happen when making actual API calls
+      // The API will return 401 if token is invalid, and we'll handle it there
+      return true
     } catch (err) {
       console.error('🔐 Session restoration error:', err)
       await this.signOut()
@@ -151,17 +159,7 @@ export class ExtensionAuth {
   }
 
   static async getSession() {
-    // First try to get from Supabase client (if session is active)
-    const { data } = await supabase.auth.getSession()
-    
-    if (data.session) {
-      return {
-        token: data.session.access_token,
-        userId: data.session.user.id,
-      }
-    }
-
-    // Fallback to storage (shouldn't happen if restoreSession is called)
+    // Get session from local storage
     return new Promise<{token: string | null, userId: string | null}>((resolve) => {
       extensionAPI.storage.local.get(['authToken', 'userId'], (result) => {
         resolve({
@@ -173,29 +171,11 @@ export class ExtensionAuth {
   }
 
   static async refreshSession() {
-    const { refreshToken } = await new Promise<{refreshToken: string | null}>((resolve) => {
-      extensionAPI.storage.local.get(['refreshToken'], (result) => {
-        resolve({ refreshToken: result.refreshToken || null })
-      })
-    })
-
-    if (!refreshToken) {
-      return { data: null, error: new Error('No refresh token') }
-    }
-
-    const { data, error } = await supabase.auth.refreshSession({
-      refresh_token: refreshToken,
-    })
-
-    if (data.session) {
-      // Update stored tokens
-      await extensionAPI.storage.local.set({
-        authToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
-      })
-    }
-
-    return { data, error }
+    // For now, we don't implement token refresh
+    // The API will handle token validation and return 401 if expired
+    // In that case, user will need to sign in again
+    console.log('🔐 Token refresh not implemented - user will need to sign in again if token expires');
+    return { data: null, error: new Error('Token refresh not implemented') }
   }
 }
 
@@ -205,9 +185,7 @@ export class ExtensionAPI {
   private static getApiBaseUrl(): string {
     // In production, use the deployed web app URL
     // In development, use localhost
-    return process.env.NODE_ENV === 'production' 
-      ? 'https://pagestash-web.vercel.app'
-      : 'http://localhost:3000'
+    return API_BASE_URL
   }
 
   // Helper method to make authenticated requests with automatic retry
