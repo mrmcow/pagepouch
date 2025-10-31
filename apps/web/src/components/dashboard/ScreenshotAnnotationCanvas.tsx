@@ -54,7 +54,7 @@ export function ScreenshotAnnotationCanvas({
   const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
-  const [annotationColor, setAnnotationColor] = useState('#3b82f6')
+  const annotationColor = '#3b82f6' // Always blue
   const [showAddNote, setShowAddNote] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [selectedText, setSelectedText] = useState('')
@@ -248,27 +248,9 @@ export function ScreenshotAnnotationCanvas({
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center gap-4 p-3 border-b bg-background">
-        {/* Color picker */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Color:</span>
-          <div className="flex gap-1.5">
-            {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'].map((color) => (
-              <button
-                key={color}
-                onClick={() => setAnnotationColor(color)}
-                className={`w-7 h-7 rounded-md border-2 transition-all ${
-                  color === annotationColor ? 'border-foreground scale-110' : 'border-border hover:border-foreground/50'
-                }`}
-                style={{ backgroundColor: color }}
-                title={color === '#3b82f6' ? 'Blue' : color === '#10b981' ? 'Green' : color === '#f59e0b' ? 'Orange' : color === '#ef4444' ? 'Red' : 'Purple'}
-              />
-            ))}
-          </div>
-        </div>
-
         {/* Instructions */}
-        <div className="ml-auto text-xs text-muted-foreground">
-          Click and drag to draw • Click annotation to view note
+        <div className="text-xs text-muted-foreground">
+          Click and drag to draw annotation • Click existing annotation to view note
         </div>
       </div>
 

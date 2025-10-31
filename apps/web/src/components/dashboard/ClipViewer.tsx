@@ -104,6 +104,30 @@ export function ClipViewer({
     }
   }, [clip, clipTags])
 
+  // Parse screenshot annotations from notes
+  const parseScreenshotAnnotations = (notes: string): Annotation[] => {
+    if (!notes) return []
+    
+    const annotations: Annotation[] = []
+    const annotationRegex = /📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)\]\n([^\n📍]+(?:\n(?!📍)[^\n]+)*)/g
+    
+    let match
+    while ((match = annotationRegex.exec(notes)) !== null) {
+      annotations.push({
+        id: `annotation-${annotations.length}`,
+        x: parseInt(match[1]),
+        y: parseInt(match[2]),
+        width: parseInt(match[3]),
+        height: parseInt(match[4]),
+        color: '#3b82f6',
+        note: match[5].trim(),
+        createdAt: new Date().toISOString()
+      })
+    }
+    
+    return annotations
+  }
+
   // Load available tags and clip tags
   useEffect(() => {
     if (!isOpen || !clip) return
@@ -625,10 +649,15 @@ export function ClipViewer({
                     <ScreenshotAnnotationCanvas
                       imageUrl={clip.screenshot_url}
                       imageAlt={clip.title}
-                      annotations={[]} // TODO: Load from clip notes
+                      annotations={parseScreenshotAnnotations(editForm.notes)}
                       onAddAnnotation={async (annotation, note) => {
-                        // TODO: Save annotation as note with coordinates
-                        console.log('Add annotation:', annotation, 'Note:', note)
+                        // Format: 📍 SCREENSHOT [x:100,y:150,w:200,h:100]
+                        // Note text here
+                        const annotationMeta = `📍 SCREENSHOT [x:${Math.round(annotation.x)},y:${Math.round(annotation.y)},w:${Math.round(annotation.width)},h:${Math.round(annotation.height)}]`
+                        const noteWithAnnotation = `${annotationMeta}\n${note.trim()}`
+                        const currentNotes = editForm.notes ? `${editForm.notes}\n\n${noteWithAnnotation}` : noteWithAnnotation
+                        
+                        handleFormChange('notes', currentNotes)
                       }}
                       onDeleteAnnotation={async (annotationId) => {
                         // TODO: Delete annotation note
