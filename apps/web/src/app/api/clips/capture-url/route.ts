@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     console.log(`🌐 Capturing URL: ${url} for user: ${user.id}`)
 
     // Fetch the webpage HTML with browser-like headers
-    let response: Response
+    let response: Response | undefined
     let attemptCount = 0
     const maxAttempts = 2
     
@@ -121,6 +121,10 @@ export async function POST(request: NextRequest) {
         console.log(`⚠️ Got 403, retrying...`)
         await new Promise(resolve => setTimeout(resolve, 500)) // Brief delay
       }
+    }
+
+    if (!response) {
+      throw new Error('Failed to fetch page: No response received')
     }
 
     if (!response.ok) {
