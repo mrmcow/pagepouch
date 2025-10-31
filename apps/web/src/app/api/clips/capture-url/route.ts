@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
+import chromium from 'chrome-aws-lambda'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60 // 60 seconds max execution time
@@ -62,25 +61,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`🌐 Capturing URL: ${url} for user: ${user.id}`)
 
-    // Configure Chromium for serverless environment (Vercel)
-    const isProduction = process.env.NODE_ENV === 'production'
-    
-    // Launch browser with serverless-compatible Chromium
-    const browser = await puppeteer.launch({
-      args: isProduction ? chromium.args : [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
-      defaultViewport: {
-        width: 1280,
-        height: 1024,
-      },
-      executablePath: isProduction 
-        ? await chromium.executablePath()
-        : process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      headless: true, // Always headless for serverless
+    // Launch browser with chrome-aws-lambda (works on Vercel)
+    const browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
     })
 
     try {

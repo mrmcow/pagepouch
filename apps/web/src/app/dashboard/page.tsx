@@ -970,19 +970,19 @@ function DashboardContent() {
                   variant="outline" 
                   size="sm" 
                   className="w-full justify-start"
-                  onClick={() => setState(prev => ({ ...prev, isCreateFolderModalOpen: true }))}
+                  onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
                 >
-                  <FolderPlus className="mr-2 h-4 w-4" />
-                  New Folder
+                  <Globe className="mr-2 h-4 w-4" />
+                  Clip URL
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="w-full justify-start"
-                  onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
+                  onClick={() => setState(prev => ({ ...prev, isCreateFolderModalOpen: true }))}
                 >
-                  <Globe className="mr-2 h-4 w-4" />
-                  Clip URL
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  New Folder
                 </Button>
                 
                 {/* Page Graphs - Pro Feature */}
