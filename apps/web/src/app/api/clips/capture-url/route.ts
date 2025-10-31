@@ -161,42 +161,61 @@ export async function POST(request: NextRequest) {
     console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars`)
 
     // Capture screenshot using Puppeteer
-    console.log('📸 Launching headless browser for screenshot...')
+    console.log('📸 Starting screenshot capture process...')
     let screenshotUrl = null
     
     try {
+      console.log('📸 Step 1: Getting Chromium executable path...')
+      const executablePath = await chromium.executablePath()
+      console.log('✅ Chromium path:', executablePath)
+      
+      console.log('📸 Step 2: Launching browser...')
       const browser = await puppeteer.launch({
-        args: chromium.args,
+        args: [
+          ...chromium.args,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+        ],
         defaultViewport: {
           width: 1280,
           height: 720,
         },
-        executablePath: await chromium.executablePath(),
+        executablePath: executablePath,
         headless: true,
       })
+      console.log('✅ Browser launched')
 
+      console.log('📸 Step 3: Creating new page...')
       const page = await browser.newPage()
+      console.log('✅ Page created')
       
-      // Navigate to the page
+      console.log('📸 Step 4: Navigating to URL:', url)
       await page.goto(url, { 
         waitUntil: 'networkidle0',
         timeout: 30000 
       })
+      console.log('✅ Page loaded')
       
-      // Wait a bit for dynamic content to load
-      await page.waitForTimeout(2000)
+      console.log('📸 Step 5: Waiting for dynamic content...')
+      // Use setTimeout Promise instead of deprecated waitForTimeout
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      console.log('✅ Wait complete')
       
-      // Take full page screenshot
+      console.log('📸 Step 6: Taking screenshot...')
       const screenshot = await page.screenshot({ 
         type: 'jpeg',
         quality: 85,
         fullPage: true,
         encoding: 'binary' // Return Buffer instead of base64 string
       }) as Buffer
+      console.log('✅ Screenshot captured, size:', screenshot.length, 'bytes')
       
       await browser.close()
+      console.log('✅ Browser closed')
       
-      console.log('📸 Screenshot captured, uploading to storage...')
+      console.log('📸 Step 7: Uploading to storage...')
       
       // Upload screenshot to Supabase storage
       const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
@@ -209,22 +228,27 @@ export async function POST(request: NextRequest) {
         })
       
       if (uploadError) {
-        console.error('Screenshot upload error:', uploadError)
+        console.error('❌ Screenshot upload error:', uploadError)
+        throw new Error(`Upload failed: ${uploadError.message}`)
       } else {
+        console.log('✅ Upload successful, getting public URL...')
         const { data: { publicUrl } } = supabase
           .storage
           .from('screenshots')
           .getPublicUrl(fileName)
         
         screenshotUrl = publicUrl
-        console.log('✅ Screenshot uploaded successfully')
+        console.log('✅ Screenshot available at:', screenshotUrl)
       }
-    } catch (screenshotError) {
-      console.error('Screenshot capture failed:', screenshotError)
+    } catch (screenshotError: any) {
+      console.error('❌ Screenshot capture failed:', screenshotError)
+      console.error('Error name:', screenshotError?.name)
+      console.error('Error message:', screenshotError?.message)
+      console.error('Error stack:', screenshotError?.stack)
       // Continue without screenshot - we still have HTML and text
     }
 
-    console.log(`📝 Final result - Screenshot: ${screenshotUrl ? 'Success' : 'Failed (continuing without)'}`)
+    console.log(`📝 Final result - Screenshot: ${screenshotUrl ? 'Success ✅' : 'Failed ❌ (continuing without)'}`)
 
     // Create clip in database
     const { data: clip, error: insertError } = await supabase
