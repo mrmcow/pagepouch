@@ -514,20 +514,42 @@ export function ClipViewer({
               {/* Tab Navigation */}
               <div className="border-b bg-background px-4 py-2">
                 <div className="flex items-center justify-between gap-4">
-                  <TabsList className="grid w-full max-w-md grid-cols-3 flex-shrink-0">
-                    <TabsTrigger value="screenshot" className="flex items-center gap-2">
-                      <Camera className="h-4 w-4" />
-                      Screenshot
-                    </TabsTrigger>
-                    <TabsTrigger value="html" className="flex items-center gap-2">
-                      <Code className="h-4 w-4" />
-                      HTML
-                    </TabsTrigger>
-                    <TabsTrigger value="text" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Text
-                    </TabsTrigger>
-                  </TabsList>
+                  <div className="flex items-center gap-4">
+                    <TabsList className="grid w-full max-w-md grid-cols-3 flex-shrink-0">
+                      <TabsTrigger value="screenshot" className="flex items-center gap-2">
+                        <Camera className="h-4 w-4" />
+                        Screenshot
+                      </TabsTrigger>
+                      <TabsTrigger value="html" className="flex items-center gap-2">
+                        <Code className="h-4 w-4" />
+                        HTML
+                      </TabsTrigger>
+                      <TabsTrigger value="text" className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Text
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    {/* Helpful hints for each tab */}
+                    {activeTab === 'html' && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
+                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        <span className="font-medium">Highlight text to annotate</span>
+                      </div>
+                    )}
+                    {activeTab === 'text' && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
+                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        <span className="font-medium">Highlight text to annotate</span>
+                      </div>
+                    )}
+                    {activeTab === 'screenshot' && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-purple-50 dark:bg-purple-950/30 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800">
+                        <StickyNote className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                        <span className="font-medium">Annotation tools coming soon</span>
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Search Bar - Only show for HTML and Text tabs */}
                   {(activeTab === 'html' || activeTab === 'text') && (
