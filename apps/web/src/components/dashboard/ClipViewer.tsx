@@ -109,7 +109,8 @@ export function ClipViewer({
     if (!notes) return []
     
     const annotations: Annotation[] = []
-    const annotationRegex = /📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)\]\n([^\n📍]+(?:\n(?!📍)[^\n]+)*)/g
+    // Updated regex to handle optional thumb parameter
+    const annotationRegex = /📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)(?:,thumb:[^\]]*)?\]\n([^\n📍]+(?:\n(?!📍)[^\n]+)*)/g
     
     let match
     while ((match = annotationRegex.exec(notes)) !== null) {
@@ -435,15 +436,16 @@ export function ClipViewer({
     let annotationIndex = 0
     
     return notes
-      // Format screenshot annotations with thumbnail
-      .replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+),thumb:([^\]]+)\]/g, (match, x, y, w, h, thumb) => {
+      // Format screenshot annotations - unified pattern for both with and without thumbnail
+      .replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)(?:,thumb:([^\]]*))?\]/g, (match, x, y, w, h, thumb) => {
         const index = annotationIndex++
-        return `<div class="inline-flex items-center gap-2 px-2 py-1.5 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><img src="${thumb}" alt="Annotation thumbnail" class="w-8 h-8 rounded border border-purple-300 object-cover" /><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
-      })
-      // Fallback for old format without thumbnail
-      .replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)\]/g, (match, x, y, w, h) => {
-        const index = annotationIndex++
-        return `<div class="inline-flex items-center gap-1.5 px-2 py-1 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
+        // If thumbnail exists and is not empty, show it
+        if (thumb && thumb.trim()) {
+          return `<div class="inline-flex items-center gap-2 px-2 py-1.5 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><img src="${thumb}" alt="Annotation thumbnail" class="w-8 h-8 rounded border border-purple-300 object-cover" /><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
+        } else {
+          // Fallback to icon if no thumbnail
+          return `<div class="inline-flex items-center gap-1.5 px-2 py-1 mb-1 bg-purple-50 border border-purple-200 rounded-md cursor-pointer hover:bg-purple-100 transition-colors" onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y})" data-annotation-index="${index}" data-x="${x}" data-y="${y}" data-w="${w}" data-h="${h}"><svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg><span class="text-xs font-medium text-purple-700">Screenshot Annotation</span></div>`
+        }
       })
       // Format blockquotes (excerpts) - clean and tight
       .replace(/^> "(.*?)"$/gm, '<div class="mb-1 p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r"><div class="text-sm italic text-gray-700 font-medium">"$1"</div></div>')

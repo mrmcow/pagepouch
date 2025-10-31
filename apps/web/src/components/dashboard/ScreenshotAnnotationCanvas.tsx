@@ -240,9 +240,32 @@ export function ScreenshotAnnotationCanvas({
 
   // Generate thumbnail from annotation rectangle
   const generateThumbnail = async (annotation: { x: number, y: number, width: number, height: number }): Promise<string> => {
-    if (!imageRef.current) return ''
+    if (!imageRef.current) {
+      console.warn('No image ref available for thumbnail generation')
+      return ''
+    }
     
     try {
+      const img = imageRef.current
+      
+      // Wait for image to be fully loaded
+      if (!img.complete) {
+        await new Promise((resolve) => {
+          img.onload = resolve
+        })
+      }
+      
+      console.log('Generating thumbnail for annotation:', { 
+        x: annotation.x, 
+        y: annotation.y, 
+        width: annotation.width, 
+        height: annotation.height,
+        imgWidth: img.naturalWidth,
+        imgHeight: img.naturalHeight,
+        displayWidth: img.width,
+        displayHeight: img.height
+      })
+      
       // Create offscreen canvas for cropping
       const canvas = document.createElement('canvas')
       const maxThumbSize = 80 // Max thumbnail dimension
@@ -253,17 +276,22 @@ export function ScreenshotAnnotationCanvas({
       canvas.height = annotation.height * scale
       
       const ctx = canvas.getContext('2d')
-      if (!ctx) return ''
+      if (!ctx) {
+        console.warn('Failed to get 2d context for thumbnail')
+        return ''
+      }
       
       // Draw cropped area from image
       ctx.drawImage(
-        imageRef.current,
+        img,
         annotation.x, annotation.y, annotation.width, annotation.height, // Source rectangle
         0, 0, canvas.width, canvas.height // Destination (scaled)
       )
       
       // Return as data URL
-      return canvas.toDataURL('image/jpeg', 0.8)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      console.log('Thumbnail generated successfully, length:', dataUrl.length)
+      return dataUrl
     } catch (error) {
       console.error('Failed to generate thumbnail:', error)
       return ''
@@ -369,6 +397,7 @@ export function ScreenshotAnnotationCanvas({
             ref={imageRef}
             src={imageUrl}
             alt={imageAlt}
+            crossOrigin="anonymous"
             className="block"
             style={{
               height: 'auto',
