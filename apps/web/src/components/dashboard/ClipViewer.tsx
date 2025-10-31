@@ -28,7 +28,8 @@ import {
   Code,
   Camera,
   StickyNote,
-  Highlighter
+  Highlighter,
+  Check
 } from 'lucide-react'
 import { ScreenshotAnnotationCanvas, type Annotation } from './ScreenshotAnnotationCanvas'
 import { 
@@ -401,6 +402,8 @@ export function ClipViewer({
   const [highlightedAnnotation, setHighlightedAnnotation] = useState<{x: number, y: number} | null>(null)
   // State for expanded annotations in notes
   const [expandedAnnotations, setExpandedAnnotations] = useState<Set<number>>(new Set())
+  // State for focus mode
+  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false)
 
   // Toggle annotation expansion in notes panel
   const handleToggleAnnotation = (annotationIndex: number, event?: Event) => {
@@ -466,70 +469,16 @@ export function ClipViewer({
     result = result.replace(/📍 SCREENSHOT \[x:(\d+),y:(\d+),w:(\d+),h:(\d+)(?:,thumb:([^\]]*))?\]\n([^\n📍]+(?:\n(?!📍)[^\n]+)*)/g, (match, x, y, w, h, thumb, noteText) => {
       const index = annotationIndex++
       const isExpanded = expandedAnnotations.has(index)
-      const escapedNote = noteText.trim().replace(/'/g, '&#39;').replace(/"/g, '&quot;')
       
-      // If thumbnail exists and is not empty, show it
+      // Clean, minimal HTML
       if (thumb && thumb.trim()) {
-        return `
-          <div class="mb-2 bg-purple-50 border border-purple-200 rounded-md overflow-hidden" data-annotation-id="${index}">
-            <div class="relative group">
-              <div class="inline-flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-purple-100 transition-colors w-full" 
-                   onclick="window.toggleAnnotation?.(${index}, event)">
-                <div class="relative">
-                  <img src="${thumb}" alt="Annotation thumbnail" class="w-8 h-8 rounded border border-purple-300 object-cover" />
-                  <!-- Hover preview -->
-                  <div class="absolute left-full ml-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50">
-                    <div class="bg-white border-2 border-purple-300 rounded-lg shadow-xl p-1">
-                      <img src="${thumb}" alt="Preview" class="w-32 h-32 rounded object-cover" />
-                    </div>
-                  </div>
-                </div>
-                <span class="text-xs font-medium text-purple-700 flex-1">Screenshot Annotation</span>
-                <svg class="w-4 h-4 text-purple-600 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </div>
-              <!-- Jump to screenshot button (always visible) -->
-              <button onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y}, event)" 
-                      class="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded"
-                      title="Jump to screenshot">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-              </button>
-            </div>
-            ${isExpanded ? `<div class="px-3 py-2 text-sm text-gray-700 border-t border-purple-200 bg-white">${noteText.trim().replace(/\n/g, '<br>')}</div>` : ''}
-          </div>
-        `
+        // With thumbnail
+        const badge = `<div class="mb-2 bg-purple-50 border border-purple-200 rounded-md overflow-hidden"><div class="relative group"><div class="inline-flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-purple-100 transition-colors w-full" onclick="window.toggleAnnotation?.(${index}, event)"><div class="relative"><img src="${thumb}" alt="" class="w-8 h-8 rounded border border-purple-300 object-cover" /><div class="absolute left-full ml-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50"><div class="bg-white border-2 border-purple-300 rounded-lg shadow-xl p-1"><img src="${thumb}" alt="" class="w-32 h-32 rounded object-cover" /></div></div></div><span class="text-xs font-medium text-purple-700 flex-1">Screenshot Annotation</span><svg class="w-4 h-4 text-purple-600 transition-transform${isExpanded ? ' rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div><button onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y}, event)" class="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded" title="Jump"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></div>${isExpanded ? `<div class="px-3 py-2 text-sm text-gray-700 border-t border-purple-200 bg-white">${noteText.trim().replace(/\n/g, '<br>')}</div>` : ''}</div>`
+        return badge
       } else {
-        // Fallback to icon if no thumbnail
-        return `
-          <div class="mb-2 bg-purple-50 border border-purple-200 rounded-md overflow-hidden" data-annotation-id="${index}">
-            <div class="relative group">
-              <div class="inline-flex items-center gap-1.5 px-2 py-1.5 cursor-pointer hover:bg-purple-100 transition-colors w-full" 
-                   onclick="window.toggleAnnotation?.(${index}, event)">
-                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                </svg>
-                <span class="text-xs font-medium text-purple-700 flex-1">Screenshot Annotation</span>
-                <svg class="w-4 h-4 text-purple-600 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </div>
-              <!-- Jump to screenshot button -->
-              <button onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y}, event)" 
-                      class="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded"
-                      title="Jump to screenshot">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-              </button>
-            </div>
-            ${isExpanded ? `<div class="px-3 py-2 text-sm text-gray-700 border-t border-purple-200 bg-white">${noteText.trim().replace(/\n/g, '<br>')}</div>` : ''}
-          </div>
-        `
+        // Without thumbnail - with icon
+        const badge = `<div class="mb-2 bg-purple-50 border border-purple-200 rounded-md overflow-hidden"><div class="relative group"><div class="inline-flex items-center gap-1.5 px-2 py-1.5 cursor-pointer hover:bg-purple-100 transition-colors w-full" onclick="window.toggleAnnotation?.(${index}, event)"><svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg><span class="text-xs font-medium text-purple-700 flex-1">Screenshot Annotation</span><svg class="w-4 h-4 text-purple-600 transition-transform${isExpanded ? ' rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div><button onclick="window.navigateToAnnotation?.(${index}, ${x}, ${y}, event)" class="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded" title="Jump"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></div>${isExpanded ? `<div class="px-3 py-2 text-sm text-gray-700 border-t border-purple-200 bg-white">${noteText.trim().replace(/\n/g, '<br>')}</div>` : ''}</div>`
+        return badge
       }
     })
     
@@ -1231,7 +1180,18 @@ export function ClipViewer({
 
               {/* Notes */}
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-muted-foreground">Notes</label>
+                  <button
+                    onClick={() => setIsFocusModeOpen(true)}
+                    className="p-1 hover:bg-muted rounded transition-colors"
+                    title="Focus mode (distraction-free writing)"
+                  >
+                    <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="relative">
                   {/* Rich text editor style - show formatted view with inline editing */}
                   {editForm.notes && (editForm.notes.includes('> "') || editForm.notes.includes('📍 SCREENSHOT')) ? (
@@ -1411,6 +1371,177 @@ export function ClipViewer({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Focus Mode Modal */}
+        {isFocusModeOpen && (
+          <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-background border rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b">
+                <div className="flex items-center gap-3">
+                  {clip.screenshot_url && (
+                    <img 
+                      src={clip.screenshot_url} 
+                      alt={clip.title}
+                      className="w-12 h-12 object-cover rounded border"
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-lg">{clip.title}</h3>
+                    <p className="text-xs text-muted-foreground">{new URL(clip.url).hostname}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsFocusModeOpen(false)}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  title="Close (Esc)"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 flex flex-col gap-4 p-6 overflow-auto">
+                {/* Tags Section */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Tags</label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {clipTags.map((tag) => (
+                      <Badge 
+                        key={tag.id}
+                        variant="secondary"
+                        className="px-3 py-1"
+                        style={{
+                          backgroundColor: tag.color ? `${tag.color}20` : undefined,
+                          borderColor: tag.color ? `${tag.color}40` : undefined,
+                          color: tag.color || undefined
+                        }}
+                      >
+                        {tag.name}
+                        <button
+                          onClick={() => {
+                            setClipTags(prev => prev.filter(t => t.id !== tag.id))
+                            setEditForm(prev => ({
+                              ...prev,
+                              tags: prev.tags.filter(t => t !== tag.name)
+                            }))
+                            setHasUnsavedChanges(true)
+                          }}
+                          className="ml-2 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newTagName}
+                      onChange={(e) => setNewTagName(e.target.value)}
+                      placeholder="Add new tag..."
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          if (newTagName.trim()) {
+                            const newTag = { id: Date.now().toString(), name: newTagName.trim(), color: undefined }
+                            setClipTags(prev => [...prev, newTag])
+                            setEditForm(prev => ({
+                              ...prev,
+                              tags: [...prev.tags, newTagName.trim()]
+                            }))
+                            setNewTagName('')
+                            setHasUnsavedChanges(true)
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={() => {
+                        if (newTagName.trim()) {
+                          const newTag = { id: Date.now().toString(), name: newTagName.trim(), color: undefined }
+                          setClipTags(prev => [...prev, newTag])
+                          setEditForm(prev => ({
+                            ...prev,
+                            tags: [...prev.tags, newTagName.trim()]
+                          }))
+                          setNewTagName('')
+                          setHasUnsavedChanges(true)
+                        }
+                      }}
+                      disabled={!newTagName.trim()}
+                    >
+                      <Tag className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Notes Section */}
+                <div className="flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">Notes</label>
+                    <div className="text-xs text-muted-foreground">
+                      {editForm.notes.length} characters · {editForm.notes.split(/\s+/).filter(Boolean).length} words
+                    </div>
+                  </div>
+                  <Textarea
+                    value={editForm.notes}
+                    onChange={(e) => handleFormChange('notes', e.target.value)}
+                    placeholder="Write your detailed notes here... ✍️"
+                    className="flex-1 resize-none text-base leading-relaxed min-h-[400px] font-mono"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between p-4 border-t bg-muted/30">
+                <div className="text-sm text-muted-foreground">
+                  {hasUnsavedChanges ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                      Auto-saving...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Saved
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsFocusModeOpen(false)}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Close
+                  </Button>
+                  <Button
+                    onClick={() => setIsFocusModeOpen(false)}
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Done
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Keyboard shortcut handler for Esc */}
+        {isFocusModeOpen && (
+          <div
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsFocusModeOpen(false)
+              }
+            }}
+            tabIndex={-1}
+            className="fixed inset-0 pointer-events-none"
+          />
         )}
       </div>
     </div>
