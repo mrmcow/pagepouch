@@ -73,23 +73,19 @@ export async function POST(request: NextRequest) {
         '--disable-dev-shm-usage',
         '--disable-gpu',
       ],
-      defaultViewport: chromium.defaultViewport,
+      defaultViewport: {
+        width: 1280,
+        height: 1024,
+      },
       executablePath: isProduction 
         ? await chromium.executablePath() 
         : process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      headless: chromium.headless,
+      headless: isProduction ? chromium.headless : true,
     })
 
     try {
       const page = await browser.newPage()
       
-      // Set viewport
-      await page.setViewport({
-        width: 1280,
-        height: 1024,
-        deviceScaleFactor: 1,
-      })
-
       // Set user agent
       await page.setUserAgent(
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
