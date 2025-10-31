@@ -103,13 +103,33 @@ export function ScreenshotAnnotationCanvas({
     annotations.forEach((annotation) => {
       const isSelected = annotation.id === selectedAnnotation
       
-      ctx.strokeStyle = annotation.color
-      ctx.fillStyle = annotation.color + '20' // 20 = ~12% opacity
-      ctx.lineWidth = isSelected ? 3 : 2
+      // Check if this annotation is being highlighted from notes click
+      const isHighlighted = highlightedPosition && 
+        annotation.x === highlightedPosition.x && 
+        annotation.y === highlightedPosition.y
       
-      // Draw rectangle
-      ctx.fillRect(annotation.x, annotation.y, annotation.width, annotation.height)
-      ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height)
+      if (isHighlighted) {
+        // Draw pulsing yellow highlight effect
+        ctx.strokeStyle = '#fbbf24' // yellow-400
+        ctx.lineWidth = 4
+        ctx.shadowColor = '#fbbf24'
+        ctx.shadowBlur = 15
+        ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height)
+        ctx.shadowBlur = 0
+        
+        // Fill with more visible yellow highlight
+        ctx.fillStyle = '#fef3c740'
+        ctx.fillRect(annotation.x, annotation.y, annotation.width, annotation.height)
+      } else {
+        // Normal annotation rendering
+        ctx.strokeStyle = annotation.color
+        ctx.fillStyle = annotation.color + '20' // 20 = ~12% opacity
+        ctx.lineWidth = isSelected ? 3 : 2
+        
+        // Draw rectangle
+        ctx.fillRect(annotation.x, annotation.y, annotation.width, annotation.height)
+        ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height)
+      }
       
       // Draw selection indicator
       if (isSelected) {
@@ -142,7 +162,7 @@ export function ScreenshotAnnotationCanvas({
       
       ctx.setLineDash([])
     }
-  }, [annotations, selectedAnnotation, currentAnnotation, annotationColor])
+  }, [annotations, selectedAnnotation, currentAnnotation, annotationColor, highlightedPosition])
 
   // Handle mouse down
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -336,7 +356,8 @@ export function ScreenshotAnnotationCanvas({
 
       {/* Canvas Container - Scrollable for long screenshots */}
       <div 
-        ref={containerRef} 
+        ref={containerRef}
+        data-screenshot-container
         className="flex-1 bg-muted/30 p-4 overflow-auto"
         style={{
           maxHeight: 'calc(100vh - 200px)', // Ensure container has max height for scrolling
