@@ -31,7 +31,8 @@ import {
   Zap,
   RefreshCw,
   Brain,
-  Sparkles
+  Sparkles,
+  FileText
 } from 'lucide-react'
 import { 
   DropdownMenu,
