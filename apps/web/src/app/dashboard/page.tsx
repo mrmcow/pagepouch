@@ -1171,7 +1171,7 @@ function DashboardContent() {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            priceId: 'price_1SBSLeDFfW8f5SmSgQooVxsd',
+                            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || 'price_1SBSLeDFfW8f5SmSgQooVxsd',
                             plan: 'monthly'
                           }),
                         });
@@ -1193,7 +1193,7 @@ function DashboardContent() {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            priceId: 'price_1SBSNpDFfW8f5SmShv3v8v8Q',
+                            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL || 'price_1SBSNpDFfW8f5SmShv3v8v8Q',
                             plan: 'annual'
                           }),
                         });
