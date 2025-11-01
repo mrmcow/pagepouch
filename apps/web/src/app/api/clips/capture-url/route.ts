@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import * as cheerio from 'cheerio'
+import { 
+  getSubscriptionLimits, 
+  getClipsRemaining, 
+  hasReachedClipLimit 
+} from '@/lib/subscription-limits'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30 // 30 seconds for HTML/text capture
@@ -47,6 +52,33 @@ export async function POST(request: NextRequest) {
     }
     
     console.log(`✅ Authenticated user: ${user.id}`)
+
+    // Check user's subscription tier and current usage
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+
+    const { data: usageData } = await supabase
+      .from('user_usage')
+      .select('clips_this_month')
+      .eq('user_id', user.id)
+      .single()
+
+    const subscriptionTier = userProfile?.subscription_tier || 'free'
+    const clipsThisMonth = usageData?.clips_this_month || 0
+
+    // Pre-check limit (database trigger will enforce it atomically)
+    if (hasReachedClipLimit(clipsThisMonth, subscriptionTier)) {
+      const limits = getSubscriptionLimits(subscriptionTier)
+      return NextResponse.json(
+        { 
+          error: `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.` 
+        },
+        { status: 429 }
+      )
+    }
 
     // Parse request body
     const body: CaptureRequestBody = await request.json()
@@ -221,6 +253,16 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Database insert error:', insertError)
+      
+      // Check if this is a clip limit violation from the database trigger
+      if (insertError.code === '23514' || insertError.message?.includes('Clip limit reached')) {
+        const limits = getSubscriptionLimits(subscriptionTier)
+        return NextResponse.json(
+          { error: insertError.message || `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.` },
+          { status: 429 }
+        )
+      }
+      
       throw new Error(`Failed to save clip: ${insertError.message}`)
     }
 

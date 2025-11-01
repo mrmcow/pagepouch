@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     
     console.log('Authenticated user:', user.email)
 
-    // Check user's subscription tier and current usage before processing
+    // Get user's subscription tier and current usage for response
     const { data: userProfile, error: userError } = await supabase
       .from('users')
       .select('subscription_tier')
@@ -206,7 +206,8 @@ export async function POST(request: NextRequest) {
     const subscriptionTier = userProfile.subscription_tier || 'free'
     const clipsThisMonth = usageData?.clips_this_month || 0
 
-    // Check if user has reached their clip limit
+    // Pre-check limit (for better UX), but database trigger will enforce it atomically
+    // This prevents unnecessary processing of screenshots for over-limit requests
     if (hasReachedClipLimit(clipsThisMonth, subscriptionTier)) {
       const limits = getSubscriptionLimits(subscriptionTier)
       return NextResponse.json(
@@ -286,6 +287,23 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Database insert error:', error)
+      
+      // Check if this is a clip limit violation from the database trigger
+      // Error code 23514 is check_violation, and message will contain "Clip limit reached"
+      if (error.code === '23514' || error.message?.includes('Clip limit reached')) {
+        const limits = getSubscriptionLimits(subscriptionTier)
+        return NextResponse.json(
+          { 
+            error: 'Clip limit reached',
+            message: error.message || `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.`,
+            clips_limit: limits.clipsPerMonth,
+            clips_this_month: clipsThisMonth,
+            subscription_tier: subscriptionTier
+          },
+          { status: 429 } // Too Many Requests
+        )
+      }
+      
       return NextResponse.json(
         { error: 'Failed to save clip' },
         { status: 500 }
