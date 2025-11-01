@@ -15,6 +15,7 @@ function ResetPasswordForm() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
@@ -24,14 +25,20 @@ function ResetPasswordForm() {
   const getSupabase = () => createClient()
 
   useEffect(() => {
-    // Check if we have the necessary tokens from the URL
-    const accessToken = searchParams.get('access_token')
-    const refreshToken = searchParams.get('refresh_token')
-    
-    if (!accessToken || !refreshToken) {
-      setError('Invalid or expired reset link. Please request a new one.')
+    // Check if user has an active session (after callback)
+    const checkSession = async () => {
+      const supabase = getSupabase()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        setError('Invalid or expired reset link. Please request a new one.')
+      }
+      
+      setIsCheckingSession(false)
     }
-  }, [searchParams])
+    
+    checkSession()
+  }, [])
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,23 +61,12 @@ function ResetPasswordForm() {
     try {
       const supabase = getSupabase()
       
-      // Set the session from URL parameters
-      const accessToken = searchParams.get('access_token')
-      const refreshToken = searchParams.get('refresh_token')
+      // Check session again before updating
+      const { data: { session } } = await supabase.auth.getSession()
       
-      if (!accessToken || !refreshToken) {
-        setError('Invalid reset link. Please request a new password reset.')
-        return
-      }
-
-      // Set the session
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      })
-
-      if (sessionError) {
-        setError('Invalid or expired reset link. Please request a new one.')
+      if (!session) {
+        setError('Session expired. Please request a new password reset link.')
+        setIsLoading(false)
         return
       }
 
