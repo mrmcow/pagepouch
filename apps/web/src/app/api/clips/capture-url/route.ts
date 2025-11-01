@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import * as cheerio from 'cheerio'
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60 // 60 seconds max execution time (screenshots take longer)
+export const maxDuration = 30 // 30 seconds for HTML/text capture
 
 interface CaptureRequestBody {
   url: string
@@ -160,92 +158,10 @@ export async function POST(request: NextRequest) {
 
     console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars`)
 
-    // Capture screenshot using Puppeteer
-    console.log('📸 Starting screenshot capture process...')
-    let screenshotUrl = null
-    
-    try {
-      console.log('📸 Step 1: Getting Chromium executable path...')
-      const executablePath = await chromium.executablePath({
-        installDependencies: true
-      })
-      console.log('✅ Chromium path:', executablePath)
-      
-      console.log('📸 Step 2: Launching browser...')
-      const browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: executablePath,
-        headless: chromium.headless,
-        ignoreHTTPSErrors: true,
-      })
-      console.log('✅ Browser launched')
-
-      console.log('📸 Step 3: Creating new page...')
-      const page = await browser.newPage()
-      
-      // Set viewport for consistent screenshots
-      await page.setViewport({ width: 1280, height: 720 })
-      console.log('✅ Page created with viewport 1280x720')
-      
-      console.log('📸 Step 4: Navigating to URL:', url)
-      await page.goto(url, { 
-        waitUntil: 'domcontentloaded',
-        timeout: 30000 
-      })
-      console.log('✅ Page loaded')
-      
-      console.log('📸 Step 5: Waiting for images to load...')
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      console.log('✅ Wait complete')
-      
-      console.log('📸 Step 6: Taking screenshot...')
-      const screenshot = await page.screenshot({ 
-        type: 'jpeg',
-        quality: 80,
-        fullPage: true,
-        encoding: 'binary'
-      }) as Buffer
-      console.log('✅ Screenshot captured, size:', screenshot.length, 'bytes')
-      
-      console.log('📸 Step 7: Closing browser...')
-      await browser.close()
-      console.log('✅ Browser closed')
-      
-      console.log('📸 Step 7: Uploading to storage...')
-      
-      // Upload screenshot to Supabase storage
-      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('screenshots')
-        .upload(fileName, screenshot, {
-          contentType: 'image/jpeg',
-          cacheControl: '3600',
-        })
-      
-      if (uploadError) {
-        console.error('❌ Screenshot upload error:', uploadError)
-        throw new Error(`Upload failed: ${uploadError.message}`)
-      } else {
-        console.log('✅ Upload successful, getting public URL...')
-        const { data: { publicUrl } } = supabase
-          .storage
-          .from('screenshots')
-          .getPublicUrl(fileName)
-        
-        screenshotUrl = publicUrl
-        console.log('✅ Screenshot available at:', screenshotUrl)
-      }
-    } catch (screenshotError: any) {
-      console.error('❌ Screenshot capture failed:', screenshotError)
-      console.error('Error name:', screenshotError?.name)
-      console.error('Error message:', screenshotError?.message)
-      console.error('Error stack:', screenshotError?.stack)
-      // Continue without screenshot - we still have HTML and text
-    }
-
-    console.log(`📝 Final result - Screenshot: ${screenshotUrl ? 'Success ✅' : 'Failed ❌ (continuing without)'}`)
+    // Note: Clip URL captures HTML and text only
+    // For screenshots, use the browser extension which captures full-page renders
+    const screenshotUrl = null
+    console.log('📝 Clip URL: HTML and text captured (use extension for screenshots)')
 
     // If no folder specified, use or create "Inbox" folder
     let targetFolderId = folderId

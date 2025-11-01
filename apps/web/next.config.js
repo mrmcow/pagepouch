@@ -1,9 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Exclude Puppeteer/Chromium from server components bundling for Vercel
-  experimental: {
-    serverComponentsExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
-  },
   images: {
     domains: [
       'gwvsltgmjreructvbpzg.supabase.co', // Your Supabase storage domain

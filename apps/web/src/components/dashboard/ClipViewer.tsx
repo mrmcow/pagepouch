@@ -80,7 +80,7 @@ export function ClipViewer({
   const [newTag, setNewTag] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [activeTab, setActiveTab] = useState('screenshot')
+  const [activeTab, setActiveTab] = useState(clip?.screenshot_url ? 'screenshot' : 'html')
   const [htmlViewMode, setHtmlViewMode] = useState('html-rendered')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedText, setSelectedText] = useState('')
@@ -102,6 +102,8 @@ export function ClipViewer({
       }
       setEditForm(newForm)
       setHasUnsavedChanges(false)
+      // Default to HTML tab if no screenshot
+      setActiveTab(clip.screenshot_url ? 'screenshot' : 'html')
     }
   }, [clip, clipTags])
 

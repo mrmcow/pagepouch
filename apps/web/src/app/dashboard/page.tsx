@@ -1654,7 +1654,7 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
 
   return (
     <Card className="overflow-hidden hover:shadow-xl hover:shadow-black/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer border border-white/20 shadow-lg bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md" onClick={onClick}>
-      {clip.screenshot_url && (
+      {clip.screenshot_url ? (
         <div className="aspect-[4/3] bg-muted/30 relative overflow-hidden">
           <CachedImage
             src={clip.screenshot_url}
@@ -1667,6 +1667,14 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
             priority={priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+        </div>
+      ) : (
+        <div className="aspect-[4/3] bg-gradient-to-br from-blue-50/50 to-purple-50/50 relative overflow-hidden border-b border-white/30">
+          <div className="absolute inset-0 p-4 flex flex-col justify-center items-center text-center">
+            <FileText className="h-12 w-12 text-blue-400/50 mb-2" />
+            <div className="text-xs text-muted-foreground font-medium">HTML Capture</div>
+            <div className="text-xs text-muted-foreground/70 mt-1">Click to view</div>
+          </div>
         </div>
       )}
       
