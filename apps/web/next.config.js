@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Remove console logs in production
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'], // Keep console.error and console.warn for critical issues
+    } : false,
+  },
   images: {
     domains: [
       'gwvsltgmjreructvbpzg.supabase.co', // Your Supabase storage domain
