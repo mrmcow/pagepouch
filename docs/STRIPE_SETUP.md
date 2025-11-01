@@ -92,6 +92,24 @@ NEXT_PUBLIC_STRIPE_PRICE_ANNUAL=price_xxxxxxxxxxxxx
 
 ---
 
+### Step 5: Activate Billing Portal (REQUIRED)
+
+**⚠️ CRITICAL:** The billing portal must be activated or users can't manage subscriptions!
+
+1. **Go to:** https://dashboard.stripe.com/test/settings/billing/portal
+2. **Click "Activate test link"** or "Activate customer portal"
+3. **Configure settings:**
+   - ✅ Allow customers to update payment methods
+   - ✅ Allow customers to update billing info
+   - ✅ Allow customers to cancel subscriptions
+   - ✅ Allow customers to switch plans (optional)
+
+4. **Click "Save changes"**
+
+**Without this:** Users get 500 error when trying to manage their subscription.
+
+---
+
 ## 🧪 Testing Payment Flow
 
 ### Test Mode (Free to Test)
@@ -190,6 +208,19 @@ vercel logs
 3. Copy the correct Price IDs
 4. Update environment variables in Vercel
 5. Redeploy
+
+---
+
+### Error: "Failed to create billing portal session" (500)
+
+**Cause:** Billing portal not activated in Stripe
+
+**Solution:**
+1. Go to https://dashboard.stripe.com/test/settings/billing/portal
+2. Click "Activate test link"
+3. Configure allowed actions (cancel, update payment, etc.)
+4. Save changes
+5. Try again
 
 ---
 
