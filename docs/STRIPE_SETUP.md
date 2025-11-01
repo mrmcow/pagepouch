@@ -65,12 +65,12 @@ Click "Add price" - Copy the **Price ID**
 
 ```bash
 # Stripe API Keys (Test Mode)
-STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxx
+STRIPE_SECRET_KEY=sk_test_[YOUR_TEST_SECRET_KEY]
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_[YOUR_TEST_PUBLISHABLE_KEY]
 
 # Stripe Price IDs
-NEXT_PUBLIC_STRIPE_PRICE_MONTHLY=price_xxxxxxxxxxxxx
-NEXT_PUBLIC_STRIPE_PRICE_ANNUAL=price_xxxxxxxxxxxxx
+NEXT_PUBLIC_STRIPE_PRICE_MONTHLY=price_[YOUR_MONTHLY_PRICE_ID]
+NEXT_PUBLIC_STRIPE_PRICE_ANNUAL=price_[YOUR_ANNUAL_PRICE_ID]
 ```
 
 ---
@@ -82,10 +82,10 @@ NEXT_PUBLIC_STRIPE_PRICE_ANNUAL=price_xxxxxxxxxxxxx
 
 | Key | Value | Environment |
 |-----|-------|-------------|
-| `STRIPE_SECRET_KEY` | `sk_test_xxx...` | Production, Preview, Development |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_xxx...` | Production, Preview, Development |
-| `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` | `price_xxx...` | Production, Preview, Development |
-| `NEXT_PUBLIC_STRIPE_PRICE_ANNUAL` | `price_xxx...` | Production, Preview, Development |
+| `STRIPE_SECRET_KEY` | `sk_test_[YOUR_KEY]` | Production, Preview, Development |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_[YOUR_KEY]` | Production, Preview, Development |
+| `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` | `price_[YOUR_ID]` | Production, Preview, Development |
+| `NEXT_PUBLIC_STRIPE_PRICE_ANNUAL` | `price_[YOUR_ID]` | Production, Preview, Development |
 
 3. **Click "Save"**
 4. **Redeploy** your application for changes to take effect
@@ -161,8 +161,8 @@ ZIP: Any 5 digits (e.g., 12345)
 
 1. Go to Settings → Environment Variables
 2. **Update these to LIVE keys:**
-   - `STRIPE_SECRET_KEY` → `sk_live_xxxxxxxxxxxxx`
-   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_live_xxxxxxxxxxxxx`
+   - `STRIPE_SECRET_KEY` → `sk_live_[YOUR_LIVE_KEY]`
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_live_[YOUR_LIVE_KEY]`
    - `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` → Live monthly price ID
    - `NEXT_PUBLIC_STRIPE_PRICE_ANNUAL` → Live annual price ID
 
@@ -263,7 +263,7 @@ Webhooks notify your app when payments succeed/fail.
 
 **In Vercel:**
 ```
-STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_[YOUR_WEBHOOK_SECRET]
 ```
 
 **Redeploy** after adding.
