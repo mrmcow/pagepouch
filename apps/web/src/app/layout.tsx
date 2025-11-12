@@ -82,6 +82,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: 'BM_hzkXetg6H2NBYAoaM0mMoskxuVDp2zmMxlGMj2ec',
+    other: {
+      'msvalidate.01': '36BB3EACD2254D72426D4F213F483787',
+    },
   },
   alternates: {
     canonical: 'https://www.pagestash.app',
