@@ -365,7 +365,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                   Put These Tips Into Action
                 </h3>
                 <p className="text-lg text-blue-100 mb-8">
-                  Start organizing your research with PageStash. Sign up for your free trial—50 clips included.
+                  Start organizing your research with PageStash. Sign up for your free trial—10 clips/month included.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg" asChild>

@@ -112,7 +112,7 @@ export function BillingModal({ isOpen, onClose, user, subscriptionData }: Billin
       ]
     }
     return [
-      '50 clips per month',
+      '10 clips per month',
       '100MB storage',
       'Basic features'
     ]
@@ -218,7 +218,7 @@ export function BillingModal({ isOpen, onClose, user, subscriptionData }: Billin
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base">Monthly</CardTitle>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold">$4</span>
+                        <span className="text-2xl font-bold">$12</span>
                         <span className="text-sm text-muted-foreground">/month</span>
                       </div>
                     </CardHeader>
@@ -240,11 +240,11 @@ export function BillingModal({ isOpen, onClose, user, subscriptionData }: Billin
                         <Badge variant="secondary" className="text-xs">Save 17%</Badge>
                       </CardTitle>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold">$40</span>
+                        <span className="text-2xl font-bold">$120</span>
                         <span className="text-sm text-muted-foreground">/year</span>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        $3.33/month
+                        $10/month
                       </div>
                     </CardHeader>
                     <CardContent>

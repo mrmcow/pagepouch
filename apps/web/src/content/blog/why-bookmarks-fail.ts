@@ -329,7 +329,7 @@ A: Choose tools with export features. Your data should always be yours.
 
 **Try PageStash Today**
 
-Stop fighting with bookmarks. [Start your free trial](/auth/signup) and build a real research system—sign up free with 50 clips included.
+Stop fighting with bookmarks. [Start your free trial](/auth/signup) and build a real research system—sign up free with 10 clips per month included.
 
 ---
 

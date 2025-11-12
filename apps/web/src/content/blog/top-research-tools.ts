@@ -12,7 +12,7 @@ Choosing the right research organization tool can transform your productivity. H
 ## 1. PageStash
 
 **Best for**: Web content archiving and research
-**Pricing**: Free trial (50 clips), $4/month Pro
+**Pricing**: Free trial (10 clips/month), $12/month Pro
 **Strengths**: Full-page capture, knowledge graphs, fast search
 **Weaknesses**: Focused on web content only
 
@@ -103,7 +103,7 @@ Perfect for readers, insufficient for researchers.
 
 | Tool | Full-Page Capture | Search | Organization | Collaboration | Price |
 |------|------------------|---------|--------------|---------------|-------|
-| PageStash | ✅ Excellent | ✅ Fast | ✅ Good | ⚠️ Basic | $4/mo |
+| PageStash | ✅ Excellent | ✅ Fast | ✅ Good | ⚠️ Basic | $12/mo |
 | Evernote | ⚠️ Okay | ✅ Good | ✅ Good | ✅ Excellent | $11/mo |
 | Notion | ❌ Basic | ⚠️ Okay | ✅ Excellent | ✅ Excellent | $8/mo |
 | Pocket | ❌ No | ❌ Weak | ❌ Weak | ❌ No | $5/mo |

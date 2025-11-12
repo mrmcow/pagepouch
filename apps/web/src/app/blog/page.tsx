@@ -278,7 +278,7 @@ export default function BlogPage() {
                 Ready to Transform Your Research Workflow?
               </h2>
               <p className="text-xl text-blue-100 mb-8">
-                Start capturing and organizing web content like a pro. Sign up for your free trial—50 clips included.
+                Start capturing and organizing web content like a pro. Sign up for your free trial—10 clips/month included.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50" asChild>

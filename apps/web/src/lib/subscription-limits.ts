@@ -15,7 +15,7 @@ export interface SubscriptionTier {
 
 export const SUBSCRIPTION_LIMITS: Record<string, SubscriptionLimits> = {
   free: {
-    clipsPerMonth: 50,
+    clipsPerMonth: 10,
     storageLimit: 100, // 100MB
   },
   pro: {
@@ -29,7 +29,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     name: 'Free',
     limits: SUBSCRIPTION_LIMITS.free,
     features: [
-      '50 clips per month',
+      '10 clips per month',
       '100MB storage',
       'Basic folders',
       'Search & tags'

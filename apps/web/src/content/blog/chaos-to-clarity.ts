@@ -114,7 +114,7 @@ The goal isn't perfect organization—it's making your massive collection actual
 
 ## Ready to Transform Your Digital Chaos?
 
-PageStash is purpose-built for people managing large web content collections. Sign up for your free trial—50 clips included.
+PageStash is purpose-built for people managing large web content collections. Sign up for your free trial—10 clips per month included.
 
 [Start organizing your research →](/auth/signup)
 `,

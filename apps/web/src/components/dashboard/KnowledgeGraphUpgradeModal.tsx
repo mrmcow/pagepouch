@@ -161,7 +161,7 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
                 <CardContent className="p-6">
                   <div className="text-center mb-4">
                     <h4 className="font-semibold text-slate-800">Monthly</h4>
-                    <div className="text-3xl font-bold text-slate-800 mt-2">$4<span className="text-lg text-slate-500">/month</span></div>
+                    <div className="text-3xl font-bold text-slate-800 mt-2">$12<span className="text-lg text-slate-500">/month</span></div>
                   </div>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center text-sm">
@@ -195,13 +195,13 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
               {/* Annual Plan */}
               <Card className="border-green-300 bg-green-50/50 relative">
                 <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-500 text-white">
-                  Save $8/year
+                  Save $24/year
                 </Badge>
                 <CardContent className="p-6">
                   <div className="text-center mb-4">
                     <h4 className="font-semibold text-slate-800">Annual</h4>
-                    <div className="text-3xl font-bold text-slate-800 mt-2">$40<span className="text-lg text-slate-500">/year</span></div>
-                    <p className="text-sm text-green-600">$3.33/month</p>
+                    <div className="text-3xl font-bold text-slate-800 mt-2">$120<span className="text-lg text-slate-500">/year</span></div>
+                    <p className="text-sm text-green-600">$10/month</p>
                   </div>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-center text-sm">

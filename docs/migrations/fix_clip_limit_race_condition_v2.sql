@@ -27,7 +27,7 @@ BEGIN
   IF v_subscription_tier = 'pro' THEN
     v_clips_limit := 1000;
   ELSE
-    v_clips_limit := 50; -- free tier
+    v_clips_limit := 10; -- free tier
   END IF;
   
   -- Get current count (with row lock to prevent race conditions)

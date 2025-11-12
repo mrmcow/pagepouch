@@ -137,7 +137,7 @@ function DashboardContent() {
     subscriptionTier: 'free',
     subscriptionStatus: 'inactive',
     clipsThisMonth: 0,
-    clipsLimit: 50,
+    clipsLimit: 10,
     isSubscriptionLoading: true,
   })
   
@@ -187,7 +187,7 @@ function DashboardContent() {
           subscriptionTier: subData.subscription_tier || usageData.subscription_tier || 'free',
           subscriptionStatus: subData.subscription_status || 'inactive',
           clipsThisMonth: usageData.clips_this_month || 0,
-          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 50),
+          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 10),
         }))
         
         console.log('📊 Subscription data refreshed:', {
@@ -418,7 +418,7 @@ function DashboardContent() {
         subscriptionTier: 'free',
         subscriptionStatus: 'inactive',
         clipsThisMonth: 0,
-        clipsLimit: 50
+        clipsLimit: 10
       }
       
       if (subscriptionResponse.ok && usageResponse.ok) {
@@ -431,7 +431,7 @@ function DashboardContent() {
           subscriptionTier: subData.subscription_tier || usageData.subscription_tier || 'free',
           subscriptionStatus: subData.subscription_status || 'inactive',
           clipsThisMonth: usageData.clips_this_month || 0,
-          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 50)
+          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 10)
         }
         
         console.log('📊 Loaded subscription and usage data:', {
@@ -1184,7 +1184,7 @@ function DashboardContent() {
                     }}
                     className="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
                   >
-                    Upgrade Monthly ($4)
+                    Upgrade Monthly ($12)
                   </button>
                   <button
                     onClick={async () => {
@@ -1206,7 +1206,7 @@ function DashboardContent() {
                     }}
                     className="w-full bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 transition-colors"
                   >
-                    Upgrade Annual ($40)
+                    Upgrade Annual ($120)
                   </button>
                 </CardContent>
               </Card>

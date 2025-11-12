@@ -221,7 +221,7 @@ export default function HomePage() {
                 
                 <div className="relative text-center mb-6 sm:mb-8">
                   <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">Start Your Free Trial</h3>
-                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">50 clips free • Free trial • 2-minute setup</p>
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">10 clips/month free • No credit card • 2-minute setup</p>
             </div>
             
                 <div className="relative">
@@ -280,7 +280,7 @@ export default function HomePage() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-slate-900 dark:text-slate-300">
                   <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span><strong>50 clips</strong> per month</span>
+                  <span><strong>10 clips</strong> per month</span>
                 </li>
                 <li className="flex items-center gap-3 text-slate-900 dark:text-slate-300">
                   <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
@@ -323,10 +323,10 @@ export default function HomePage() {
               <div className="relative text-center mb-8 text-white pt-4">
                 <h3 className="text-2xl font-bold mb-2">PageStash Pro</h3>
                 <div className="flex items-baseline justify-center gap-2 mb-2">
-                  <span className="text-5xl font-bold">$4</span>
+                  <span className="text-5xl font-bold">$12</span>
                   <span className="text-xl">/month</span>
                 </div>
-                <p className="text-sm">or $40/year (save $8)</p>
+                <p className="text-sm">or $120/year (save $24)</p>
               </div>
               
               <ul className="space-y-3 mb-8 text-white">
@@ -693,7 +693,7 @@ export default function HomePage() {
               {/* Modal Header */}
               <div className="bg-slate-50 dark:bg-slate-800 px-6 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-400">6 of 50</span>
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-400">6 of 10</span>
                   <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-xs font-medium text-blue-700 dark:text-blue-300">
                     <FolderIcon className="h-3 w-3" />
                     Research
@@ -918,7 +918,7 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-300">
                 <div className="flex items-center gap-2">
                 <CheckIcon className="h-4 w-4" />
-                <span>50 clips free</span>
+                <span>10 clips/month free</span>
                 </div>
                 <div className="flex items-center gap-2">
                 <CheckIcon className="h-4 w-4" />
@@ -982,7 +982,7 @@ export default function HomePage() {
                 What's included in the free plan?
               </h3>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                The free plan includes 50 clips per month, 100MB of storage, full-text search, folders & organization, and both Chrome & Firefox extensions. Perfect for trying PageStash and light usage.
+                The free plan includes 10 clips per month, 100MB of storage, full-text search, folders & organization, and both Chrome & Firefox extensions. Perfect for trying PageStash and light usage.
             </p>
           </div>
 

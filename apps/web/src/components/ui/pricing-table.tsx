@@ -19,7 +19,7 @@ export function PricingTable({ currentTier = 'free', showFree = true }: PricingT
       price: '$0',
       period: 'forever',
       features: [
-        '50 clips per month',
+        '10 clips per month',
         '100MB storage',
         'Basic folders & tags',
         'Full-text search',
@@ -31,7 +31,7 @@ export function PricingTable({ currentTier = 'free', showFree = true }: PricingT
       id: 'pro-monthly',
       name: 'Pro',
       description: 'For serious researchers & analysts',
-      price: '$4',
+      price: '$12',
       period: 'month',
       originalPrice: null,
       features: [
@@ -49,9 +49,9 @@ export function PricingTable({ currentTier = 'free', showFree = true }: PricingT
       id: 'pro-annual',
       name: 'Pro Annual',
       description: 'Save 2 months with annual billing',
-      price: '$40',
+      price: '$120',
       period: 'year',
-      originalPrice: '$48',
+      originalPrice: '$144',
       features: [
         '1,000 clips per month',
         '5GB storage',
@@ -105,7 +105,7 @@ export function PricingTable({ currentTier = 'free', showFree = true }: PricingT
               {plan.originalPrice && (
                 <div className="text-sm text-muted-foreground mt-1">
                   <span className="line-through">{plan.originalPrice}/year</span>
-                  <span className="text-green-600 ml-2 font-medium">Save $8</span>
+                  <span className="text-green-600 ml-2 font-medium">Save $24</span>
                 </div>
               )}
             </div>

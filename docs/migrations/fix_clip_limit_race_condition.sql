@@ -28,7 +28,7 @@ BEGIN
   IF v_subscription_tier = 'pro' THEN
     v_clips_limit := 1000;
   ELSE
-    v_clips_limit := 50;
+    v_clips_limit := 10;
   END IF;
   
   -- Lock the user_usage row for this user to prevent race conditions

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: 'PageStash - Web Archival Tool for Researchers & Analysts',
     template: '%s | PageStash'
   },
-  description: 'The only web archival tool built for researchers, analysts, and professionals. Capture full-page screenshots, extract text, organize with folders, and find content instantly. Free trial with 50 clips per month.',
+  description: 'The only web archival tool built for researchers, analysts, and professionals. Capture full-page screenshots, extract text, organize with folders, and find content instantly. Free trial with 10 clips per month.',
   keywords: [
     'web clipper',
     'web archival tool', 
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'PageStash - Web Archival Tool for Researchers & Analysts',
-    description: 'Capture, organize, and search web content like a pro. Free trial with 50 clips/month.',
+    description: 'Capture, organize, and search web content like a pro. Free trial with 10 clips/month.',
     images: ['/og-image.png'],
     creator: '@pagestash',
   },

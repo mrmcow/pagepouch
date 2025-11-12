@@ -189,7 +189,7 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
                   <div>
                     <span className="text-sm font-medium text-gray-900">Current Plan</span>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {subscriptionData.subscriptionTier === 'pro' ? '1,000 clips/month + 5GB storage' : '50 clips/month + 100MB storage'}
+                      {subscriptionData.subscriptionTier === 'pro' ? '1,000 clips/month + 5GB storage' : '10 clips/month + 100MB storage'}
                     </p>
                   </div>
                   <Badge variant={getSubscriptionBadgeVariant(subscriptionData.subscriptionTier, subscriptionData.subscriptionStatus)}>

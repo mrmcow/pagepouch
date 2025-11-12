@@ -428,7 +428,7 @@ Effective web research starts with a solid capture and organization system. Whet
 
 **Ready to transform your research workflow?**
 
-Try PageStash free—sign up for your free trial with 50 pages included. Experience the difference a purpose-built research tool makes.
+Try PageStash free—sign up for your free trial with 10 clips per month included. Experience the difference a purpose-built research tool makes.
 
 👉 **[Start Your Free Trial Now](/auth/signup)** — Set up in 2 minutes
 
@@ -456,7 +456,7 @@ A: Use folders for projects and tags for cross-cutting themes. This dual system 
 
 **Try PageStash Today**
 
-Ready to stop losing track of important research? [Start your free trial](/auth/signup) and capture your first 50 pages—sign up free to get started.
+Ready to stop losing track of important research? [Start your free trial](/auth/signup) with 10 clips per month—sign up free to get started.
 
 ---
 

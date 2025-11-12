@@ -383,7 +383,7 @@ A: Follow the rule: Save and close within 5 minutes of opening, or close without
 
 **Try PageStash Today**
 
-Close tabs with confidence. [Start free](/auth/signup)—sign up free with 50 clips included.
+Close tabs with confidence. [Start free](/auth/signup)—sign up free with 10 clips per month included.
 
 ---
 

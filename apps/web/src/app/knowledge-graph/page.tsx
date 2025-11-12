@@ -52,7 +52,7 @@ function KnowledgeGraphDashboardContent() {
     subscriptionTier: 'free',
     subscriptionStatus: 'inactive',
     clipsThisMonth: 0,
-    clipsLimit: 50,
+    clipsLimit: 10,
     isSubscriptionLoading: true,
     isProfileModalOpen: false,
     isBillingModalOpen: false,
@@ -82,7 +82,7 @@ function KnowledgeGraphDashboardContent() {
           subscriptionTier: subData.subscription_tier || 'free',
           subscriptionStatus: subData.subscription_status || 'inactive',
           clipsThisMonth: subData.clips_this_month || 0,
-          clipsLimit: subData.subscription_tier === 'pro' ? 1000 : 50,
+          clipsLimit: subData.subscription_tier === 'pro' ? 1000 : 10,
           isSubscriptionLoading: false,
         }))
       }

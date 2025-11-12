@@ -23,7 +23,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 | Tool | Best For | Price | Key Feature |
 |------|----------|-------|-------------|
-| **PageStash** | Serious students | Free / $9.99/mo | Organization + search |
+| **PageStash** | Serious students | Free / $12/mo | Organization + search |
 | **Pocket** | Light reading | Free / $4.99/mo | Reading list |
 | **Notion** | All-in-one | Free / $10/mo | Notes + wiki |
 | **Evernote** | Note-takers | Free / $14.99/mo | Rich notes |
@@ -34,7 +34,7 @@ The right web clipping tool can be the difference between staying organized and 
 ### Why Students Love It:
 
 **Pros:**
-✅ Free for 50 clips (perfect for one semester)
+✅ Free for 10 clips per month (perfect for trying it out)
 ✅ Full-text search across all saved content
 ✅ Folder system for organizing by class
 ✅ Tag system for themes across classes
@@ -51,11 +51,11 @@ The right web clipping tool can be the difference between staying organized and 
 - Literature reviews
 - Multi-class organization
 
-**Student Pricing**: Free for 50 clips, then $9.99/month (save 30% annually)
+**Student Pricing**: Free for 10 clips per month, then $12/month ($120/year)
 
 ---
 
-💡 **Student Tip**: Use folders for classes, tags for themes. [Try PageStash free](/auth/signup) with 50 clips included.
+💡 **Student Tip**: Use folders for classes, tags for themes. [Try PageStash free](/auth/signup) with 10 free clips per month.
 
 ---
 
@@ -162,7 +162,7 @@ The right web clipping tool can be the difference between staying organized and 
 **Why**: Flexible systems, multiple views, deep organization
 
 ### For Budget-Conscious Students:
-**Recommendation**: PageStash (50 free clips) or Notion (free for students)
+**Recommendation**: PageStash (10 free clips per month) or Notion (free for students)
 **Why**: Best value for features
 
 ## Student-Specific Features to Look For
@@ -211,9 +211,9 @@ The right web clipping tool can be the difference between staying organized and 
 
 **Most Affordable**: Raindrop ($3/mo) or Pocket ($4.99/mo)
 
-**Best Free Option**: Notion (unlimited for students) or PageStash (50 clips)
+**Best Free Option**: Notion (unlimited for students) or PageStash (10 clips per month)
 
-**Best Value**: PageStash ($9.99/mo unlimited with Pro features)
+**Best Value**: PageStash ($12/mo, 1,000 clips per month with Pro features)
 
 **Premium Option**: Evernote ($14.99/mo)
 
@@ -270,7 +270,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 **Ready to get organized?**
 
-[Try PageStash free](/auth/signup) and see why students love it—50 clips included, no credit card required.
+[Try PageStash free](/auth/signup) and see why students love it—10 free clips per month, no credit card required.
 
 ---
 

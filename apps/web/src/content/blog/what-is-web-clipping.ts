@@ -224,7 +224,7 @@ Monthly maintenance:
 
 **Ready to transform your research workflow?**
 
-PageStash combines powerful web clipping with intelligent organization. [Start your free trial](/auth/signup) and capture your first 50 pages—sign up free to get started.
+PageStash combines powerful web clipping with intelligent organization. [Start your free trial](/auth/signup) with 10 clips per month—sign up free to get started.
 
 ---
 

@@ -176,7 +176,7 @@ export default function TermsOfServicePage() {
               <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Free and Paid Plans</h3>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 mb-6">
                 <ul className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <li>• <strong>Free Plan:</strong> 50 clips per month with basic features</li>
+                  <li>• <strong>Free Plan:</strong> 10 clips per month with basic features</li>
                   <li>• <strong>Pro Plan:</strong> 1,000 clips per month with advanced features</li>
                   <li>• <strong>Billing:</strong> Monthly or annual subscription options</li>
                   <li>• <strong>Changes:</strong> You can upgrade, downgrade, or cancel anytime</li>

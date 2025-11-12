@@ -120,11 +120,11 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 ### PageStash
 
 **Free Trial**:
-- 50 clips included
+- 10 clips per month
 - 100MB storage
 - Full features
 
-**Pro** ($4/month or $40/year):
+**Pro** ($12/month or $120/year):
 - 1,000 clips per month
 - 5GB storage
 - Full-text search
@@ -183,7 +183,7 @@ Choose based on your primary use case:
 
 ## Try PageStash Risk-Free
 
-Sign up for your free trial with 50 clips included. No credit card required to start.
+Sign up for your free trial with 10 clips per month included. No credit card required to start.
 
 [Start your free trial →](/auth/signup)
 

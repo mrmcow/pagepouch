@@ -32,8 +32,8 @@ This comprehensive comparison will help you choose the right tool for your needs
 | **Annotations** | ❌ Limited | ✅ Highlights + notes |
 | **Team Sharing** | ❌ No | ✅ Pro plan |
 | **Page Graphs** | ❌ No | ✅ Visualize connections |
-| **Free Plan** | Limited | 50 clips |
-| **Starting Price** | $4.99/mo | $9.99/mo |
+| **Free Plan** | Limited | 10 clips |
+| **Starting Price** | $4.99/mo | $12/mo |
 | **Best For** | Casual reading | Professional research |
 
 ## Detailed Feature Comparison
@@ -189,16 +189,17 @@ This comprehensive comparison will help you choose the right tool for your needs
 ### PageStash Pricing
 
 **Free Trial**:
-- 50 clips
+- 10 clips per month
 - Full features
 - No credit card required
 
-**Pro ($9.99/mo or $99/yr)**:
-- Unlimited clips
+**Pro ($12/mo or $120/yr)**:
+- 1,000 clips per month
+- 5GB storage
 - All features including:
-  - Page graphs
-  - Team workspaces
+  - Knowledge graphs
   - Advanced search
+  - Export & backup
   - Priority support
 
 ### Value Analysis
@@ -378,7 +379,7 @@ A: PageStash. Pocket has no team features.
 
 **Ready to upgrade your research workflow?**
 
-[Start your free PageStash trial](/auth/signup) and see if advanced organization is worth it for your needs—50 clips included, no credit card required to start.
+[Start your free PageStash trial](/auth/signup) and see if advanced organization is worth it for your needs—10 clips per month included, no credit card required to start.
 
 ---
 

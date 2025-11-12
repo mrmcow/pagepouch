@@ -181,7 +181,7 @@ export default function SignUpPage() {
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li className="flex items-center">
                   <Check className="h-3 w-3 text-primary mr-2" />
-                  100 clips per month
+                  10 clips per month
                 </li>
                 <li className="flex items-center">
                   <Check className="h-3 w-3 text-primary mr-2" />

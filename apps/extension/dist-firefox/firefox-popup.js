@@ -1,1 +1,743 @@
-console.log("🦊 Firefox popup script loaded");const extensionAPI="undefined"!=typeof browser?browser:chrome;console.log("🦊 Using extension API:","undefined"!=typeof browser?"browser":"chrome");let appState={isCapturing:!1,isAuthenticated:!1,isCheckingAuth:!0,showAuth:!1,currentTab:null,userEmail:null,captureProgress:null,folders:[],selectedFolderId:null,loadingFolders:!1,clipsRemaining:50,clipsLimit:50,subscriptionTier:"free",warningLevel:"safe",usageLoading:!1},authState={email:"",password:"",isSignUp:!1,isLoading:!1,error:null};const styles={container:'width: 380px; min-height: 520px; max-height: 600px; height: auto; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: #ffffff; color: #1f2937; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column; overflow: hidden;',header:"padding: 16px 20px 12px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; border-bottom: 1px solid #f1f5f9;",logoSection:"display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 8px;",brandName:"font-size: 20px; font-weight: 600; color: #1e293b; margin: 0; letter-spacing: -0.025em; text-align: center;",content:"padding: 20px 24px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 16px; overflow-y: auto; overflow-x: hidden;",button:"padding: 14px 24px; border-radius: 12px; border: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 320px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);",primaryButton:"background-color: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);",secondaryButton:"background-color: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);",input:"width: 320px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; color: #1f2937; font-family: inherit;",card:"background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; width: 100%; max-width: 320px; text-align: center; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);",badge:"display: inline-flex; align-items: center; padding: 4px 8px; background-color: #dbeafe; color: #1d4ed8; border-radius: 12px; font-size: 12px; font-weight: 500;",tabInfo:"display: flex; align-items: flex-start; gap: 12px; padding: 16px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; max-width: 320px; box-sizing: border-box; flex-direction: column; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);"};function createLogo(e=32){return`\n    <svg width="${e}" height="${e}" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.3));">\n      <defs>\n        <filter id="emboss-${e}" x="-20%" y="-20%" width="140%" height="140%">\n          <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.3" floodColor="#1d4ed8" floodOpacity="0.3"/>\n        </filter>\n      </defs>\n      <path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>\n      <path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>\n      <path d="M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" filter="url(#emboss-${e})"/>\n      <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>\n      <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>\n      <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>\n    </svg>\n  `}function createElement(e,t={},a=[]){const n=document.createElement(e);return Object.entries(t).forEach(([e,t])=>{"style"===e?n.setAttribute("style",t):"onClick"===e?n.addEventListener("click",t):n.setAttribute(e,t)}),a.forEach(e=>{"string"==typeof e?n.innerHTML+=e:n.appendChild(e)}),n}async function loadFolders(){console.log("🦊 Loading user folders..."),appState.loadingFolders=!0,render(),await new Promise(e=>setTimeout(e,100));try{const e=await extensionAPI.runtime.sendMessage({type:"GET_FOLDERS"});if(console.log("🦊 Folders response:",e),e&&e.folders&&Array.isArray(e.folders)){if(appState.folders=e.folders,console.log("🦊 Loaded folders:",appState.folders),0===appState.folders.length){console.log("🦊 No folders found, creating default Inbox folder...");try{const e=await extensionAPI.runtime.sendMessage({type:"CREATE_FOLDER",payload:{name:"Inbox",color:"#6B7280"}});e&&e.folder&&(appState.folders=[e.folder],appState.selectedFolderId=e.folder.id,console.log("🦊 Created default Inbox folder:",e.folder))}catch(e){console.error("🦊 Failed to create default folder:",e)}}else if(!appState.selectedFolderId){const e=appState.folders.find(e=>"inbox"===e.name.toLowerCase());appState.selectedFolderId=e?e.id:appState.folders[0].id,console.log("🦊 Selected default folder:",appState.selectedFolderId,e?"(Inbox found)":"(First folder)"),await extensionAPI.storage.local.set({selectedFolderId:appState.selectedFolderId})}}else console.log("🦊 No folders in response or invalid format, using empty folder list"),console.log("🦊 Response structure:",e),appState.folders=[],appState.selectedFolderId=null}catch(e){console.error("🦊 Failed to load folders:",e),appState.folders=[],appState.selectedFolderId=null}appState.loadingFolders=!1,render()}async function loadUsage(){console.log("🦊 Loading user usage..."),appState.usageLoading=!0,render();try{const e=await extensionAPI.runtime.sendMessage({type:"GET_USAGE"});console.log("🦊 Usage response:",e),e&&!e.error?(appState.clipsRemaining=e.clips_remaining,appState.clipsLimit=e.clips_limit,appState.subscriptionTier=e.subscription_tier,appState.warningLevel=e.warning_level,console.log("🦊 Loaded usage:",{remaining:appState.clipsRemaining,limit:appState.clipsLimit,tier:appState.subscriptionTier,warning:appState.warningLevel})):console.error("🦊 Failed to load usage:",e?.error)}catch(e){console.error("🦊 Error loading usage:",e)}appState.usageLoading=!1,render()}async function handleFolderChange(e){console.log("🦊 Folder selected:",e),appState.selectedFolderId=e,await extensionAPI.storage.local.set({selectedFolderId:e}),render()}function getUsageBadgeStyle(){const e=styles.badge;switch(appState.warningLevel){case"critical":return e+"; background-color: #dc2626; color: white;";case"warning":return e+"; background-color: #f59e0b; color: white;";case"exceeded":return e+"; background-color: #7f1d1d; color: white;";default:return e}}function getUsageBadgeText(){return appState.usageLoading?"Loading...":"exceeded"===appState.warningLevel?"Limit reached":`${appState.clipsRemaining} clips left`}async function checkAuthStatus(){try{console.log("🦊 Checking auth status...");const e=await extensionAPI.storage.local.get(["authToken","userEmail","selectedFolderId"]);console.log("🦊 Storage result:",e),e?(appState.isAuthenticated=!!e.authToken,appState.userEmail=e.userEmail,appState.selectedFolderId=e.selectedFolderId,console.log("🦊 Auth status:",appState.isAuthenticated,"Email:",appState.userEmail),appState.isAuthenticated&&await Promise.all([loadFolders(),loadUsage()])):(console.log("🦊 No storage result, setting defaults"),appState.isAuthenticated=!1,appState.userEmail=null,appState.selectedFolderId=null)}catch(e){console.error("🦊 Error checking auth status:",e),appState.isAuthenticated=!1,appState.userEmail=null}finally{appState.isCheckingAuth=!1,render()}}async function getCurrentTab(){try{console.log("🦊 Getting current tab...");const e=await extensionAPI.tabs.query({active:!0,currentWindow:!0});console.log("🦊 Tabs result:",e),e&&e.length>0&&e[0]?(appState.currentTab=e[0],console.log("🦊 Current tab:",appState.currentTab.title)):(console.log("🦊 No active tab found"),appState.currentTab=null)}catch(e){console.error("🦊 Error getting current tab:",e),appState.currentTab=null}}async function capturePage(e){if(appState.currentTab?.id){if(!appState.isAuthenticated)return appState.showAuth=!0,void render();appState.isCapturing=!0,appState.captureProgress={status:"starting",message:"fullPage"===e?"Preparing full page capture...":"Preparing visible area capture..."},render();try{setTimeout(()=>{appState.captureProgress={status:"capturing",message:"fullPage"===e?"Capturing full page...":"Capturing visible area..."},render()},100),await extensionAPI.runtime.sendMessage({type:"CAPTURE_PAGE",payload:{tabId:appState.currentTab.id,captureType:e,url:appState.currentTab.url,title:appState.currentTab.title,...appState.selectedFolderId&&"inbox"!==appState.selectedFolderId?{folderId:appState.selectedFolderId}:{}}}),appState.captureProgress={status:"complete",message:"Capture successful! 🎉"},render(),setTimeout(()=>{appState.isCapturing=!1,appState.captureProgress=null,render()},2e3)}catch(e){console.error("Capture failed:",e),appState.isCapturing=!1,appState.captureProgress={status:"error",message:"Capture failed. Please refresh the page and try again."},render(),setTimeout(()=>{appState.captureProgress=null,render()},3e3)}}}async function handleAuth(){authState.isLoading=!0,authState.error=null,render();try{console.log("🦊 Sending auth request:",{email:authState.email,isSignUp:authState.isSignUp});const e=await extensionAPI.runtime.sendMessage({type:"AUTHENTICATE",payload:{email:authState.email,password:authState.password,isSignUp:authState.isSignUp}});if(console.log("🦊 Auth response received:",e),e&&e.error)return console.error("🦊 Auth failed:",e.error),authState.error=e.error.message||"Authentication failed",authState.isLoading=!1,void render();if(!e||!e.data)return console.error("🦊 Invalid response:",e),authState.error="Invalid response from server",authState.isLoading=!1,void render();console.log("🦊 Auth successful!"),appState.isAuthenticated=!0,appState.userEmail=authState.email,appState.showAuth=!1,authState={email:"",password:"",isSignUp:!1,isLoading:!1,error:null},await Promise.all([loadFolders(),loadUsage()]),render()}catch(e){console.error("🦊 Auth error:",e),authState.error="Authentication failed. Please try again.",authState.isLoading=!1,render()}}async function signOut(){try{await extensionAPI.runtime.sendMessage({type:"SIGN_OUT"}),appState.isAuthenticated=!1,appState.userEmail=null,appState.showAuth=!1,render()}catch(e){console.error("Sign out failed:",e),await extensionAPI.storage.local.remove(["authToken","userEmail","userId","refreshToken","isAuthenticated"]),appState.isAuthenticated=!1,appState.userEmail=null,render()}}function updateAuthButtonState(){const e=document.getElementById("auth-submit");if(e){const t=!authState.isLoading&&authState.email&&authState.password;e.disabled=!t,e.style.opacity=t?"1":"0.6"}}function renderAuthScreen(){return`\n    <div style="${styles.container}">\n      <div style="${styles.header}">\n        <div style="${styles.logoSection}">\n          ${createLogo(32)}\n          <h1 style="${styles.brandName}">PageStash</h1>\n        </div>\n        <button id="close-auth" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">×</button>\n      </div>\n      <div style="padding: 24px 20px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; overflow-y: auto; overflow-x: hidden;">\n        <div style="text-align: center; margin-bottom: 4px; width: 100%;">\n          <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 600; color: #1e293b;">${authState.isSignUp?"Create Account":"Welcome Back"}</h2>\n          <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">${authState.isSignUp?"Start capturing and organizing web content":"Sign in to access your library"}</p>\n        </div>\n        <form id="auth-form" action="#" method="post" style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%;">\n          <label for="email-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Email</label>\n          <input \n            id="email-input" \n            name="email"\n            type="email" \n            placeholder="Email address" \n            value="${authState.email}" \n            autocomplete="${authState.isSignUp?"email":"username"}"\n            required\n            style="${styles.input}; margin: 0;">\n          <label for="password-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Password</label>\n          <input \n            id="password-input" \n            name="password"\n            type="password" \n            placeholder="Password" \n            value="${authState.password}" \n            autocomplete="${authState.isSignUp?"new-password":"current-password"}"\n            required\n            style="${styles.input}; margin: 0;">\n          ${authState.error?`<div style="text-align: center; padding: 12px; background-color: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 13px;">${authState.error}</div>`:""}\n          <button id="auth-submit" type="submit" ${!authState.isLoading&&authState.email&&authState.password?"":"disabled"} style="${styles.button}; ${styles.primaryButton}; max-width: 100%; margin-top: 4px; opacity: ${!authState.isLoading&&authState.email&&authState.password?"1":"0.5"}; cursor: ${!authState.isLoading&&authState.email&&authState.password?"pointer":"not-allowed"};">\n            ${authState.isLoading?"⏳ Processing...":authState.isSignUp?"✨ Create Account":"🔓 Sign In"}\n        </button>\n        </form>\n        <div style="width: 100%; text-align: center; padding-top: 8px; border-top: 1px solid #f1f5f9;">\n          <button id="auth-toggle" style="background: none; border: none; color: #3b82f6; font-size: 14px; font-weight: 500; cursor: pointer; padding: 8px; text-decoration: none;">\n            ${authState.isSignUp?"Already have an account? Sign in":"Need an account? Sign up"}\n        </button>\n        </div>\n      </div>\n    </div>\n  `}function renderMainScreen(){return`\n    <div style="${styles.container}">\n      <div style="${styles.header}">\n        <div style="${styles.logoSection}">\n          ${createLogo(40)}\n          <h1 style="${styles.brandName}">PageStash</h1>\n          ${appState.isAuthenticated?`<div style="${getUsageBadgeStyle()}">${getUsageBadgeText()}</div>`:""}\n        </div>\n      </div>\n      <div style="${styles.content}">\n        ${appState.currentTab?`\n          <div style="${styles.tabInfo}">\n            ${appState.currentTab.favIconUrl?`<img src="${appState.currentTab.favIconUrl}" alt="Site icon" style="width: 16px; height: 16px; border-radius: 2px; margin-bottom: 4px;">`:""}\n            <div style="text-align: center; width: 100%;">\n              <div style="font-weight: 500; font-size: 13px; text-align: center; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${appState.currentTab.title||"Untitled"}</div>\n              <div style="font-size: 11px; color: #6b7280; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${appState.currentTab.url}</div>\n            </div>\n          </div>\n        `:""}\n        \n        ${appState.captureProgress?`\n          <div style="${styles.card}; background-color: ${"error"===appState.captureProgress.status?"#fef2f2":"complete"===appState.captureProgress.status?"#f0fdf4":"#f0f9ff"}; border: ${"error"===appState.captureProgress.status?"1px solid #fecaca":"complete"===appState.captureProgress.status?"1px solid #bbf7d0":"1px solid #bfdbfe"};">\n            <div style="margin-bottom: 12px; font-weight: 600; color: ${"error"===appState.captureProgress.status?"#dc2626":"complete"===appState.captureProgress.status?"#16a34a":"#2563eb"};">\n              ${"complete"===appState.captureProgress.status?"✅ Capture Complete!":"error"===appState.captureProgress.status?"❌ Capture Failed":"📸 Capturing..."}\n            </div>\n            ${"error"!==appState.captureProgress.status?`\n              <div style="width: 100%; height: 4px; background-color: #e5e7eb; border-radius: 2px; overflow: hidden; margin-bottom: 8px;">\n                <div style="height: 100%; background-color: ${"complete"===appState.captureProgress.status?"#16a34a":"#2563eb"}; border-radius: 2px; transition: width 0.3s ease; width: ${"complete"===appState.captureProgress.status?"100%":"capturing"===appState.captureProgress.status?"75%":"25%"};"></div>\n              </div>\n            `:""}\n            <div style="font-size: 13px; color: ${"error"===appState.captureProgress.status?"#dc2626":"#6b7280"}; margin-top: 8px;">${appState.captureProgress.message}</div>\n          </div>\n        `:""}\n        \n        \n        ${appState.isAuthenticated&&appState.folders&&appState.folders.length>0&&!appState.isCapturing?`\n          <div style="width: 100%; max-width: 320px; margin-bottom: 12px;">\n            <label style="display: block; font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 6px;">Save to folder:</label>\n            ${appState.loadingFolders?'\n              <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 13px;">Loading folders...</div>\n            ':`\n              <select id="folder-select" style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; background-color: #ffffff; color: #1f2937; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 4 5&quot;><path fill=&quot;%23666&quot; d=&quot;M2 0L0 2h4zm0 5L0 3h4z&quot;/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; padding-right: 40px;">\n                ${appState.folders.map(e=>`\n                  <option value="${e.id}" ${e.id===appState.selectedFolderId?"selected":""}>\n                    ${e.name}${e.is_default?" (Default)":""}\n                  </option>\n                `).join("")}\n              </select>\n            `}\n          </div>\n        `:""}\n        \n        \n        ${appState.isCapturing||appState.captureProgress?"":"exceeded"===appState.warningLevel?`\n            <div style="padding: 16px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; text-align: center; margin-bottom: 12px;">\n              <div style="font-size: 14px; font-weight: 500; color: #dc2626; margin-bottom: 8px;">\n                Monthly limit reached\n              </div>\n              <div style="font-size: 12px; color: #7f1d1d; margin-bottom: 12px;">\n                You've used all ${appState.clipsLimit} clips this month. Upgrade to Pro for unlimited clips!\n              </div>\n              <button id="upgrade-pro" style="${styles.button}; ${styles.primaryButton}; background-color: #dc2626;">🚀 Upgrade to Pro</button>\n            </div>\n          `:`\n            <button id="capture-full" style="${styles.button}; ${styles.primaryButton};">📄 Capture Full Page</button>\n            <button id="capture-visible" style="${styles.button}; ${styles.secondaryButton};">📱 Capture Visible Area</button>\n          `}\n        \n        ${appState.isAuthenticated?`\n          <div style="${styles.card}">\n            <div style="margin-bottom: 12px;">\n              <div style="font-weight: 500; margin-bottom: 4px;">👋 Welcome back!</div>\n              <div style="font-size: 12px; color: #6b7280;">${appState.userEmail}</div>\n            </div>\n            <button id="open-webapp" style="${styles.button}; ${styles.primaryButton};">🌐 Open Web App</button>\n            <button id="sign-out" style="${styles.button}; ${styles.secondaryButton};">Sign Out</button>\n          </div>\n        `:`\n          <div style="${styles.card}">\n            <div style="margin-bottom: 12px;">\n              <div style="font-weight: 500; margin-bottom: 4px;">🔒 Sign in for cloud sync</div>\n              <div style="font-size: 12px; color: #6b7280;">Access your clips anywhere and never lose them</div>\n            </div>\n            <button id="show-auth" style="${styles.button}; ${styles.secondaryButton};">Sign In / Sign Up</button>\n          </div>\n        `}\n        \n        <div style="text-align: center; margin-top: auto; padding-top: 16px; padding-bottom: 16px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b;">\n          <div style="font-weight: 500; margin-bottom: 4px; color: #64748b;">PageStash v1.1.0</div>\n          <div style="font-size: 11px; color: #94a3b8;">Capture • Organize • Retrieve</div>\n        </div>\n      </div>\n    </div>\n  `}function renderLoadingScreen(){return`\n    <div style="${styles.container}">\n      <div style="${styles.content}; justify-content: center; align-items: center; height: 100%;">\n        <div style="text-align: center;">\n          ${createLogo(48)}\n          <p style="margin-top: 16px; color: #64748b; font-size: 14px;">Loading...</p>\n        </div>\n      </div>\n    </div>\n  `}function render(){const e=document.getElementById("popup-root");if(e)if(appState.isCheckingAuth)e.innerHTML=renderLoadingScreen();else if(e.innerHTML=appState.showAuth?renderAuthScreen():renderMainScreen(),appState.showAuth){const e=document.getElementById("close-auth"),t=document.getElementById("email-input"),a=document.getElementById("password-input"),n=document.getElementById("auth-form"),o=document.getElementById("auth-toggle");e&&e.addEventListener("click",()=>{appState.showAuth=!1,render()}),t&&t.addEventListener("input",e=>{authState.email=e.target.value,updateAuthButtonState()}),a&&a.addEventListener("input",e=>{authState.password=e.target.value,updateAuthButtonState()}),n&&n.addEventListener("submit",e=>{e.preventDefault(),handleAuth()}),o&&o.addEventListener("click",()=>{authState.isSignUp=!authState.isSignUp,authState.error=null,render()})}else{const e=document.getElementById("capture-full"),t=document.getElementById("capture-visible"),a=document.getElementById("show-auth"),n=document.getElementById("sign-out"),o=document.getElementById("open-webapp"),r=document.getElementById("folder-select"),i=document.getElementById("upgrade-pro");e&&e.addEventListener("click",()=>capturePage("fullPage")),t&&t.addEventListener("click",()=>capturePage("visible")),a&&a.addEventListener("click",()=>{appState.showAuth=!0,render()}),n&&n.addEventListener("click",signOut),o&&o.addEventListener("click",()=>{extensionAPI.tabs.create({url:"https://pagestash.app/dashboard"})}),i&&i.addEventListener("click",()=>{extensionAPI.tabs.create({url:"https://pagestash.app/pricing"})}),r&&r.addEventListener("change",e=>{handleFolderChange(e.target.value)})}else console.error("popup-root not found")}async function init(){console.log("🦊 Initializing Firefox popup"),await checkAuthStatus(),await getCurrentTab(),extensionAPI.runtime.onMessage.addListener(e=>{"CAPTURE_PROGRESS"===e.type&&(appState.captureProgress={status:e.payload.status,message:e.payload.message},"complete"===e.payload.status&&e.payload.usage&&(appState.clipsRemaining=e.payload.usage.clips_remaining,appState.clipsLimit=e.payload.usage.clips_limit,appState.subscriptionTier=e.payload.usage.subscription_tier,appState.warningLevel=e.payload.usage.warning_level,console.log("🦊 Updated usage after capture:",{remaining:appState.clipsRemaining,limit:appState.clipsLimit,warning:appState.warningLevel})),render(),"complete"===e.payload.status&&setTimeout(()=>{appState.captureProgress=null,appState.isCapturing=!1,render()},2e3))}),render(),console.log("🦊 Firefox popup initialized")}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",init):init();
+// Firefox-specific popup (Vanilla JavaScript)
+// This version doesn't use React to avoid CSP issues
+
+console.log('🦊 Firefox popup script loaded');
+
+// Firefox compatibility layer
+const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+console.log('🦊 Using extension API:', typeof browser !== 'undefined' ? 'browser' : 'chrome');
+
+// State management
+let appState = {
+  isCapturing: false,
+  isAuthenticated: false,
+  isCheckingAuth: true, // Start with checking auth
+  showAuth: false,
+  currentTab: null,
+  userEmail: null,
+  captureProgress: null,
+  folders: [],
+  selectedFolderId: null,
+  loadingFolders: false,
+  // Usage tracking
+  clipsRemaining: 10, // Default for free tier
+  clipsLimit: 10,
+  subscriptionTier: 'free',
+  warningLevel: 'safe',
+  usageLoading: false
+};
+
+let authState = {
+  email: '',
+  password: '',
+  isSignUp: false,
+  isLoading: false,
+  error: null
+};
+
+// Styles
+const styles = {
+  container: 'width: 380px; min-height: 520px; max-height: 600px; height: auto; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: #ffffff; color: #1f2937; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column; overflow: hidden;',
+  header: 'padding: 16px 20px 12px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; border-bottom: 1px solid #f1f5f9;',
+  logoSection: 'display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 8px;',
+  brandName: 'font-size: 20px; font-weight: 600; color: #1e293b; margin: 0; letter-spacing: -0.025em; text-align: center;',
+  content: 'padding: 20px 24px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 16px; overflow-y: auto; overflow-x: hidden;',
+  button: 'padding: 14px 24px; border-radius: 12px; border: none; font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 320px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);',
+  primaryButton: 'background-color: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);',
+  secondaryButton: 'background-color: #ffffff; color: #475569; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
+  input: 'width: 320px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; background-color: #ffffff; transition: all 0.2s ease; outline: none; color: #1f2937; font-family: inherit;',
+  card: 'background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; width: 100%; max-width: 320px; text-align: center; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);',
+  badge: 'display: inline-flex; align-items: center; padding: 4px 8px; background-color: #dbeafe; color: #1d4ed8; border-radius: 12px; font-size: 12px; font-weight: 500;',
+  tabInfo: 'display: flex; align-items: flex-start; gap: 12px; padding: 16px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; max-width: 320px; box-sizing: border-box; flex-direction: column; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);'
+};
+
+// Logo SVG
+function createLogo(size = 32) {
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.3));">
+      <defs>
+        <filter id="emboss-${size}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.3" floodColor="#1d4ed8" floodOpacity="0.3"/>
+        </filter>
+      </defs>
+      <path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+      <path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" filter="url(#emboss-${size})"/>
+      <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+    </svg>
+  `;
+}
+
+// Utility functions
+function createElement(tag, attributes = {}, children = []) {
+  const element = document.createElement(tag);
+  
+  Object.entries(attributes).forEach(([key, value]) => {
+    if (key === 'style') {
+      element.setAttribute('style', value);
+    } else if (key === 'onClick') {
+      element.addEventListener('click', value);
+    } else {
+      element.setAttribute(key, value);
+    }
+  });
+  
+  children.forEach(child => {
+    if (typeof child === 'string') {
+      element.innerHTML += child;
+    } else {
+      element.appendChild(child);
+    }
+  });
+  
+  return element;
+}
+
+// Load user folders
+async function loadFolders() {
+  console.log('🦊 Loading user folders...');
+  appState.loadingFolders = true;
+  render();
+  
+  // Add a small delay to ensure auth token is stored
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  try {
+    const response = await extensionAPI.runtime.sendMessage({
+      type: 'GET_FOLDERS'
+    });
+    
+    console.log('🦊 Folders response:', response);
+    
+    if (response && response.folders && Array.isArray(response.folders)) {
+      appState.folders = response.folders;
+      console.log('🦊 Loaded folders:', appState.folders);
+      
+      // If no folders exist, create a default Inbox folder
+      if (appState.folders.length === 0) {
+        console.log('🦊 No folders found, creating default Inbox folder...');
+        try {
+          const createResponse = await extensionAPI.runtime.sendMessage({
+            type: 'CREATE_FOLDER',
+            payload: { name: 'Inbox', color: '#6B7280' }
+          });
+          
+          if (createResponse && createResponse.folder) {
+            appState.folders = [createResponse.folder];
+            appState.selectedFolderId = createResponse.folder.id;
+            console.log('🦊 Created default Inbox folder:', createResponse.folder);
+          }
+        } catch (createError) {
+          console.error('🦊 Failed to create default folder:', createError);
+        }
+      } else {
+        // Set default folder if none selected
+        if (!appState.selectedFolderId) {
+          // Try to find "Inbox" folder first
+          const inboxFolder = appState.folders.find(f => f.name.toLowerCase() === 'inbox');
+          appState.selectedFolderId = inboxFolder ? inboxFolder.id : appState.folders[0].id;
+          
+          console.log('🦊 Selected default folder:', appState.selectedFolderId, inboxFolder ? '(Inbox found)' : '(First folder)');
+          
+          // Save selection to storage
+          await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
+        }
+      }
+    } else {
+      console.log('🦊 No folders in response or invalid format, using empty folder list');
+      console.log('🦊 Response structure:', response);
+      // Don't set fallback folders - let clips save to default location
+      appState.folders = [];
+      appState.selectedFolderId = null;
+    }
+  } catch (error) {
+    console.error('🦊 Failed to load folders:', error);
+    // Don't set fallback folders - let clips save to default location
+    appState.folders = [];
+    appState.selectedFolderId = null;
+  }
+  
+  appState.loadingFolders = false;
+  render();
+}
+
+// Load usage data
+async function loadUsage() {
+  console.log('🦊 Loading user usage...');
+  appState.usageLoading = true;
+  render();
+  
+  try {
+    const response = await extensionAPI.runtime.sendMessage({
+      type: 'GET_USAGE'
+    });
+    
+    console.log('🦊 Usage response:', response);
+    
+    if (response && !response.error) {
+      appState.clipsRemaining = response.clips_remaining;
+      appState.clipsLimit = response.clips_limit;
+      appState.subscriptionTier = response.subscription_tier;
+      appState.warningLevel = response.warning_level;
+      console.log('🦊 Loaded usage:', {
+        remaining: appState.clipsRemaining,
+        limit: appState.clipsLimit,
+        tier: appState.subscriptionTier,
+        warning: appState.warningLevel
+      });
+    } else {
+      console.error('🦊 Failed to load usage:', response?.error);
+    }
+  } catch (error) {
+    console.error('🦊 Error loading usage:', error);
+  }
+  
+  appState.usageLoading = false;
+  render();
+}
+
+// Handle folder selection
+async function handleFolderChange(folderId) {
+  console.log('🦊 Folder selected:', folderId);
+  appState.selectedFolderId = folderId;
+  
+  // Save selection to storage
+  await extensionAPI.storage.local.set({ selectedFolderId: folderId });
+  
+  render();
+}
+
+// Get usage badge style based on warning level
+function getUsageBadgeStyle() {
+  const baseStyle = styles.badge;
+  
+  switch (appState.warningLevel) {
+    case 'critical':
+      return baseStyle + '; background-color: #dc2626; color: white;';
+    case 'warning':
+      return baseStyle + '; background-color: #f59e0b; color: white;';
+    case 'exceeded':
+      return baseStyle + '; background-color: #7f1d1d; color: white;';
+    default:
+      return baseStyle;
+  }
+}
+
+// Get usage badge text
+function getUsageBadgeText() {
+  if (appState.usageLoading) return 'Loading...';
+  if (appState.warningLevel === 'exceeded') return 'Limit reached';
+  return `${appState.clipsRemaining} clips left`;
+}
+
+// Check authentication status
+async function checkAuthStatus() {
+  try {
+    console.log('🦊 Checking auth status...');
+    const result = await extensionAPI.storage.local.get(['authToken', 'userEmail', 'selectedFolderId']);
+    console.log('🦊 Storage result:', result);
+    
+    if (result) {
+      appState.isAuthenticated = !!result.authToken;
+      appState.userEmail = result.userEmail;
+      appState.selectedFolderId = result.selectedFolderId;
+      console.log('🦊 Auth status:', appState.isAuthenticated, 'Email:', appState.userEmail);
+      
+      // Load folders and usage if authenticated
+      if (appState.isAuthenticated) {
+        await Promise.all([loadFolders(), loadUsage()]);
+      }
+    } else {
+      console.log('🦊 No storage result, setting defaults');
+      appState.isAuthenticated = false;
+      appState.userEmail = null;
+      appState.selectedFolderId = null;
+    }
+  } catch (error) {
+    console.error('🦊 Error checking auth status:', error);
+    // Set defaults on error
+    appState.isAuthenticated = false;
+    appState.userEmail = null;
+  } finally {
+    // Always set isCheckingAuth to false when done
+    appState.isCheckingAuth = false;
+    render(); // Re-render to show auth or main screen
+  }
+}
+
+// Get current tab
+async function getCurrentTab() {
+  try {
+    console.log('🦊 Getting current tab...');
+    const tabs = await extensionAPI.tabs.query({ active: true, currentWindow: true });
+    console.log('🦊 Tabs result:', tabs);
+    
+    if (tabs && tabs.length > 0 && tabs[0]) {
+      appState.currentTab = tabs[0];
+      console.log('🦊 Current tab:', appState.currentTab.title);
+    } else {
+      console.log('🦊 No active tab found');
+      appState.currentTab = null;
+    }
+  } catch (error) {
+    console.error('🦊 Error getting current tab:', error);
+    appState.currentTab = null;
+  }
+}
+
+// Capture page
+async function capturePage(captureType) {
+  if (!appState.currentTab?.id) return;
+  
+  if (!appState.isAuthenticated) {
+    appState.showAuth = true;
+    render();
+    return;
+  }
+  
+  appState.isCapturing = true;
+  appState.captureProgress = {
+    status: 'starting',
+    message: captureType === 'fullPage' ? 'Preparing full page capture...' : 'Preparing visible area capture...'
+  };
+  render();
+  
+  try {
+    setTimeout(() => {
+      appState.captureProgress = {
+        status: 'capturing',
+        message: captureType === 'fullPage' ? 'Capturing full page...' : 'Capturing visible area...'
+      };
+      render();
+    }, 100);
+    
+    await extensionAPI.runtime.sendMessage({
+      type: 'CAPTURE_PAGE',
+      payload: {
+        tabId: appState.currentTab.id,
+        captureType: captureType,
+        url: appState.currentTab.url,
+        title: appState.currentTab.title,
+        // Only include folderId if it's a valid UUID (not the fallback 'inbox' string)
+        ...(appState.selectedFolderId && appState.selectedFolderId !== 'inbox' ? { folderId: appState.selectedFolderId } : {})
+      }
+    });
+    
+    appState.captureProgress = {
+      status: 'complete',
+      message: 'Capture successful! 🎉'
+    };
+    render();
+    
+    setTimeout(() => {
+      appState.isCapturing = false;
+      appState.captureProgress = null;
+      render();
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Capture failed:', error);
+    appState.isCapturing = false;
+    appState.captureProgress = {
+      status: 'error',
+      message: 'Capture failed. Please refresh the page and try again.'
+    };
+    render();
+    
+    setTimeout(() => {
+      appState.captureProgress = null;
+      render();
+    }, 3000);
+  }
+}
+
+// Authentication functions
+async function handleAuth() {
+  authState.isLoading = true;
+  authState.error = null;
+  render();
+  
+  try {
+    console.log('🦊 Sending auth request:', { email: authState.email, isSignUp: authState.isSignUp });
+    
+    // Use real Supabase authentication
+    const response = await extensionAPI.runtime.sendMessage({
+      type: 'AUTHENTICATE',
+      payload: {
+        email: authState.email,
+        password: authState.password,
+        isSignUp: authState.isSignUp
+      }
+    });
+    
+    console.log('🦊 Auth response received:', response);
+    
+    if (response && response.error) {
+      console.error('🦊 Auth failed:', response.error);
+      authState.error = response.error.message || 'Authentication failed';
+      authState.isLoading = false;
+      render();
+      return;
+    }
+    
+    if (!response || !response.data) {
+      console.error('🦊 Invalid response:', response);
+      authState.error = 'Invalid response from server';
+      authState.isLoading = false;
+      render();
+      return;
+    }
+    
+    console.log('🦊 Auth successful!');
+    // Success - update state
+    appState.isAuthenticated = true;
+    appState.userEmail = authState.email;
+    appState.showAuth = false;
+    
+    // Reset auth state
+    authState = {
+      email: '',
+      password: '',
+      isSignUp: false,
+      isLoading: false,
+      error: null
+    };
+    
+    // Load folders and usage after successful authentication
+    await Promise.all([loadFolders(), loadUsage()]);
+    
+    render();
+    
+  } catch (error) {
+    console.error('🦊 Auth error:', error);
+    authState.error = 'Authentication failed. Please try again.';
+    authState.isLoading = false;
+    render();
+  }
+}
+
+async function signOut() {
+  try {
+    // Use background script for sign out
+    await extensionAPI.runtime.sendMessage({
+      type: 'SIGN_OUT'
+    });
+    
+    appState.isAuthenticated = false;
+    appState.userEmail = null;
+    appState.showAuth = false;
+    
+    render();
+  } catch (error) {
+    console.error('Sign out failed:', error);
+    // Force local cleanup even if remote signout fails
+    await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
+    appState.isAuthenticated = false;
+    appState.userEmail = null;
+    render();
+  }
+}
+
+// Helper function to update auth button state
+function updateAuthButtonState() {
+  const authSubmit = document.getElementById('auth-submit');
+  if (authSubmit) {
+    const canSubmit = !authState.isLoading && authState.email && authState.password;
+    authSubmit.disabled = !canSubmit;
+    authSubmit.style.opacity = canSubmit ? '1' : '0.6';
+  }
+}
+
+// Render functions
+function renderAuthScreen() {
+  return `
+    <div style="${styles.container}">
+      <div style="${styles.header}">
+        <div style="${styles.logoSection}">
+          ${createLogo(32)}
+          <h1 style="${styles.brandName}">PageStash</h1>
+        </div>
+        <button id="close-auth" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">×</button>
+      </div>
+      <div style="padding: 24px 20px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; overflow-y: auto; overflow-x: hidden;">
+        <div style="text-align: center; margin-bottom: 4px; width: 100%;">
+          <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 600; color: #1e293b;">${authState.isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
+          <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">${authState.isSignUp ? 'Start capturing and organizing web content' : 'Sign in to access your library'}</p>
+        </div>
+        <form id="auth-form" action="#" method="post" style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%;">
+          <label for="email-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Email</label>
+          <input 
+            id="email-input" 
+            name="email"
+            type="email" 
+            placeholder="Email address" 
+            value="${authState.email}" 
+            autocomplete="${authState.isSignUp ? 'email' : 'username'}"
+            required
+            style="${styles.input}; margin: 0;">
+          <label for="password-input" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;">Password</label>
+          <input 
+            id="password-input" 
+            name="password"
+            type="password" 
+            placeholder="Password" 
+            value="${authState.password}" 
+            autocomplete="${authState.isSignUp ? 'new-password' : 'current-password'}"
+            required
+            style="${styles.input}; margin: 0;">
+          ${authState.error ? `<div style="text-align: center; padding: 12px; background-color: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 13px;">${authState.error}</div>` : ''}
+          <button id="auth-submit" type="submit" ${authState.isLoading || !authState.email || !authState.password ? 'disabled' : ''} style="${styles.button}; ${styles.primaryButton}; max-width: 100%; margin-top: 4px; opacity: ${!authState.isLoading && authState.email && authState.password ? '1' : '0.5'}; cursor: ${!authState.isLoading && authState.email && authState.password ? 'pointer' : 'not-allowed'};">
+            ${authState.isLoading ? '⏳ Processing...' : (authState.isSignUp ? '✨ Create Account' : '🔓 Sign In')}
+        </button>
+        </form>
+        <div style="width: 100%; text-align: center; padding-top: 8px; border-top: 1px solid #f1f5f9;">
+          <button id="auth-toggle" style="background: none; border: none; color: #3b82f6; font-size: 14px; font-weight: 500; cursor: pointer; padding: 8px; text-decoration: none;">
+            ${authState.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+        </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMainScreen() {
+  return `
+    <div style="${styles.container}">
+      <div style="${styles.header}">
+        <div style="${styles.logoSection}">
+          ${createLogo(40)}
+          <h1 style="${styles.brandName}">PageStash</h1>
+          ${appState.isAuthenticated ? `<div style="${getUsageBadgeStyle()}">${getUsageBadgeText()}</div>` : ''}
+        </div>
+      </div>
+      <div style="${styles.content}">
+        ${appState.currentTab ? `
+          <div style="${styles.tabInfo}">
+            ${appState.currentTab.favIconUrl ? `<img src="${appState.currentTab.favIconUrl}" alt="Site icon" style="width: 16px; height: 16px; border-radius: 2px; margin-bottom: 4px;">` : ''}
+            <div style="text-align: center; width: 100%;">
+              <div style="font-weight: 500; font-size: 13px; text-align: center; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${appState.currentTab.title || 'Untitled'}</div>
+              <div style="font-size: 11px; color: #6b7280; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${appState.currentTab.url}</div>
+            </div>
+          </div>
+        ` : ''}
+        
+        ${appState.captureProgress ? `
+          <div style="${styles.card}; background-color: ${appState.captureProgress.status === 'error' ? '#fef2f2' : appState.captureProgress.status === 'complete' ? '#f0fdf4' : '#f0f9ff'}; border: ${appState.captureProgress.status === 'error' ? '1px solid #fecaca' : appState.captureProgress.status === 'complete' ? '1px solid #bbf7d0' : '1px solid #bfdbfe'};">
+            <div style="margin-bottom: 12px; font-weight: 600; color: ${appState.captureProgress.status === 'error' ? '#dc2626' : appState.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb'};">
+              ${appState.captureProgress.status === 'complete' ? '✅ Capture Complete!' : appState.captureProgress.status === 'error' ? '❌ Capture Failed' : '📸 Capturing...'}
+            </div>
+            ${appState.captureProgress.status !== 'error' ? `
+              <div style="width: 100%; height: 4px; background-color: #e5e7eb; border-radius: 2px; overflow: hidden; margin-bottom: 8px;">
+                <div style="height: 100%; background-color: ${appState.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb'}; border-radius: 2px; transition: width 0.3s ease; width: ${appState.captureProgress.status === 'complete' ? '100%' : appState.captureProgress.status === 'capturing' ? '75%' : '25%'};"></div>
+              </div>
+            ` : ''}
+            <div style="font-size: 13px; color: ${appState.captureProgress.status === 'error' ? '#dc2626' : '#6b7280'}; margin-top: 8px;">${appState.captureProgress.message}</div>
+          </div>
+        ` : ''}
+        
+        ${/* Folder Selector - Always visible when authenticated and folders available */ ''}
+        ${appState.isAuthenticated && appState.folders && appState.folders.length > 0 && !appState.isCapturing ? `
+          <div style="width: 100%; max-width: 320px; margin-bottom: 12px;">
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 6px;">Save to folder:</label>
+            ${appState.loadingFolders ? `
+              <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 13px;">Loading folders...</div>
+            ` : `
+              <select id="folder-select" style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; background-color: #ffffff; color: #1f2937; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 4 5&quot;><path fill=&quot;%23666&quot; d=&quot;M2 0L0 2h4zm0 5L0 3h4z&quot;/></svg>'); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; padding-right: 40px;">
+                ${appState.folders.map(folder => `
+                  <option value="${folder.id}" ${folder.id === appState.selectedFolderId ? 'selected' : ''}>
+                    ${folder.name}${folder.is_default ? ' (Default)' : ''}
+                  </option>
+                `).join('')}
+              </select>
+            `}
+          </div>
+        ` : ''}
+        
+        ${/* Capture Buttons */ ''}
+        ${!appState.isCapturing && !appState.captureProgress ? (
+          appState.warningLevel === 'exceeded' ? `
+            <div style="padding: 16px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; text-align: center; margin-bottom: 12px;">
+              <div style="font-size: 14px; font-weight: 500; color: #dc2626; margin-bottom: 8px;">
+                Monthly limit reached
+              </div>
+              <div style="font-size: 12px; color: #7f1d1d; margin-bottom: 12px;">
+                You've used all ${appState.clipsLimit} clips this month. Upgrade to Pro for unlimited clips!
+              </div>
+              <button id="upgrade-pro" style="${styles.button}; ${styles.primaryButton}; background-color: #dc2626;">🚀 Upgrade to Pro</button>
+            </div>
+          ` : `
+            <button id="capture-full" style="${styles.button}; ${styles.primaryButton};">📄 Capture Full Page</button>
+            <button id="capture-visible" style="${styles.button}; ${styles.secondaryButton};">📱 Capture Visible Area</button>
+          `
+        ) : ''}
+        
+        ${appState.isAuthenticated ? `
+          <div style="${styles.card}">
+            <div style="margin-bottom: 12px;">
+              <div style="font-weight: 500; margin-bottom: 4px;">👋 Welcome back!</div>
+              <div style="font-size: 12px; color: #6b7280;">${appState.userEmail}</div>
+            </div>
+            <button id="open-webapp" style="${styles.button}; ${styles.primaryButton};">🌐 Open Web App</button>
+            <button id="sign-out" style="${styles.button}; ${styles.secondaryButton};">Sign Out</button>
+          </div>
+        ` : `
+          <div style="${styles.card}">
+            <div style="margin-bottom: 12px;">
+              <div style="font-weight: 500; margin-bottom: 4px;">🔒 Sign in for cloud sync</div>
+              <div style="font-size: 12px; color: #6b7280;">Access your clips anywhere and never lose them</div>
+            </div>
+            <button id="show-auth" style="${styles.button}; ${styles.secondaryButton};">Sign In / Sign Up</button>
+          </div>
+        `}
+        
+        <div style="text-align: center; margin-top: auto; padding-top: 16px; padding-bottom: 16px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b;">
+          <div style="font-weight: 500; margin-bottom: 4px; color: #64748b;">PageStash v1.1.0</div>
+          <div style="font-size: 11px; color: #94a3b8;">Capture • Organize • Retrieve</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderLoadingScreen() {
+  return `
+    <div style="${styles.container}">
+      <div style="${styles.content}; justify-content: center; align-items: center; height: 100%;">
+        <div style="text-align: center;">
+          ${createLogo(48)}
+          <p style="margin-top: 16px; color: #64748b; font-size: 14px;">Loading...</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  const container = document.getElementById('popup-root');
+  if (!container) {
+    console.error('popup-root not found');
+    return;
+  }
+  
+  // Show loading screen while checking auth
+  if (appState.isCheckingAuth) {
+    container.innerHTML = renderLoadingScreen();
+    return;
+  }
+  
+  container.innerHTML = appState.showAuth ? renderAuthScreen() : renderMainScreen();
+  
+  // Add event listeners
+  if (appState.showAuth) {
+    const closeAuth = document.getElementById('close-auth');
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const authForm = document.getElementById('auth-form');
+    const authToggle = document.getElementById('auth-toggle');
+    
+    if (closeAuth) closeAuth.addEventListener('click', () => {
+      appState.showAuth = false;
+      render();
+    });
+    
+    if (emailInput) emailInput.addEventListener('input', (e) => {
+      authState.email = e.target.value;
+      updateAuthButtonState();
+    });
+    
+    if (passwordInput) passwordInput.addEventListener('input', (e) => {
+      authState.password = e.target.value;
+      updateAuthButtonState();
+    });
+    
+    if (authForm) authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleAuth();
+    });
+    
+    if (authToggle) authToggle.addEventListener('click', () => {
+      authState.isSignUp = !authState.isSignUp;
+      authState.error = null;
+      render();
+    });
+    
+  } else {
+    const captureFullBtn = document.getElementById('capture-full');
+    const captureVisibleBtn = document.getElementById('capture-visible');
+    const showAuthBtn = document.getElementById('show-auth');
+    const signOutBtn = document.getElementById('sign-out');
+    const openWebappBtn = document.getElementById('open-webapp');
+    const folderSelect = document.getElementById('folder-select');
+    const upgradeProBtn = document.getElementById('upgrade-pro');
+    
+    if (captureFullBtn) captureFullBtn.addEventListener('click', () => capturePage('fullPage'));
+    if (captureVisibleBtn) captureVisibleBtn.addEventListener('click', () => capturePage('visible'));
+    if (showAuthBtn) showAuthBtn.addEventListener('click', () => {
+      appState.showAuth = true;
+      render();
+    });
+    if (signOutBtn) signOutBtn.addEventListener('click', signOut);
+    if (openWebappBtn) openWebappBtn.addEventListener('click', () => {
+      extensionAPI.tabs.create({ url: 'https://pagestash.app/dashboard' });
+    });
+    if (upgradeProBtn) upgradeProBtn.addEventListener('click', () => {
+      extensionAPI.tabs.create({ url: 'https://pagestash.app/pricing' });
+    });
+    if (folderSelect) folderSelect.addEventListener('change', (e) => {
+      handleFolderChange(e.target.value);
+    });
+  }
+}
+
+// Initialize
+async function init() {
+  console.log('🦊 Initializing Firefox popup');
+  
+  await checkAuthStatus();
+  await getCurrentTab();
+  
+  // Listen for messages
+    extensionAPI.runtime.onMessage.addListener((message) => {
+    if (message.type === 'CAPTURE_PROGRESS') {
+      appState.captureProgress = {
+        status: message.payload.status,
+        message: message.payload.message
+      };
+      
+      // Update usage data if provided in the response
+      if (message.payload.status === 'complete' && message.payload.usage) {
+        appState.clipsRemaining = message.payload.usage.clips_remaining;
+        appState.clipsLimit = message.payload.usage.clips_limit;
+        appState.subscriptionTier = message.payload.usage.subscription_tier;
+        appState.warningLevel = message.payload.usage.warning_level;
+        console.log('🦊 Updated usage after capture:', {
+          remaining: appState.clipsRemaining,
+          limit: appState.clipsLimit,
+          warning: appState.warningLevel
+        });
+      }
+      
+      render();
+      
+      if (message.payload.status === 'complete') {
+        setTimeout(() => {
+          appState.captureProgress = null;
+          appState.isCapturing = false;
+          render();
+        }, 2000);
+      }
+    }
+  });
+  
+  render();
+  console.log('🦊 Firefox popup initialized');
+}
+
+// Start the app
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

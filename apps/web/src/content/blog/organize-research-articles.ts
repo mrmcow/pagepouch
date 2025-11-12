@@ -264,7 +264,7 @@ Find all "qualitative-research" articles
 
 **Ready to organize your research?**
 
-[Try PageStash free](/auth/signup) and implement this system today—50 clips included to get started.
+[Try PageStash free](/auth/signup) and implement this system today—10 clips per month included to get started.
 
 ---
 

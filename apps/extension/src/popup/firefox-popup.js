@@ -20,8 +20,8 @@ let appState = {
   selectedFolderId: null,
   loadingFolders: false,
   // Usage tracking
-  clipsRemaining: 50, // Default for free tier
-  clipsLimit: 50,
+  clipsRemaining: 10, // Default for free tier
+  clipsLimit: 10,
   subscriptionTier: 'free',
   warningLevel: 'safe',
   usageLoading: false
