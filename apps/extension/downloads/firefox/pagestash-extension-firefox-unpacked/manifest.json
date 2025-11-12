@@ -8,7 +8,10 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "pagestash@pagestash.app",
-      "strict_min_version": "91.0"
+      "strict_min_version": "91.0",
+      "data_collection_permissions": {
+        "required": ["webBrowsing", "technicalAndInteraction"]
+      }
     }
   },
   "permissions": [
