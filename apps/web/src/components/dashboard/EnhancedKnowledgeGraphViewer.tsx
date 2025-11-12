@@ -696,10 +696,20 @@ export function EnhancedKnowledgeGraphViewer({
   useEffect(() => {
     if (isOpen) {
       // Filter clips by the graph's selected folders
-      const filteredClips = graphFolderIds.length > 0 
+      let filteredClips = graphFolderIds.length > 0 
         ? clips.filter(clip => graphFolderIds.includes(clip.folder_id))
         : clips
       
+      // Fallback: if no clips match the folder filter, use all clips
+      // This prevents empty graphs when folder IDs are misconfigured
+      if (filteredClips.length === 0 && clips.length > 0) {
+        console.log('[Graph] No clips match folder filter, using all clips', {
+          graphFolderIds,
+          totalClips: clips.length,
+          clipFolderIds: clips.map(c => c.folder_id)
+        })
+        filteredClips = clips
+      }
       
       const enhanced = convertToEnhancedGraphData(filteredClips, folders, uiState.activeFilters.connections.viewMode)
       
