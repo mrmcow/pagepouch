@@ -86,7 +86,12 @@ function createElement(tag, attributes = {}, children = []) {
   
   children.forEach(child => {
     if (typeof child === 'string') {
-      element.innerHTML += child;
+      // Use DOMParser for safe HTML parsing instead of innerHTML
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(child, 'text/html');
+      Array.from(doc.body.childNodes).forEach(node => {
+        element.appendChild(node.cloneNode(true));
+      });
     } else {
       element.appendChild(child);
     }
@@ -623,11 +628,24 @@ function render() {
   
   // Show loading screen while checking auth
   if (appState.isCheckingAuth) {
-    container.innerHTML = renderLoadingScreen();
+    // Use safer DOM parsing instead of innerHTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(renderLoadingScreen(), 'text/html');
+    container.textContent = ''; // Clear container
+    Array.from(doc.body.childNodes).forEach(node => {
+      container.appendChild(node.cloneNode(true));
+    });
     return;
   }
   
-  container.innerHTML = appState.showAuth ? renderAuthScreen() : renderMainScreen();
+  // Use safer DOM parsing instead of innerHTML
+  const parser = new DOMParser();
+  const htmlContent = appState.showAuth ? renderAuthScreen() : renderMainScreen();
+  const doc = parser.parseFromString(htmlContent, 'text/html');
+  container.textContent = ''; // Clear container
+  Array.from(doc.body.childNodes).forEach(node => {
+    container.appendChild(node.cloneNode(true));
+  });
   
   // Add event listeners
   if (appState.showAuth) {
