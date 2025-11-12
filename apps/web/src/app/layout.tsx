@@ -81,7 +81,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: 'your-google-verification-code', // Add this from Google Search Console
+    google: 'BM_hzkXetg6H2NBYAoaM0mMoskxuVDp2zmMxlGMj2ec',
   },
   alternates: {
     canonical: 'https://www.pagestash.app',
