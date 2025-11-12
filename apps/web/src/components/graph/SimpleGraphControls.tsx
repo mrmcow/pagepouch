@@ -110,9 +110,9 @@ export function SimpleGraphControls({
             <span className="text-sm font-medium text-slate-700 whitespace-nowrap">View:</span>
             <Select value={viewMode} onValueChange={onViewModeChange}>
               <SelectTrigger className="w-[220px] h-10">
-                <div className="flex items-center gap-2.5">
-                  <selectedViewMode.icon className="h-4 w-4 flex-shrink-0" />
-                  <SelectValue className="text-sm" />
+                <div className="flex items-center gap-2.5 w-full">
+                  <selectedViewMode.icon className="h-4 w-4 flex-shrink-0 text-slate-600" />
+                  <span className="text-sm font-medium truncate">{selectedViewMode.label}</span>
                 </div>
               </SelectTrigger>
               <SelectContent className="w-[280px]">
