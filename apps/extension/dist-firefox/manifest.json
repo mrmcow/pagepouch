@@ -10,9 +10,7 @@
       "id": "pagestash@pagestash.app",
       "strict_min_version": "91.0",
       "data_collection_permissions": {
-        "web_accessible": true,
-        "remote": true,
-        "required": true
+        "required": []
       }
     }
   },
