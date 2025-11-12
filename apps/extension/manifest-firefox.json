@@ -11,7 +11,8 @@
       "strict_min_version": "78.0",
       "data_collection_permissions": {
         "web_accessible": true,
-        "remote": true
+        "remote": true,
+        "required": true
       }
     }
   },
@@ -57,5 +58,5 @@
   "web_accessible_resources": [
     "icons/*"
   ],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  "content_security_policy": "script-src 'self'; object-src 'self'"
 }

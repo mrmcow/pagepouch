@@ -11,7 +11,8 @@
       "strict_min_version": "91.0",
       "data_collection_permissions": {
         "web_accessible": true,
-        "remote": true
+        "remote": true,
+        "required": true
       }
     }
   },
@@ -23,9 +24,7 @@
     "http://*/*"
   ],
   "background": {
-    "scripts": [
-      "background.js"
-    ],
+    "scripts": ["background.js"],
     "persistent": false
   },
   "browser_action": {
@@ -46,17 +45,11 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
       "run_at": "document_end"
     }
   ],
-  "web_accessible_resources": [
-    "icons/*"
-  ],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  "web_accessible_resources": ["icons/*"],
+  "content_security_policy": "script-src 'self'; object-src 'self'"
 }
