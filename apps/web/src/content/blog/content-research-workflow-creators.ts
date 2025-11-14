@@ -893,11 +893,11 @@ Project: "Content Research System" (published)
 
 | Tool | Best For | Cost |
 |------|----------|------|
-| **Feedly** | RSS feed aggregation | Free / $6/mo |
+| **Feedly** | RSS feed aggregation | Free / \$6/mo |
 | **Twitter Lists** | Curated thought leaders | Free |
 | **Reddit** | Audience questions | Free |
 | **Google Alerts** | Topic monitoring | Free |
-| **AnswerThePublic** | Question research | Free / $99/mo |
+| **AnswerThePublic** | Question research | Free / \$99/mo |
 
 ---
 
@@ -906,7 +906,7 @@ Project: "Content Research System" (published)
 | Tool | Best For | Cost |
 |------|----------|------|
 | **Google Trends** | Search interest over time | Free |
-| **BuzzSumo** | Content performance | $99+/mo |
+| **BuzzSumo** | Content performance | \$99+/mo |
 | **Reddit Search** | Discussion volume | Free |
 | **Twitter Search** | Real-time interest | Free |
 
@@ -916,9 +916,9 @@ Project: "Content Research System" (published)
 
 | Tool | Best For | Cost |
 |------|----------|------|
-| **PageStash** | Full research archival | Free / $12/mo |
-| **Notion** | Content planning | Free / $10/mo |
-| **Airtable** | Content calendar | Free / $20/mo |
+| **PageStash** | Full research archival | Free / \$12/mo |
+| **Notion** | Content planning | Free / \$10/mo |
+| **Airtable** | Content calendar | Free / \$20/mo |
 | **Obsidian** | Note-taking | Free |
 
 **For content creators:** You need research archival + organization. Web clipper (like PageStash) captures full pages with content, examples, and data. Searchable when writing. Notion/Airtable for planning.

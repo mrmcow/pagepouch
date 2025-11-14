@@ -716,13 +716,13 @@ World Health Organization. (2024, March 15). *Global health statistics*. https:/
 |------|----------|----------------|-------------|-----------------|------|
 | **Mendeley** | Papers only | ⭐⭐⭐⭐⭐ | ⭐☆☆☆☆ | ⭐⭐⭐⭐⭐ | Free |
 | **Zotero** | Papers + basic web | ⭐⭐⭐⭐⭐ | ⭐⭐☆☆☆ | ⭐⭐⭐⭐⭐ | Free |
-| **PageStash** | Web sources | ⭐☆☆☆☆ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐☆☆ | $12/mo |
-| **Evernote** | General notes | ⭐☆☆☆☆ | ⭐⭐⭐☆☆ | ⭐☆☆☆☆ | $15/mo |
-| **Notion** | General research | ⭐☆☆☆☆ | ⭐⭐☆☆☆ | ⭐☆☆☆☆ | $10/mo |
+| **PageStash** | Web sources | ⭐☆☆☆☆ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐☆☆ | \$12/mo |
+| **Evernote** | General notes | ⭐☆☆☆☆ | ⭐⭐⭐☆☆ | ⭐☆☆☆☆ | \$15/mo |
+| **Notion** | General research | ⭐☆☆☆☆ | ⭐⭐☆☆☆ | ⭐☆☆☆☆ | \$10/mo |
 
 **Recommended dual setup:**
 - **Mendeley/Zotero** for papers (free, citation management)
-- **PageStash** for web sources ($12/mo, archival + organization)
+- **PageStash** for web sources (\$12/mo, archival + organization)
 
 ---
 
@@ -841,7 +841,7 @@ A: Depends. If they have DOI (most do now), use Mendeley. If you're monitoring m
 
 **Q: Is it worth paying for a tool?**
 
-A: For PhD/dissertation: Yes. You'll spend 100+ hours on lit review. A $12/month tool that saves 20 hours pays for itself. For coursework lit review: Free tier probably sufficient.
+A: For PhD/dissertation: Yes. You'll spend 100+ hours on lit review. A \$12/month tool that saves 20 hours pays for itself. For coursework lit review: Free tier probably sufficient.
 
 **Q: Can I share my lit review sources with advisor/committee?**
 

@@ -895,10 +895,10 @@ Supporting sources: [Links to 3 archived sources]
 
 | Tool | Best For | Graph View | Obsidian Integration | Cost |
 |------|----------|------------|---------------------|------|
-| **PageStash** | Modern PKM | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐☆ | $12/mo |
-| **DEVONthink** | Apple ecosystem | ⭐⭐⭐☆☆ | ⭐⭐☆☆☆ | $99-199 |
+| **PageStash** | Modern PKM | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐☆ | \$12/mo |
+| **DEVONthink** | Apple ecosystem | ⭐⭐⭐☆☆ | ⭐⭐☆☆☆ | \$99-199 |
 | **Zotero** | Academic focus | ⭐☆☆☆☆ | ⭐⭐⭐☆☆ | Free |
-| **Raindrop** | Visual bookmarks | ⭐⭐☆☆☆ | ⭐☆☆☆☆ | Free/$3/mo |
+| **Raindrop** | Visual bookmarks | ⭐⭐☆☆☆ | ⭐☆☆☆☆ | Free/\$3/mo |
 | **Browser Bookmarks** | Basic needs | ☆☆☆☆☆ | ☆☆☆☆☆ | Free |
 
 **For most PKM users:** PageStash + your note-taking app = complete system
