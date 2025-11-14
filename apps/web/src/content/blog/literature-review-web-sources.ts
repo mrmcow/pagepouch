@@ -161,7 +161,7 @@ This guide shows you how academic researchers systematically manage web sources 
 
 **Folder Structure for Literature Reviews:**
 
-\\`\\`\\`
+\`\`\`
 LiteratureReview/
 ├── Background/
 │   ├── TheoreticalFramework/
@@ -185,7 +185,7 @@ LiteratureReview/
     ├── TheoreticalGaps/
     ├── MethodologicalGaps/
     └── EmpiricalGaps/
-\\`\\`\\`
+\`\`\`
 
 **This mirrors your dissertation structure.** Makes writing easier.
 
@@ -334,7 +334,7 @@ LiteratureReview/
 - Exclude: Clearly irrelevant  
 - Maybe: Review full content
 
-**Tag accordingly:** \\`included\\`, \\`excluded\\`, \\`maybe\\`
+**Tag accordingly:** \`included\`, \`excluded\`, \`maybe\`
 
 **Stage 2: Full content review (2-5 min per source)**
 - Read full document
