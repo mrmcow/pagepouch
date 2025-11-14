@@ -180,7 +180,7 @@ This guide shows you the exact research system top content creators use—how th
 
 **Simple folder structure:**
 
-```
+\`\`\`
 ContentIdeas/
 ├── ToValidate/           (New captures here)
 ├── Validated/             (Proven demand)
@@ -190,7 +190,7 @@ ContentIdeas/
     ├── CompetitorAnalysis/
     ├── IndustryTrends/
     └── AudienceFeedback/
-```
+\`\`\`
 
 **Tags to add:**
 - `hot-topic` (trending now)
@@ -374,7 +374,7 @@ ContentIdeas/
 
 **Create comparison notes:**
 
-```
+\`\`\`
 Topic: "How to grow Twitter following"
 
 Competitor A:
@@ -393,7 +393,7 @@ Competitor B:
 
 MY ANGLE: Long-term authentic growth
 MY ADVANTAGE: Data from 50+ creators, anti-gaming positioning
-```
+\`\`\`
 
 **This isn't copying. It's strategic positioning.**
 
@@ -431,13 +431,13 @@ MY ADVANTAGE: Data from 50+ creators, anti-gaming positioning
 
 **Organization:**
 
-```
+\`\`\`
 Project: [Content Title]
 ├── Data (statistics, studies)
 ├── Examples (case studies, screenshots)
 ├── Expert-Quotes (authorities, interviews)
 └── Resources (tools, templates, related content)
-```
+\`\`\`
 
 **When writing, all sources are one search away.**
 
@@ -467,7 +467,7 @@ Project: [Content Title]
 
 **Example outline:**
 
-```
+\`\`\`
 Title: "How to Actually Grow Your Twitter Following in 2025"
 
 Intro:
@@ -500,7 +500,7 @@ Conclusion:
 - Recap framework
 - First 3 actions to take today
 - CTA: Download growth tracker template
-```
+\`\`\`
 
 **Your outline IS your research organized.** Writing is now just connecting the dots.
 
@@ -561,7 +561,7 @@ Conclusion:
 
 **Document insights:**
 
-```
+\`\`\`
 Month: November 2025
 
 Top Performers:
@@ -574,7 +574,7 @@ Why they worked:
 - Both had real examples
 
 Lesson: Audience wants systems, not tips
-```
+\`\`\`
 
 **This informs next month's topics.**
 
@@ -699,7 +699,7 @@ Lesson: Audience wants systems, not tips
 
 **Document patterns:**
 
-```
+\`\`\`
 Pattern in top 10 "productivity" posts:
 - Average length: 2,500 words
 - All have specific frameworks (not abstract advice)
@@ -713,7 +713,7 @@ Application to my content:
 - Always include framework/system
 - Create downloadable for each piece
 - Lead with personal experience
-```
+\`\`\`
 
 **You're not copying. You're understanding what your audience rewards.**
 
@@ -729,7 +729,7 @@ Application to my content:
 3. List all topics YOUR AUDIENCE has asked about
 4. Find the intersection:
 
-```
+\`\`\`
 Audience wants:
 - Topic A
 - Topic B
@@ -745,7 +745,7 @@ GAPS (your opportunity):
 - Topic B (no one covering)
 - Topic D (no one covering)
 - Topic E (no one covering)
-```
+\`\`\`
 
 **These gaps are your competitive advantage.**
 
@@ -812,13 +812,13 @@ GAPS (your opportunity):
 
 **Your research stays in system:**
 
-```
+\`\`\`
 Project: "Content Research System" (published)
 ├── Research (keep for future)
 ├── Examples (reusable)
 ├── Data (cite in other pieces)
 └── Related-Ideas (spin-off content)
-```
+\`\`\`
 
 **Tag published content:** `can-repurpose`, `has-data`, `has-examples`
 

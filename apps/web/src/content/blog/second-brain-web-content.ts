@@ -186,7 +186,7 @@ Your note-taking app wasn't built for web content. This guide shows you how to p
 
 **1. By Project/Area (Folders)**
 
-```
+\`\`\`
 SecondBrain/
 ├── ActiveProjects/
 │   ├── WebsiteRedesign/
@@ -202,7 +202,7 @@ SecondBrain/
 │   └── ToolsDocumentation/
 └── Archive/
     └── CompletedProjects/
-```
+\`\`\`
 
 **This mirrors PARA method** (Projects, Areas, Resources, Archive)
 
@@ -328,7 +328,7 @@ SecondBrain/
 
 **In your Obsidian note:**
 
-```markdown
+\`\`\`markdown
 # CSS Grid Layouts
 
 ## Key Concepts
@@ -343,7 +343,7 @@ SecondBrain/
 
 ## My Notes
 The fr unit is particularly useful for...
-```
+\`\`\`
 
 **Your notes reference the full sources.** One click brings up the complete archived page.
 
@@ -360,7 +360,7 @@ The fr unit is particularly useful for...
 
 **Example Obsidian note:**
 
-```markdown
+\`\`\`markdown
 # Progressive Enhancement Pattern
 Source: [[Web Archive - Smashing Magazine Article]]
 
@@ -370,7 +370,7 @@ Source: [[Web Archive - Smashing Magazine Article]]
 This connects to [[Accessibility]] and [[Performance]]
 
 My application: Use this for [[Project - Website Redesign]]
-```
+\`\`\`
 
 **Best of both worlds:** Snippets in Obsidian (searchable, linkable), full source one click away.
 
@@ -486,7 +486,7 @@ My application: Use this for [[Project - Website Redesign]]
 
 **Main MOC (Map of Content):**
 
-```markdown
+\`\`\`markdown
 # JavaScript Learning Path
 
 ## Fundamentals
@@ -500,7 +500,7 @@ My application: Use this for [[Project - Website Redesign]]
 Beginner: [link to PageStash folder]
 Intermediate: [link to PageStash folder]
 Advanced: [link to PageStash folder]
-```
+\`\`\`
 
 **Workflow:**
 1. Capture tutorials/docs as you find them
@@ -538,7 +538,7 @@ Advanced: [link to PageStash folder]
 
 **Decision note:**
 
-```markdown
+\`\`\`markdown
 # Feature X: Implementation Decision
 
 ## Options Researched
@@ -554,7 +554,7 @@ Reasoning: ...
 
 ## Implementation
 Links to relevant technical docs archived
-```
+\`\`\`
 
 **All sources are one click away in your decision documentation.**
 
@@ -589,7 +589,7 @@ Links to relevant technical docs archived
 
 **Example outline:**
 
-```markdown
+\`\`\`markdown
 # Article Outline
 
 ## Introduction
@@ -602,7 +602,7 @@ Supporting sources: [Links to 3 archived sources]
 
 ## Section 2
 ...
-```
+\`\`\`
 
 **As you write, sources are right there.** No hunting through bookmarks.
 
@@ -715,7 +715,7 @@ Supporting sources: [Links to 3 archived sources]
 
 **Example hub note:**
 
-```markdown
+\`\`\`markdown
 # Async Programming MOC
 
 ## Core Concepts
@@ -736,7 +736,7 @@ Supporting sources: [Links to 3 archived sources]
 ## Questions to Explore
 - How to handle race conditions?
 - When to use async vs observables?
-```
+\`\`\`
 
 **This hub note:**
 - Organizes web sources thematically

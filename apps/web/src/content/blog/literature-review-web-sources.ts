@@ -161,7 +161,7 @@ This guide shows you how academic researchers systematically manage web sources 
 
 **Folder Structure for Literature Reviews:**
 
-```
+\`\`\`
 LiteratureReview/
 ├── Background/
 │   ├── TheoreticalFramework/
@@ -185,7 +185,7 @@ LiteratureReview/
     ├── TheoreticalGaps/
     ├── MethodologicalGaps/
     └── EmpiricalGaps/
-```
+\`\`\`
 
 **This mirrors your dissertation structure.** Makes writing easier.
 
