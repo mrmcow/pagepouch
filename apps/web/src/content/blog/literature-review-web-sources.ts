@@ -162,29 +162,29 @@ This guide shows you how academic researchers systematically manage web sources 
 **Folder Structure for Literature Reviews:**
 
 ```
-Literature-Review/
+LiteratureReview/
 ├── Background/
-│   ├── Theoretical-Framework/
-│   ├── Historical-Context/
-│   └── Key-Definitions/
+│   ├── TheoreticalFramework/
+│   ├── HistoricalContext/
+│   └── KeyDefinitions/
 ├── Methods/
-│   ├── Quantitative-Approaches/
-│   ├── Qualitative-Approaches/
-│   └── Mixed-Methods/
-├── RQ1-[Your first research question]/
-│   ├── Supporting-Evidence/
-│   ├── Contradictory-Evidence/
+│   ├── QuantitativeApproaches/
+│   ├── QualitativeApproaches/
+│   └── MixedMethods/
+├── RQ1_YourFirstResearchQuestion/
+│   ├── SupportingEvidence/
+│   ├── ContradictoryEvidence/
 │   └── Gaps/
-├── RQ2-[Your second research question]/
+├── RQ2_YourSecondResearchQuestion/
 │   └── ... (same structure)
 ├── Methodology/
-│   ├── Data-Collection/
-│   ├── Analysis-Techniques/
-│   └── Tools-Software/
-└── Gap-Analysis/
-    ├── Theoretical-Gaps/
-    ├── Methodological-Gaps/
-    └── Empirical-Gaps/
+│   ├── DataCollection/
+│   ├── AnalysisTechniques/
+│   └── ToolsSoftware/
+└── GapAnalysis/
+    ├── TheoreticalGaps/
+    ├── MethodologicalGaps/
+    └── EmpiricalGaps/
 ```
 
 **This mirrors your dissertation structure.** Makes writing easier.

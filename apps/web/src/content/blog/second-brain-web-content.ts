@@ -187,21 +187,21 @@ Your note-taking app wasn't built for web content. This guide shows you how to p
 **1. By Project/Area (Folders)**
 
 ```
-Second-Brain/
-├── Active-Projects/
-│   ├── Website-Redesign/
-│   ├── Book-Writing/
-│   └── Course-Development/
-├── Areas-of-Responsibility/
-│   ├── Career-Dev/
-│   ├── Health-Research/
-│   └── Financial-Planning/
+SecondBrain/
+├── ActiveProjects/
+│   ├── WebsiteRedesign/
+│   ├── BookWriting/
+│   └── CourseDevelopment/
+├── AreasOfResponsibility/
+│   ├── CareerDev/
+│   ├── HealthResearch/
+│   └── FinancialPlanning/
 ├── Resources/
-│   ├── Design-Inspiration/
-│   ├── Writing-Techniques/
-│   └── Tools-Documentation/
+│   ├── DesignInspiration/
+│   ├── WritingTechniques/
+│   └── ToolsDocumentation/
 └── Archive/
-    └── Completed-Projects/
+    └── CompletedProjects/
 ```
 
 **This mirrors PARA method** (Projects, Areas, Resources, Archive)

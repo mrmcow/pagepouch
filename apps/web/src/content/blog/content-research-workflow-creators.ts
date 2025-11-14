@@ -181,15 +181,15 @@ This guide shows you the exact research system top content creators use—how th
 **Simple folder structure:**
 
 ```
-Content-Ideas/
-├── To-Validate/           (New captures here)
+ContentIdeas/
+├── ToValidate/           (New captures here)
 ├── Validated/             (Proven demand)
-├── In-Progress/           (Currently creating)
+├── InProgress/           (Currently creating)
 ├── Published/             (Done, with performance data)
 └── Reference/
-    ├── Competitor-Analysis/
-    ├── Industry-Trends/
-    └── Audience-Feedback/
+    ├── CompetitorAnalysis/
+    ├── IndustryTrends/
+    └── AudienceFeedback/
 ```
 
 **Tags to add:**
