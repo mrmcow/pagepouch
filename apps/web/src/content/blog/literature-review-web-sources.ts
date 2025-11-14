@@ -161,7 +161,7 @@ This guide shows you how academic researchers systematically manage web sources 
 
 **Folder Structure for Literature Reviews:**
 
-\`\`\`
+\\`\\`\\`
 LiteratureReview/
 ├── Background/
 │   ├── TheoreticalFramework/
@@ -185,7 +185,7 @@ LiteratureReview/
     ├── TheoreticalGaps/
     ├── MethodologicalGaps/
     └── EmpiricalGaps/
-\`\`\`
+\\`\\`\\`
 
 **This mirrors your dissertation structure.** Makes writing easier.
 
@@ -334,7 +334,7 @@ LiteratureReview/
 - Exclude: Clearly irrelevant  
 - Maybe: Review full content
 
-**Tag accordingly:** `included`, `excluded`, `maybe`
+**Tag accordingly:** \\`included\\`, \\`excluded\\`, \\`maybe\\`
 
 **Stage 2: Full content review (2-5 min per source)**
 - Read full document
@@ -367,12 +367,12 @@ LiteratureReview/
 
 **1. Verify claims**
 - "Did I see this statistic somewhere?"
-- Search: `"47% of respondents"`
+- Search: \`"47% of respondents"\`
 - Finds source instantly
 
 **2. Find supporting evidence**
 - "I need examples of X implementation"
-- Search: `implementation AND case study`
+- Search: \`implementation AND case study\`
 - Returns all relevant sources
 
 **3. Cross-check contradictions**
@@ -382,7 +382,7 @@ LiteratureReview/
 
 **4. Build evidence chains**
 - "What sources discuss both concept A AND concept B?"
-- Search: `"concept A" AND "concept B"`
+- Search: \`"concept A" AND "concept B"\`
 - Reveals connections
 
 **This is impossible with browser bookmarks.**
@@ -396,16 +396,16 @@ LiteratureReview/
 **Examples:**
 
 **"Key government policy sources"**
-- `tag:government-report AND tag:key-reference`
+- \`tag:government-report AND tag:key-reference\`
 
 **"Methodology sources to re-read"**
-- `folder:Methods AND tag:to-reread`
+- \`folder:Methods AND tag:to-reread\`
 
 **"Sources I haven't reviewed yet"**
-- `tag:to-read AND captured:last-month`
+- \`tag:to-read AND captured:last-month\`
 
 **"All WHO publications"**
-- `domain:who.int`
+- \`domain:who.int\`
 
 **Run these weekly** to see what needs attention.
 
@@ -815,7 +815,7 @@ World Health Organization. (2024, March 15). *Global health statistics*. https:/
 
 **Workflow:**
 
-1. Write draft with placeholder citations: `[NEED: WHO stat on malaria]`
+1. Write draft with placeholder citations: \`[NEED: WHO stat on malaria]\`
 2. Search PageStash for exact source
 3. Replace placeholder with proper citation
 4. Export source metadata

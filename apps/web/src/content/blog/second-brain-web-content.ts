@@ -186,7 +186,7 @@ Your note-taking app wasn't built for web content. This guide shows you how to p
 
 **1. By Project/Area (Folders)**
 
-\`\`\`
+\\`\\`\\`
 SecondBrain/
 ├── ActiveProjects/
 │   ├── WebsiteRedesign/
@@ -202,7 +202,7 @@ SecondBrain/
 │   └── ToolsDocumentation/
 └── Archive/
     └── CompletedProjects/
-\`\`\`
+\\`\\`\\`
 
 **This mirrors PARA method** (Projects, Areas, Resources, Archive)
 
@@ -249,9 +249,9 @@ SecondBrain/
 
 **Web source:** CSS Grid tutorial  
 **Links to notes:**
-- `[[Web Development MOC]]`
-- `[[CSS Techniques]]`  
-- `[[Layout Systems]]`
+- \`[[Web Development MOC]]\`
+- \`[[CSS Techniques]]\`  
+- \`[[Layout Systems]]\`
 
 **Now your CSS notes link to the tutorial.** When you need it, it's one click away.
 
@@ -328,7 +328,7 @@ SecondBrain/
 
 **In your Obsidian note:**
 
-\`\`\`markdown
+\\`\\`\\`markdown
 # CSS Grid Layouts
 
 ## Key Concepts
@@ -343,7 +343,7 @@ SecondBrain/
 
 ## My Notes
 The fr unit is particularly useful for...
-\`\`\`
+\\`\\`\\`
 
 **Your notes reference the full sources.** One click brings up the complete archived page.
 
@@ -360,7 +360,7 @@ The fr unit is particularly useful for...
 
 **Example Obsidian note:**
 
-\`\`\`markdown
+\\`\\`\\`markdown
 # Progressive Enhancement Pattern
 Source: [[Web Archive - Smashing Magazine Article]]
 
@@ -370,7 +370,7 @@ Source: [[Web Archive - Smashing Magazine Article]]
 This connects to [[Accessibility]] and [[Performance]]
 
 My application: Use this for [[Project - Website Redesign]]
-\`\`\`
+\\`\\`\\`
 
 **Best of both worlds:** Snippets in Obsidian (searchable, linkable), full source one click away.
 
@@ -413,7 +413,7 @@ My application: Use this for [[Project - Website Redesign]]
 - Archive (interesting but not actionable)
 - Delete (no longer relevant)
 
-**Tag status:** `to-process` → `processed`
+**Tag status:** \`to-process\` → \`processed\`
 
 ---
 
@@ -429,7 +429,7 @@ My application: Use this for [[Project - Website Redesign]]
 3. **Update metadata:**
    - Add project/area
    - Tag content type
-   - Status → `processed`
+   - Status → \`processed\`
 
 ---
 
@@ -475,18 +475,18 @@ My application: Use this for [[Project - Website Redesign]]
 
 **Organization:**
 
-**Folder:** `Learning/JavaScript`
+**Folder:** \`Learning/JavaScript\`
 
 **Tags:**
-- `tutorial`, `documentation`, `example`, `concept`
-- `beginner`, `intermediate`, `advanced`
-- `async`, `dom`, `functions`, etc (by topic)
+- \`tutorial\`, \`documentation\`, \`example\`, \`concept\`
+- \`beginner\`, \`intermediate\`, \`advanced\`
+- \`async\`, \`dom\`, \`functions\`, etc (by topic)
 
 **Integration with Obsidian:**
 
 **Main MOC (Map of Content):**
 
-\`\`\`markdown
+\\`\\`\\`markdown
 # JavaScript Learning Path
 
 ## Fundamentals
@@ -500,7 +500,7 @@ My application: Use this for [[Project - Website Redesign]]
 Beginner: [link to PageStash folder]
 Intermediate: [link to PageStash folder]
 Advanced: [link to PageStash folder]
-\`\`\`
+\\`\\`\\`
 
 **Workflow:**
 1. Capture tutorials/docs as you find them
@@ -524,11 +524,11 @@ Advanced: [link to PageStash folder]
 
 **Organization:**
 
-**Folder:** `Projects/Feature-X-Research`
+**Folder:** \`Projects/Feature-X-Research\`
 
 **Tags:**
-- `competitor`, `design`, `technical`, `user-research`
-- `inspiration`, `how-to`, `case-study`
+- \`competitor\`, \`design\`, \`technical\`, \`user-research\`
+- \`inspiration\`, \`how-to\`, \`case-study\`
 
 **Weekly review:**
 - Look for patterns across competitors
@@ -538,7 +538,7 @@ Advanced: [link to PageStash folder]
 
 **Decision note:**
 
-\`\`\`markdown
+\\`\\`\\`markdown
 # Feature X: Implementation Decision
 
 ## Options Researched
@@ -554,7 +554,7 @@ Reasoning: ...
 
 ## Implementation
 Links to relevant technical docs archived
-\`\`\`
+\\`\\`\\`
 
 **All sources are one click away in your decision documentation.**
 
@@ -574,11 +574,11 @@ Links to relevant technical docs archived
 
 **Organization:**
 
-**Folder:** `Projects/Article-Title/Research`
+**Folder:** \`Projects/Article-Title/Research\`
 
 **Tags:**
-- `cite`, `inspiration`, `data`, `counter-argument`
-- `intro`, `section-1`, `section-2`, etc (by section)
+- \`cite\`, \`inspiration\`, \`data\`, \`counter-argument\`
+- \`intro\`, \`section-1\`, \`section-2\`, etc (by section)
 
 **Writing workflow:**
 
@@ -589,7 +589,7 @@ Links to relevant technical docs archived
 
 **Example outline:**
 
-\`\`\`markdown
+\\`\\`\\`markdown
 # Article Outline
 
 ## Introduction
@@ -602,7 +602,7 @@ Supporting sources: [Links to 3 archived sources]
 
 ## Section 2
 ...
-\`\`\`
+\\`\\`\\`
 
 **As you write, sources are right there.** No hunting through bookmarks.
 
@@ -695,9 +695,9 @@ Supporting sources: [Links to 3 archived sources]
 - Environment design
 
 **Evergreen notes created:**
-- `[[Implementation Intentions]]`
-- `[[Habit Stacking]]`
-- `[[Environment Design for Habits]]`
+- \`[[Implementation Intentions]]\`
+- \`[[Habit Stacking]]\`
+- \`[[Environment Design for Habits]]\`
 
 **Each note:**
 - Explains concept in your words
@@ -715,7 +715,7 @@ Supporting sources: [Links to 3 archived sources]
 
 **Example hub note:**
 
-\`\`\`markdown
+\\`\\`\\`markdown
 # Async Programming MOC
 
 ## Core Concepts
@@ -736,7 +736,7 @@ Supporting sources: [Links to 3 archived sources]
 ## Questions to Explore
 - How to handle race conditions?
 - When to use async vs observables?
-\`\`\`
+\\`\\`\\`
 
 **This hub note:**
 - Organizes web sources thematically
