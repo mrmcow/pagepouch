@@ -57,7 +57,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen relative bg-white dark:bg-slate-950 overflow-hidden">
+      {/* Background Effects - Same as Homepage Hero */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="absolute -top-32 -right-32 w-[520px] h-[520px] bg-gradient-to-br from-blue-500/30 via-cyan-500/20 to-transparent blur-[160px]" />
+        <div className="absolute bottom-[-200px] -left-24 w-[480px] h-[480px] bg-gradient-to-tr from-indigo-500/20 via-blue-500/10 to-transparent blur-[150px]" />
+      </div>
+
       {/* Back to Home - Fixed Top Left */}
       <div className="fixed top-6 left-6 z-50">
         <Link 
@@ -69,7 +76,7 @@ export default function LoginPage() {
         </Link>
       </div>
 
-      <div className="min-h-screen flex items-center justify-center p-4 pt-20">
+      <div className="min-h-screen flex items-center justify-center p-4 pt-20 relative z-10">
         <div className="w-full max-w-md space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
