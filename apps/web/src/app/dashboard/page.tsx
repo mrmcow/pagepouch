@@ -32,7 +32,10 @@ import {
   RefreshCw,
   Brain,
   Sparkles,
-  FileText
+  FileText,
+  FileDown,
+  CheckSquare,
+  Square
 } from 'lucide-react'
 import { 
   DropdownMenu,
@@ -63,6 +66,8 @@ import { KnowledgeGraphUpgradeModal } from '@/components/dashboard/KnowledgeGrap
 import { KnowledgeGraphsView } from '@/components/dashboard/KnowledgeGraphsView'
 import { CachedImage, useImageCache } from '@/components/ui/cached-image'
 import { DownloadModal } from '@/components/ui/download-modal'
+import { ExportModal } from '@/components/dashboard/ExportModal'
+import { ExportUpgradeModal } from '@/components/dashboard/ExportUpgradeModal'
 
 interface DashboardState {
   clips: Clip[]
@@ -99,6 +104,11 @@ interface DashboardState {
   clipsThisMonth: number
   clipsLimit: number
   isSubscriptionLoading: boolean
+  // Export & selection state
+  isSelectionMode: boolean
+  selectedClipIds: Set<string>
+  isExportModalOpen: boolean
+  isExportUpgradeModalOpen: boolean
 }
 
 function DashboardContent() {
@@ -139,6 +149,11 @@ function DashboardContent() {
     clipsThisMonth: 0,
     clipsLimit: 10,
     isSubscriptionLoading: true,
+    // Export & selection state
+    isSelectionMode: false,
+    selectedClipIds: new Set(),
+    isExportModalOpen: false,
+    isExportUpgradeModalOpen: false,
   })
   
   const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -552,6 +567,50 @@ function DashboardContent() {
     setState(prev => ({ ...prev, searchQuery: query }))
   }
 
+  // Export & Selection handlers
+  const handleToggleClipSelection = (clipId: string) => {
+    setState(prev => {
+      const newSelected = new Set(prev.selectedClipIds)
+      if (newSelected.has(clipId)) {
+        newSelected.delete(clipId)
+      } else {
+        newSelected.add(clipId)
+      }
+      return { ...prev, selectedClipIds: newSelected }
+    })
+  }
+
+  const handleSelectAll = () => {
+    const allVisibleClipIds = sortedClips.map(clip => clip.id)
+    setState(prev => ({
+      ...prev,
+      selectedClipIds: new Set(allVisibleClipIds)
+    }))
+  }
+
+  const handleClearSelection = () => {
+    setState(prev => ({
+      ...prev,
+      selectedClipIds: new Set()
+    }))
+  }
+
+  const handleCancelSelectionMode = () => {
+    setState(prev => ({
+      ...prev,
+      isSelectionMode: false,
+      selectedClipIds: new Set()
+    }))
+  }
+
+  const handleOpenExportModal = () => {
+    if (state.selectedClipIds.size === 0) {
+      alert('Please select at least one clip to export')
+      return
+    }
+    setState(prev => ({ ...prev, isExportModalOpen: true }))
+  }
+
   const loadClipTagsForFilter = async (tagId: string) => {
     try {
       // Only load if we don't have the data yet
@@ -879,9 +938,16 @@ function DashboardContent() {
   // Don't hide the entire UI while loading - show skeleton instead
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/80">
+    <div className="min-h-screen bg-white dark:bg-slate-950 relative overflow-hidden">
+      {/* Background Effects - Full Width - Same as Homepage Hero */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="absolute -top-32 -right-32 w-[520px] h-[520px] bg-gradient-to-br from-blue-500/30 via-cyan-500/20 to-transparent blur-[160px]" />
+        <div className="absolute bottom-[-200px] -left-24 w-[480px] h-[480px] bg-gradient-to-tr from-indigo-500/20 via-blue-500/10 to-transparent blur-[150px]" />
+      </div>
+
       {/* Header */}
-      <header className="border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm supports-[backdrop-filter]:bg-white/70">
+      <header className="border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm supports-[backdrop-filter]:bg-white/70 relative z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo and Navigation */}
@@ -947,7 +1013,8 @@ function DashboardContent() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 h-[calc(100vh-80px)]">
+      {/* Dashboard Container */}
+      <div className="container mx-auto px-4 py-6 h-[calc(100vh-80px)] relative z-10">
         <div className="flex flex-col lg:flex-row gap-6 h-full">
           {/* Sidebar */}
           <aside className="w-full lg:w-64 space-y-6">
@@ -976,42 +1043,57 @@ function DashboardContent() {
                   <Globe className="mr-2 h-4 w-4" />
                   Clip URL
                 </Button>
+                
+                {/* Export Clips - Pro Feature */}
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full justify-start"
-                  onClick={() => setState(prev => ({ ...prev, isCreateFolderModalOpen: true }))}
+                  className="w-full justify-start relative"
+                  onClick={() => {
+                    if (state.subscriptionTier === 'pro') {
+                      // Enable selection mode for Pro users
+                      setState(prev => ({ 
+                        ...prev, 
+                        isSelectionMode: true,
+                        selectedClipIds: new Set()
+                      }))
+                    } else {
+                      // Show upgrade modal for free users
+                      setState(prev => ({ ...prev, isExportUpgradeModalOpen: true }))
+                    }
+                  }}
                 >
-                  <FolderPlus className="mr-2 h-4 w-4" />
-                  New Folder
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export Clips
+                  {state.subscriptionTier !== 'pro' && (
+                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
+                      PRO
+                    </Badge>
+                  )}
                 </Button>
                 
                 {/* Page Graphs - Pro Feature */}
-                {!state.isSubscriptionLoading && state.subscriptionTier === 'pro' && (
                   <Button 
                     variant="outline"
                     size="sm"
-                    className={`w-full justify-start border transition-all duration-200 group ${
-                      state.viewFilter === 'knowledge-graphs' 
-                        ? 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white hover:text-white border-purple-500 shadow-md' 
-                        : 'border-purple-200 text-purple-600 hover:text-purple-700 bg-white hover:bg-purple-50'
-                    }`}
-                    onClick={() => setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))}
+                  className="w-full justify-start relative"
+                  onClick={() => {
+                    if (state.subscriptionTier === 'pro') {
+                      setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))
+                    } else {
+                      // Show upgrade modal for free users
+                      setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: true }))
+                    }
+                  }}
                   >
                     <Brain className="mr-2 h-4 w-4" />
-                    <span className="flex-1 text-left">Page Graphs</span>
-                    <Badge 
-                      variant="secondary" 
-                      className={`text-xs font-semibold transition-all ${
-                        state.viewFilter === 'knowledge-graphs' 
-                          ? 'bg-white/20 text-white border-white/30' 
-                          : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0'
-                      }`}
-                    >
+                  Page Graphs
+                  {state.subscriptionTier !== 'pro' && (
+                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0">
                       PRO
                     </Badge>
-                  </Button>
                 )}
+                </Button>
               </CardContent>
             </Card>
 
@@ -1093,6 +1175,17 @@ function DashboardContent() {
                     </Button>
                   )
                 })}
+                
+                {/* Add New Folder Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start border-dashed border-2 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50 text-slate-600 hover:text-blue-700 transition-all mt-2"
+                  onClick={() => setState(prev => ({ ...prev, isCreateFolderModalOpen: true }))}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Folder
+                </Button>
               </CardContent>
             </Card>
 
@@ -1310,6 +1403,58 @@ function DashboardContent() {
             </div>
             )}
 
+            {/* Selection Mode Floating Action Bar */}
+            {state.isSelectionMode && (
+              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-blue-500 px-6 py-4 flex items-center space-x-4">
+                  <div className="flex items-center space-x-2 text-sm font-medium">
+                    <CheckSquare className="h-5 w-5 text-blue-600" />
+                    <span className="text-slate-900 dark:text-white">
+                      {state.selectedClipIds.size} selected
+                    </span>
+                  </div>
+                  
+                  {state.selectedClipIds.size < sortedClips.length && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                    >
+                      Select All ({sortedClips.length})
+                    </Button>
+                  )}
+                  
+                  {state.selectedClipIds.size > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearSelection}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                  
+                  <Button
+                    size="sm"
+                    onClick={handleOpenExportModal}
+                    disabled={state.selectedClipIds.size === 0}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Export {state.selectedClipIds.size > 0 ? `(${state.selectedClipIds.size})` : ''}
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCancelSelectionMode}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+              </div>
+            </div>
+            )}
+
             {/* Content Area - Clips or Page Graphs */}
             {state.viewFilter === 'knowledge-graphs' ? (
               <KnowledgeGraphsView 
@@ -1381,11 +1526,20 @@ function DashboardContent() {
                         clip={clip} 
                         viewMode={state.viewMode}
                         folders={state.folders}
-                        onClick={() => handleClipClick(clip)}
+                        onClick={() => {
+                          if (state.isSelectionMode) {
+                            handleToggleClipSelection(clip.id)
+                          } else {
+                            handleClipClick(clip)
+                          }
+                        }}
                         onUpdate={handleClipUpdate}
                         onDelete={handleClipDelete}
                         onToggleFavorite={handleToggleFavorite}
                         priority={index < 20} // Prioritize first 20 images in current view (filtered or unfiltered)
+                        isSelectionMode={state.isSelectionMode}
+                        isSelected={state.selectedClipIds.has(clip.id)}
+                        onToggleSelection={() => handleToggleClipSelection(clip.id)}
                       />
                     ))}
                     
@@ -1511,6 +1665,24 @@ function DashboardContent() {
         onClose={() => setState(prev => ({ ...prev, isDownloadModalOpen: false }))}
         selectedBrowser={detectedBrowser}
       />
+
+      {/* Export Clips Modal */}
+      <ExportModal
+        clips={sortedClips.filter(clip => state.selectedClipIds.has(clip.id))}
+        folders={state.folders}
+        isOpen={state.isExportModalOpen}
+        onClose={() => {
+          setState(prev => ({ ...prev, isExportModalOpen: false }))
+          // Optionally exit selection mode after export
+          // setState(prev => ({ ...prev, isExportModalOpen: false, isSelectionMode: false, selectedClipIds: new Set() }))
+        }}
+      />
+
+      {/* Export Upgrade Modal (for free users) */}
+      <ExportUpgradeModal
+        isOpen={state.isExportUpgradeModalOpen}
+        onClose={() => setState(prev => ({ ...prev, isExportUpgradeModalOpen: false }))}
+      />
     </div>
   )
 }
@@ -1524,9 +1696,12 @@ interface ClipCardProps {
   onDelete: (clipId: string) => Promise<void>
   onToggleFavorite: (clipId: string, isFavorite: boolean) => Promise<void>
   priority?: boolean
+  isSelectionMode?: boolean
+  isSelected?: boolean
+  onToggleSelection?: () => void
 }
 
-function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onToggleFavorite, priority = false }: ClipCardProps) {
+function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onToggleFavorite, priority = false, isSelectionMode = false, isSelected = false, onToggleSelection }: ClipCardProps) {
   const folder = folders.find(f => f.id === clip.folder_id)
   
   const handleDelete = async (e: React.MouseEvent) => {
@@ -1552,11 +1727,28 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
   if (viewMode === 'list') {
     return (
       <Card className={`p-3 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 cursor-pointer shadow-md backdrop-blur-md ${
-        clip.is_favorite 
+        isSelectionMode && isSelected 
+          ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-50/60 to-blue-50/40' 
+          : clip.is_favorite 
           ? 'border-l-4 border-l-yellow-400 bg-gradient-to-r from-yellow-50/40 to-white/60 border-t border-r border-b border-white/20' 
           : 'border border-white/20 bg-gradient-to-r from-white/80 to-white/60'
       }`} onClick={onClick}>
         <div className="flex items-center space-x-3">
+          {isSelectionMode && (
+            <div 
+              className="flex-shrink-0"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleSelection?.()
+              }}
+            >
+              {isSelected ? (
+                <CheckSquare className="h-5 w-5 text-blue-600" />
+              ) : (
+                <Square className="h-5 w-5 text-slate-400" />
+              )}
+            </div>
+          )}
           {clip.screenshot_url && (
             <div className="relative overflow-hidden rounded-md">
               <CachedImage
@@ -1654,7 +1846,11 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-xl hover:shadow-black/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer border border-white/20 shadow-lg bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md" onClick={onClick}>
+    <Card className={`overflow-hidden hover:shadow-xl hover:shadow-black/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer shadow-lg bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md ${
+      isSelectionMode && isSelected 
+        ? 'border-4 border-blue-500 ring-2 ring-blue-200' 
+        : 'border border-white/20'
+    }`} onClick={onClick}>
       {clip.screenshot_url ? (
         <div className="aspect-[4/3] bg-muted/30 relative overflow-hidden">
           <CachedImage
@@ -1668,6 +1864,23 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
             priority={priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          
+          {/* Selection checkbox overlay */}
+          {isSelectionMode && (
+            <div 
+              className="absolute top-2 right-2 bg-white rounded-lg shadow-lg p-1.5"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleSelection?.()
+              }}
+            >
+              {isSelected ? (
+                <CheckSquare className="h-6 w-6 text-blue-600" />
+              ) : (
+                <Square className="h-6 w-6 text-slate-400" />
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div className="aspect-[4/3] bg-gradient-to-br from-blue-50/50 to-purple-50/50 relative overflow-hidden border-b border-white/30">
