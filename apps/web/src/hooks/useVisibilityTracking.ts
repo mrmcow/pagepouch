@@ -11,12 +11,12 @@ interface VisibilityTrackingOptions {
   minTimeInView?: number // Minimum time in view before tracking (ms)
 }
 
-export function useVisibilityTracking({
+export function useVisibilityTracking<T extends HTMLElement = HTMLElement>({
   sectionName,
   threshold = 0.5, // 50% of section must be visible
   minTimeInView = 2000, // 2 seconds minimum
 }: VisibilityTrackingOptions) {
-  const sectionRef = useRef<HTMLElement>(null)
+  const sectionRef = useRef<T>(null)
   const timeInViewRef = useRef<number>(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const hasTrackedRef = useRef(false)
