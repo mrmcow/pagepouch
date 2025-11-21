@@ -341,7 +341,7 @@ export default function HomePage() {
       <section 
         ref={heroRef}
         data-section="hero"
-        className="relative pt-24 sm:pt-40 lg:pt-48 pb-24 sm:pb-32 bg-white dark:bg-slate-950 overflow-hidden px-4 sm:px-6"
+        className="relative pt-20 sm:pt-32 lg:pt-32 pb-20 sm:pb-28 bg-white dark:bg-slate-950 overflow-hidden px-4 sm:px-6"
       >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
@@ -369,7 +369,7 @@ export default function HomePage() {
             </h1>
             
               <h2 className="text-xl sm:text-2xl text-slate-600 dark:text-slate-400 font-medium mt-4 sm:mt-6">
-                Professional web clipping and archival tool for researchers
+                Web clipping and archival tool for researchers
               </h2>
             
               <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-light">

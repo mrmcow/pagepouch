@@ -64,14 +64,14 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
                 key={browser.id}
                 onClick={() => setSelectedBrowser(browser.id)}
                 className={`
-                  relative flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ease-out
+                  group relative flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ease-out
                   ${isSelected 
                     ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10' 
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-900/50 hover:shadow-sm'
                   }
                 `}
               >
-                <IconComponent size={18} className={isSelected ? 'opacity-100' : 'opacity-70 grayscale'} />
+                <IconComponent size={18} className={`transition-all duration-300 ${isSelected ? 'opacity-100' : 'opacity-70 grayscale group-hover:opacity-100 group-hover:grayscale-0'}`} />
                 <span>{browser.name}</span>
               </button>
             )
