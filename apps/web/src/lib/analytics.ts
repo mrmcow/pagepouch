@@ -432,7 +432,7 @@ export const trackFormAbandoned = (params: {
 }) => {
   gtag.event('form_abandoned', {
     ...params,
-    fields_count: fields_filled.length,
+    fields_count: params.fields_filled.length,
     event_category: 'form_interaction',
   })
 }
