@@ -58,6 +58,21 @@ export function useAnalytics() {
     trackFeatureFirstUse: analytics.trackFeatureFirstUse,
     trackBlogPostViewed: analytics.trackBlogPostViewed,
     
+    // Homepage Conversion Tracking
+    trackScrollDepth: analytics.trackScrollDepth,
+    trackSectionViewed: analytics.trackSectionViewed,
+    trackCTAClick: analytics.trackCTAClick,
+    trackSectionEngagement: analytics.trackSectionEngagement,
+    trackElementHover: analytics.trackElementHover,
+    trackExitIntent: analytics.trackExitIntent,
+    trackButtonClick: analytics.trackButtonClick,
+    
+    // Form Tracking
+    trackFormFieldFocused: analytics.trackFormFieldFocused,
+    trackFormFieldFilled: analytics.trackFormFieldFilled,
+    trackFormFieldError: analytics.trackFormFieldError,
+    trackFormAbandoned: analytics.trackFormAbandoned,
+    
     // Errors
     trackError: analytics.trackError,
     

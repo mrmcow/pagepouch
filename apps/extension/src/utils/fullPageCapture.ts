@@ -73,17 +73,16 @@ export class FullPageCapture {
       console.log('🔧 Chrome: Using full grid capture');
 
       // Check if we need horizontal scrolling
-      // Firefox often underreports scrollWidth, so be more aggressive about detecting wide pages
-      const needsHorizontalScroll = pageInfo.scrollWidth > pageInfo.viewportWidth;
-      const forceHorizontalScroll = pageInfo.scrollWidth >= pageInfo.viewportWidth * 1.1; // Force if 10% wider
-      const finalNeedsHorizontalScroll = needsHorizontalScroll || forceHorizontalScroll;
+      // Only do horizontal capture if page is SIGNIFICANTLY wider (50%+ wider)
+      // Most responsive sites (like Reddit) don't need horizontal capture
+      const needsHorizontalScroll = pageInfo.scrollWidth >= pageInfo.viewportWidth * 1.5;
+      const finalNeedsHorizontalScroll = needsHorizontalScroll;
       
       console.log('🔧 Horizontal scroll analysis:', {
         scrollWidth: pageInfo.scrollWidth,
         viewportWidth: pageInfo.viewportWidth,
         ratio: pageInfo.scrollWidth / pageInfo.viewportWidth,
         needsHorizontalScroll,
-        forceHorizontalScroll,
         finalNeedsHorizontalScroll
       });
       
@@ -165,22 +164,37 @@ export class FullPageCapture {
 
       // Stitch screenshots together
       console.log('Starting image stitching...');
-      const actualWidth = Math.max(pageInfo.viewportWidth, pageInfo.scrollWidth);
-      const actualHeight = Math.min(pageInfo.scrollHeight, opts.maxHeight);
+      
+      // Calculate actual canvas dimensions based on how we'll stitch
+      const overlap = Math.floor(pageInfo.viewportHeight * 0.1);
+      const horizontalOverlap = Math.floor(pageInfo.viewportWidth * 0.1);
+      
+      // Calculate final stitched dimensions
+      const stitchedWidth = horizontalPositions.length === 1 
+        ? pageInfo.viewportWidth 
+        : pageInfo.viewportWidth + ((horizontalPositions.length - 1) * (pageInfo.viewportWidth - horizontalOverlap));
+      
+      const stitchedHeight = verticalPositions.length === 1
+        ? pageInfo.viewportHeight
+        : pageInfo.viewportHeight + ((verticalPositions.length - 1) * (pageInfo.viewportHeight - overlap));
       
       console.log('Stitching parameters:', {
         screenshotCount: screenshots.length,
-        actualWidth,
-        actualHeight,
+        stitchedWidth,
+        stitchedHeight,
         viewportWidth: pageInfo.viewportWidth,
         viewportHeight: pageInfo.viewportHeight,
+        verticalSections: verticalPositions.length,
+        horizontalSections: horizontalPositions.length,
+        overlap,
+        horizontalOverlap,
         screenshotPositions: screenshots.map(s => ({ x: s.x, y: s.y }))
       });
       
       const stitchedImage = await this.stitchGridScreenshots(
         screenshots,
-        actualWidth,
-        actualHeight,
+        stitchedWidth,
+        stitchedHeight,
         pageInfo.viewportWidth,
         pageInfo.viewportHeight
       );
@@ -248,8 +262,8 @@ export class FullPageCapture {
 
       return {
         dataUrl: finalImage,
-        width: actualWidth,
-        height: Math.min(pageInfo.scrollHeight, opts.maxHeight),
+        width: stitchedWidth,
+        height: stitchedHeight,
         scrollHeight: pageInfo.scrollHeight,
         captureTime: Date.now() - startTime,
       };
@@ -768,7 +782,6 @@ export class FullPageCapture {
     // If content is wider than viewport, calculate overlapping positions
     if (scrollWidth > viewportWidth) {
       // Calculate how much we need to scroll to capture remaining width
-      // We want overlap, not gaps!
       const overlap = Math.floor(viewportWidth * 0.1); // 10% overlap
       const step = viewportWidth - overlap;
       
@@ -780,10 +793,13 @@ export class FullPageCapture {
         }
       }
       
-      // CRITICAL FIX: Always capture the rightmost edge!
-      // This ensures we don't cut off the right side of the page
+      // Add the rightmost position ONLY if it's further right than our last position
       const rightmostPosition = Math.max(0, scrollWidth - viewportWidth);
-      if (!positions.includes(rightmostPosition) && rightmostPosition > 0) {
+      const lastPosition = positions[positions.length - 1];
+      
+      // Only add rightmost if it's significantly different from the last position
+      // and it's actually to the right of where we are
+      if (rightmostPosition > lastPosition && (rightmostPosition - lastPosition) > (viewportWidth * 0.2)) {
         positions.push(rightmostPosition);
       }
     }
@@ -915,8 +931,31 @@ export class FullPageCapture {
         viewportHeight
       });
       
+      // Detect device pixel ratio from first screenshot
+      const firstResponse = await fetch(screenshots[0].dataUrl);
+      const firstBlob = await firstResponse.blob();
+      const firstImage = await createImageBitmap(firstBlob);
+      
+      const actualWidth = firstImage.width;
+      const actualHeight = firstImage.height;
+      const devicePixelRatio = actualWidth / viewportWidth;
+      
+      console.log('🔧 Device pixel ratio detected:', {
+        logicalViewport: `${viewportWidth}x${viewportHeight}`,
+        actualScreenshot: `${actualWidth}x${actualHeight}`,
+        devicePixelRatio
+      });
+      
+      firstImage.close();
+      
+      // Scale all dimensions by device pixel ratio
+      const scaledTotalWidth = Math.round(totalWidth * devicePixelRatio);
+      const scaledTotalHeight = Math.round(totalHeight * devicePixelRatio);
+      const scaledViewportWidth = Math.round(viewportWidth * devicePixelRatio);
+      const scaledViewportHeight = Math.round(viewportHeight * devicePixelRatio);
+      
       // Use OffscreenCanvas for service worker compatibility
-      const canvas = new OffscreenCanvas(totalWidth, totalHeight);
+      const canvas = new OffscreenCanvas(scaledTotalWidth, scaledTotalHeight);
       const ctx = canvas.getContext('2d');
       
       if (!ctx) {
@@ -929,15 +968,18 @@ export class FullPageCapture {
         return a.x - b.x;
       });
 
-      // Calculate overlap amounts
-      const verticalOverlap = Math.floor(viewportHeight * 0.1);
-      const horizontalOverlap = Math.floor(viewportWidth * 0.1);
+      // Calculate overlap amounts (10% of viewport, scaled by DPR)
+      const verticalOverlap = Math.floor(scaledViewportHeight * 0.1);
+      const horizontalOverlap = Math.floor(scaledViewportWidth * 0.1);
       
-      console.log('🔧 Stitching with standard overlaps:', {
+      console.log('🔧 Stitching with overlaps (scaled for DPR):', {
         verticalOverlap,
         horizontalOverlap,
-        viewportWidth,
-        viewportHeight
+        scaledViewportWidth,
+        scaledViewportHeight,
+        scaledTotalWidth,
+        scaledTotalHeight,
+        devicePixelRatio
       });
 
       // Group screenshots by rows
@@ -952,6 +994,8 @@ export class FullPageCapture {
       // Process each row
       const sortedRowKeys = Array.from(rows.keys()).sort((a, b) => a - b);
       
+      let currentCanvasY = 0;
+      
       for (let rowIndex = 0; rowIndex < sortedRowKeys.length; rowIndex++) {
         const rowY = sortedRowKeys[rowIndex];
         const rowScreenshots = rows.get(rowY)!;
@@ -959,60 +1003,67 @@ export class FullPageCapture {
         // Sort screenshots in this row by x position
         rowScreenshots.sort((a, b) => a.x - b.x);
         
+        let currentCanvasX = 0;
+        let rowHeight = 0;
+        
         for (let colIndex = 0; colIndex < rowScreenshots.length; colIndex++) {
           const screenshot = rowScreenshots[colIndex];
+          
+          console.log(`🔧 Processing screenshot at scroll position (${screenshot.x}, ${screenshot.y}), row ${rowIndex}, col ${colIndex}`);
           
           // Convert data URL to ImageBitmap
           const response = await fetch(screenshot.dataUrl);
           const blob = await response.blob();
           const imageBitmap = await createImageBitmap(blob);
           
-          // CRITICAL FIX: Use the screenshot's ACTUAL scroll position as the canvas position
-          // This properly handles irregular grids (like rightmost edge captures)
-          const canvasX = screenshot.x;
-          const canvasY = screenshot.y;
-          
-          // Calculate overlaps based on previous screenshots
+          // Calculate source rectangle (what to copy from the screenshot)
           let sourceX = 0;
           let sourceY = 0;
           let sourceWidth = imageBitmap.width;
           let sourceHeight = imageBitmap.height;
           
-          // Handle horizontal overlap with previous column in same row
+          // For non-first columns, skip the horizontal overlap from the left
           if (colIndex > 0) {
-            const prevScreenshot = rowScreenshots[colIndex - 1];
-            const prevEndX = prevScreenshot.x + viewportWidth;
-            if (prevEndX > canvasX) {
-              // There's overlap - skip it from source
-              const overlap = prevEndX - canvasX;
-              sourceX = overlap;
-              sourceWidth -= overlap;
-            }
+            sourceX = horizontalOverlap;
+            sourceWidth -= horizontalOverlap;
           }
           
-          // Handle vertical overlap with previous row
+          // For non-first rows, skip the vertical overlap from the top
           if (rowIndex > 0) {
-            const prevRowY = sortedRowKeys[rowIndex - 1];
-            const prevEndY = prevRowY + viewportHeight;
-            if (prevEndY > canvasY) {
-              // There's overlap - skip it from source
-              const overlap = prevEndY - canvasY;
-              sourceY = overlap;
-              sourceHeight -= overlap;
-            }
+            sourceY = verticalOverlap;
+            sourceHeight -= verticalOverlap;
           }
           
-          // Draw the non-overlapping portion at the correct canvas position
+          // Calculate destination position on canvas
+          const destX = currentCanvasX;
+          const destY = currentCanvasY;
+          
+          console.log(`🔧 Drawing: source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight}) -> canvas(${destX}, ${destY}, ${sourceWidth}x${sourceHeight})`);
+          
+          // Draw the non-overlapping portion
           ctx.drawImage(
             imageBitmap,
             sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle (skip overlaps)
-            canvasX + sourceX, canvasY + sourceY, sourceWidth, sourceHeight // Destination rectangle
+            destX, destY, sourceWidth, sourceHeight // Destination rectangle
           );
+          
+          // Update canvas X position for next column
+          currentCanvasX += sourceWidth;
+          
+          // Track row height (use the full height minus overlap for first screenshot in row)
+          if (colIndex === 0) {
+            rowHeight = sourceHeight;
+          }
           
           // Clean up ImageBitmap to free memory
           imageBitmap.close();
         }
+        
+        // Update canvas Y position for next row
+        currentCanvasY += rowHeight;
       }
+
+      console.log('🔧 Grid stitching completed successfully');
 
       // Convert to blob and then to data URL
       const blob = await canvas.convertToBlob({ type: 'image/png' });

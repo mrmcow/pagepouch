@@ -10,8 +10,12 @@
       "id": "pagestash@pagestash.app",
       "strict_min_version": "91.0",
       "data_collection_permissions": {
-        "required": ["websiteContent"],
-        "optional": ["technicalAndInteraction"]
+        "required": [
+          "websiteContent"
+        ],
+        "optional": [
+          "technicalAndInteraction"
+        ]
       }
     }
   },
@@ -23,7 +27,9 @@
     "http://*/*"
   ],
   "background": {
-    "scripts": ["background.js"],
+    "scripts": [
+      "background.js"
+    ],
     "persistent": false
   },
   "browser_action": {
@@ -44,11 +50,17 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ],
-  "web_accessible_resources": ["icons/*"],
+  "web_accessible_resources": [
+    "icons/*"
+  ],
   "content_security_policy": "script-src 'self'; object-src 'self'"
 }

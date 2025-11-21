@@ -313,3 +313,140 @@ export const trackPageView = (url: string, title?: string) => {
   }
 }
 
+// ============================================================================
+// HOMEPAGE CONVERSION TRACKING
+// ============================================================================
+
+// Scroll Depth Tracking
+export const trackScrollDepth = (percentage: 25 | 50 | 75 | 100) => {
+  gtag.event(`scroll_depth_${percentage}`, {
+    scroll_percentage: percentage,
+    event_category: 'engagement',
+  })
+}
+
+// Section Visibility Tracking
+export const trackSectionViewed = (params: {
+  section_name: string
+  time_in_view: number
+  scroll_percentage_when_viewed: number
+  device_type?: string
+}) => {
+  gtag.event('section_viewed', {
+    ...params,
+    event_category: 'engagement',
+  })
+}
+
+// Enhanced CTA Click Tracking
+export const trackCTAClick = (params: {
+  cta_id: string
+  cta_text: string
+  cta_location: string
+  scroll_depth?: number
+  time_on_page?: number
+  section_visible?: string
+}) => {
+  gtag.event('cta_clicked', {
+    ...params,
+    event_category: 'conversion',
+  })
+}
+
+// Section Engagement Tracking
+export const trackSectionEngagement = (params: {
+  section_name: string
+  time_spent: number
+  interactions?: number
+}) => {
+  gtag.event('section_engagement', {
+    ...params,
+    event_category: 'engagement',
+  })
+}
+
+// Element Hover Tracking (High Intent Signals)
+export const trackElementHover = (params: {
+  element_type: 'cta_button' | 'pricing_card' | 'browser_selector' | 'link'
+  element_id: string
+  hover_duration: number
+}) => {
+  // Only track hovers over 500ms (intentional hovers)
+  if (params.hover_duration < 500) return
+  
+  gtag.event('element_hovered', {
+    ...params,
+    event_category: 'engagement',
+  })
+}
+
+// Exit Intent Tracking
+export const trackExitIntent = (params: {
+  page_section: string
+  scroll_depth: number
+  time_on_page: number
+  cta_interactions: number
+}) => {
+  gtag.event('exit_intent_detected', {
+    ...params,
+    event_category: 'engagement',
+  })
+}
+
+// Form Interaction Tracking
+export const trackFormFieldFocused = (params: {
+  form_type: 'signup' | 'login' | 'forgot_password'
+  field_name: string
+}) => {
+  gtag.event('form_field_focused', {
+    ...params,
+    event_category: 'form_interaction',
+  })
+}
+
+export const trackFormFieldFilled = (params: {
+  form_type: 'signup' | 'login' | 'forgot_password'
+  field_name: string
+}) => {
+  gtag.event('form_field_filled', {
+    ...params,
+    event_category: 'form_interaction',
+  })
+}
+
+export const trackFormFieldError = (params: {
+  form_type: 'signup' | 'login' | 'forgot_password'
+  field_name: string
+  error_message: string
+}) => {
+  gtag.event('form_field_error', {
+    ...params,
+    event_category: 'form_interaction',
+  })
+}
+
+export const trackFormAbandoned = (params: {
+  form_type: 'signup' | 'login' | 'forgot_password'
+  fields_filled: string[]
+  time_on_form: number
+}) => {
+  gtag.event('form_abandoned', {
+    ...params,
+    fields_count: fields_filled.length,
+    event_category: 'form_interaction',
+  })
+}
+
+// Button Click with Context (Generic CTA Tracker)
+export const trackButtonClick = (params: {
+  button_id: string
+  button_text: string
+  button_location: string
+  destination?: string
+}) => {
+  gtag.event('button_clicked', {
+    ...params,
+    event_category: 'interaction',
+  })
+}
+

@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { LogoWithText, LogoIcon } from '@/components/ui/logo'
 import { BrowserSelector } from '@/components/ui/browser-selector'
 import { DownloadModal } from '@/components/ui/download-modal'
+import { useScrollTracking } from '@/hooks/useScrollTracking'
+import { useVisibilityTracking } from '@/hooks/useVisibilityTracking'
+import { useExitIntentTracking, useButtonClickTracking } from '@/hooks/useCTATracking'
 import { 
   ZapIcon,
   SearchIcon, 
@@ -89,6 +92,20 @@ export default function HomePage() {
   // Initialize with Chrome as default to avoid hydration mismatch
   const [detectedBrowser, setDetectedBrowser] = useState<any>({ name: 'Chrome', icon: 'chrome' })
 
+  // Analytics Hooks
+  useScrollTracking() // Track scroll depth automatically
+  const { incrementCTAInteractions } = useExitIntentTracking() // Track exit intent
+  const trackButtonClick = useButtonClickTracking() // Track button clicks with context
+  
+  // Section visibility tracking
+  const heroRef = useVisibilityTracking({ sectionName: 'hero', threshold: 0.3 })
+  const pricingRef = useVisibilityTracking({ sectionName: 'pricing', threshold: 0.5 })
+  const howItWorksRef = useVisibilityTracking({ sectionName: 'how_it_works', threshold: 0.5 })
+  const featuresRef = useVisibilityTracking({ sectionName: 'features', threshold: 0.5 })
+  const previewPaneRef = useVisibilityTracking({ sectionName: 'preview_pane', threshold: 0.5 })
+  const finalCTARef = useVisibilityTracking({ sectionName: 'final_cta', threshold: 0.5 })
+  const faqRef = useVisibilityTracking({ sectionName: 'faq', threshold: 0.5 })
+
   // Detect browser on component mount
   React.useEffect(() => {
     const browserInfo = getBrowserInfo()
@@ -97,7 +114,7 @@ export default function HomePage() {
     setSelectedBrowser(browserInfo.name.toLowerCase() as 'chrome' | 'firefox')
   }, [])
 
-  const handleDownloadClick = (browser?: 'chrome' | 'firefox') => {
+  const handleDownloadClick = (browser?: 'chrome' | 'firefox', location: string = 'hero') => {
     if (browser) {
       setSelectedBrowser(browser)
     }
@@ -108,6 +125,14 @@ export default function HomePage() {
       source: 'homepage'
     })
     
+    // Track CTA click with context
+    trackButtonClick(
+      `extension_download_${browser || selectedBrowser}_${location}`,
+      `Add to ${browser === 'firefox' ? 'Firefox' : 'Chrome'}`,
+      location
+    )
+    
+    incrementCTAInteractions()
     setIsDownloadModalOpen(true)
   }
 
@@ -166,10 +191,27 @@ export default function HomePage() {
             <LogoWithText size={32} className="sm:hidden" />
             <LogoWithText size={40} className="hidden sm:block" />
             <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" className="font-medium hidden sm:inline-flex" asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="font-medium hidden sm:inline-flex" 
+                asChild
+                onClick={() => {
+                  trackButtonClick('header_signin', 'Sign In', 'header', '/auth/login')
+                  incrementCTAInteractions()
+                }}
+              >
                 <Link href="/auth/login">Sign In</Link>
               </Button>
-              <Button size="sm" className="font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" asChild>
+              <Button 
+                size="sm" 
+                className="font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" 
+                asChild
+                onClick={() => {
+                  trackButtonClick('header_start_free', 'Start Free', 'header', '/auth/signup')
+                  incrementCTAInteractions()
+                }}
+              >
                 <Link href="/auth/signup">
                   <span className="hidden sm:inline">Start Free</span>
                   <span className="sm:hidden">Free</span>
@@ -181,7 +223,11 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section - Clean & Direct */}
-      <section className="relative pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 lg:pb-24 bg-gradient-to-b from-white via-blue-50/30 to-blue-50/60 dark:from-slate-950 dark:via-blue-950/20 dark:to-blue-950/40">
+      <section 
+        ref={heroRef}
+        data-section="hero"
+        className="relative pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20 lg:pb-24 bg-gradient-to-b from-white via-blue-50/30 to-blue-50/60 dark:from-slate-950 dark:via-blue-950/20 dark:to-blue-950/40"
+      >
         <div className="pagestash-container">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Side - Hero Text */}
@@ -234,6 +280,10 @@ export default function HomePage() {
                 size="lg"
                     className="font-medium w-full" 
                 asChild
+                onClick={() => {
+                  trackButtonClick('hero_open_dashboard', 'Open Dashboard', 'hero_cta_box', '/auth/signup')
+                  incrementCTAInteractions()
+                }}
               >
                 <Link href="/auth/signup">
                       <RocketIcon className="mr-2 h-5 w-5" />
@@ -248,7 +298,11 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="relative py-12 sm:py-16 px-4 overflow-hidden bg-gradient-to-b from-blue-50/50 via-indigo-50/40 to-purple-50/40 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30">
+      <section 
+        ref={pricingRef}
+        data-section="pricing"
+        className="relative py-12 sm:py-16 px-4 overflow-hidden bg-gradient-to-b from-blue-50/50 via-indigo-50/40 to-purple-50/40 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30"
+      >
         {/* Floating orbs */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-3xl" />
@@ -303,7 +357,10 @@ export default function HomePage() {
               <Button 
                 className="w-full font-medium hover:!text-slate-900 dark:hover:!text-white" 
                 variant="outline"
-                onClick={handleSmartDownload}
+                onClick={() => {
+                  handleSmartDownload()
+                  trackButtonClick('pricing_free_start_trial', 'Start Free Trial', 'pricing_free_card')
+                }}
               >
                 <DownloadIcon className="mr-2 h-4 w-4" />
                 Start Free Trial
@@ -355,6 +412,10 @@ export default function HomePage() {
               <Button 
                 className="w-full font-medium bg-white/90 text-blue-600 hover:bg-white hover:scale-105 group-hover:bg-white group-hover:shadow-2xl group-hover:scale-105 transition-all duration-300 shadow-lg" 
                 asChild
+                onClick={() => {
+                  trackButtonClick('pricing_pro_upgrade', 'Upgrade to Pro', 'pricing_pro_card', '/auth/signup')
+                  incrementCTAInteractions()
+                }}
               >
                 <Link href="/auth/signup">
                   Upgrade to Pro
@@ -375,7 +436,11 @@ export default function HomePage() {
       </section>
 
       {/* How it Works - MOVED UP for better sequencing */}
-      <section className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-b from-purple-50/40 via-violet-50/30 to-blue-50/20 dark:from-purple-950/30 dark:via-violet-950/25 dark:to-blue-950/20">
+      <section 
+        ref={howItWorksRef}
+        data-section="how_it_works"
+        className="relative py-20 sm:py-24 px-4 overflow-hidden bg-gradient-to-b from-purple-50/40 via-violet-50/30 to-blue-50/20 dark:from-purple-950/30 dark:via-violet-950/25 dark:to-blue-950/20"
+      >
         {/* Floating orbs for depth */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/8 dark:bg-purple-600/8 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/8 dark:bg-indigo-600/8 rounded-full blur-3xl" />
@@ -434,7 +499,11 @@ export default function HomePage() {
       </section>
 
       {/* Features Overview with Visual Depth */}
-      <section className="py-20 sm:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-blue-50/30 via-slate-50 to-white dark:from-blue-950/30 dark:via-slate-900/50 dark:to-slate-900">
+      <section 
+        ref={featuresRef}
+        data-section="features"
+        className="py-20 sm:py-24 px-4 relative overflow-hidden bg-gradient-to-b from-blue-50/30 via-slate-50 to-white dark:from-blue-950/30 dark:via-slate-900/50 dark:to-slate-900"
+      >
         {/* Enhanced floating orbs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/15 dark:bg-indigo-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/15 dark:bg-blue-600/10 rounded-full blur-3xl" />
@@ -682,7 +751,11 @@ export default function HomePage() {
           </div>
 
           {/* Preview Pane Showcase - New Section */}
-          <div className="mt-20 max-w-6xl mx-auto">
+          <div 
+            ref={previewPaneRef}
+            data-section="preview_pane"
+            className="mt-20 max-w-6xl mx-auto"
+          >
             <div className="text-center mb-12">
               <h3 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">Rich Preview Experience</h3>
               <p className="text-xl text-slate-600 dark:text-slate-300">View, annotate, and interact with your captured pages</p>
@@ -875,7 +948,11 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="relative py-12 sm:py-16 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <section 
+        ref={finalCTARef}
+        data-section="final_cta"
+        className="relative py-12 sm:py-16 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950"
+      >
         {/* Glass effect overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent" />
         
@@ -897,7 +974,14 @@ export default function HomePage() {
                 <Button 
                   size="lg" 
                 className="text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 px-8 py-6 h-auto"
-                  onClick={handleSmartDownload}
+                  onClick={() => {
+                    handleSmartDownload()
+                    trackButtonClick(
+                      'final_cta_extension',
+                      detectedBrowser?.name ? `Add to ${detectedBrowser.name}` : 'Install Extension',
+                      'final_cta_section'
+                    )
+                  }}
                 >
                 <DownloadIcon className="mr-2 h-5 w-5" />
                 {detectedBrowser?.name ? `Add to ${detectedBrowser.name}` : 'Install Extension'}
@@ -908,6 +992,10 @@ export default function HomePage() {
                 variant="outline"
                 className="text-lg font-semibold bg-transparent text-white border-2 border-white hover:bg-white hover:text-blue-600 transition-all px-8 py-6 h-auto"
                   asChild
+                  onClick={() => {
+                    trackButtonClick('final_cta_dashboard', 'Open Dashboard', 'final_cta_section', '/auth/signup')
+                    incrementCTAInteractions()
+                  }}
                 >
                   <Link href="/auth/signup">
                   Open Dashboard
@@ -934,7 +1022,12 @@ export default function HomePage() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 sm:py-24 px-4 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+      <section 
+        id="faq" 
+        ref={faqRef}
+        data-section="faq"
+        className="py-20 sm:py-24 px-4 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900"
+      >
         <div className="pagestash-container">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
@@ -1012,7 +1105,14 @@ export default function HomePage() {
             <p className="text-lg text-slate-600 dark:text-slate-400 mb-4">
               Still have questions?
             </p>
-            <Button variant="outline" size="lg" asChild>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              asChild
+              onClick={() => {
+                trackButtonClick('faq_contact_support', 'Contact Support', 'faq_section', 'mailto:support@pagestash.app')
+              }}
+            >
               <a href="mailto:support@pagestash.app">
                 <MessageCircleIcon className="mr-2 h-5 w-5" />
                 Contact Support
