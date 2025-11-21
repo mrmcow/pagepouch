@@ -9,6 +9,8 @@ import { LogoWithText } from '@/components/ui/logo'
 import { Calendar, Clock, ArrowLeft, Share2, Bookmark, Tag, ArrowRight } from 'lucide-react'
 import { getPostBySlug, getRelatedPosts, formatDate, getCategoryLabel, getAllPosts } from '@/lib/blog'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -295,35 +297,69 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_table]:my-8
               [&_table]:border-collapse
               [&_table]:bg-white
-              [&_table]:shadow-sm
-              [&_table]:rounded-lg
+              [&_table]:shadow-lg
+              [&_table]:rounded-xl
               [&_table]:overflow-hidden
+              [&_table]:border
+              [&_table]:border-slate-200
               
-              [&_thead]:bg-gradient-to-r
-              [&_thead]:from-slate-50
-              [&_thead]:to-slate-100
+              [&_thead]:bg-blue-600
               
-              [&_th]:px-6
-              [&_th]:py-4
-              [&_th]:text-left
+              [&_th]:px-4
+              [&_th]:py-5
+              [&_th]:text-center
               [&_th]:text-sm
-              [&_th]:font-semibold
-              [&_th]:text-slate-900
-              [&_th]:border-b-2
-              [&_th]:border-slate-200
+              [&_th]:font-bold
+              [&_th]:text-white
+              [&_th]:tracking-wide
+              [&_th:first-child]:text-left
+              [&_th:first-child]:pl-6
+              [&_th:first-child]:uppercase
               
-              [&_td]:px-6
-              [&_td]:py-4
+              [&_td]:px-4
+              [&_td]:py-5
+              [&_td]:text-center
               [&_td]:text-base
               [&_td]:text-slate-700
               [&_td]:border-b
               [&_td]:border-slate-100
+              [&_td:first-child]:text-left
+              [&_td:first-child]:pl-6
+              [&_td:first-child]:font-semibold
+              [&_td:first-child]:text-slate-900
               
               [&_tbody_tr:last-child_td]:border-b-0
-              [&_tbody_tr:hover]:bg-slate-50
-              [&_tbody_tr]:transition-colors
+              [&_tbody_tr:hover]:bg-blue-50
+              [&_tbody_tr]:transition-all
+              [&_tbody_tr]:duration-200
+              
+              [&_th_img]:inline-block
+              [&_th_img]:w-8
+              [&_th_img]:h-8
+              [&_th_img]:object-contain
+              [&_th_img]:rounded-md
+              [&_th_img]:mr-0
+              [&_th_img]:align-middle
+              [&_th_img]:shadow-none
+              [&_th_img]:my-0
+              [&_th_img]:bg-white
+              [&_th_img]:p-1.5
+              [&_th_img]:border
+              [&_th_img]:border-blue-200
+              
+              [&_td_img]:inline-block
+              [&_td_img]:w-6
+              [&_td_img]:h-6
+              [&_td_img]:object-contain
+              [&_td_img]:rounded
+              [&_td_img]:mr-2
+              [&_td_img]:align-middle
+              [&_td_img]:shadow-none
+              [&_td_img]:my-0
             ">
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                   // Custom components for better formatting
                   p: ({node, ...props}) => <p className="mb-5" {...props} />,
@@ -333,6 +369,15 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                   h1: ({node, ...props}) => <h1 className="scroll-mt-20" {...props} />,
                   h2: ({node, ...props}) => <h2 className="scroll-mt-20" {...props} />,
                   h3: ({node, ...props}) => <h3 className="scroll-mt-20" {...props} />,
+                  // Enhanced table styling
+                  table: ({node, ...props}) => (
+                    <div className="overflow-x-auto -mx-4 sm:mx-0 my-8">
+                      <table className="min-w-full" {...props} />
+                    </div>
+                  ),
+                  th: ({node, ...props}) => (
+                    <th className="whitespace-nowrap" {...props} />
+                  ),
                 }}
               >
                 {post.content}

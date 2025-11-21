@@ -29,8 +29,14 @@ import { literatureReviewWebSources } from './literature-review-web-sources'
 import { secondBrainWebContent } from './second-brain-web-content'
 import { informationOverloadProductivity } from './information-overload-productivity-system'
 import { contentResearchWorkflow } from './content-research-workflow-creators'
+import { threatIntelligenceSocWorkflow } from './threat-intelligence-soc-workflow'
+import { bestPageClippers2025 } from './best-page-clippers-2025'
+import { webEvidencePreservationLegal } from './web-evidence-preservation-legal'
 
 export const allPosts: BlogPost[] = [
+  threatIntelligenceSocWorkflow,
+  bestPageClippers2025,
+  webEvidencePreservationLegal,
   informationOverloadProductivity,
   contentResearchWorkflow,
   osintWebArchivalTools,
