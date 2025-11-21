@@ -1051,12 +1051,22 @@ function DashboardContent() {
                   className="w-full justify-start relative"
                   onClick={() => {
                     if (state.subscriptionTier === 'pro') {
-                      // Enable selection mode for Pro users
-                      setState(prev => ({ 
-                        ...prev, 
-                        isSelectionMode: true,
-                        selectedClipIds: new Set()
-                      }))
+                      // If in Page Graphs, switch back to Library view first
+                      if (state.viewFilter === 'knowledge-graphs') {
+                        setState(prev => ({ 
+                          ...prev, 
+                          viewFilter: 'library',
+                          isSelectionMode: true,
+                          selectedClipIds: new Set()
+                        }))
+                      } else {
+                        // Just enable selection mode if already in clips view
+                        setState(prev => ({ 
+                          ...prev, 
+                          isSelectionMode: true,
+                          selectedClipIds: new Set()
+                        }))
+                      }
                     } else {
                       // Show upgrade modal for free users
                       setState(prev => ({ ...prev, isExportUpgradeModalOpen: true }))
@@ -1073,26 +1083,32 @@ function DashboardContent() {
                 </Button>
                 
                 {/* Page Graphs - Pro Feature */}
-                  <Button 
-                    variant="outline"
-                    size="sm"
+                <Button 
+                  variant="outline"
+                  size="sm"
                   className="w-full justify-start relative"
                   onClick={() => {
                     if (state.subscriptionTier === 'pro') {
-                      setState(prev => ({ ...prev, viewFilter: 'knowledge-graphs' }))
+                      // Exit selection mode when switching to Page Graphs
+                      setState(prev => ({ 
+                        ...prev, 
+                        viewFilter: 'knowledge-graphs',
+                        isSelectionMode: false,
+                        selectedClipIds: new Set()
+                      }))
                     } else {
                       // Show upgrade modal for free users
                       setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: true }))
                     }
                   }}
-                  >
-                    <Brain className="mr-2 h-4 w-4" />
+                >
+                  <Brain className="mr-2 h-4 w-4" />
                   Page Graphs
                   {state.subscriptionTier !== 'pro' && (
                     <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0">
                       PRO
                     </Badge>
-                )}
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -1553,14 +1569,10 @@ function DashboardContent() {
                             : 'flex justify-center py-8'
                         }`}
                       >
-                        {state.isLoadingMore ? (
+                        {state.isLoadingMore && (
                           <div className="flex items-center space-x-2 text-muted-foreground">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
                             <span>Loading more clips...</span>
-                          </div>
-                        ) : (
-                          <div className="text-muted-foreground text-sm">
-                            Scroll to load more clips
                           </div>
                         )}
                       </div>
