@@ -100,11 +100,11 @@ export default function HomePage() {
   // Section visibility tracking
   const heroRef = useVisibilityTracking({ sectionName: 'hero', threshold: 0.3 })
   const pricingRef = useVisibilityTracking({ sectionName: 'pricing', threshold: 0.5 })
-  const howItWorksRef = useVisibilityTracking({ sectionName: 'how_it_works', threshold: 0.5 })
-  const featuresRef = useVisibilityTracking({ sectionName: 'features', threshold: 0.5 })
-  const previewPaneRef = useVisibilityTracking({ sectionName: 'preview_pane', threshold: 0.5 })
-  const finalCTARef = useVisibilityTracking({ sectionName: 'final_cta', threshold: 0.5 })
-  const faqRef = useVisibilityTracking({ sectionName: 'faq', threshold: 0.5 })
+  const howItWorksRef = useVisibilityTracking<HTMLDivElement>({ sectionName: 'how_it_works', threshold: 0.5 })
+  const featuresRef = useVisibilityTracking<HTMLDivElement>({ sectionName: 'features', threshold: 0.5 })
+  const previewPaneRef = useVisibilityTracking<HTMLDivElement>({ sectionName: 'preview_pane', threshold: 0.5 })
+  const finalCTARef = useVisibilityTracking<HTMLDivElement>({ sectionName: 'final_cta', threshold: 0.5 })
+  const faqRef = useVisibilityTracking<HTMLDivElement>({ sectionName: 'faq', threshold: 0.5 })
 
   // Detect browser on component mount
   React.useEffect(() => {
