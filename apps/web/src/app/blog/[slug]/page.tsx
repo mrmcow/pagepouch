@@ -11,6 +11,7 @@ import { getPostBySlug, getRelatedPosts, formatDate, getCategoryLabel, getAllPos
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
+import { Breadcrumbs } from '@/components/blog/Breadcrumbs'
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -107,12 +108,48 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     keywords: post.tags.join(', '),
   }
 
+  // Breadcrumb schema
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: `${siteUrl}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog',
+        item: `${siteUrl}/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: `${siteUrl}/blog/${post.slug}`,
+      },
+    ],
+  }
+
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Blog', url: '/blog' },
+    { name: post.title, url: `/blog/${post.slug}` },
+  ]
+
   return (
     <>
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       
       <div className="flex flex-col min-h-screen bg-white">
@@ -143,6 +180,8 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         {/* Article Header */}
         <section className="py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
           <div className="max-w-4xl mx-auto px-4">
+            <Breadcrumbs items={breadcrumbItems} />
+            
             <div className="mb-6">
               <Link href="/blog">
                 <Button variant="ghost" size="sm">

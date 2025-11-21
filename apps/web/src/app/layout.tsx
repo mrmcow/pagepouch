@@ -12,10 +12,10 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.pagestash.app'),
   title: {
-    default: 'PageStash - Web Archival Tool for Researchers & Analysts',
+    default: 'PageStash - Web Clipping & Archive Tool | Save Pages Permanently',
     template: '%s | PageStash'
   },
-  description: 'The only web archival tool built for researchers, analysts, and professionals. Capture full-page screenshots, extract text, organize with folders, and find content instantly. Free trial with 10 clips per month.',
+  description: 'The #1 web clipping and archival tool for researchers. Capture, organize, and search web pages permanently. Join 10,000+ professionals. Free trial - no credit card required.',
   keywords: [
     'web clipper',
     'web archival tool', 

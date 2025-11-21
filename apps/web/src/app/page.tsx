@@ -196,6 +196,67 @@ export default function HomePage() {
           }),
         }}
       />
+      
+      {/* FAQ Schema for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'How does PageStash work?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'PageStash is a browser extension that captures full-page screenshots and extracts text from any webpage with a single click. All your captures are automatically synced to your secure dashboard where you can search, organize, and access them from anywhere.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Is my data secure and private?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Yes. Your data is encrypted in transit and at rest. We use industry-standard security practices and never share your data with third parties. You can delete your account and all associated data at any time.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'What browsers are supported?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'PageStash works on Google Chrome, Microsoft Edge, Brave, and Mozilla Firefox. Simply download the extension for your browser and sign up for a free account to get started.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: "What's included in the free plan?",
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'The free plan includes 10 clips per month, 100MB of storage, full-text search, folders & organization, and both Chrome & Firefox extensions. Perfect for trying PageStash and light usage.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Can I upgrade or downgrade my plan?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Yes. You can upgrade to Pro at any time to get 1,000 clips per month and 5GB of storage. You can also cancel anytime with no fees or penalties. Your data will remain accessible even if you downgrade.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Can I export my captured content?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Yes. You can download your screenshots and extracted text at any time. Pro users also have access to bulk export features for easy backup and portability.',
+                },
+              },
+            ],
+          }),
+        }}
+      />
     <div className="flex flex-col min-h-screen bg-white dark:bg-slate-950 selection:bg-blue-100 selection:text-blue-900">
       {/* Clean Header - Enterprise Grade */}
       <header className="fixed top-0 left-0 right-0 z-50">
@@ -299,13 +360,17 @@ export default function HomePage() {
                 <span className="text-sm font-semibold tracking-tight">Just released Page Graphs</span>
               </div>
               
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold sm:mb-6 tracking-tight text-slate-900 dark:text-white leading-[1.05] space-y-1 sm:space-y-2">
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.05] space-y-1 sm:space-y-2">
                 <span className="block">Capture</span>
                 <span className="block">the web</span>
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-400">
                   like a pro.
                 </span>
             </h1>
+            
+              <h2 className="text-xl sm:text-2xl text-slate-600 dark:text-slate-400 font-medium mt-4 sm:mt-6">
+                Professional web clipping and archival tool for researchers
+              </h2>
             
               <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-light">
                 The only web archival tool built for researchers, analysts, and professionals who demand instant capture, intelligent search, and beautiful organization.
