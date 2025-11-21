@@ -1014,8 +1014,8 @@ function DashboardContent() {
       </header>
 
       {/* Dashboard Container */}
-      <div className="container mx-auto px-4 py-6 h-[calc(100vh-80px)] relative z-10">
-        <div className="flex flex-col lg:flex-row gap-6 h-full">
+      <div className="container mx-auto px-4 py-6 h-auto lg:h-[calc(100vh-80px)] relative z-10">
+        <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-full">
           {/* Sidebar */}
           <aside className="w-full lg:w-64 space-y-6">
 
@@ -1323,7 +1323,7 @@ function DashboardContent() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 flex flex-col space-y-6 min-w-0 h-full overflow-hidden">
+          <main className="flex-1 flex flex-col space-y-6 min-w-0 h-auto lg:h-full lg:overflow-hidden">
             {/* Search and Filters - Clean Simple Layout */}
             {state.viewFilter !== 'knowledge-graphs' && (
             <div className="flex items-center gap-3 w-full px-1 py-3">
@@ -1489,7 +1489,7 @@ function DashboardContent() {
                 }}
               />
             ) : (
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-visible lg:overflow-hidden">
               {isInitialLoading ? (
                 /* Fast Loading Skeleton */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -1530,7 +1530,7 @@ function DashboardContent() {
                   </div>
                 </Card>
               ) : (
-                <div className="h-full overflow-y-auto pr-2 -mr-2">
+                <div className="h-auto lg:h-full overflow-visible lg:overflow-y-auto pr-2 -mr-2">
                   <div className={
                     state.viewMode === 'grid' 
                       ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 pb-6"
