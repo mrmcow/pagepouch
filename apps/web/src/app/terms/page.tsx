@@ -6,18 +6,18 @@ import { LogoIcon } from '@/components/ui/logo'
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="pagestash-container py-4">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
+      {/* Header - Premium */}
+      <header className="border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="pagestash-container px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
               <LogoIcon size={32} />
-              <span className="text-xl font-bold">PageStash</span>
+              <span className="text-xl font-bold text-slate-900 dark:text-white">PageStash</span>
             </Link>
             <Link 
               href="/" 
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium rounded-full px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-900"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Home
@@ -27,64 +27,73 @@ export default function TermsOfServicePage() {
       </header>
 
       {/* Main Content */}
-      <main className="pagestash-container py-16">
+      <main className="pagestash-container px-4 sm:px-6 py-16">
         <div className="max-w-4xl mx-auto">
-          {/* Hero Section */}
+          {/* Hero Section - Premium */}
           <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl mb-6">
-              <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 rounded-3xl mb-8 border border-blue-100 dark:border-blue-900/50 shadow-lg shadow-blue-500/10">
+              <FileText className="h-10 w-10 text-blue-600 dark:text-blue-400" />
             </div>
-            <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-200 mb-4">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
               Terms of Service
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
               Clear, fair terms that protect both you and PageStash. Read what you're agreeing to when you use our service.
             </p>
-            <div className="mt-6 text-sm text-slate-500">
+            <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
+              <Clock className="h-4 w-4" />
               <span>Last updated: January 15, 2025</span>
             </div>
           </div>
 
-          {/* Quick Summary */}
-          <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-3xl p-8 mb-12">
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6">Terms Summary</h2>
+          {/* Quick Summary - Premium */}
+          <div className="bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 sm:p-10 mb-12 shadow-sm">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8 tracking-tight">Terms Summary</h2>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">What You Can Do</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Use PageStash for personal or commercial research, capture unlimited content, and organize your data.</p>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1.5">What You Can Do</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Use PageStash for personal or commercial research, capture unlimited content, and organize your data.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <XCircle className="h-5 w-5 text-red-500 mt-1" />
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0">
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">What You Can't Do</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Violate copyright, abuse the service, or use it for illegal activities.</p>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1.5">What You Can't Do</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Violate copyright, abuse the service, or use it for illegal activities.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <Scale className="h-5 w-5 text-blue-500 mt-1" />
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
+                  <Scale className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">Our Responsibilities</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Provide reliable service, protect your data, and give 30 days notice for major changes.</p>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1.5">Our Responsibilities</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Provide reliable service, protect your data, and give 30 days notice for major changes.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-orange-500 mt-1" />
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">Limitations</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Service provided "as-is" with reasonable limitations on liability and damages.</p>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1.5">Limitations</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Service provided "as-is" with reasonable limitations on liability and damages.</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Detailed Terms */}
-          <div className="prose prose-slate dark:prose-invert max-w-none">
+          {/* Detailed Terms - Premium Typography */}
+          <div className="space-y-12">
             
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6">1. Acceptance of Terms</h2>
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">1. Acceptance of Terms</h2>
               <p className="text-slate-600 dark:text-slate-400 mb-4">
                 By accessing or using PageStash ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
                 If you disagree with any part of these terms, you may not access the Service.

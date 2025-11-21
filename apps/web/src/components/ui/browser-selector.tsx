@@ -52,9 +52,9 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
 
   return (
     <div className={`${className}`}>
-      {/* Browser Toggle */}
-      <div className="flex items-center justify-center mb-5">
-        <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-1 flex w-full sm:w-auto">
+      {/* Modern Rounded Browser Switcher */}
+      <div className="flex justify-center mb-8">
+        <div className="inline-flex items-center p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-inner">
           {browsers.map((browser) => {
             const IconComponent = browser.icon
             const isSelected = selectedBrowser === browser.id
@@ -64,41 +64,41 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
                 key={browser.id}
                 onClick={() => setSelectedBrowser(browser.id)}
                 className={`
-                  flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all flex-1 sm:flex-initial
+                  relative flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ease-out
                   ${isSelected 
-                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' 
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                   }
                 `}
               >
-                <IconComponent size={20} />
-                <span className="whitespace-nowrap">{browser.name}</span>
+                <IconComponent size={18} className={isSelected ? 'opacity-100' : 'opacity-70 grayscale'} />
+                <span>{browser.name}</span>
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Primary Action Button */}
+      {/* Primary Action Button - Enterprise Style */}
       <Button 
         size="lg" 
-        className="w-full text-base sm:text-lg py-5 sm:py-6 h-auto font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+        className="w-full sm:h-16 text-lg font-bold bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 rounded-xl"
         disabled={selectedBrowserData.status === 'coming-soon'}
         onClick={() => onDownloadClick?.(selectedBrowser)}
       >
-        <DownloadIcon className="mr-2 h-5 w-5 flex-shrink-0" />
-        <span className="truncate">Add to {selectedBrowserData.name} – It's Free</span>
+        <DownloadIcon className="mr-3 h-6 w-6" />
+        Add to {selectedBrowserData.name} — It's Free
       </Button>
 
-      {/* Features */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-4">
+      {/* Trust Indicators */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mt-6 text-sm font-medium text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2">
-          <CheckIcon className="h-4 w-4 text-green-600 flex-shrink-0" />
-          <span className="whitespace-nowrap">Free trial</span>
+          <CheckIcon className="h-4 w-4 text-emerald-500" />
+          <span>No credit card required</span>
         </div>
         <div className="flex items-center gap-2">
-          <CheckIcon className="h-4 w-4 text-green-600 flex-shrink-0" />
-          <span className="whitespace-nowrap">Works instantly</span>
+          <CheckIcon className="h-4 w-4 text-emerald-500" />
+          <span>2-minute setup</span>
         </div>
       </div>
     </div>

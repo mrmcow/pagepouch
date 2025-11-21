@@ -4,9 +4,10 @@ interface LogoProps {
   size?: number
   className?: string
   showText?: boolean
+  textClassName?: string
 }
 
-export function Logo({ size = 48, className = '', showText = true }: LogoProps) {
+export function Logo({ size = 48, className = '', showText = true, textClassName = '' }: LogoProps) {
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
       <div className="relative">
@@ -64,7 +65,7 @@ export function Logo({ size = 48, className = '', showText = true }: LogoProps) 
       </div>
       {showText && (
         <span 
-          className="font-bold tracking-tight text-foreground" 
+          className={`font-bold tracking-tight text-foreground ${textClassName}`} 
           style={{ fontSize: `${size * 0.4}px` }}
         >
           PageStash
@@ -81,11 +82,13 @@ export function LogoIcon({ size = 24, className = '' }: { size?: number; classNa
 export function LogoWithText({ 
   size = 48, 
   className = '', 
-  clickable = true 
+  clickable = true,
+  textClassName = ''
 }: { 
   size?: number; 
   className?: string;
   clickable?: boolean;
+  textClassName?: string;
 }) {
   const handleClick = () => {
     if (clickable) {
@@ -94,7 +97,7 @@ export function LogoWithText({
   }
 
   if (!clickable) {
-    return <Logo size={size} className={className} showText={true} />
+    return <Logo size={size} className={className} textClassName={textClassName} showText={true} />
   }
 
   return (
@@ -103,7 +106,7 @@ export function LogoWithText({
       className={`cursor-pointer hover:opacity-80 transition-opacity duration-200 ${className}`}
       aria-label="Scroll to top"
     >
-      <Logo size={size} className="" showText={true} />
+      <Logo size={size} className="" textClassName={textClassName} showText={true} />
     </button>
   )
 }
