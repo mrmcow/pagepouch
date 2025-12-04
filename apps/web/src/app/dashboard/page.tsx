@@ -1083,9 +1083,9 @@ function DashboardContent() {
                 </Button>
                 
                 {/* Page Graphs - Pro Feature */}
-                <Button 
-                  variant="outline"
-                  size="sm"
+                  <Button 
+                    variant="outline"
+                    size="sm"
                   className="w-full justify-start relative"
                   onClick={() => {
                     if (state.subscriptionTier === 'pro') {
@@ -1101,14 +1101,14 @@ function DashboardContent() {
                       setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: true }))
                     }
                   }}
-                >
-                  <Brain className="mr-2 h-4 w-4" />
+                  >
+                    <Brain className="mr-2 h-4 w-4" />
                   Page Graphs
                   {state.subscriptionTier !== 'pro' && (
                     <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0">
                       PRO
                     </Badge>
-                  )}
+                )}
                 </Button>
               </CardContent>
             </Card>

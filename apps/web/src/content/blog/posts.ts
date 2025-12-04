@@ -32,8 +32,20 @@ import { contentResearchWorkflow } from './content-research-workflow-creators'
 import { threatIntelligenceSocWorkflow } from './threat-intelligence-soc-workflow'
 import { bestPageClippers2025 } from './best-page-clippers-2025'
 import { webEvidencePreservationLegal } from './web-evidence-preservation-legal'
+import { offlineReadingCommute } from './offline-reading-commute'
+import { realEstateWebClipping } from './real-estate-web-clipping'
+import { recruiterProfileArchiving } from './recruiter-profile-archiving'
+import { bestClippersBusinessResearch } from './best-clippers-business-research'
+import { freeVsProClippingTools } from './free-vs-pro-clipping-tools'
+import { researchStorageOrganization } from './research-storage-solutions'
 
 export const allPosts: BlogPost[] = [
+  researchStorageOrganization,
+  freeVsProClippingTools,
+  bestClippersBusinessResearch,
+  recruiterProfileArchiving,
+  realEstateWebClipping,
+  offlineReadingCommute,
   threatIntelligenceSocWorkflow,
   bestPageClippers2025,
   webEvidencePreservationLegal,
