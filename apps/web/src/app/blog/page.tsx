@@ -310,7 +310,7 @@ export default function BlogPage() {
       <footer className="border-t border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950">
         <div className="pagestash-container py-12 px-4 sm:px-6">
           <div className="text-center text-sm text-slate-500 dark:text-slate-400">
-            &copy; 2025 PageStash. All rights reserved.
+            &copy; 2026 PageStash. All rights reserved.
           </div>
         </div>
       </footer>

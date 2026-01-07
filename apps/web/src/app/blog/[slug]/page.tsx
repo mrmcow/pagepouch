@@ -512,7 +512,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       <footer className="border-t border-slate-200 bg-white">
         <div className="pagestash-container py-12 px-4">
           <div className="text-center text-sm text-slate-500">
-            &copy; 2025 PageStash. All rights reserved.
+            &copy; 2026 PageStash. All rights reserved.
           </div>
         </div>
       </footer>

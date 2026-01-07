@@ -42,7 +42,7 @@ export default function TermsOfServicePage() {
             </p>
             <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
               <Clock className="h-4 w-4" />
-              <span>Last updated: January 15, 2025</span>
+              <span>Last updated: January 7, 2026</span>
             </div>
           </div>
 
@@ -358,7 +358,7 @@ export default function TermsOfServicePage() {
                 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-slate-500">
-                    These Terms of Service are effective as of January 15, 2025, and govern your use of PageStash services.
+                    These Terms of Service are effective as of January 7, 2026, and govern your use of PageStash services.
                   </p>
                 </div>
               </div>

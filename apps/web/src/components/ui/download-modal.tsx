@@ -130,7 +130,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
                     2.1 MB
                   </span>
                   <span className="w-1 h-1 rounded-full bg-slate-300" />
-                  <span>Build: Nov 21, 2025</span>
+                  <span>Build: Jan 7, 2026</span>
                 </div>
               </div>
             </div>

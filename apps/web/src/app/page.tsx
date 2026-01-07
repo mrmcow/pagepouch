@@ -1165,7 +1165,7 @@ export default function HomePage() {
             </div>
 
             <div className="text-sm text-slate-500 dark:text-slate-400">
-              &copy; 2025 PageStash
+              &copy; 2026 PageStash
             </div>
           </div>
         </div>

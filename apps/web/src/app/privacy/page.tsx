@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
               <Clock className="h-4 w-4" />
-              <span>Last updated: January 15, 2025</span>
+              <span>Last updated: January 7, 2026</span>
             </div>
           </div>
 
