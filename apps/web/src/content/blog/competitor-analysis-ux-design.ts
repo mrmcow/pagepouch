@@ -6,7 +6,7 @@ export const competitorAnalysisUXDesign: BlogPost = {
   description: 'Discover the best competitor analysis tools for UX design. Learn research workflows for capturing design patterns, UI states, and building organized reference libraries.',
   excerpt: 'UX designers need more than screenshots. Learn how to capture interactive states, organize design patterns, and build searchable archives of competitor research.',
   author: 'PageStash Team',
-  publishedAt: '2025-12-08',
+  publishedAt: '2026-01-07',
   readingTime: 5,
   category: 'use-cases',
   tags: ['ux-design', 'competitor-analysis', 'design-research', 'ui-patterns'],

@@ -6,7 +6,7 @@ export const bestClipperBusinessResearch2025: BlogPost = {
   description: 'Find the best clipper for organizing business research in 2025. Learn key features for competitive analysis, market research, and data integrity in professional workflows.',
   excerpt: 'Competitive analysis and market research require more than just URLs. Discover the key features you need in a business research clipper for data integrity and searchability.',
   author: 'PageStash Team',
-  publishedAt: '2025-12-07',
+  publishedAt: '2026-01-07',
   readingTime: 5,
   category: 'guides',
   tags: ['business-research', 'competitive-analysis', 'research-organization', 'professional-tools'],

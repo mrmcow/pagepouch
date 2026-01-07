@@ -6,7 +6,7 @@ export const bestWebResearchTools2026: BlogPost = {
   description: 'Discover the top web research tools for organized reference in 2026. Compare PageStash, Notion, Obsidian, Zotero, and Pocket to find the best tool for fast, organized web research.',
   excerpt: 'Simple bookmarks aren\'t enough in 2026. Discover the 5 best web research tools for creating organized, permanent archives of your research sources.',
   author: 'PageStash Team',
-  publishedAt: '2025-12-06',
+  publishedAt: '2026-01-07',
   readingTime: 5,
   category: 'comparisons',
   tags: ['web-research-tools', 'organized-reference', 'research-productivity', 'tool-comparison'],
