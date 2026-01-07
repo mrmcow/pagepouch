@@ -38,8 +38,14 @@ import { recruiterProfileArchiving } from './recruiter-profile-archiving'
 import { bestClippersBusinessResearch } from './best-clippers-business-research'
 import { freeVsProClippingTools } from './free-vs-pro-clipping-tools'
 import { researchStorageOrganization } from './research-storage-solutions'
+import { bestWebResearchTools2026 } from './best-web-research-tools-2026'
+import { bestClipperBusinessResearch2025 } from './best-clipper-business-research-2025'
+import { competitorAnalysisUXDesign } from './competitor-analysis-ux-design'
 
 export const allPosts: BlogPost[] = [
+  competitorAnalysisUXDesign,
+  bestClipperBusinessResearch2025,
+  bestWebResearchTools2026,
   researchStorageOrganization,
   freeVsProClippingTools,
   bestClippersBusinessResearch,
