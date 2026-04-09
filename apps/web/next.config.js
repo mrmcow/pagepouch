@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Tree-shake lucide to icons actually used (smaller client bundles — especially mobile)
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   // Remove console logs in production
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {

@@ -77,6 +77,11 @@ export function useExitIntentTracking() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    // Exit-intent is desktop-only; skip on touch / coarse pointer (saves listeners + work on mobile)
+    const coarse =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches
+    if (coarse || 'ontouchstart' in window) return
 
     const handleMouseLeave = (e: MouseEvent) => {
       // Detect if mouse is leaving toward top of window (close button)

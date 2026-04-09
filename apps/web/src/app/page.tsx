@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import * as analytics from '@/lib/analytics'
@@ -9,7 +10,13 @@ import { Badge } from '@/components/ui/badge'
 import { LogoWithText, LogoIcon } from '@/components/ui/logo'
 import { ChromeIcon } from '@/components/ui/browser-icons'
 import { BrowserSelector } from '@/components/ui/browser-selector'
-import { DownloadModal } from '@/components/ui/download-modal'
+const DownloadModal = dynamic(
+  () =>
+    import('@/components/ui/download-modal').then((mod) => ({
+      default: mod.DownloadModal,
+    })),
+  { ssr: false }
+)
 import { useScrollTracking } from '@/hooks/useScrollTracking'
 import { useVisibilityTracking } from '@/hooks/useVisibilityTracking'
 import { useExitIntentTracking, useButtonClickTracking } from '@/hooks/useCTATracking'
@@ -117,7 +124,7 @@ export default function HomePage() {
       setIsScrolled(window.scrollY > 16)
     }
     handleScroll()
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 

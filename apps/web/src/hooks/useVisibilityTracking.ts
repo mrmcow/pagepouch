@@ -26,7 +26,14 @@ export function useVisibilityTracking<T extends HTMLElement = HTMLElement>({
     const section = sectionRef.current
     if (!section) return
 
-    const observer = new IntersectionObserver(
+    let cancelled = false
+    let observer: IntersectionObserver | null = null
+    let startTimer: ReturnType<typeof setTimeout> | null = null
+
+    const start = () => {
+      if (cancelled || observer) return
+
+      observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -81,13 +88,28 @@ export function useVisibilityTracking<T extends HTMLElement = HTMLElement>({
       }
     )
 
-    observer.observe(section)
+      observer.observe(section)
+    }
+
+    // Mobile: defer section observers until after first paint + hydration settles
+    const narrow =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(max-width: 767px)').matches
+    const deferMs = narrow ? 1600 : 0
+    if (deferMs > 0) {
+      startTimer = setTimeout(start, deferMs)
+    } else {
+      start()
+    }
 
     return () => {
+      cancelled = true
+      if (startTimer) clearTimeout(startTimer)
       if (timerRef.current) {
         clearTimeout(timerRef.current)
       }
-      observer.disconnect()
+      observer?.disconnect()
     }
   }, [sectionName, threshold, minTimeInView])
 

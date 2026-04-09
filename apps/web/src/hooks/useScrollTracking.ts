@@ -56,7 +56,7 @@ export function useScrollTracking() {
       }
     }
 
-    window.addEventListener('scroll', throttledScroll)
+    window.addEventListener('scroll', throttledScroll, { passive: true })
     
     // Initial check
     handleScroll()
