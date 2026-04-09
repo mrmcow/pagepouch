@@ -1,4 +1,4 @@
-// Utility functions for PagePouch
+// Utility functions for PageStash
 
 /**
  * Generate a unique ID for clips, folders, etc.

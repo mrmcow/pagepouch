@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
@@ -35,7 +35,9 @@ import {
   FileText,
   FileDown,
   CheckSquare,
-  Square
+  Square,
+  Moon,
+  Sun
 } from 'lucide-react'
 import { 
   DropdownMenu,
@@ -68,6 +70,20 @@ import { CachedImage, useImageCache } from '@/components/ui/cached-image'
 import { DownloadModal } from '@/components/ui/download-modal'
 import { ExportModal } from '@/components/dashboard/ExportModal'
 import { ExportUpgradeModal } from '@/components/dashboard/ExportUpgradeModal'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useDarkMode } from '@/hooks/useDarkMode'
+import { useToast } from '@/components/ui/toast'
+import { OnboardingOverlay } from '@/components/dashboard/OnboardingOverlay'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface DashboardState {
   clips: Clip[]
@@ -109,10 +125,18 @@ interface DashboardState {
   selectedClipIds: Set<string>
   isExportModalOpen: boolean
   isExportUpgradeModalOpen: boolean
+  // Server-side search results (populated when searchQuery is non-empty)
+  searchResults: Clip[] | null
+  isSearching: boolean
 }
 
 function DashboardContent() {
   const [detectedBrowser, setDetectedBrowser] = useState<'chrome' | 'firefox'>('chrome')
+  const [isDark, toggleDark] = useDarkMode()
+  const { toast } = useToast()
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; clipId: string | null }>({ open: false, clipId: null })
+  const [showOnboarding, setShowOnboarding] = useState(false)
   
   const [state, setState] = useState<DashboardState>({
     clips: [],
@@ -154,6 +178,9 @@ function DashboardContent() {
     selectedClipIds: new Set(),
     isExportModalOpen: false,
     isExportUpgradeModalOpen: false,
+    // Server-side search
+    searchResults: null,
+    isSearching: false,
   })
   
   const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -172,10 +199,8 @@ function DashboardContent() {
   }, [])
 
   const handleRefresh = () => {
-    // Clear image cache on refresh to ensure fresh content
     clearCache()
-    console.log('Image cache cleared')
-    loadData(true) // Reset to first page
+    loadData(true)
   }
 
   const refreshSubscriptionData = useCallback(async () => {
@@ -204,18 +229,7 @@ function DashboardContent() {
           clipsThisMonth: usageData.clips_this_month || 0,
           clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 10),
         }))
-        
-        console.log('📊 Subscription data refreshed:', {
-          tier: subData.subscription_tier || usageData.subscription_tier,
-          status: subData.subscription_status,
-          clipsThisMonth: usageData.clips_this_month,
-          clipsLimit: usageData.clips_limit
-        })
       } else {
-        console.error('Failed to refresh subscription or usage data:', {
-          subscriptionOk: subscriptionResponse.ok,
-          usageOk: usageResponse.ok
-        })
       }
     } catch (error) {
       console.error('Failed to refresh subscription data:', error)
@@ -232,13 +246,11 @@ function DashboardContent() {
   // Refresh subscription data when window gains focus (user might have created clips via extension)
   useEffect(() => {
     const handleFocus = () => {
-      console.log('🔄 Window focused, refreshing subscription data...')
       refreshSubscriptionData()
     }
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('🔄 Page became visible, refreshing subscription data...')
         refreshSubscriptionData()
       }
     }
@@ -255,9 +267,8 @@ function DashboardContent() {
   // Periodically refresh subscription data (every 30 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('⏰ Periodic subscription data refresh...')
       refreshSubscriptionData()
-    }, 30000) // 30 seconds
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [refreshSubscriptionData])
@@ -342,8 +353,7 @@ function DashboardContent() {
             preloadCooldown = true
             const nextBatch = uncachedClips.slice(0, Math.min(batchSize, uncachedClips.length))
             preloadClipImages(nextBatch, false).then(() => {
-              console.log(`Smart preload (speed: ${scrollSpeed.toFixed(2)}): ${nextBatch.length} images`)
-              setTimeout(() => { preloadCooldown = false }, 1000) // 1 second cooldown
+              setTimeout(() => { preloadCooldown = false }, 1000)
             })
           }
         }
@@ -366,14 +376,19 @@ function DashboardContent() {
       )
       
       if (uncachedClips.length > 0) {
-        // Take next 10 uncached images and preload them
         const nextBatch = uncachedClips.slice(0, 10)
-        preloadClipImages(nextBatch, false).then(() => {
-          console.log(`Background preloaded ${nextBatch.length} additional images`)
-        })
+        preloadClipImages(nextBatch, false)
       }
     }
   }, [state.clips.length]) // Trigger when new clips are loaded
+
+  // Onboarding overlay
+  useEffect(() => {
+    if (!isInitialLoading && state.clips.length === 0) {
+      const dismissed = localStorage.getItem('pagestash-onboarding-dismissed')
+      if (!dismissed) setShowOnboarding(true)
+    }
+  }, [isInitialLoading, state.clips.length])
 
   // Preload images when folder selection changes
   useEffect(() => {
@@ -385,15 +400,27 @@ function DashboardContent() {
         clipsToPreload = state.clips.filter(clip => clip.folder_id === state.selectedFolder)
       }
       
-      // Preload first 25 clips in the current context
       if (clipsToPreload.length > 0) {
         const priorityClips = clipsToPreload.slice(0, 25)
-        preloadClipImages(priorityClips, false).then(() => {
-          console.log(`Context preload (${state.selectedFolder ? 'folder' : 'all'}): ${priorityClips.length} images`)
-        })
+        preloadClipImages(priorityClips, false)
       }
     }
   }, [state.selectedFolder, state.clips.length]) // Trigger when folder selection or clips change
+
+  useKeyboardShortcuts({
+    viewerOpen: state.isClipViewerOpen,
+    focusSearch: () => searchInputRef.current?.focus(),
+    escape: () => {
+      if (state.isClipViewerOpen) handleClipViewerClose()
+    },
+    prev: () => handleClipNavigate('prev'),
+    next: () => handleClipNavigate('next'),
+    toggleFavorite: () => {
+      if (state.selectedClip) {
+        handleToggleFavorite(state.selectedClip.id, !state.selectedClip.is_favorite)
+      }
+    },
+  })
 
   const checkAuth = async () => {
     try {
@@ -414,126 +441,69 @@ function DashboardContent() {
   const loadData = async (reset: boolean = true) => {
     try {
       const offset = reset ? 0 : state.currentOffset
-      const limit = 50 // Load 50 clips at a time for better performance
-      
-      // Load subscription and usage data first to prevent UI flash
-      const [subscriptionResponse, usageResponse] = await Promise.all([
-        fetch('/api/subscription', {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        }),
-        fetch('/api/usage', {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        })
-      ])
-      
-      // Handle subscription and usage data
-      let subscriptionData = {
-        subscriptionTier: 'free',
-        subscriptionStatus: 'inactive',
-        clipsThisMonth: 0,
-        clipsLimit: 10
-      }
-      
-      if (subscriptionResponse.ok && usageResponse.ok) {
-        const [subData, usageData] = await Promise.all([
-          subscriptionResponse.json(),
-          usageResponse.json()
-        ])
-        
-        subscriptionData = {
-          subscriptionTier: subData.subscription_tier || usageData.subscription_tier || 'free',
-          subscriptionStatus: subData.subscription_status || 'inactive',
-          clipsThisMonth: usageData.clips_this_month || 0,
-          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 10)
-        }
-        
-        console.log('📊 Loaded subscription and usage data:', {
-          tier: subscriptionData.subscriptionTier,
-          status: subscriptionData.subscriptionStatus,
-          clipsThisMonth: subscriptionData.clipsThisMonth,
-          clipsLimit: subscriptionData.clipsLimit
-        })
-      } else {
-        console.error('Failed to load subscription or usage data:', {
-          subscriptionOk: subscriptionResponse.ok,
-          usageOk: usageResponse.ok
-        })
-      }
-      
-      // Update subscription state immediately to prevent flash
-      setState(prev => ({
-        ...prev,
-        subscriptionTier: subscriptionData.subscriptionTier as 'free' | 'pro',
-        subscriptionStatus: subscriptionData.subscriptionStatus,
-        clipsThisMonth: subscriptionData.clipsThisMonth,
-        clipsLimit: subscriptionData.clipsLimit,
-        isSubscriptionLoading: false,
-      }))
-      
-      // Now load other data in parallel
-      const [clipsResponse, foldersResponse, tagsResponse] = await Promise.all([
-        fetch(`/api/clips?limit=${limit}&offset=${offset}`, { 
-          cache: 'no-store', // Always get fresh data
-          headers: { 'Cache-Control': 'no-cache' }
-        }),
-        fetch('/api/folders', { 
-          cache: 'force-cache', // Cache folders as they change less
-          headers: { 'Cache-Control': 'max-age=300' }
-        }),
-        fetch('/api/tags', { 
-          cache: 'force-cache', // Cache tags as they change less
-          headers: { 'Cache-Control': 'max-age=300' }
-        })
+      const limit = 50
+
+      // Fire ALL requests simultaneously — don't let subscription block clip rendering
+      const [clipsResponse, foldersResponse, tagsResponse, subscriptionResponse, usageResponse] = await Promise.all([
+        fetch(`/api/clips?limit=${limit}&offset=${offset}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
+        fetch('/api/folders', { cache: 'force-cache', headers: { 'Cache-Control': 'max-age=300' } }),
+        fetch('/api/tags', { cache: 'force-cache', headers: { 'Cache-Control': 'max-age=300' } }),
+        fetch('/api/subscription', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
+        fetch('/api/usage', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
       ])
 
       if (!clipsResponse.ok || !foldersResponse.ok || !tagsResponse.ok) {
         throw new Error('Failed to fetch data')
       }
 
-      const clipsData = await clipsResponse.json()
-      const foldersData = await foldersResponse.json()
-      const tagsData = await tagsResponse.json()
-
-      // Load clip tags lazily - only when needed for filtering
-      const clipTagsMap: Record<string, string[]> = {}
+      const [clipsData, foldersData, tagsData] = await Promise.all([
+        clipsResponse.json(),
+        foldersResponse.json(),
+        tagsResponse.json(),
+      ])
 
       const newClips = clipsData.clips || []
       const allClips = reset ? newClips : [...state.clips, ...newClips]
 
-      // Folders loaded successfully
-      
+      // Resolve subscription data (non-blocking — clips already parsed above)
+      let subscriptionTier = 'free'
+      let subscriptionStatus = 'inactive'
+      let clipsThisMonth = 0
+      let clipsLimit = 10
+      if (subscriptionResponse.ok && usageResponse.ok) {
+        const [subData, usageData] = await Promise.all([subscriptionResponse.json(), usageResponse.json()])
+        subscriptionTier = subData.subscription_tier || usageData.subscription_tier || 'free'
+        subscriptionStatus = subData.subscription_status || 'inactive'
+        clipsThisMonth = usageData.clips_this_month || 0
+        clipsLimit = usageData.clips_limit || (subscriptionTier === 'pro' ? 1000 : 10)
+      }
+
       setState(prev => ({
         ...prev,
         clips: allClips,
         folders: foldersData.folders || [],
         availableTags: tagsData || [],
-        clipTags: clipTagsMap,
+        clipTags: {},
         totalClips: clipsData.total || 0,
         hasMoreClips: clipsData.hasMore || false,
         currentOffset: offset + limit,
         isLoadingMore: false,
+        subscriptionTier: subscriptionTier as 'free' | 'pro',
+        subscriptionStatus,
+        clipsThisMonth,
+        clipsLimit,
+        isSubscriptionLoading: false,
       }))
 
-      // Preload images for better performance
       if (newClips.length > 0) {
-        const isInitialLoad = reset && state.clips.length === 0
-        preloadClipImages(newClips, isInitialLoad).then(() => {
-          console.log(`${isInitialLoad ? 'Sequentially preloaded' : 'Preloaded'} ${newClips.length} clip images`)
-        })
+        preloadClipImages(newClips, false)
       }
-      
+
       setIsInitialLoading(false)
     } catch (error) {
       console.error('Failed to load data:', error)
       setIsInitialLoading(false)
-      setState(prev => ({ 
-        ...prev, 
-        isLoadingMore: false,
-        isSubscriptionLoading: false 
-      }))
-      // Show error state but don't block the UI
+      setState(prev => ({ ...prev, isLoadingMore: false, isSubscriptionLoading: false }))
     }
   }
 
@@ -556,16 +526,44 @@ function DashboardContent() {
       )
       
       if (uncachedNewClips.length > 0) {
-        preloadClipImages(uncachedNewClips, false).then(() => {
-          console.log(`Infinite scroll preload: ${uncachedNewClips.length} new images`)
-        })
+        preloadClipImages(uncachedNewClips, false)
       }
     }, 200) // Small delay to let the state update
   }
 
   const handleSearch = (query: string) => {
-    setState(prev => ({ ...prev, searchQuery: query }))
+    setState(prev => ({ ...prev, searchQuery: query, searchResults: query ? prev.searchResults : null, isSearching: !!query }))
   }
+
+  // Debounced server-side search — fires 300ms after the user stops typing
+  useEffect(() => {
+    const q = state.searchQuery.trim()
+    if (!q) {
+      setState(prev => ({ ...prev, searchResults: null, isSearching: false }))
+      return
+    }
+    setState(prev => ({ ...prev, isSearching: true }))
+    const timer = setTimeout(async () => {
+      try {
+        const folderId = state.selectedFolder
+        const url = `/api/clips?q=${encodeURIComponent(q)}&limit=100${folderId ? `&folder_id=${folderId}` : ''}`
+        const res = await fetch(url, { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setState(prev => ({
+            ...prev,
+            searchResults: data.clips || [],
+            isSearching: false,
+          }))
+        } else {
+          setState(prev => ({ ...prev, isSearching: false }))
+        }
+      } catch {
+        setState(prev => ({ ...prev, isSearching: false }))
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [state.searchQuery, state.selectedFolder])
 
   // Export & Selection handlers
   const handleToggleClipSelection = (clipId: string) => {
@@ -605,7 +603,7 @@ function DashboardContent() {
 
   const handleOpenExportModal = () => {
     if (state.selectedClipIds.size === 0) {
-      alert('Please select at least one clip to export')
+      toast({ message: 'Select at least one clip to export', type: 'error' })
       return
     }
     setState(prev => ({ ...prev, isExportModalOpen: true }))
@@ -729,30 +727,21 @@ function DashboardContent() {
   }
 
   const handleToggleFavorite = async (clipId: string, isFavorite: boolean) => {
-    console.log(`🌟 Toggling favorite for clip ${clipId} to ${isFavorite}`)
-    
-    // Optimistic update - update UI immediately
-    setState(prev => {
-      console.log(`🔄 Optimistically updating clip ${clipId} favorite status to ${isFavorite}`)
-      return {
-        ...prev,
-        clips: prev.clips.map(clip => 
-          clip.id === clipId 
-            ? { ...clip, is_favorite: isFavorite }
-            : clip
-        ),
-        selectedClip: prev.selectedClip?.id === clipId 
-          ? { ...prev.selectedClip, is_favorite: isFavorite }
-          : prev.selectedClip,
-      }
-    })
+    // Optimistic update
+    setState(prev => ({
+      ...prev,
+      clips: prev.clips.map(clip => 
+        clip.id === clipId ? { ...clip, is_favorite: isFavorite } : clip
+      ),
+      selectedClip: prev.selectedClip?.id === clipId 
+        ? { ...prev.selectedClip, is_favorite: isFavorite }
+        : prev.selectedClip,
+    }))
 
     try {
       const response = await fetch(`/api/clips/${clipId}/favorite`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_favorite: isFavorite }),
       })
 
@@ -761,29 +750,21 @@ function DashboardContent() {
         throw new Error(`Failed to toggle favorite: ${response.status} ${errorText}`)
       }
 
-      const result = await response.json()
-      console.log('✅ Favorite status updated successfully:', result)
+      await response.json()
     } catch (error) {
-      console.error('❌ Failed to toggle favorite:', error)
-      
-      // Revert the optimistic update on error
-      setState(prev => {
-        console.log(`🔄 Reverting clip ${clipId} favorite status back to ${!isFavorite}`)
-        return {
-          ...prev,
-          clips: prev.clips.map(clip => 
-            clip.id === clipId 
-              ? { ...clip, is_favorite: !isFavorite }
-              : clip
-          ),
-          selectedClip: prev.selectedClip?.id === clipId 
-            ? { ...prev.selectedClip, is_favorite: !isFavorite }
-            : prev.selectedClip,
-        }
-      })
+      // Revert on error
+      setState(prev => ({
+        ...prev,
+        clips: prev.clips.map(clip => 
+          clip.id === clipId ? { ...clip, is_favorite: !isFavorite } : clip
+        ),
+        selectedClip: prev.selectedClip?.id === clipId 
+          ? { ...prev.selectedClip, is_favorite: !isFavorite }
+          : prev.selectedClip,
+      }))
       
       // Show user-friendly error message
-      alert('Failed to update favorite status. Please try again.')
+      toast({ message: 'Failed to update favorite. Please try again.', type: 'error' })
     }
   }
 
@@ -884,56 +865,33 @@ function DashboardContent() {
     }
   }
 
-  const filteredClips = state.clips.filter(clip => {
-    const matchesSearch = !state.searchQuery || (() => {
-      const query = state.searchQuery.toLowerCase()
-      const folder = state.folders.find(f => f.id === clip.folder_id)
-      
-      return (
-        // Search in title
-        clip.title.toLowerCase().includes(query) ||
-        // Search in URL
-        clip.url.toLowerCase().includes(query) ||
-        // Search in text content
-        clip.text_content?.toLowerCase().includes(query) ||
-        // Search in HTML content
-        clip.html_content?.toLowerCase().includes(query) ||
-        // Search in folder name
-        folder?.name.toLowerCase().includes(query)
-      )
-    })()
-    
-    const matchesFolder = !state.selectedFolder || clip.folder_id === state.selectedFolder
-    
-    // Tag filtering: check if clip has the selected tag
-    const matchesTag = !state.selectedTag || (state.clipTags[clip.id] && state.clipTags[clip.id].includes(state.selectedTag))
+  // Use server search results when a query is active; otherwise filter the library locally.
+  // html_content/text_content are no longer in the list payload — search is fully server-side.
+  const filteredClips = useMemo(() => {
+    const base = state.searchQuery ? (state.searchResults ?? []) : state.clips
 
-    // Apply view filter
-    let matchesViewFilter = true
-    if (state.viewFilter === 'favorites') {
-      // Show only favorited clips
-      matchesViewFilter = clip.is_favorite === true
-    } else if (state.viewFilter === 'recent') {
-      // Show clips from the last 7 days
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      matchesViewFilter = new Date(clip.created_at) > sevenDaysAgo
-    }
-    // 'library' shows all clips (no additional filter)
+    return base.filter(clip => {
+      const matchesFolder = !state.selectedFolder || clip.folder_id === state.selectedFolder
+      const matchesTag = !state.selectedTag || (state.clipTags[clip.id] && state.clipTags[clip.id].includes(state.selectedTag))
 
-    return matchesSearch && matchesFolder && matchesTag && matchesViewFilter
-  })
+      let matchesViewFilter = true
+      if (state.viewFilter === 'favorites') {
+        matchesViewFilter = clip.is_favorite === true
+      } else if (state.viewFilter === 'recent') {
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        matchesViewFilter = new Date(clip.created_at) > sevenDaysAgo
+      }
 
-  const sortedClips = [...filteredClips].sort((a, b) => {
+      return matchesFolder && matchesTag && matchesViewFilter
+    })
+  }, [state.clips, state.searchResults, state.searchQuery, state.selectedFolder, state.selectedTag, state.viewFilter, state.clipTags])
+
+  const sortedClips = useMemo(() => [...filteredClips].sort((a, b) => {
     const aValue = a[state.sortBy]
     const bValue = b[state.sortBy]
-    
-    if (state.sortOrder === 'asc') {
-      return aValue > bValue ? 1 : -1
-    } else {
-      return aValue < bValue ? 1 : -1
-    }
-  })
+    return state.sortOrder === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1)
+  }), [filteredClips, state.sortBy, state.sortOrder])
 
   // Don't hide the entire UI while loading - show skeleton instead
 
@@ -947,7 +905,7 @@ function DashboardContent() {
       </div>
 
       {/* Header */}
-      <header className="border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm supports-[backdrop-filter]:bg-white/70 relative z-20">
+      <header className="border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl shadow-sm relative z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo and Navigation */}
@@ -968,36 +926,40 @@ function DashboardContent() {
                 <LogoWithText size={40} clickable={false} />
               </button>
               
-              <nav className="hidden md:flex items-center space-x-4">
-                <Button 
-                  variant={state.viewFilter === 'library' ? 'default' : 'ghost'} 
-                  size="sm"
-                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'library' }))}
-                >
-                  <Grid className="mr-2 h-4 w-4" />
-                  Library
-                </Button>
-                <Button 
-                  variant={state.viewFilter === 'favorites' ? 'default' : 'ghost'} 
-                  size="sm"
-                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'favorites' }))}
-                >
-                  <Star className="mr-2 h-4 w-4" />
-                  Favorites
-                </Button>
-                <Button 
-                  variant={state.viewFilter === 'recent' ? 'default' : 'ghost'} 
-                  size="sm"
-                  onClick={() => setState(prev => ({ ...prev, viewFilter: 'recent' }))}
-                >
-                  <Clock className="mr-2 h-4 w-4" />
-                  Recent
-                </Button>
+              <nav className="hidden md:flex items-center space-x-1">
+                {([
+                  { filter: 'library',   icon: <Grid className="h-4 w-4" />,  label: 'Library'   },
+                  { filter: 'favorites', icon: <Star className="h-4 w-4" />,  label: 'Favorites' },
+                  { filter: 'recent',    icon: <Clock className="h-4 w-4" />, label: 'Recent'    },
+                ] as const).map(({ filter, icon, label }) => {
+                  const active = state.viewFilter === filter
+                  return (
+                    <button
+                      key={filter}
+                      onClick={() => setState(prev => ({ ...prev, viewFilter: filter }))}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                        active
+                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                      }`}
+                    >
+                      {icon}
+                      {label}
+                    </button>
+                  )
+                })}
               </nav>
             </div>
 
             {/* User Profile */}
             <div className="flex items-center space-x-3">
+              <button
+                onClick={toggleDark}
+                className="h-9 w-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-all"
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
               {state.user && (
                 <UserAvatar
                   user={{
@@ -1020,7 +982,7 @@ function DashboardContent() {
           <aside className="w-full lg:w-64 space-y-6">
 
             {/* Quick Actions */}
-            <Card className="border border-white/20 shadow-md bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md">
+            <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Quick Actions</CardTitle>
               </CardHeader>
@@ -1105,7 +1067,7 @@ function DashboardContent() {
                     <Brain className="mr-2 h-4 w-4" />
                   Page Graphs
                   {state.subscriptionTier !== 'pro' && (
-                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0">
+                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
                       PRO
                     </Badge>
                 )}
@@ -1114,7 +1076,7 @@ function DashboardContent() {
             </Card>
 
             {/* Folders */}
-            <Card className="border border-white/20 shadow-md bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md">
+            <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Folders</CardTitle>
               </CardHeader>
@@ -1129,12 +1091,9 @@ function DashboardContent() {
                       selectedFolder: null,
                       viewFilter: 'library' // Switch back to library view if in knowledge graphs
                     }))
-                    // Trigger preloading for all clips when returning to full view
-                    setTimeout(() => {
+                        setTimeout(() => {
                       if (state.clips.length > 0) {
-                        preloadClipImages(state.clips.slice(0, 30), true).then(() => {
-                          console.log(`All clips preload: ${Math.min(30, state.clips.length)} images`)
-                        })
+                        preloadClipImages(state.clips.slice(0, 30), true)
                       }
                     }, 100)
                   }}
@@ -1157,13 +1116,10 @@ function DashboardContent() {
                           selectedFolder: folder.id,
                           viewFilter: 'library' // Switch back to library view if in knowledge graphs
                         }))
-                        // Trigger preloading for folder-filtered clips
                         setTimeout(() => {
                           const folderClips = state.clips.filter(clip => clip.folder_id === folder.id)
                           if (folderClips.length > 0) {
-                            preloadClipImages(folderClips.slice(0, 30), true).then(() => {
-                              console.log(`Folder preload: ${Math.min(30, folderClips.length)} images for "${folder.name}"`)
-                            })
+                            preloadClipImages(folderClips.slice(0, 30), true)
                           }
                         }, 100)
                       }}
@@ -1196,7 +1152,7 @@ function DashboardContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start border-dashed border-2 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50 text-slate-600 hover:text-blue-700 transition-all mt-2"
+                  className="w-full justify-start border-dashed border-2 border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-400 transition-all mt-2"
                   onClick={() => setState(prev => ({ ...prev, isCreateFolderModalOpen: true }))}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -1207,7 +1163,7 @@ function DashboardContent() {
 
             {/* Usage Stats - Only show when subscription data is loaded */}
             {!state.isSubscriptionLoading && (
-              <Card>
+              <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">Usage</CardTitle>
@@ -1225,17 +1181,23 @@ function DashboardContent() {
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Clips this month</span>
-                      <span className="font-medium">{state.clipsThisMonth}/{state.clipsLimit}</span>
+                      <span className="text-slate-600 dark:text-slate-400">Clips this month</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{state.clipsThisMonth}/{state.clipsLimit}</span>
                     </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
                       <div 
-                        className="bg-primary h-2 rounded-full transition-all"
+                        className={`h-1.5 rounded-full transition-all ${
+                          (state.clipsThisMonth / state.clipsLimit) >= 0.9
+                            ? 'bg-red-500'
+                            : (state.clipsThisMonth / state.clipsLimit) >= 0.7
+                            ? 'bg-yellow-500'
+                            : 'bg-blue-500'
+                        }`}
                         style={{ width: `${Math.min((state.clipsThisMonth / state.clipsLimit) * 100, 100)}%` }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {state.clipsLimit - state.clipsThisMonth} clips remaining
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {state.clipsLimit - state.clipsThisMonth} clips remaining this month
                     </p>
                   </div>
                 </CardContent>
@@ -1244,20 +1206,20 @@ function DashboardContent() {
 
             {/* Subscription Loading State */}
             {state.isSubscriptionLoading && (
-              <Card>
+              <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Loading...</CardTitle>
+                  <CardTitle className="text-sm text-slate-400 dark:text-slate-600">Usage</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Clips this month</span>
-                      <div className="h-4 w-12 bg-secondary rounded animate-pulse"></div>
+                      <span className="text-slate-400">Clips this month</span>
+                      <div className="h-4 w-12 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
                     </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div className="bg-secondary h-2 rounded-full animate-pulse"></div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
+                      <div className="bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full animate-pulse w-1/3"></div>
                     </div>
-                    <div className="h-3 w-24 bg-secondary rounded animate-pulse"></div>
+                    <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
                   </div>
                 </CardContent>
               </Card>
@@ -1265,13 +1227,11 @@ function DashboardContent() {
 
             {/* Upgrade Section - Only show for free users when subscription data is loaded */}
             {!state.isSubscriptionLoading && state.subscriptionTier === 'free' && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Upgrade to Pro</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="text-xs text-muted-foreground">
-                    Get 1,000 clips/month + 5GB storage
+              <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
+                <CardContent className="pt-4 space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white mb-0.5">Upgrade to Pro</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">1,000 clips/month · 5GB storage</p>
                   </div>
                   <button
                     onClick={async () => {
@@ -1288,12 +1248,12 @@ function DashboardContent() {
                         if (url) window.location.href = url;
                       } catch (error) {
                         console.error('Upgrade error:', error);
-                        alert('Upgrade failed. Check console.');
+                        toast({ message: 'Upgrade failed. Please try again.', type: 'error' })
                       }
                     }}
-                    className="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all"
                   >
-                    Upgrade Monthly ($12)
+                    Monthly — $12/mo
                   </button>
                   <button
                     onClick={async () => {
@@ -1310,12 +1270,12 @@ function DashboardContent() {
                         if (url) window.location.href = url;
                       } catch (error) {
                         console.error('Upgrade error:', error);
-                        alert('Upgrade failed. Check console.');
+                        toast({ message: 'Upgrade failed. Please try again.', type: 'error' })
                       }
                     }}
-                    className="w-full bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 transition-colors"
+                    className="w-full border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-medium transition-all"
                   >
-                    Upgrade Annual ($120)
+                    Annual — $120/yr <span className="text-green-600 dark:text-green-400 font-semibold">Save 17%</span>
                   </button>
                 </CardContent>
               </Card>
@@ -1324,97 +1284,106 @@ function DashboardContent() {
 
           {/* Main Content */}
           <main className="flex-1 flex flex-col space-y-6 min-w-0 h-auto lg:h-full lg:overflow-hidden">
-            {/* Search and Filters - Clean Simple Layout */}
+            {/* Search and Filters */}
             {state.viewFilter !== 'knowledge-graphs' && (
-            <div className="flex items-center gap-3 w-full px-1 py-3">
-              {/* Refresh Button */}
-              <button
-                onClick={handleRefresh}
-                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 focus:outline-none transition-all duration-200 rounded-xl flex items-center justify-center"
-                title="Refresh and clear image cache"
-              >
-                <RefreshCw className="h-4 w-4 text-gray-600" />
-              </button>
+            <div className="flex flex-col gap-2 w-full px-1 py-3">
+              {/* Primary row: refresh + search */}
+              <div className="flex items-center gap-2 w-full">
+                <button
+                  onClick={handleRefresh}
+                  className="h-11 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent focus:outline-none transition-all duration-200 rounded-xl flex items-center justify-center flex-shrink-0"
+                  title="Refresh"
+                >
+                  <RefreshCw className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                </button>
 
-              {/* Main Search Bar */}
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search titles, content, URLs, folders..."
-                  value={state.searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className={`pl-10 pr-3 h-11 w-full bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl ${state.searchQuery ? 'pr-10' : ''}`}
-                />
-                {state.searchQuery && (
-                  <button
-                    onClick={() => handleSearch('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
-                    title="Clear search"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search titles, content, URLs..."
+                    value={state.searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className={`pl-10 h-11 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus:border-blue-500 dark:focus:border-blue-400 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl ${state.searchQuery ? 'pr-10' : 'pr-3'}`}
+                  />
+                  {state.searchQuery && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                      {state.isSearching && (
+                        <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                      )}
+                      <button
+                        onClick={() => handleSearch('')}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {state.searchQuery && !state.isSearching && filteredClips.length > 0 && (
+                  <span className="flex-shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md whitespace-nowrap">
+                    {filteredClips.length} result{filteredClips.length !== 1 ? 's' : ''}
+                  </span>
                 )}
               </div>
 
-              {/* Simple Tag Filter */}
-              <select
-                value={state.selectedTag || 'all-tags'}
-                onChange={(e) => handleTagFilterChange(e.target.value)}
-                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl text-sm min-w-[100px]"
-              >
-                <option value="all-tags">All Tags</option>
-                {state.availableTags.map((tag) => (
-                  <option key={tag.id} value={tag.id}>
-                    {tag.name}
-                  </option>
-                ))}
-              </select>
-              
-              {/* Simple Sort */}
-              <select
-                value={state.sortBy}
-                onChange={(e) => setState(prev => ({ ...prev, sortBy: e.target.value as any }))}
-                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl text-sm min-w-[120px]"
-              >
-                <option value="created_at">Date Created</option>
-                <option value="updated_at">Last Modified</option>
-                <option value="title">Title</option>
-              </select>
-                
-              <button
-                onClick={() => setState(prev => ({ 
-                  ...prev, 
-                  sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
-                }))}
-                className="h-11 px-3 bg-white border border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl text-sm"
-                title={`Sort ${state.sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
-              >
-                {state.sortOrder === 'asc' ? '↑' : '↓'}
-              </button>
+              {/* Secondary row: filters + sort + view — scrollable on mobile */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+                <select
+                  value={state.selectedTag || 'all-tags'}
+                  onChange={(e) => handleTagFilterChange(e.target.value)}
+                  className="h-9 px-2 bg-slate-100 dark:bg-slate-800 border border-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-0 transition-all duration-200 rounded-lg text-sm flex-shrink-0"
+                >
+                  <option value="all-tags">All Tags</option>
+                  {state.availableTags.map((tag) => (
+                    <option key={tag.id} value={tag.id}>{tag.name}</option>
+                  ))}
+                </select>
 
-              {/* View Mode Toggle */}
-              <div className="flex border border-gray-200 rounded-xl overflow-hidden bg-white">
-                <button
-                  onClick={() => setState(prev => ({ ...prev, viewMode: 'grid' }))}
-                  className={`h-11 px-3 transition-all duration-200 ${
-                    state.viewMode === 'grid' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-white text-gray-600 hover:bg-gray-50'
-                  }`}
+                <select
+                  value={state.sortBy}
+                  onChange={(e) => setState(prev => ({ ...prev, sortBy: e.target.value as any }))}
+                  className="h-9 px-2 bg-slate-100 dark:bg-slate-800 border border-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-0 transition-all duration-200 rounded-lg text-sm flex-shrink-0"
                 >
-                  <Grid className="h-4 w-4" />
-                </button>
+                  <option value="created_at">Date</option>
+                  <option value="updated_at">Modified</option>
+                  <option value="title">Title</option>
+                </select>
+
                 <button
-                  onClick={() => setState(prev => ({ ...prev, viewMode: 'list' }))}
-                  className={`h-11 px-3 transition-all duration-200 ${
-                    state.viewMode === 'list' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-white text-gray-600 hover:bg-gray-50'
-                  }`}
+                  onClick={() => setState(prev => ({ 
+                    ...prev, 
+                    sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
+                  }))}
+                  className="h-9 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-transparent focus:outline-none transition-all duration-200 rounded-lg text-sm flex-shrink-0"
+                  title={`Sort ${state.sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
                 >
-                  <List className="h-4 w-4" />
+                  {state.sortOrder === 'asc' ? '↑' : '↓'}
                 </button>
+
+                <div className="flex items-center p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg flex-shrink-0 ml-auto gap-0.5">
+                  <button
+                    onClick={() => setState(prev => ({ ...prev, viewMode: 'grid' }))}
+                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
+                      state.viewMode === 'grid'
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setState(prev => ({ ...prev, viewMode: 'list' }))}
+                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
+                      state.viewMode === 'list'
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
             )}
@@ -1491,44 +1460,55 @@ function DashboardContent() {
             ) : (
               <div className="flex-1 overflow-visible lg:overflow-hidden">
               {isInitialLoading ? (
-                /* Fast Loading Skeleton */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-xl p-4 animate-pulse border border-gray-100">
-                      <div className="aspect-video bg-gray-100 rounded-lg mb-3"></div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-100 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                /* Loading Skeleton */
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden animate-pulse border border-slate-200/70 dark:border-white/[0.08]">
+                      <div className="aspect-[16/10] bg-slate-100 dark:bg-slate-800"></div>
+                      <div className="px-3 pt-2.5 pb-3 space-y-2">
+                        <div className="h-3.5 bg-slate-100 dark:bg-slate-800 rounded w-3/4"></div>
+                        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-2/5"></div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : sortedClips.length === 0 ? (
-                <Card className="p-12">
-                  <div className="text-center space-y-4">
-                    <div className="flex justify-center opacity-20">
-                      <LogoIcon size={96} />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {state.viewFilter === 'favorites' ? 'No favorites found' :
-                         state.viewFilter === 'recent' ? 'No recent clips found' :
-                         'No clips yet'}
-                      </h3>
-                      <p className="text-muted-foreground">
-                        {state.viewFilter === 'favorites' ? 'Star clips to add them to your favorites' :
-                         state.viewFilter === 'recent' ? 'Clips from the last 7 days will appear here' :
-                         'Install the PageStash extension to start capturing web content'}
-                      </p>
-                    </div>
-                    {state.viewFilter === 'library' && (
-                      <Button onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Install Extension
-                      </Button>
-                    )}
+                <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center mb-6">
+                    <LogoIcon size={40} />
                   </div>
-                </Card>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                    {state.searchQuery ? 'No results found' :
+                     state.viewFilter === 'favorites' ? 'No favorites yet' :
+                     state.viewFilter === 'recent' ? 'No recent clips' :
+                     state.selectedFolder ? 'This folder is empty' :
+                     'Your stash is empty'}
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed mb-8">
+                    {state.searchQuery ? `No clips match "${state.searchQuery}". Try different keywords.` :
+                     state.viewFilter === 'favorites' ? 'Star a clip to add it to your favorites.' :
+                     state.viewFilter === 'recent' ? 'Clips from the last 7 days will appear here.' :
+                     state.selectedFolder ? 'Capture a page with the extension and move it here.' :
+                     'Install the extension and capture your first page — it takes one click.'}
+                  </p>
+                  {(state.viewFilter === 'library' && !state.searchQuery) && (
+                    <Button
+                      onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}
+                      className="h-11 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Install Extension
+                    </Button>
+                  )}
+                  {state.searchQuery && (
+                    <button
+                      onClick={() => handleSearch('')}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="h-auto lg:h-full overflow-visible lg:overflow-y-auto pr-2 -mr-2">
                   <div className={
@@ -1551,6 +1531,7 @@ function DashboardContent() {
                         }}
                         onUpdate={handleClipUpdate}
                         onDelete={handleClipDelete}
+                        onRequestDelete={(clipId) => setDeleteConfirm({ open: true, clipId })}
                         onToggleFavorite={handleToggleFavorite}
                         priority={index < 20} // Prioritize first 20 images in current view (filtered or unfiltered)
                         isSelectionMode={state.isSelectionMode}
@@ -1695,6 +1676,47 @@ function DashboardContent() {
         isOpen={state.isExportUpgradeModalOpen}
         onClose={() => setState(prev => ({ ...prev, isExportUpgradeModalOpen: false }))}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this clip?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The clip and its screenshot will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (deleteConfirm.clipId) {
+                  await handleClipDelete(deleteConfirm.clipId)
+                  toast({ message: 'Clip deleted', type: 'info' })
+                }
+                setDeleteConfirm({ open: false, clipId: null })
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Onboarding Overlay */}
+      {showOnboarding && (
+        <OnboardingOverlay
+          onInstallClick={() => {
+            setShowOnboarding(false)
+            setState(prev => ({ ...prev, isDownloadModalOpen: true }))
+          }}
+          onDismiss={() => {
+            localStorage.setItem('pagestash-onboarding-dismissed', '1')
+            setShowOnboarding(false)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -1706,6 +1728,7 @@ interface ClipCardProps {
   onClick: () => void
   onUpdate: (clipId: string, updates: Partial<Clip>) => Promise<void>
   onDelete: (clipId: string) => Promise<void>
+  onRequestDelete: (clipId: string) => void
   onToggleFavorite: (clipId: string, isFavorite: boolean) => Promise<void>
   priority?: boolean
   isSelectionMode?: boolean
@@ -1713,18 +1736,12 @@ interface ClipCardProps {
   onToggleSelection?: () => void
 }
 
-function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onToggleFavorite, priority = false, isSelectionMode = false, isSelected = false, onToggleSelection }: ClipCardProps) {
+function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onRequestDelete, onToggleFavorite, priority = false, isSelectionMode = false, isSelected = false, onToggleSelection }: ClipCardProps) {
   const folder = folders.find(f => f.id === clip.folder_id)
   
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (confirm('Are you sure you want to delete this clip?')) {
-      try {
-        await onDelete(clip.id)
-      } catch (error) {
-        console.error('Failed to delete clip:', error)
-      }
-    }
+    onRequestDelete(clip.id)
   }
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
@@ -1738,12 +1755,12 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
 
   if (viewMode === 'list') {
     return (
-      <Card className={`p-3 hover:shadow-lg hover:shadow-black/5 transition-all duration-300 cursor-pointer shadow-md backdrop-blur-md ${
+      <Card className={`p-3 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/30 transition-all duration-300 cursor-pointer ${
         isSelectionMode && isSelected 
-          ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-50/60 to-blue-50/40' 
+          ? 'border-2 border-blue-500 bg-blue-50/60 dark:bg-blue-900/20' 
           : clip.is_favorite 
-          ? 'border-l-4 border-l-yellow-400 bg-gradient-to-r from-yellow-50/40 to-white/60 border-t border-r border-b border-white/20' 
-          : 'border border-white/20 bg-gradient-to-r from-white/80 to-white/60'
+          ? 'border-l-4 border-l-yellow-400 bg-yellow-50/40 dark:bg-yellow-900/10 border-t border-r border-b border-slate-200/60 dark:border-white/10' 
+          : 'border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900'
       }`} onClick={onClick}>
         <div className="flex items-center space-x-3">
           {isSelectionMode && (
@@ -1857,134 +1874,122 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onTogg
     )
   }
 
+  const hostname = (() => { try { return new URL(clip.url).hostname.replace('www.', '') } catch { return clip.url } })()
+  const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`
+
   return (
-    <Card className={`overflow-hidden hover:shadow-xl hover:shadow-black/10 hover:scale-[1.02] transition-all duration-300 group cursor-pointer shadow-lg bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-md ${
-      isSelectionMode && isSelected 
-        ? 'border-4 border-blue-500 ring-2 ring-blue-200' 
-        : 'border border-white/20'
-    }`} onClick={onClick}>
-      {clip.screenshot_url ? (
-        <div className="aspect-[4/3] bg-muted/30 relative overflow-hidden">
-          <CachedImage
-            src={clip.screenshot_url}
-            alt={clip.title}
-            width={400}
-            height={300}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1536px) 25vw, 16vw"
-            className="w-full h-full object-top object-cover group-hover:scale-105 transition-transform duration-300"
-            quality={85}
-            priority={priority}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          
-          {/* Selection checkbox overlay */}
-          {isSelectionMode && (
-            <div 
-              className="absolute top-2 right-2 bg-white rounded-lg shadow-lg p-1.5"
-              onClick={(e) => {
-                e.stopPropagation()
-                onToggleSelection?.()
-              }}
-            >
-              {isSelected ? (
-                <CheckSquare className="h-6 w-6 text-blue-600" />
-              ) : (
-                <Square className="h-6 w-6 text-slate-400" />
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="aspect-[4/3] bg-gradient-to-br from-blue-50/50 to-purple-50/50 relative overflow-hidden border-b border-white/30">
-          <div className="absolute inset-0 p-4 flex flex-col justify-center items-center text-center">
-            <FileText className="h-12 w-12 text-blue-400/50 mb-2" />
-            <div className="text-xs text-muted-foreground font-medium">HTML Capture</div>
-            <div className="text-xs text-muted-foreground/70 mt-1">Click to view</div>
+    <div
+      className={`group cursor-pointer rounded-2xl overflow-hidden bg-white dark:bg-slate-900 transition-all duration-200 ${
+        isSelectionMode && isSelected
+          ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-950 border border-blue-500'
+          : 'border border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20 hover:shadow-lg hover:shadow-slate-900/8 dark:hover:shadow-black/30'
+      }`}
+      onClick={onClick}
+    >
+      {/* Screenshot */}
+      <div className="aspect-[16/10] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+        {clip.screenshot_url ? (
+          <>
+            <CachedImage
+              src={clip.screenshot_url}
+              alt={clip.title}
+              width={400}
+              height={250}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              className="w-full h-full object-cover object-top"
+              quality={85}
+              priority={priority}
+            />
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent" />
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">HTML capture</span>
           </div>
-        </div>
-      )}
-      
-      <CardContent className="p-3">
-        <div className="space-y-1.5">
-          <h3 className="font-medium text-sm line-clamp-2 leading-tight text-foreground/90">{clip.title}</h3>
-          
-          <div className="flex items-center text-xs text-muted-foreground/80">
-            <Globe className="h-3 w-3 mr-1.5 flex-shrink-0" />
-            <span className="truncate">{new URL(clip.url).hostname}</span>
+        )}
+
+        {/* Favorite pill — top right */}
+        <button
+          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(e) }}
+          className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 backdrop-blur-sm shadow-sm ${
+            clip.is_favorite
+              ? 'opacity-100 bg-white/90 dark:bg-slate-900/90'
+              : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-slate-900/80'
+          }`}
+        >
+          <Star className={`h-3.5 w-3.5 transition-colors ${
+            clip.is_favorite ? 'fill-yellow-400 text-yellow-400' : 'text-slate-500 hover:text-yellow-400'
+          }`} />
+        </button>
+
+        {/* Selection */}
+        {isSelectionMode && (
+          <div
+            className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center shadow"
+            onClick={(e) => { e.stopPropagation(); onToggleSelection?.() }}
+          >
+            {isSelected
+              ? <CheckSquare className="h-4 w-4 text-blue-600" />
+              : <Square className="h-4 w-4 text-slate-400" />
+            }
+          </div>
+        )}
+      </div>
+
+      {/* Metadata */}
+      <div className="px-3 pt-2.5 pb-3">
+        <h3 className="font-semibold text-[13px] leading-snug text-slate-900 dark:text-white line-clamp-2 mb-2">
+          {clip.title}
+        </h3>
+
+        <div className="flex items-center justify-between gap-2">
+          {/* Source */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={faviconUrl} alt="" width={12} height={12} className="w-3 h-3 rounded-sm flex-shrink-0 opacity-60" />
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{hostname}</span>
+            {folder && (
+              <>
+                <span className="text-slate-300 dark:text-slate-700 flex-shrink-0">·</span>
+                <span className="text-[11px] font-medium truncate flex-shrink-0" style={{ color: folder.color }}>
+                  {folder.name}
+                </span>
+              </>
+            )}
           </div>
 
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-1 flex-wrap text-xs text-muted-foreground/70 font-medium">
-              <span>
-                {new Date(clip.created_at).toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric' 
-                })}
-              </span>
-              
-              {folder && (
-                <>
-                  <span className="text-muted-foreground/50">•</span>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs px-2 py-0.5 border-0"
-                    style={{
-                      backgroundColor: `${folder.color}20`,
-                      color: folder.color,
-                      borderColor: `${folder.color}40`
-                    }}
-                  >
-                    {folder.name}
-                  </Badge>
-                </>
-              )}
-              
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggleFavorite(e);
-                }}
-                className="flex-shrink-0 hover:scale-110 transition-transform"
-              >
-                <Star className={`h-3 w-3 transition-colors ${
-                  clip.is_favorite 
-                    ? 'fill-yellow-500 text-yellow-500' 
-                    : 'text-muted-foreground/40 hover:text-yellow-500'
-                }`} />
-              </button>
-            </div>
-            
+          {/* Date + menu */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+              {new Date(clip.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-primary/10"
+                <button
+                  className="h-6 w-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 ml-0.5"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                  <MoreHorizontal className="h-3.5 w-3.5 text-slate-400" />
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.open(clip.url, '_blank') }}>
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Open Original
+                  <ExternalLink className="mr-2 h-4 w-4" />Open Original
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClick() }}>
-                  <Edit3 className="mr-2 h-4 w-4" />
-                  View & Edit
+                  <Edit3 className="mr-2 h-4 w-4" />View &amp; Edit
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  <Trash2 className="mr-2 h-4 w-4" />Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

@@ -227,7 +227,7 @@ function getClipColor(domain: string): string {
   if (domain.includes('linkedin.com')) return '#0077b5';
   if (domain.includes('reddit.com')) return '#ff4500';
   if (domain.includes('news') || domain.includes('bbc') || domain.includes('cnn')) return '#e11d48';
-  return NODE_COLORS.clip; // Default purple
+  return NODE_COLORS.clip; // Default blue
 }
 
 function generateClipConnections(clips: any[], edges: GraphEdge[]): void {
@@ -856,7 +856,7 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
         {/* Header */}
         <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Brain className="w-6 h-6 text-purple-600" />
+            <Brain className="w-6 h-6 text-blue-600" />
             <div>
               <h2 className="text-lg font-semibold text-slate-900">{graphTitle}</h2>
               {graphDescription && (
@@ -970,7 +970,7 @@ export function KnowledgeGraphViewer({ isOpen, onClose, graphId, graphTitle, gra
                 <span>{graphData.nodes.length} nodes</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <span>{graphData.edges.length} connections</span>
               </div>
             </div>

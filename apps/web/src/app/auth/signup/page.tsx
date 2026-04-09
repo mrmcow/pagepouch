@@ -12,6 +12,15 @@ import { Loader2, Mail, Lock, User, ArrowLeft, Check, Eye, EyeOff, Copy } from '
 import { createClient } from '@/lib/supabase'
 import { LogoIcon } from '@/components/ui/logo'
 
+function humanizeAuthError(message: string): string {
+  if (message.includes('already registered') || message.includes('already been registered')) return 'An account with this email already exists. Try signing in instead.'
+  if (message.includes('Invalid email')) return 'Please enter a valid email address.'
+  if (message.includes('Password should be')) return 'Your password needs to be at least 6 characters.'
+  if (message.includes('rate limit') || message.includes('too many')) return 'Too many attempts. Please wait a moment and try again.'
+  if (message.includes('network') || message.includes('fetch')) return 'Connection issue. Please check your internet and try again.'
+  return 'Something went wrong. Please try again.'
+}
+
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -73,8 +82,6 @@ export default function SignUpPage() {
     try {
       const supabase = getSupabase()
       
-      console.log('🚀 Starting signup for:', email)
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -85,32 +92,19 @@ export default function SignUpPage() {
         },
       })
 
-      console.log('📧 Signup response:', { data, error })
-
       if (error) {
-        console.error('❌ Signup error:', error)
-        setError(error.message)
+        setError(humanizeAuthError(error.message))
         return
       }
 
       if (data.user) {
-        console.log('✅ User created:', data.user)
-        console.log('📮 Email confirmation status:', data.user.email_confirmed_at ? 'Confirmed' : 'Pending confirmation')
-        
         if (data.user.email_confirmed_at) {
-          // Email already confirmed, redirect to dashboard
-          console.log('🎉 User already confirmed, redirecting to dashboard')
           router.push('/dashboard')
         } else {
-          // Show success message for email confirmation
-          console.log('📬 Showing confirmation message, check your email!')
           setSuccess(true)
         }
-      } else {
-        console.warn('⚠️ No user data returned')
       }
     } catch (err) {
-      console.error('💥 Signup error:', err)
       setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

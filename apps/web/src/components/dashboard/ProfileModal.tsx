@@ -222,39 +222,43 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
             </Card>
           )}
 
-          <div className="border-t my-6" />
-
           {/* Danger Zone */}
-          <Card className="border-red-200 bg-red-50/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl text-red-700 flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
-                </div>
-                Danger Zone
-              </CardTitle>
-              <CardDescription className="text-red-600/80">
-                Irreversible actions that will permanently affect your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="border border-red-200 dark:border-red-900/60 rounded-xl overflow-hidden mt-6">
+            <div className="px-5 py-4 bg-red-50/60 dark:bg-red-950/20 border-b border-red-200 dark:border-red-900/60 flex items-center gap-3">
+              <AlertTriangle className="h-4 w-4 text-red-500 dark:text-red-400 flex-shrink-0" />
+              <div>
+                <h3 className="text-sm font-semibold text-red-700 dark:text-red-400">Danger Zone</h3>
+                <p className="text-xs text-red-600/70 dark:text-red-500/80 mt-0.5">
+                  Irreversible actions that will permanently affect your account.
+                </p>
+              </div>
+            </div>
+            <div className="px-5 py-4 bg-white dark:bg-slate-900">
               {!showDeleteConfirm ? (
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={isLoading}
-                >
-                  Delete Account
-                </Button>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">Delete Account</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Permanently remove your account and all data.</p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={isLoading}
+                    className="flex-shrink-0 bg-red-600 hover:bg-red-700"
+                  >
+                    Delete Account
+                  </Button>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    This will permanently delete your account, all clips, folders, and cancel any active subscription. 
-                    This action cannot be undone.
+                <div className="space-y-4">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    This will permanently delete your account, all clips, folders, and cancel any active subscription.{' '}
+                    <span className="font-medium text-slate-900 dark:text-white">This action cannot be undone.</span>
                   </p>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-delete">
-                      Type "DELETE" to confirm:
+                  <div className="space-y-1.5">
+                    <Label htmlFor="confirm-delete" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Type <span className="font-mono font-bold text-red-600 dark:text-red-400">DELETE</span> to confirm
                     </Label>
                     <Input
                       id="confirm-delete"
@@ -262,18 +266,22 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
                       placeholder="DELETE"
                       disabled={isLoading}
+                      className="font-mono"
                     />
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="destructive"
+                      size="sm"
                       onClick={handleDeleteAccount}
                       disabled={isLoading || deleteConfirmText !== 'DELETE'}
+                      className="bg-red-600 hover:bg-red-700 disabled:opacity-40"
                     >
-                      {isLoading ? 'Deleting...' : 'Permanently Delete Account'}
+                      {isLoading ? 'Deleting…' : 'Permanently Delete Account'}
                     </Button>
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => {
                         setShowDeleteConfirm(false)
                         setDeleteConfirmText('')
@@ -285,8 +293,8 @@ export function ProfileModal({ isOpen, onClose, user, subscriptionData }: Profil
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -31,47 +31,27 @@ export class GraphFilterEngine {
    * Apply comprehensive filters to the graph
    */
   applyFilters(filters: GraphFilters): FilteredGraphData {
-    console.log('🔍 Filter Debug: Starting with', { totalNodes: this.nodes.length, totalEdges: this.edges.length })
-
     // Step 1: Filter nodes based on entity filters
     let filteredNodes = this.filterEntities(this.nodes, filters.entities)
-    console.log('🔍 Filter Debug: After entity filtering', { nodesLeft: filteredNodes.length })
 
     // Step 2: Filter edges based on connection filters
     let filteredEdges = this.filterConnections(this.edges, filters.connections)
-    console.log('🔍 Filter Debug: After connection filtering', { edgesLeft: filteredEdges.length })
 
     // Step 3: Apply theme filters to both nodes and edges
     const themeResult = this.filterByThemes(filteredNodes, filteredEdges, filters.themes)
     filteredNodes = themeResult.nodes
     filteredEdges = themeResult.edges
-    console.log('🔍 Filter Debug: After theme filtering', { nodesLeft: filteredNodes.length, edgesLeft: filteredEdges.length })
 
     // Step 4: Apply evidence filters
     const evidenceResult = this.filterByEvidence(filteredNodes, filteredEdges, filters.evidence)
     filteredNodes = evidenceResult.nodes
     filteredEdges = evidenceResult.edges
-    console.log('🔍 Filter Debug: After evidence filtering', { nodesLeft: filteredNodes.length, edgesLeft: filteredEdges.length })
 
-    // Step 5: TEMPORARILY SKIP orphaned node removal for debugging
-    // const connectedNodeIds = new Set<string>()
-    // filteredEdges.forEach(edge => {
-    //   connectedNodeIds.add(edge.source)
-    //   connectedNodeIds.add(edge.target)
-    // })
-    // const beforeOrphanRemoval = filteredNodes.length
-    // filteredNodes = filteredNodes.filter(node => connectedNodeIds.has(node.id))
-    // console.log('🔍 Filter Debug: After orphan removal', { before: beforeOrphanRemoval, after: filteredNodes.length })
-
-    // Step 6: Remove edges that reference filtered-out nodes
+    // Step 5: Remove edges that reference filtered-out nodes
     const nodeIds = new Set(filteredNodes.map(n => n.id))
-    const beforeEdgeCleanup = filteredEdges.length
     filteredEdges = filteredEdges.filter(edge => 
       nodeIds.has(edge.source) && nodeIds.has(edge.target)
     )
-    console.log('🔍 Filter Debug: After edge cleanup', { before: beforeEdgeCleanup, after: filteredEdges.length })
-
-    console.log('🔍 Filter Debug: Final result', { nodes: filteredNodes.length, edges: filteredEdges.length })
 
     return {
       nodes: filteredNodes,
@@ -231,17 +211,8 @@ export class GraphFilterEngine {
     filters: EvidenceFilters
   ): { nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[] } {
     
-    // TEMPORARILY SIMPLIFIED: Just return all edges for now to get the graph working
-    const filteredEdges = edges // Skip evidence filtering temporarily
-    
-    console.log('🔍 Evidence Debug: Skipping evidence filtering, returning all edges', { 
-      totalEdges: edges.length,
-      sampleEdge: edges[0] ? {
-        id: edges[0].id,
-        evidenceLength: edges[0].evidence?.length || 0,
-        hasEvidence: !!edges[0].evidence
-      } : 'No edges'
-    })
+    // Simplified: return all edges (evidence-based filtering not yet implemented)
+    const filteredEdges = edges
 
     // Filter nodes based on their evidence quality (simplified)
     const filteredNodes = nodes.filter(node => {

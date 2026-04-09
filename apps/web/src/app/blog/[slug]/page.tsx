@@ -178,7 +178,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       {/* Article Content */}
       <main className="flex-1">
         {/* Article Header */}
-        <section className="py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <section className="py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50">
           <div className="max-w-4xl mx-auto px-4">
             <Breadcrumbs items={breadcrumbItems} />
             

@@ -97,8 +97,8 @@ export function ExportUpgradeModal({ isOpen, onClose }: ExportUpgradeModalProps)
                   <div className="text-xs text-slate-600 mt-1">For Obsidian</div>
                 </div>
                 
-                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100/30 rounded-lg border border-purple-200">
-                  <Table className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/30 rounded-lg border border-blue-200">
+                  <Table className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                   <div className="text-sm font-semibold text-slate-800">CSV/Excel</div>
                   <div className="text-xs text-slate-600 mt-1">Data analysis</div>
                 </div>
@@ -136,12 +136,12 @@ export function ExportUpgradeModal({ isOpen, onClose }: ExportUpgradeModalProps)
                 </CardContent>
               </Card>
               
-              <Card className="border-purple-100">
+              <Card className="border-blue-100">
                 <CardContent className="p-6">
-                  <SearchIcon className="h-8 w-8 text-purple-600 mb-3" />
+                  <SearchIcon className="h-8 w-8 text-blue-600 mb-3" />
                   <h4 className="font-semibold text-slate-800 mb-2">OSINT Analysts</h4>
                   <p className="text-sm text-slate-600 mb-3">Generate timeline reports with all screenshots and timestamps automatically. Save 2 hours per report.</p>
-                  <div className="text-xs text-purple-600 font-medium">→ PDF, Markdown, HTML exports</div>
+                  <div className="text-xs text-blue-600 font-medium">→ PDF, Markdown, HTML exports</div>
                 </CardContent>
               </Card>
               

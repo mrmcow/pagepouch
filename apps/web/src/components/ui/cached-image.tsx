@@ -82,9 +82,10 @@ export function CachedImage({
   style,
   ...props
 }: CachedImageProps) {
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [isInView, setIsInView] = useState(priority)
+  const alreadyCached = imageCache.get(src) === 'loaded'
+  const [isLoading, setIsLoading] = useState(!alreadyCached)
+  const [hasError, setHasError] = useState(imageCache.get(src) === 'error')
+  const [isInView, setIsInView] = useState(priority || alreadyCached)
   const imgRef = useRef<HTMLDivElement>(null)
 
   // Intersection Observer for lazy loading
@@ -156,7 +157,7 @@ export function CachedImage({
       <div 
         ref={imgRef}
         className={cn(
-          'bg-gray-100 flex items-center justify-center text-gray-400 text-xs',
+          'bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-600 text-xs',
           className
         )}
         style={style}
@@ -171,14 +172,12 @@ export function CachedImage({
 
   return (
     <div ref={imgRef} className="relative">
-      {/* Loading placeholder */}
+      {/* Loading placeholder — clean pulse, no spinner */}
       {isLoading && (
         <div 
-          className="bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse flex items-center justify-center rounded-sm"
+          className="absolute inset-0 bg-slate-100 dark:bg-slate-800 animate-pulse"
           style={{ width, height }}
-        >
-          <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin opacity-60" />
-        </div>
+        />
       )}
       
       {/* Actual image - only render when in view or priority */}
@@ -196,8 +195,8 @@ export function CachedImage({
           onLoad={handleLoad}
           onError={handleError}
           className={cn(
-            'transition-all duration-500 ease-out',
-            isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100',
+            'transition-opacity duration-200 ease-out',
+            isLoading ? 'opacity-0' : 'opacity-100',
             className
           )}
           style={{

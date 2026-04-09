@@ -24,8 +24,6 @@ import {
   CheckIcon,
   PlayIcon,
   SparklesIcon,
-  TrendingUpIcon,
-  UsersIcon,
   CrownIcon,
   InfinityIcon,
   DatabaseIcon,
@@ -60,11 +58,9 @@ const getBrowserInfo = () => {
   }
   
   const userAgent = window.navigator.userAgent
-  console.log('🔍 User Agent:', userAgent) // Debug log
   
   // Firefox detection - must check Firefox specifically (NOT just Gecko, as Chrome also has Gecko in UA)
   if (userAgent.includes('Firefox')) {
-    console.log('✅ Firefox detected!') // Debug log
     return { 
       name: 'Firefox', 
       icon: 'firefox', 
@@ -76,7 +72,6 @@ const getBrowserInfo = () => {
   }
   
   // Default to Chrome for all other browsers (Chrome, Edge, Safari, etc.)
-  console.log('✅ Chrome detected (default)') // Debug log
   return { 
     name: 'Chrome', 
     icon: 'chrome', 
@@ -112,7 +107,6 @@ export default function HomePage() {
   // Detect browser on component mount
   React.useEffect(() => {
     const browserInfo = getBrowserInfo()
-    console.log('🔍 Detected browser:', browserInfo) // Debug log with emoji for visibility
     setDetectedBrowser(browserInfo)
     setSelectedBrowser(browserInfo.name.toLowerCase() as 'chrome' | 'firefox')
   }, [])
@@ -150,9 +144,6 @@ export default function HomePage() {
   }
 
   const handleSmartDownload = () => {
-    console.log('Smart download clicked, detected browser:', detectedBrowser) // Debug log
-    
-    // Always use the modal for better UX with instructions
     const browserType = detectedBrowser?.name === 'Firefox' ? 'firefox' : 'chrome'
     handleDownloadClick(browserType)
   }
@@ -181,7 +172,7 @@ export default function HomePage() {
               ratingCount: '10000',
               bestRating: '5',
             },
-            description: 'The only web archival tool built for researchers, analysts, and professionals. Capture full-page screenshots, extract text, organize with folders, and find content instantly.',
+            description: 'PageStash archives every web page exactly as you saw it — full screenshot, full text — and lets you search what\'s inside weeks later. The web clipper for researchers who actually need to find what they saved.',
             url: 'https://www.pagestash.app',
             image: 'https://www.pagestash.app/og-image.png',
             author: {
@@ -337,61 +328,69 @@ export default function HomePage() {
         )}
       </header>
 
+      {/* Hero + Pricing share one continuous background */}
+      <div className="bg-gradient-to-b from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900/50">
+
       {/* Hero Section - Elite & Precise */}
       <section 
         ref={heroRef}
         data-section="hero"
-        className="relative pt-20 sm:pt-32 lg:pt-32 pb-20 sm:pb-28 bg-white dark:bg-slate-950 overflow-hidden px-4 sm:px-6"
+        className="relative pt-20 sm:pt-32 lg:pt-32 pb-10 sm:pb-14 px-4 sm:px-6"
       >
-        <div className="absolute inset-0 pointer-events-none">
+        {/* overflow-hidden scoped to orb container only — avoids paint-layer edge on section boundary */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
           <div className="absolute -top-32 -right-32 w-[520px] h-[520px] bg-gradient-to-br from-blue-500/30 via-cyan-500/20 to-transparent blur-[160px]" />
           <div className="absolute bottom-[-200px] -left-24 w-[480px] h-[480px] bg-gradient-to-tr from-indigo-500/20 via-blue-500/10 to-transparent blur-[150px]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent dark:from-slate-950" />
         </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
             {/* Left Side - Hero Text */}
-            <div className="w-full text-center lg:text-left space-y-6 sm:space-y-8">
-              <div className="inline-flex items-center gap-2 pl-3 pr-5 py-[0.85rem] rounded-full bg-white/80 dark:bg-slate-900/65 text-slate-900 dark:text-white mb-4 sm:mb-6 shadow-[0_18px_45px_-35px_rgba(15,23,42,1)] border border-slate-200/70 dark:border-white/15">
-                <span className="inline-flex items-center justify-center px-3 py-[0.35rem] rounded-full text-[11px] uppercase tracking-[0.4em] bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-[0_6px_24px_-10px_rgba(15,23,42,1)] border border-slate-900/0">
+            <div className="w-full text-center lg:text-left flex flex-col gap-5 sm:gap-6">
+              {/* PRO badge */}
+              <div className="inline-flex items-center gap-2 pl-3 pr-5 py-[0.75rem] rounded-full bg-white/80 dark:bg-slate-900/65 text-slate-900 dark:text-white self-center lg:self-start shadow-[0_18px_45px_-35px_rgba(15,23,42,1)] border border-slate-200/70 dark:border-white/15">
+                <span className="inline-flex items-center justify-center px-3 py-[0.3rem] rounded-full text-[11px] uppercase tracking-[0.4em] bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-[0_6px_24px_-10px_rgba(15,23,42,1)]">
                   PRO
                 </span>
-                <span className="text-sm font-semibold tracking-tight">Just released Page Graphs</span>
+                <span className="text-sm font-semibold tracking-tight">Connect your research with Page Graphs</span>
               </div>
-              
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.05] space-y-1 sm:space-y-2">
-                <span className="block">Capture</span>
-                <span className="block">the web</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-400">
-                  like a pro.
-                </span>
-            </h1>
-            
-              <h2 className="text-xl sm:text-2xl text-slate-600 dark:text-slate-400 font-medium mt-4 sm:mt-6">
-                Web clipping and archival tool for researchers
-              </h2>
-            
-              <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-light">
-                The only web archival tool built for researchers, analysts, and professionals who demand instant capture, intelligent search, and beautiful organization.
-            </p>
 
-              {/* Social Proof - Clean */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-8 text-sm font-medium text-slate-500 dark:text-slate-300 border-t border-slate-200/70 dark:border-white/10 pt-6 sm:pt-8">
-                <div className="flex items-center gap-2.5">
-                  <UsersIcon className="h-5 w-5 text-blue-500" />
-                  <span>10,000+ professionals</span>
+              {/* Headline block — tightly grouped */}
+              <div className="space-y-2 sm:space-y-3">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.05]">
+                  <span className="block">Your research,</span>
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-400 pb-2">
+                    permanently.
+                  </span>
+                </h1>
+                <p className="text-lg sm:text-xl text-slate-500 dark:text-slate-400 font-medium">
+                  Pages disappear. Evidence gets edited. Links die.
+                </p>
               </div>
-                <div className="flex items-center gap-2.5">
-                  <TrendingUpIcon className="h-5 w-5 text-blue-500" />
-                  <span>2M+ pages archived</span>
-              </div>
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheckIcon className="h-5 w-5 text-blue-500" />
-                  <span>SOC-2 Compliant</span>
+
+              {/* Body copy */}
+              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg mx-auto lg:mx-0 font-light">
+                PageStash captures every page as it existed — screenshot, full text — so you can find it, cite it, and prove it long after the original is gone.
+              </p>
+
+              {/* Trust signals */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400 border-t border-slate-200/70 dark:border-white/10 pt-5 mt-1">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheckIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  Encrypted at rest
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  No ads. No tracking.
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <ZapIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  One-click capture
+                </span>
               </div>
             </div>
-          </div>
 
             {/* Right Side - CTA Box - Frosted Glass Enterprise */}
             <div className="w-full max-w-lg mx-auto lg:max-w-xl lg:mx-0">
@@ -432,9 +431,8 @@ export default function HomePage() {
       <section 
         ref={pricingRef}
         data-section="pricing"
-        className="relative py-24 sm:py-32 px-4 overflow-hidden bg-slate-50 dark:bg-slate-900/50"
+        className="relative pt-14 sm:pt-20 pb-24 sm:pb-32 px-4 overflow-hidden"
       >
-        {/* Simple background pattern */}
         <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#fff_1px,transparent_1px)]" />
 
         <div className="pagestash-container relative z-10">
@@ -539,6 +537,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      </div>{/* end hero+pricing gradient wrapper */}
+
       {/* How it Works - Signature Flow */}
       <section 
         ref={howItWorksRef}
@@ -581,7 +581,7 @@ export default function HomePage() {
               {
                 number: '03',
                 title: 'Organize & search',
-                desc: 'Every capture lands in your workspace with folders, tags, semantic search, and knowledge graph context.',
+                desc: 'Every capture lands in your workspace. Full-text search finds it in seconds. Page Graphs shows how everything connects.',
                 accent: 'from-indigo-500 to-blue-500',
                 icon: <SearchIcon className="w-9 h-9 text-indigo-200" />,
                 chips: ['Folders', 'Graph'],
@@ -820,6 +820,89 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Knowledge Graph Feature Section */}
+          <div className="mt-32 max-w-5xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              {/* Left: text */}
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-widest">Pro feature</span>
+                </div>
+                <h3 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  See how your research connects.
+                </h3>
+                <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+                  PageStash automatically maps connections between your saved pages — by domain, topic, and tag. See your research as a living network, not a flat list.
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    'Auto-generated connection graph from your clips',
+                    'Filter by folder, tag, or domain',
+                    'Click any node to open the original clip',
+                    'Discover patterns you didn\'t know were there',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-slate-700 dark:text-slate-300">
+                      <CheckIcon className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="pt-2">
+                  <span className="text-sm text-slate-500 dark:text-slate-400">Included in <strong className="text-slate-900 dark:text-white">Pro</strong> — upgrade any time.</span>
+                </div>
+              </div>
+
+              {/* Right: visual graph mockup */}
+              <div className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-blue-500/10 blur-2xl rounded-3xl" />
+                <div className="relative rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-xl overflow-hidden">
+                  <div className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-6">Connection Map — Research folder</div>
+                  {/* SVG graph mockup */}
+                  <svg viewBox="0 0 380 280" className="w-full" xmlns="http://www.w3.org/2000/svg">
+                    {/* Edges */}
+                    <line x1="190" y1="140" x2="100" y2="80" stroke="#e2e8f0" strokeWidth="1.5"/>
+                    <line x1="190" y1="140" x2="290" y2="80" stroke="#e2e8f0" strokeWidth="1.5"/>
+                    <line x1="190" y1="140" x2="80" y2="200" stroke="#e2e8f0" strokeWidth="1.5"/>
+                    <line x1="190" y1="140" x2="310" y2="200" stroke="#e2e8f0" strokeWidth="1.5"/>
+                    <line x1="190" y1="140" x2="190" y2="240" stroke="#e2e8f0" strokeWidth="1.5"/>
+                    <line x1="100" y1="80" x2="290" y2="80" stroke="#e2e8f0" strokeWidth="1"/>
+                    <line x1="80" y1="200" x2="190" y2="240" stroke="#e2e8f0" strokeWidth="1"/>
+                    <line x1="310" y1="200" x2="190" y2="240" stroke="#e2e8f0" strokeWidth="1"/>
+                    {/* Central node */}
+                    <circle cx="190" cy="140" r="22" fill="#7c3aed" opacity="0.9"/>
+                    <text x="190" y="144" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">AI</text>
+                    {/* Satellite nodes */}
+                    <circle cx="100" cy="80" r="16" fill="#3b82f6" opacity="0.8"/>
+                    <text x="100" y="84" textAnchor="middle" fill="white" fontSize="9">ML</text>
+                    <circle cx="290" cy="80" r="16" fill="#3b82f6" opacity="0.8"/>
+                    <text x="290" y="84" textAnchor="middle" fill="white" fontSize="9">LLM</text>
+                    <circle cx="80" cy="200" r="14" fill="#8b5cf6" opacity="0.7"/>
+                    <text x="80" y="204" textAnchor="middle" fill="white" fontSize="9">NLP</text>
+                    <circle cx="310" cy="200" r="14" fill="#8b5cf6" opacity="0.7"/>
+                    <text x="310" y="204" textAnchor="middle" fill="white" fontSize="9">RAG</text>
+                    <circle cx="190" cy="240" r="13" fill="#a78bfa" opacity="0.7"/>
+                    <text x="190" y="244" textAnchor="middle" fill="white" fontSize="9">GPT</text>
+                    {/* Outer ring nodes */}
+                    <circle cx="50" cy="120" r="10" fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1"/>
+                    <circle cx="340" cy="140" r="10" fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1"/>
+                    <circle cx="150" cy="40" r="10" fill="#ddd6fe" stroke="#3b82f6" strokeWidth="1"/>
+                    <circle cx="240" cy="40" r="10" fill="#ddd6fe" stroke="#3b82f6" strokeWidth="1"/>
+                    <line x1="100" y1="80" x2="50" y2="120" stroke="#e9d5ff" strokeWidth="1" strokeDasharray="3,2"/>
+                    <line x1="290" y1="80" x2="340" y2="140" stroke="#e9d5ff" strokeWidth="1" strokeDasharray="3,2"/>
+                    <line x1="100" y1="80" x2="150" y2="40" stroke="#dbeafe" strokeWidth="1" strokeDasharray="3,2"/>
+                    <line x1="290" y1="80" x2="240" y2="40" stroke="#dbeafe" strokeWidth="1" strokeDasharray="3,2"/>
+                  </svg>
+                  <div className="flex items-center gap-4 mt-4 text-xs text-slate-500">
+                    <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-600 inline-block"/><span>Primary topic</span></div>
+                    <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block"/><span>Related</span></div>
+                    <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-200 border border-blue-400 inline-block"/><span>Connected</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Preview Pane Showcase - Reader Experience */}
           <div 
             ref={previewPaneRef}
@@ -977,10 +1060,10 @@ export default function HomePage() {
         <div className="pagestash-container relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-8 tracking-tight text-white">
-              Ready to professionalize your web research?
+              Your research deserves better than bookmarks.
             </h2>
             <p className="text-xl mb-12 text-slate-400 max-w-2xl mx-auto">
-              Join thousands of analysts and researchers who have switched to PageStash.
+              Start free. Capture 10 pages a month. Upgrade when you need more.
             </p>
             
             {/* CTA Buttons */}

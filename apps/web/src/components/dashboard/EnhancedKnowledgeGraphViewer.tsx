@@ -1,10 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { createPortal } from 'react-dom'
 import { 
   X, 
   ZoomIn, 
@@ -12,21 +9,9 @@ import {
   RotateCcw, 
   Download, 
   Share2, 
-  Search,
-  Filter,
-  Maximize2,
-  Settings,
   Brain,
-  Network,
   Eye,
   EyeOff,
-  ExternalLink,
-  FileText,
-  Calendar,
-  Link,
-  SplitSquareHorizontal,
-  List,
-  Layers
 } from 'lucide-react'
 import { ClipViewer } from './ClipViewer'
 import { SimpleGraphControls } from '@/components/graph/SimpleGraphControls'
@@ -61,7 +46,7 @@ interface EnhancedKnowledgeGraphViewerProps {
 const DEFAULT_FILTERS: GraphFilters = {
   connections: {
     viewMode: 'all',
-    edgeTypes: [], // Empty = include all types
+    edgeTypes: ['citation'], // Default: show only domain→clip (Same Website) to keep initial view clean
     minStrength: 0,
     minSources: 0, // Changed from 1 to 0 to be more permissive
     maxPathLength: 6, // Increased from 3
@@ -146,6 +131,26 @@ export function EnhancedKnowledgeGraphViewer({
 
   // Advanced features state
   const [isExporting, setIsExporting] = useState(false)
+
+  // Escape key to close
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        // Close clip viewer first if open, otherwise close the graph
+        if (isClipViewerOpen) {
+          setIsClipViewerOpen(false)
+          setSelectedClipId(null)
+        } else if (uiState.persistentTooltip) {
+          setUIState(prev => ({ ...prev, persistentTooltip: undefined, selectedNodes: [] }))
+        } else {
+          onClose()
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isClipViewerOpen, uiState.persistentTooltip, onClose])
 
   // Initialize filter engine
   const filterEngine = useCallback(() => {
@@ -321,7 +326,9 @@ export function EnhancedKnowledgeGraphViewer({
       generateTemporalConnections(clips, nodes, edges)
     }
     
-    if (viewMode === 'content' || viewMode === 'all') {
+    // 'similar_content' is only generated when explicitly in 'content' mode
+    // Running it in 'all' mode produces too many low-quality edges
+    if (viewMode === 'content') {
       generateContentConnections(clips, nodes, edges)
     }
 
@@ -703,11 +710,6 @@ export function EnhancedKnowledgeGraphViewer({
       // Fallback: if no clips match the folder filter, use all clips
       // This prevents empty graphs when folder IDs are misconfigured
       if (filteredClips.length === 0 && clips.length > 0) {
-        console.log('[Graph] No clips match folder filter, using all clips', {
-          graphFolderIds,
-          totalClips: clips.length,
-          clipFolderIds: clips.map(c => c.folder_id)
-        })
         filteredClips = clips
       }
       
@@ -760,10 +762,13 @@ export function EnhancedKnowledgeGraphViewer({
       return node
     })
 
+    // Build O(1) lookup map — avoids O(E×N) find() in the edge drawing loop
+    const nodeMap = new Map(nodesWithPositions.map(n => [n.id, n]))
+
     // Draw edges with enhanced visual feedback
     filteredData.edges.forEach(edge => {
-      const sourceNode = nodesWithPositions.find(n => n.id === edge.source)
-      const targetNode = nodesWithPositions.find(n => n.id === edge.target)
+      const sourceNode = nodeMap.get(edge.source)
+      const targetNode = nodeMap.get(edge.target)
 
       if (sourceNode && targetNode && sourceNode.x !== undefined && sourceNode.y !== undefined && targetNode.x !== undefined && targetNode.y !== undefined) {
         const isHovered = uiState.hoveredEdge === edge.id
@@ -782,7 +787,7 @@ export function EnhancedKnowledgeGraphViewer({
           ctx.strokeStyle = '#3b82f6'
           ctx.globalAlpha = 1
         } else if (isSelected) {
-          ctx.strokeStyle = '#8b5cf6'
+          ctx.strokeStyle = '#6366f1'
           ctx.globalAlpha = 0.8
         } else {
           ctx.strokeStyle = edge.color || '#94a3b8'
@@ -808,7 +813,7 @@ export function EnhancedKnowledgeGraphViewer({
         if (isHovered || isSelected) {
           ctx.beginPath()
           ctx.arc(node.x, node.y, radius + 6, 0, 2 * Math.PI)
-          const glowColor = isSelected ? '#8b5cf6' : '#3b82f6'
+          const glowColor = isSelected ? '#6366f1' : '#3b82f6'
           ctx.fillStyle = `${glowColor}30`
           ctx.fill()
         }
@@ -829,7 +834,7 @@ export function EnhancedKnowledgeGraphViewer({
           nodeColor = '#ef4444' // Low confidence - red
         }
         
-        ctx.fillStyle = isSelected ? '#8b5cf6' : nodeColor
+        ctx.fillStyle = isSelected ? '#6366f1' : nodeColor
         ctx.globalAlpha = isSelected ? 1 : (isHovered ? 0.9 : 0.8)
         ctx.fill()
         
@@ -871,15 +876,8 @@ export function EnhancedKnowledgeGraphViewer({
 
   const generateAndSavePreview = async () => {
     if (!graphId || !filteredData.nodes.length || !canvasRef.current) {
-      console.log('🖼️ Preview Generation: Skipping - missing requirements', { 
-        graphId, 
-        nodesLength: filteredData.nodes.length,
-        hasCanvas: !!canvasRef.current 
-      })
       return
     }
-    
-    console.log('🖼️ Preview Generation: Capturing actual canvas content')
     
     try {
       // Capture the actual rendered canvas content
@@ -1136,47 +1134,47 @@ export function EnhancedKnowledgeGraphViewer({
     setLastMousePos({ x, y })
   }, [])
 
+  // Throttle ref — avoids queuing React state updates on every pixel of mouse movement
+  const rafRef = useRef<number | null>(null)
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
 
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    const clientX = e.clientX
+    const clientY = e.clientY
 
     if (isDragging) {
-      // Pan the canvas
+      // Pan runs every event for responsive feel
       const deltaX = x - lastMousePos.x
       const deltaY = y - lastMousePos.y
-      setPanOffset(prev => ({
-        x: prev.x + deltaX,
-        y: prev.y + deltaY
-      }))
+      setPanOffset(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }))
       setLastMousePos({ x, y })
-    } else {
-      // Check for node/edge hover
-      const hoveredNode = getNodeAtPosition(x, y)
-      const hoveredEdge = getEdgeAtPosition(x, y)
-      
-      if (hoveredNode) {
-        setUIState(prev => ({ ...prev, hoveredNode: hoveredNode.id, hoveredEdge: undefined }))
-        if (canvasRef.current) {
-          canvasRef.current.style.cursor = 'pointer'
-        }
-      } else if (hoveredEdge) {
-        setUIState(prev => ({ ...prev, hoveredEdge: hoveredEdge.id, hoveredNode: undefined }))
-        if (canvasRef.current) {
-          canvasRef.current.style.cursor = 'pointer'
-        }
-      } else {
-        setUIState(prev => ({ ...prev, hoveredNode: undefined, hoveredEdge: undefined }))
-        if (canvasRef.current) {
-          canvasRef.current.style.cursor = isDragging ? 'grabbing' : 'grab'
-        }
-      }
+      return
     }
 
-    // Always update tooltip position for any mouse movement
-    setTooltipPosition({ x: e.clientX, y: e.clientY })
+    // Throttle hover detection to one rAF per frame
+    if (rafRef.current !== null) return
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null
+      const hoveredNode = getNodeAtPosition(x, y)
+      const hoveredEdge = hoveredNode ? undefined : getEdgeAtPosition(x, y)
+
+      if (hoveredNode) {
+        setUIState(prev => ({ ...prev, hoveredNode: hoveredNode.id, hoveredEdge: undefined }))
+        if (canvasRef.current) canvasRef.current.style.cursor = 'pointer'
+      } else if (hoveredEdge) {
+        setUIState(prev => ({ ...prev, hoveredEdge: hoveredEdge.id, hoveredNode: undefined }))
+        if (canvasRef.current) canvasRef.current.style.cursor = 'pointer'
+      } else {
+        setUIState(prev => ({ ...prev, hoveredNode: undefined, hoveredEdge: undefined }))
+        if (canvasRef.current) canvasRef.current.style.cursor = 'grab'
+      }
+
+      setTooltipPosition({ x: clientX, y: clientY })
+    })
   }, [isDragging, lastMousePos, getNodeAtPosition, getEdgeAtPosition])
 
   const handleMouseUp = useCallback(() => {
@@ -1302,73 +1300,83 @@ export function EnhancedKnowledgeGraphViewer({
   }
 
   const getClipColor = (domain: string) => {
-    const colors = ['#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444']
+    const colors = ['#3B82F6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#6366F1']
     const hash = domain.split('').reduce((a, b) => a + b.charCodeAt(0), 0)
     return colors[hash % colors.length]
   }
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full h-full max-w-[95vw] max-h-[95vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-slate-50 rounded-t-xl">
-          <div className="flex items-center gap-3">
-            <Brain className="h-6 w-6 text-purple-600" />
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">{graphTitle}</h2>
-              {graphDescription && (
-                <p className="text-sm text-slate-600">{graphDescription}</p>
-              )}
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-slate-900 overflow-hidden">
+        {/* Header — single unified row */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 flex-shrink-0">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="p-1.5 bg-blue-50 dark:bg-blue-950/50 rounded-lg flex-shrink-0">
+              <Brain className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{graphTitle}</h2>
+              <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                <span>{filteredData.nodes.length} entities</span>
+                <span>·</span>
+                <span>{filteredData.edges.length} connections</span>
+                <span>·</span>
+                <span>Zoom {(zoom * 100).toFixed(0)}%</span>
+              </div>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {filteredData.metadata.filterSummary}
-            </Badge>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
 
-        {/* Toolbar */}
-        <div className="flex items-center justify-between p-3 border-b bg-white">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+          {/* Toolbar controls inline in header */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
               onClick={() => setUIState(prev => ({ ...prev, splitView: { ...prev.splitView, showResultsList: !prev.splitView.showResultsList } }))}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                uiState.splitView.showResultsList
+                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
             >
-              {uiState.splitView.showResultsList ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
-              Results Panel
-            </Button>
+              {uiState.splitView.showResultsList ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              Panel
+            </button>
 
-            <div className="flex items-center gap-1 ml-4">
-              <Button variant="outline" size="sm" onClick={handleZoomOut}>
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleZoomIn}>
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleResetView}>
-                <RotateCcw className="h-4 w-4" />
-              </Button>
+            <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+
+            <div className="flex items-center gap-0.5">
+              <button onClick={handleZoomOut} className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Zoom out">
+                <ZoomOut className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={handleZoomIn} className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Zoom in">
+                <ZoomIn className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={handleResetView} className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Reset view">
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
-              <Download className="h-4 w-4 mr-1" />
+            <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+
+            <button onClick={handleExport} disabled={isExporting} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50">
+              <Download className="h-3.5 w-3.5" />
               Export
-            </Button>
-            
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="h-4 w-4 mr-1" />
+            </button>
+            <button onClick={handleShare} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <Share2 className="h-3.5 w-3.5" />
               Share
-            </Button>
+            </button>
+
+            <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+              title="Close (Esc)"
+            >
+              <X className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Close</span>
+              <kbd className="hidden sm:inline text-[10px] text-slate-400 dark:text-slate-500 bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded">Esc</kbd>
+            </button>
           </div>
         </div>
 
@@ -1410,12 +1418,12 @@ export function EnhancedKnowledgeGraphViewer({
         <div className="flex-1 flex overflow-hidden">
           {/* Graph Canvas */}
           <div 
-            className={`relative bg-slate-50 ${uiState.splitView.showResultsList ? 'flex-[2]' : 'flex-1'}`}
+            className={`relative ${uiState.splitView.showResultsList ? 'flex-[2]' : 'flex-1'}`}
           >
             <canvas
               ref={canvasRef}
               className="w-full h-full cursor-grab active:cursor-grabbing"
-              style={{ background: '#ffffff' }}
+              style={{ background: 'var(--graph-bg, #f8fafc)' }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -1423,29 +1431,16 @@ export function EnhancedKnowledgeGraphViewer({
               onWheel={handleWheel}
               onClick={handleClick}
             />
-            
-            {/* Graph Stats Overlay */}
-            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-              <div className="text-xs space-y-1">
-                <div className="flex items-center gap-2">
-                  <Network className="h-3 w-3 text-blue-600" />
-                  <span>{filteredData.nodes.length} entities</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Link className="h-3 w-3 text-green-600" />
-                  <span>{filteredData.edges.length} connections</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Eye className="h-3 w-3 text-purple-600" />
-                  <span>Zoom: {(zoom * 100).toFixed(0)}%</span>
-                </div>
-              </div>
+
+            {/* Tip overlay — bottom left */}
+            <div className="absolute bottom-4 left-4 text-[11px] text-slate-400 dark:text-slate-600 select-none pointer-events-none">
+              Click a node to inspect · Drag to pan · Scroll to zoom
             </div>
           </div>
 
           {/* Results List */}
               {uiState.splitView.showResultsList && (
-                <div className="w-[480px] flex-shrink-0 border-l bg-white overflow-hidden">
+                <div className="w-[420px] xl:w-[480px] flex-shrink-0 border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 overflow-hidden flex flex-col">
                   <GraphResultsList
                 nodes={filteredData.nodes}
                 edges={filteredData.edges}
@@ -1485,121 +1480,62 @@ export function EnhancedKnowledgeGraphViewer({
           onNodeSelect={handleNodeSelect}
         />
 
+        {/* Node Tooltip — inside the modal so z-index is scoped correctly */}
+        {(() => {
+          const tooltipNodeId = uiState.persistentTooltip?.nodeId || uiState.hoveredNode
+          const currentTooltipPosition = uiState.persistentTooltip?.position || tooltipPosition
+          if (!tooltipNodeId) return null
+          const nodeData = filteredData.nodes.find(n => n.id === tooltipNodeId)
+          if (!nodeData) return null
+          return (
+            <NodeTooltip
+              node={nodeData}
+              position={currentTooltipPosition}
+              connectionCount={filteredData.edges.filter(e =>
+                e.source === tooltipNodeId || e.target === tooltipNodeId
+              ).length}
+              onViewEvidence={handleEvidenceView}
+              onClose={() => setUIState(prev => ({ ...prev, persistentTooltip: undefined, selectedNodes: [] }))}
+              onMarkImportant={async (nodeId) => {
+                const node = filteredData.nodes.find(n => n.id === nodeId)
+                if (!node || node.evidence.length === 0) return
+                try {
+                  await fetch(`/api/clips/${node.evidence[0].clipId}/favorite`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_favorite: true })
+                  })
+                } catch (error) {
+                  console.error('Error marking clip as favorite:', error)
+                }
+              }}
+              isPersistent={!!uiState.persistentTooltip}
+              isClipViewerOpen={isClipViewerOpen}
+            />
+          )
+        })()}
+
         {/* Clip Viewer Overlay */}
         {isClipViewerOpen && selectedClipId && (() => {
           const selectedClip = clips.find(clip => clip.id === selectedClipId) || null
           return (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 100000 }}>
-              <div style={{ position: 'relative', zIndex: 100001 }}>
-                <ClipViewer
-                  clip={selectedClip}
-                  clips={clips}
-                  folders={folders}
-                  isOpen={isClipViewerOpen}
-                  onClose={() => {
-                    setIsClipViewerOpen(false)
-                    setSelectedClipId(null)
-                  }}
-                  onUpdate={async () => {}}
-                  onDelete={async () => {}}
-                  onNavigate={() => {}}
-                />
-              </div>
-            </div>
+            <ClipViewer
+              clip={selectedClip}
+              clips={clips}
+              folders={folders}
+              isOpen={isClipViewerOpen}
+              onClose={() => {
+                setIsClipViewerOpen(false)
+                setSelectedClipId(null)
+              }}
+              onUpdate={async () => {}}
+              onDelete={async () => {}}
+              onNavigate={() => {}}
+            />
           )
         })()}
-      </div>
-
-      {/* Node Tooltip - Show persistent tooltip or hover tooltip */}
-      {(() => {
-        // Prioritize persistent tooltip over hover tooltip
-        const tooltipNodeId = uiState.persistentTooltip?.nodeId || uiState.hoveredNode
-        const currentTooltipPosition = uiState.persistentTooltip?.position || tooltipPosition
-        
-        if (!tooltipNodeId) return null
-        
-        const nodeData = filteredData.nodes.find(n => n.id === tooltipNodeId)
-        if (!nodeData) return null
-        
-        return (
-          <NodeTooltip
-            node={nodeData}
-            position={currentTooltipPosition}
-            connectionCount={filteredData.edges.filter(e => 
-              e.source === tooltipNodeId || e.target === tooltipNodeId
-            ).length}
-            onViewEvidence={handleEvidenceView}
-            onAddNote={async (nodeId) => {
-              // Find the clip associated with this node
-              const node = filteredData.nodes.find(n => n.id === nodeId)
-              if (!node || node.evidence.length === 0) return
-              
-              const clipId = node.evidence[0].clipId
-              const currentNotes = node.evidence[0].snippet
-              
-              // Prompt user for note
-              const newNote = prompt('Add a note for this clip:', currentNotes)
-              if (newNote === null) return // User cancelled
-              
-              try {
-                const response = await fetch(`/api/clips/${clipId}`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ notes: newNote })
-                })
-                
-                if (response.ok) {
-                  // Update local data
-                  const updatedNode = { ...node }
-                  updatedNode.evidence[0].snippet = newNote
-                  
-                  // Update the graph data
-                  setRawGraphData(prev => ({
-                    ...prev,
-                    nodes: prev.nodes.map(n => n.id === nodeId ? updatedNode : n)
-                  }))
-                  
-                  console.log('Note updated successfully')
-                } else {
-                  console.error('Failed to update note')
-                }
-              } catch (error) {
-                console.error('Error updating note:', error)
-              }
-            }}
-            onMarkImportant={async (nodeId) => {
-              // Find the clip associated with this node
-              const node = filteredData.nodes.find(n => n.id === nodeId)
-              if (!node || node.evidence.length === 0) return
-              
-              const clipId = node.evidence[0].clipId
-              
-              try {
-                const response = await fetch(`/api/clips/${clipId}/favorite`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ is_favorite: true })
-                })
-                
-                if (response.ok) {
-                  console.log('Clip marked as favorite successfully')
-                  // Optionally update local state to show visual feedback
-                } else {
-                  console.error('Failed to mark clip as favorite')
-                }
-              } catch (error) {
-                console.error('Error marking clip as favorite:', error)
-              }
-            }}
-            isPersistent={!!uiState.persistentTooltip}
-            isClipViewerOpen={isClipViewerOpen}
-          />
-        )
-      })()}
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }

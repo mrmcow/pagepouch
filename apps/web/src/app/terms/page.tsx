@@ -352,8 +352,7 @@ export default function TermsOfServicePage() {
                 </p>
                 <div className="space-y-2 text-slate-600 dark:text-slate-400">
                   <p>📧 Email: <a href="mailto:support@pagestash.app" className="text-blue-600 dark:text-blue-400 hover:underline">support@pagestash.app</a></p>
-                  <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.com/contact</Link></p>
-                  <p>📍 Address: PageStash Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
+                  <p>🌐 Web: <a href="https://pagestash.app" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.app</a></p>
                 </div>
                 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">

@@ -1,34 +1,14 @@
 'use client'
 
 import React from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Search,
-  X,
-  Globe,
-  Folder,
-  Tag,
-  Clock,
-  FileText,
-  RotateCcw,
-  Layers
-} from 'lucide-react'
-import { GraphFilters } from '@/types/graph-filters'
+import { Search, X, Globe, Folder, Tag, Clock, Layers, RotateCcw } from 'lucide-react'
 
 interface SimpleGraphControlsProps {
   searchQuery: string
   onSearchChange: (query: string) => void
-  viewMode: string
-  onViewModeChange: (mode: string) => void
+  /** Kept for API compatibility — always treated as 'all' internally */
+  viewMode?: string
+  onViewModeChange?: (mode: string) => void
   connectionTypes: string[]
   onConnectionTypesChange: (types: string[]) => void
   onResetFilters: () => void
@@ -37,157 +17,100 @@ interface SimpleGraphControlsProps {
   className?: string
 }
 
-const VIEW_MODES = [
-  { id: 'all', label: 'All Connections', icon: Layers, description: 'Show all types of connections' },
-  { id: 'domains', label: 'By Website', icon: Globe, description: 'Group by website domains' },
-  { id: 'folders', label: 'By Topic', icon: Folder, description: 'Group by folders/topics' },
-  { id: 'tags', label: 'By Tags', icon: Tag, description: 'Connect by shared tags' },
-  { id: 'temporal', label: 'By Time', icon: Clock, description: 'Connect by time proximity' },
-  { id: 'content', label: 'By Content', icon: FileText, description: 'Connect by content similarity' }
-]
-
 const CONNECTION_TYPES = [
-  { id: 'citation', label: 'Source Links', icon: '🔗', color: 'bg-blue-100 text-blue-700' },
-  { id: 'same_topic', label: 'Same Topic', icon: '📁', color: 'bg-purple-100 text-purple-700' },
-  { id: 'same_source', label: 'Same Website', icon: '🌐', color: 'bg-green-100 text-green-700' },
-  { id: 'similar_content', label: 'Similar Content', icon: '📄', color: 'bg-orange-100 text-orange-700' },
-  { id: 'same_session', label: 'Same Session', icon: '⏰', color: 'bg-red-100 text-red-700' },
-  { id: 'tag_match', label: 'Shared Tags', icon: '🏷️', color: 'bg-yellow-100 text-yellow-700' }
+  { id: 'citation',    label: 'Same Website', icon: <Globe className="h-3 w-3" />,  color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-700' },
+  { id: 'same_topic',  label: 'Same Topic',   icon: <Folder className="h-3 w-3" />, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700' },
+  { id: 'same_session',label: 'Same Session', icon: <Clock className="h-3 w-3" />,  color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-700' },
+  { id: 'tag_match',   label: 'Shared Tags',  icon: <Tag className="h-3 w-3" />,    color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-700' },
 ]
 
 export function SimpleGraphControls({
   searchQuery,
   onSearchChange,
-  viewMode,
-  onViewModeChange,
   connectionTypes,
   onConnectionTypesChange,
   onResetFilters,
-  nodeCount,
-  connectionCount,
   className = ''
 }: SimpleGraphControlsProps) {
-  
-  const selectedViewMode = VIEW_MODES.find(mode => mode.id === viewMode) || VIEW_MODES[0]
-  
-  const toggleConnectionType = (typeId: string) => {
-    const newTypes = connectionTypes.includes(typeId)
-      ? connectionTypes.filter(t => t !== typeId)
-      : [...connectionTypes, typeId]
-    onConnectionTypesChange(newTypes)
-  }
 
-  const clearSearch = () => {
-    onSearchChange('')
+  // Active filter: empty array means "All". Non-empty means exactly ONE type (single-select).
+  const activeType = connectionTypes.length === 1 ? connectionTypes[0] : null
+
+  const selectType = (typeId: string) => {
+    // Clicking the already-active pill goes back to "All"
+    if (activeType === typeId) {
+      onConnectionTypesChange([])
+    } else {
+      onConnectionTypesChange([typeId])
+    }
   }
 
   return (
-    <div className={`bg-white border-b border-slate-200 ${className}`}>
-      {/* Top Row - Search and View Mode */}
-      <div className="px-4 py-3 border-b border-slate-100">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          {/* Search */}
-          <div className="flex-1 min-w-[280px] max-w-md relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Search entities, content, or evidence..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 pr-8 h-10"
-            />
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-slate-100 rounded"
-              >
-                <X className="h-3 w-3 text-slate-400" />
-              </button>
-            )}
-          </div>
+    <div className={`bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 ${className}`}>
+      <div className="px-4 py-2.5 flex items-center gap-3 flex-wrap">
 
-          {/* View Mode Selector */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-slate-700 whitespace-nowrap">View:</span>
-            <Select value={viewMode} onValueChange={onViewModeChange}>
-              <SelectTrigger className="w-[220px] h-10">
-                <div className="flex items-center gap-2.5 w-full">
-                  <selectedViewMode.icon className="h-4 w-4 flex-shrink-0 text-slate-600" />
-                  <span className="text-sm font-medium truncate">{selectedViewMode.label}</span>
-                </div>
-              </SelectTrigger>
-              <SelectContent className="w-[280px]">
-                {VIEW_MODES.map(mode => (
-                  <SelectItem key={mode.id} value={mode.id} className="py-2.5">
-                    <div className="flex items-center gap-3">
-                      <mode.icon className="h-4 w-4 flex-shrink-0 text-slate-600" />
-                      <div className="flex flex-col gap-0.5">
-                        <div className="font-medium text-sm">{mode.label}</div>
-                        <div className="text-xs text-slate-500">{mode.description}</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Stats and Reset */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="text-sm text-slate-600 whitespace-nowrap">
-              <span className="font-medium">{nodeCount}</span> entities • <span className="font-medium">{connectionCount}</span> connections
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onResetFilters}
-              className="text-slate-500 hover:text-slate-700 h-10"
-            >
-              <RotateCcw className="h-4 w-4 mr-1.5" />
-              Reset
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Row - Connection Type Filters */}
-      <div className="px-4 py-2.5">
-        <div className="flex items-start gap-3 flex-wrap">
-          <span className="text-sm font-medium text-slate-700 whitespace-nowrap pt-1">Show connections:</span>
-          
-          <div className="flex flex-wrap items-center gap-2">
-            {/* All connections button */}
+        {/* Search */}
+        <div className="relative min-w-[200px] flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <input
+            placeholder="Search entities or content..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full h-8 pl-8 pr-7 text-sm bg-slate-100 dark:bg-slate-800 border-none rounded-lg outline-none focus:ring-2 focus:ring-blue-500/40 text-slate-700 dark:text-slate-200 placeholder-slate-400"
+          />
+          {searchQuery && (
             <button
-              onClick={() => onConnectionTypesChange([])}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                connectionTypes.length === 0
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              onClick={() => onSearchChange('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+            >
+              <X className="h-3 w-3 text-slate-400" />
+            </button>
+          )}
+        </div>
+
+        <div className="w-px h-5 bg-slate-200 dark:bg-white/10 flex-shrink-0" />
+
+        {/* Connection filter pills — single-select radio behaviour */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 mr-0.5">View:</span>
+
+          {/* All (default) */}
+          <button
+            onClick={() => onConnectionTypesChange([])}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all ${
+              activeType === null
+                ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 border-transparent'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <Layers className="h-3 w-3" />
+            All
+          </button>
+
+          {CONNECTION_TYPES.map(type => (
+            <button
+              key={type.id}
+              onClick={() => selectType(type.id)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all ${
+                activeType === type.id
+                  ? `${type.color} shadow-sm`
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              <Layers className="h-3.5 w-3.5" />
-              All Types
+              {type.icon}
+              {type.label}
             </button>
-            
-            {/* Individual connection type buttons */}
-            {CONNECTION_TYPES.map(type => {
-              const isSelected = connectionTypes.includes(type.id)
-              return (
-                <button
-                  key={type.id}
-                  onClick={() => toggleConnectionType(type.id)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    isSelected 
-                      ? `${type.color} shadow-sm border border-opacity-20`
-                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                  }`}
-                >
-                  <span className="text-sm leading-none">{type.icon}</span>
-                  <span>{type.label}</span>
-                </button>
-              )
-            })}
-          </div>
+          ))}
         </div>
+
+        {/* Reset */}
+        <button
+          onClick={onResetFilters}
+          className="ml-auto flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <RotateCcw className="h-3 w-3" />
+          Reset
+        </button>
       </div>
     </div>
   )

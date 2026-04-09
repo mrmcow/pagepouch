@@ -141,10 +141,10 @@ function KnowledgeGraphDashboardContent() {
         <div className="max-w-6xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl mb-6">
-              <Brain className="h-8 w-8 text-purple-600" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-100 rounded-2xl mb-6">
+              <Brain className="h-8 w-8 text-blue-600" />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-4">
               Knowledge Graphs
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
@@ -153,7 +153,7 @@ function KnowledgeGraphDashboardContent() {
             
             <Button 
               size="lg"
-              className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200"
               onClick={() => router.push('/knowledge-graph/create')}
             >
               <Plus className="mr-2 h-5 w-5" />
@@ -163,9 +163,9 @@ function KnowledgeGraphDashboardContent() {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <Card className="border-purple-100 hover:border-purple-200 transition-colors">
+            <Card className="border-blue-100 hover:border-blue-200 transition-colors">
               <CardContent className="p-6 text-center">
-                <Network className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                <Network className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">AI-Powered Analysis</h3>
                 <p className="text-slate-600 dark:text-slate-400">
                   Automatically discover relationships between people, places, and concepts in your captured content.
@@ -234,7 +234,7 @@ function KnowledgeGraphDashboardContent() {
                   </p>
                   <Button 
                     size="lg"
-                    className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0"
                     onClick={() => router.push('/knowledge-graph/create')}
                   >
                     <Plus className="mr-2 h-5 w-5" />
@@ -248,8 +248,8 @@ function KnowledgeGraphDashboardContent() {
                 {state.graphs.map((graph) => (
                   <Card key={graph.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardContent className="p-6">
-                      <div className="h-32 bg-gradient-to-br from-slate-100 to-purple-50 rounded-lg mb-4 flex items-center justify-center">
-                        <Network className="h-8 w-8 text-purple-400" />
+                      <div className="h-32 bg-gradient-to-br from-slate-100 to-blue-50 rounded-lg mb-4 flex items-center justify-center">
+                        <Network className="h-8 w-8 text-blue-400" />
                       </div>
                       <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">{graph.name}</h3>
                       <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
@@ -265,12 +265,12 @@ function KnowledgeGraphDashboardContent() {
           </div>
 
           {/* Getting Started */}
-          <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-800">
+          <Card className="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
             <CardContent className="p-8">
               <div className="flex items-start gap-6">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center">
-                    <Sparkles className="h-6 w-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center">
+                    <Sparkles className="h-6 w-6 text-blue-600" />
                   </div>
                 </div>
                 <div className="flex-1">
@@ -282,7 +282,7 @@ function KnowledgeGraphDashboardContent() {
                     Select folders containing related content, and our AI will analyze the text to create meaningful connections.
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
                       <Users className="mr-1 h-3 w-3" />
                       People & Organizations
                     </Badge>

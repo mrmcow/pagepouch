@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Extension authentication with Bearer token
       const token = authHeader.substring(7)
-      console.log('Using Bearer token authentication for extension')
       
       // Create a client with the Bearer token
       supabase = createSupabaseClient(
@@ -41,7 +40,6 @@ export async function GET(request: NextRequest) {
       user = userData.user
     } else {
       // Web app authentication with cookies
-      console.log('Using cookie authentication for web app')
       supabase = createClient()
       
       const { data: userData, error: authError } = await supabase.auth.getUser()
@@ -86,7 +84,6 @@ export async function POST(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Extension authentication with Bearer token
       const token = authHeader.substring(7)
-      console.log('Using Bearer token authentication for extension')
       
       // Create a client with the Bearer token
       supabase = createSupabaseClient(
@@ -115,7 +112,6 @@ export async function POST(request: NextRequest) {
       user = userData.user
     } else {
       // Web app authentication with cookies
-      console.log('Using cookie authentication for web app')
       supabase = createClient()
       
       const { data: userData, error: authError } = await supabase.auth.getUser()

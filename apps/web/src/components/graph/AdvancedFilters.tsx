@@ -516,7 +516,7 @@ export function AdvancedFilters({
             <div className="mt-6 pt-4 border-t">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-purple-600" />
+                  <Sparkles className="h-4 w-4 text-blue-600" />
                   Saved Lenses
                 </h4>
                 <Button
@@ -553,7 +553,7 @@ export function AdvancedFilters({
                   <Badge
                     key={lens.id}
                     variant="outline"
-                    className="cursor-pointer hover:bg-purple-50"
+                    className="cursor-pointer hover:bg-blue-50"
                     onClick={() => onLoadLens(lens.id)}
                   >
                     {lens.name}

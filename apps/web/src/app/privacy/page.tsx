@@ -166,7 +166,7 @@ export default function PrivacyPolicyPage() {
                 </div>
                 
                 <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-slate-700/30 rounded-2xl p-6">
-                  <Shield className="h-8 w-8 text-purple-500 mb-4" />
+                  <Shield className="h-8 w-8 text-blue-500 mb-4" />
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3">Access Control</h3>
                   <p className="text-slate-600 dark:text-slate-400 text-sm">
                     Strict access controls ensure only authorized personnel can access systems, with all access logged and monitored.
@@ -250,8 +250,7 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <div className="space-y-2 text-slate-600 dark:text-slate-400">
                   <p>📧 Email: <a href="mailto:support@pagestash.app" className="text-blue-600 dark:text-blue-400 hover:underline">support@pagestash.app</a></p>
-                  <p>🌐 Web: <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.com/contact</Link></p>
-                  <p>📍 Address: PageStash Inc., 123 Privacy Lane, San Francisco, CA 94105</p>
+                  <p>🌐 Web: <a href="https://pagestash.app" className="text-blue-600 dark:text-blue-400 hover:underline">pagestash.app</a></p>
                 </div>
                 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">

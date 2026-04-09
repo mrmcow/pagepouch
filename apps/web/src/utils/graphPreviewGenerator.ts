@@ -201,7 +201,7 @@ export function generateFallbackPreview(
     // Animated dots (static for preview)
     const dotRadius = 4
     const dotSpacing = 12
-    ctx.fillStyle = '#8b5cf6' // purple-500
+    ctx.fillStyle = '#3b82f6' // blue-500
     
     for (let i = 0; i < 3; i++) {
       ctx.beginPath()

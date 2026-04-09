@@ -255,17 +255,6 @@ export function ScreenshotAnnotationCanvas({
         })
       }
       
-      console.log('Generating thumbnail for annotation:', { 
-        x: annotation.x, 
-        y: annotation.y, 
-        width: annotation.width, 
-        height: annotation.height,
-        imgWidth: img.naturalWidth,
-        imgHeight: img.naturalHeight,
-        displayWidth: img.width,
-        displayHeight: img.height
-      })
-      
       // Create offscreen canvas for cropping
       const canvas = document.createElement('canvas')
       const maxThumbSize = 80 // Max thumbnail dimension
@@ -289,9 +278,7 @@ export function ScreenshotAnnotationCanvas({
       )
       
       // Return as data URL
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-      console.log('Thumbnail generated successfully, length:', dataUrl.length)
-      return dataUrl
+      return canvas.toDataURL('image/jpeg', 0.8)
     } catch (error) {
       console.error('Failed to generate thumbnail:', error)
       return ''

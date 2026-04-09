@@ -59,10 +59,10 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
             <X className="h-4 w-4" />
           </Button>
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl mb-4">
-              <Brain className="h-8 w-8 text-purple-600" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-100 rounded-2xl mb-4">
+              <Brain className="h-8 w-8 text-blue-600" />
             </div>
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               Unlock Knowledge Graph
             </DialogTitle>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
@@ -73,14 +73,14 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
 
         <div className="space-y-8">
           {/* Preview Section */}
-          <div className="bg-gradient-to-br from-slate-50 to-purple-50/30 rounded-2xl p-8">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl p-8">
             <h3 className="text-xl font-bold text-slate-800 mb-6 text-center">See Your Research Come to Life</h3>
             
             {/* Mock Graph Preview */}
             <div className="bg-white rounded-xl p-6 shadow-sm border">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-semibold text-slate-700">Trump Investigation Graph</h4>
-                <Badge className="bg-purple-100 text-purple-700">24 connections found</Badge>
+                <Badge className="bg-blue-100 text-blue-700">24 connections found</Badge>
               </div>
               
               {/* Simple graph visualization mockup */}
@@ -101,7 +101,7 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
                   <div className="absolute bottom-8 left-20 w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
                     Policy
                   </div>
-                  <div className="absolute bottom-8 right-20 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
+                  <div className="absolute bottom-8 right-20 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
                     BBC
                   </div>
                   
@@ -123,9 +123,9 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="border-purple-100">
+            <Card className="border-blue-100">
               <CardContent className="p-6 text-center">
-                <Network className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                <Network className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                 <h4 className="font-semibold text-slate-800 mb-2">AI-Powered Analysis</h4>
                 <p className="text-sm text-slate-600">Automatically discover relationships between people, places, and concepts in your captured content.</p>
               </CardContent>
@@ -149,7 +149,7 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
           </div>
 
           {/* Pricing Section */}
-          <div className="bg-white rounded-2xl border-2 border-purple-200 p-8">
+          <div className="bg-white rounded-2xl border-2 border-blue-200 p-8">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-slate-800 mb-2">Upgrade to PageStash Pro</h3>
               <p className="text-slate-600">Get Knowledge Graph + all Pro features</p>

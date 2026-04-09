@@ -11,16 +11,13 @@ import {
   Brain, 
   Plus, 
   Search, 
-  Filter, 
   Grid, 
   List, 
   MoreHorizontal,
-  Share2,
   Download,
   Trash2,
   Edit3,
   Eye,
-  Calendar,
   Users,
   Zap,
   Sparkles,
@@ -291,22 +288,16 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips, onNaviga
 
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+      <div className="flex-1 overflow-hidden p-1 pt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-gray-200 rounded mb-4"></div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded w-full"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
+            <div key={i} className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900 animate-pulse">
+              <div className="aspect-[16/9] bg-slate-100 dark:bg-slate-800" />
+              <div className="px-4 pt-3 pb-3.5 space-y-2">
+                <div className="h-3.5 bg-slate-100 dark:bg-slate-800 rounded-full w-2/3" />
+                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2" />
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -315,28 +306,28 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips, onNaviga
 
   return (
     <div className="flex-1 flex flex-col space-y-6 overflow-hidden">
-      {/* Header with Search and Actions - Aligned with main content */}
-      <div className="flex items-center gap-3 w-full px-1 py-3">
+      {/* Header */}
+      <div className="flex items-center gap-3 w-full px-1 py-2">
         {/* Search Bar */}
         <div className="relative flex-1 min-w-0">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search page graphs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-3 h-11 w-full bg-white border border-gray-200 hover:border-gray-300 focus:border-purple-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl"
+            className="pl-10 pr-3 h-10 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 transition-all duration-200 rounded-xl text-sm"
           />
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 flex-shrink-0">
           <button
             onClick={() => setViewMode('grid')}
             className={`p-1.5 rounded transition-colors ${
-              viewMode === 'grid' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700'
+              viewMode === 'grid'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             <Grid className="h-4 w-4" />
@@ -344,9 +335,9 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips, onNaviga
           <button
             onClick={() => setViewMode('list')}
             className={`p-1.5 rounded transition-colors ${
-              viewMode === 'list' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700'
+              viewMode === 'list'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             <List className="h-4 w-4" />
@@ -354,9 +345,9 @@ export function KnowledgeGraphsView({ folders, subscriptionTier, clips, onNaviga
         </div>
 
         {/* Create New Graph Button */}
-        <Button 
+        <Button
           onClick={() => setShowCreateModal(true)}
-          className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 flex-shrink-0"
         >
           <Plus className="mr-2 h-4 w-4" />
           New Graph
@@ -503,8 +494,8 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
                 </div>
                 
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Eye className="w-4 h-4 text-purple-600" />
+                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Eye className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
                     <h4 className="font-medium text-slate-900 text-sm mb-1">Interactive exploration</h4>
@@ -573,7 +564,7 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
               </div>
               
               <div className="absolute bottom-8 left-6 w-10 h-10 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center">
-                <Users className="w-4 h-4 text-purple-600" />
+                <Users className="w-4 h-4 text-blue-600" />
               </div>
               
               <div className="absolute bottom-6 right-8 w-14 h-7 bg-white rounded-md shadow-md border border-slate-200 flex items-center justify-center">
@@ -670,6 +661,41 @@ function FirstTimeExperience({ onCreateGraph, folders }: { onCreateGraph: () => 
   )
 }
 
+function GraphCardMenu({ graph, onOpenGraph, onEditGraph, onDeleteGraph }: {
+  graph: KnowledgeGraph
+  onOpenGraph: (id: string) => void
+  onEditGraph: (g: any) => void
+  onDeleteGraph: (g: any) => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem onClick={() => onOpenGraph(graph.id)}>
+          <Eye className="mr-2 h-4 w-4" />
+          Open
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onEditGraph(graph)}>
+          <Edit3 className="mr-2 h-4 w-4" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => onDeleteGraph(graph)}>
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 function GraphsGrid({ graphs, viewMode, folders, onOpenGraph, onEditGraph, onDeleteGraph }: { 
   graphs: KnowledgeGraph[], 
   viewMode: 'grid' | 'list',
@@ -681,239 +707,156 @@ function GraphsGrid({ graphs, viewMode, folders, onOpenGraph, onEditGraph, onDel
   const getFolderNames = (folderIds: string[]) => {
     return folderIds
       .map(id => folders.find(f => f.id === id)?.name)
-      .filter(Boolean)
-      .join(', ')
+      .filter(Boolean) as string[]
   }
 
   if (viewMode === 'list') {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {graphs.map((graph) => (
-          <Card key={graph.id} className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 flex-1">
-                  <div 
-                    className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center relative cursor-pointer hover:from-purple-600 hover:to-blue-700 transition-all duration-200"
-                    onClick={() => onOpenGraph(graph.id)}
-                  >
-                    {graph.status === 'processing' ? (
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    ) : (
-                      <Brain className="w-6 h-6 text-white" />
-                    )}
-                    {graph.status === 'completed' && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{graph.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{graph.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                      <span>{graph.nodeCount} nodes</span>
-                      <span>{graph.connectionCount} connections</span>
-                      <span>Folders: {getFolderNames(graph.folder_ids)}</span>
-                    </div>
-                  </div>
+          <div
+            key={graph.id}
+            className="group flex items-center gap-4 px-4 py-3.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-white/20 hover:shadow-sm transition-all duration-150 cursor-pointer"
+            onClick={() => onOpenGraph(graph.id)}
+          >
+            {/* Preview thumbnail */}
+            <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800">
+              {graph.preview_image ? (
+                <img src={graph.preview_image} alt={graph.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Brain className="w-5 h-5 text-slate-400" />
                 </div>
-                <div className="flex items-center gap-2">
-                  {graph.isPublic && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Share2 className="w-3 h-3 mr-1" />
-                      Public
-                    </Badge>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onOpenGraph(graph.id)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Open Graph
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEditGraph(graph)}>
-                        <Edit3 className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600" onClick={() => onDeleteGraph(graph)}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{graph.title}</h3>
+                {graph.status === 'completed' && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                )}
               </div>
-            </CardContent>
-          </Card>
+              {graph.description && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{graph.description}</p>
+              )}
+              <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+                <span>{graph.nodeCount} entities</span>
+                <span>·</span>
+                <span>{graph.connectionCount} connections</span>
+                {getFolderNames(graph.folder_ids).length > 0 && (
+                  <>
+                    <span>·</span>
+                    <span className="truncate">{getFolderNames(graph.folder_ids).join(', ')}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:block">
+                {formatRelativeTime(graph.updatedAt)}
+              </span>
+              <GraphCardMenu graph={graph} onOpenGraph={onOpenGraph} onEditGraph={onEditGraph} onDeleteGraph={onDeleteGraph} />
+            </div>
+          </div>
         ))}
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {graphs.map((graph) => (
-        <Card key={graph.id} className="hover:shadow-lg transition-all duration-200 cursor-pointer group flex flex-col h-full">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+        <div
+          key={graph.id}
+          className="group relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900 cursor-pointer hover:border-slate-300 dark:hover:border-white/20 hover:shadow-lg dark:hover:shadow-slate-900/40 transition-all duration-200"
+          onClick={() => onOpenGraph(graph.id)}
+        >
+          {/* Preview Area */}
+          <div className="aspect-[16/9] relative bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            {graph.preview_image ? (
+              <img
+                src={graph.preview_image}
+                alt={graph.title}
+                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+              />
+            ) : graph.status === 'processing' ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-slate-300 border-t-blue-500" />
+                <p className="text-xs text-slate-400">Building graph…</p>
+              </div>
+            ) : graph.status === 'failed' ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                  <span className="text-red-500 text-sm font-bold">!</span>
+                </div>
+                <p className="text-xs text-red-500">Processing failed</p>
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Brain className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+              </div>
+            )}
+
+            {/* Status dot */}
+            {graph.status === 'completed' && (
+              <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-green-400 shadow-sm ring-2 ring-white dark:ring-slate-900" />
+            )}
+
+            {/* Stats bar — always visible */}
+            <div className="absolute bottom-0 inset-x-0 px-3 py-2 bg-gradient-to-t from-black/50 to-transparent">
+              <div className="flex items-center gap-2 text-white/90 text-[11px]">
+                <span>{graph.nodeCount} entities</span>
+                <span className="opacity-50">·</span>
+                <span>{graph.connectionCount} connections</span>
+              </div>
+            </div>
+
+            {/* Hover open button */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-full px-4 py-1.5 text-xs font-semibold flex items-center gap-1.5 shadow-lg">
+                <Eye className="w-3.5 h-3.5" />
+                Open Graph
+              </div>
+            </div>
+          </div>
+
+          {/* Card Body */}
+          <div className="px-4 pt-3 pb-3.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white leading-snug truncate">
                   {graph.title}
-                </CardTitle>
-                <CardDescription className="mt-1 text-sm text-gray-600">
-                  {graph.description}
-                </CardDescription>
+                </h3>
+                {graph.description && (
+                  <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                    {graph.description}
+                  </p>
+                )}
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onOpenGraph(graph.id)}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Open Graph
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEditGraph(graph)}>
-                    <Edit3 className="mr-2 h-4 w-4" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600" onClick={() => onDeleteGraph(graph)}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col h-full">
-            {/* Graph Thumbnail/Preview */}
-            <div 
-              className="aspect-video rounded-lg mb-4 relative cursor-pointer overflow-hidden border border-purple-100 hover:border-purple-200 transition-all duration-200 group"
-              onClick={() => onOpenGraph(graph.id)}
-            >
-              {graph.preview_image ? (
-                // Show actual graph preview
-                <div className="relative w-full h-full">
-                  <img 
-                    src={graph.preview_image} 
-                    alt={`Preview of ${graph.title}`}
-                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                  />
-                  {/* Overlay gradient for better text visibility */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  {/* Status indicator */}
-                  {graph.status === 'completed' && (
-                    <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full shadow-sm"></div>
-                  )}
-                  {/* Hover overlay with stats */}
-                  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="bg-white/90 backdrop-blur-sm rounded px-2 py-1 text-xs text-gray-700">
-                      {graph.nodeCount} nodes • {graph.connectionCount} connections
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                // Fallback for graphs without previews
-                <div className="w-full h-full bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center relative group-hover:from-purple-100 group-hover:to-blue-100 transition-all duration-200">
-                  <div className="text-center">
-                    {graph.status === 'processing' ? (
-                      <>
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
-                        <p className="text-xs text-purple-600 font-medium">Processing...</p>
-                      </>
-                    ) : graph.status === 'failed' ? (
-                      <>
-                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                          <span className="text-red-600 text-xs">!</span>
-                        </div>
-                        <p className="text-xs text-red-600 font-medium">Failed</p>
-                      </>
-                    ) : (
-                      <>
-                        <Brain className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                        <p className="text-xs text-purple-600 font-medium">Interactive Graph</p>
-                      </>
-                    )}
-                  </div>
-                  {graph.status === 'completed' && (
-                    <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full"></div>
-                  )}
-                </div>
-              )}
+              <GraphCardMenu graph={graph} onOpenGraph={onOpenGraph} onEditGraph={onEditGraph} onDeleteGraph={onDeleteGraph} />
             </div>
 
-            {/* Graph Stats */}
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  {graph.nodeCount} nodes
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  {graph.connectionCount} links
-                </span>
+            {/* Footer */}
+            <div className="flex items-center justify-between mt-2.5">
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                {getFolderNames(graph.folder_ids).length > 0 ? (
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                    {getFolderNames(graph.folder_ids).join(', ')}
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-slate-300 dark:text-slate-600">All folders</span>
+                )}
               </div>
-              {graph.isPublic && (
-                <Badge variant="secondary" className="text-xs">
-                  <Share2 className="w-3 h-3 mr-1" />
-                  Public
-                </Badge>
-              )}
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 flex-shrink-0 ml-2">
+                {formatRelativeTime(graph.updatedAt)}
+              </span>
             </div>
-
-            {/* Folders - with better overflow handling */}
-            <div className="text-xs text-gray-500 mb-3">
-              <span className="font-medium">Folders:</span>{' '}
-              <span className="line-clamp-2">{getFolderNames(graph.folder_ids)}</span>
-            </div>
-
-            {/* Spacer to push footer to bottom */}
-            <div className="flex-1"></div>
-
-            {/* Footer with dates and action - anchored to bottom */}
-            <div className="mt-auto pt-3 border-t border-gray-100 space-y-2">
-              {/* Dates */}
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  Created: {formatDate(graph.createdAt)}
-                </span>
-                <span className="flex items-center gap-1">
-                  Updated: {formatRelativeTime(graph.updatedAt)}
-                </span>
-              </div>
-              
-              {/* Action button */}
-              <div className="flex justify-end">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                  onClick={() => onOpenGraph(graph.id)}
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  Open
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   )
@@ -958,7 +901,7 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
                 value={graphTitle}
                 onChange={(e) => setGraphTitle(e.target.value)}
                 placeholder="e.g., Research Project Alpha"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -970,7 +913,7 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
                 onChange={(e) => setGraphDescription(e.target.value)}
                 placeholder="Brief description of what this graph represents..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -986,7 +929,7 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
                   key={folder.id}
                   className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
                     selectedFolders.includes(folder.id)
-                      ? 'border-purple-500 bg-purple-50'
+                      ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -1000,7 +943,7 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
                         setSelectedFolders(selectedFolders.filter(id => id !== folder.id))
                       }
                     }}
-                    className="mr-3 text-purple-600 focus:ring-purple-500"
+                    className="mr-3 text-blue-600 focus:ring-blue-500"
                   />
                   <div className="flex items-center gap-2 flex-1">
                     <div 
@@ -1030,7 +973,7 @@ function CreateGraphModal({ folders, onClose, onCreateGraph }: {
                   folders: selectedFolders
                 })}
                 disabled={!graphTitle.trim() || selectedFolders.length === 0}
-                className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white border-0"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0"
               >
                 <Brain className="mr-2 h-4 w-4" />
                 Create Graph

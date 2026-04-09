@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
+import { GlobalProviders } from '@/components/GlobalProviders'
 
 // Trigger rebuild with environment variables configured
 
@@ -102,7 +103,10 @@ export const metadata: Metadata = {
   },
 }
 
-export const viewport = 'width=device-width, initial-scale=1'
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export default function RootLayout({
   children,
@@ -137,9 +141,11 @@ export default function RootLayout({
         )}
       </head>
       <body className={inter.className}>
-        <div className="min-h-screen bg-background">
-          {children}
-        </div>
+        <GlobalProviders>
+          <div className="min-h-screen bg-background">
+            {children}
+          </div>
+        </GlobalProviders>
       </body>
     </html>
   )

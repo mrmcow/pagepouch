@@ -122,7 +122,7 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
               <Link2 className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -174,7 +174,7 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
             <div className="space-y-2">
               <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500 ease-out"
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 ease-out"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -213,7 +213,7 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
           <Button
             onClick={handleCapture}
             disabled={isCapturing || !url.trim()}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
           >
             {isCapturing ? (
               <>

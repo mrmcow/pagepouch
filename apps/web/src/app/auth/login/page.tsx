@@ -11,6 +11,15 @@ import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { LogoIcon } from '@/components/ui/logo'
 
+function humanizeAuthError(message: string): string {
+  if (message.includes('Invalid login credentials') || message.includes('invalid_credentials')) return 'Your email or password is incorrect. Please try again.'
+  if (message.includes('Email not confirmed')) return 'Please check your email and click the confirmation link before signing in.'
+  if (message.includes('rate limit') || message.includes('too many')) return 'Too many attempts. Please wait a moment and try again.'
+  if (message.includes('network') || message.includes('fetch')) return 'Connection issue. Please check your internet and try again.'
+  if (message.includes('User not found')) return 'No account found with this email. Try signing up instead.'
+  return 'Something went wrong. Please try again.'
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -40,7 +49,7 @@ export default function LoginPage() {
       })
 
       if (error) {
-        setError(error.message)
+        setError(humanizeAuthError(error.message))
         return
       }
 

@@ -28,32 +28,23 @@ export async function GET(request: NextRequest) {
     const folderId = searchParams.get('folder_id')
     const query = searchParams.get('q')
 
-    let dbQuery = supabase
-      .from('clips')
-      .select(`
-        id,
-        url,
-        title,
-        screenshot_url,
-        html_content,
-        text_content,
-        favicon_url,
-        notes,
-        created_at,
-        updated_at,
-        folder_id,
-        is_favorite
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-
-    if (folderId) {
-      dbQuery = dbQuery.eq('folder_id', folderId)
-    }
+    // Light select — never send html_content or text_content in list responses.
+    // Full content is fetched on demand via GET /api/clips/[id] when a clip is opened.
+    const listSelect = `
+      id,
+      url,
+      title,
+      screenshot_url,
+      favicon_url,
+      notes,
+      created_at,
+      updated_at,
+      folder_id,
+      is_favorite
+    `
 
     if (query) {
-      // Use full-text search function
+      // Server-side full-text search via Postgres tsvector index
       const { data, error } = await supabase.rpc('search_clips', {
         search_query: query,
         user_uuid: user.id,
@@ -70,10 +61,33 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      return NextResponse.json({ clips: data || [] })
+      // Strip heavy content fields from RPC results too
+      const lightData = (data || []).map(({ html_content, text_content, ...clip }: any) => clip)
+      return NextResponse.json({ clips: lightData, total: lightData.length })
     }
 
-    const { data, error } = await dbQuery
+    let dbQuery = supabase
+      .from('clips')
+      .select(listSelect)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    let countQuery = supabase
+      .from('clips')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    if (folderId) {
+      dbQuery = dbQuery.eq('folder_id', folderId)
+      countQuery = countQuery.eq('folder_id', folderId)
+    }
+
+    // Run data and count in parallel — one round trip each
+    const [{ data, error }, { count, error: countError }] = await Promise.all([
+      dbQuery,
+      countQuery,
+    ])
 
     if (error) {
       console.error('Database error:', error)
@@ -81,24 +95,6 @@ export async function GET(request: NextRequest) {
         { error: 'Failed to fetch clips' },
         { status: 500 }
       )
-    }
-
-    // Get total count for pagination
-    let countQuery = supabase
-      .from('clips')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-
-    if (folderId) {
-      countQuery = countQuery.eq('folder_id', folderId)
-    }
-
-    const { count, error: countError } = await countQuery
-
-    if (countError) {
-      console.error('Count error:', countError)
-      // Return clips without count if count fails
-      return NextResponse.json({ clips: data || [], total: data?.length || 0 })
     }
 
     return NextResponse.json({ 
@@ -127,7 +123,6 @@ export async function POST(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Extension authentication with Bearer token
       const token = authHeader.substring(7)
-      console.log('Using Bearer token authentication for extension')
       
       // Create a client with the Bearer token
       supabase = createSupabaseClient(
@@ -156,7 +151,6 @@ export async function POST(request: NextRequest) {
       user = userData.user
     } else {
       // Web app authentication with cookies
-      console.log('Using cookie authentication for web app')
       supabase = createClient()
       
       const { data: userData, error: authError } = await supabase.auth.getUser()
@@ -171,8 +165,6 @@ export async function POST(request: NextRequest) {
       
       user = userData.user
     }
-    
-    console.log('Authenticated user:', user.email)
 
     // Get user's subscription tier and current usage for response
     const { data: userProfile, error: userError } = await supabase

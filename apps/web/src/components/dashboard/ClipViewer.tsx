@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -61,6 +61,98 @@ interface ClipViewerProps {
   onNavigate: (direction: 'prev' | 'next') => void
 }
 
+interface ReaderViewProps {
+  content: string
+  searchQuery: string
+  currentMatchIndex: number
+  clipUrl: string
+  onTextSelection: (event?: React.MouseEvent<HTMLDivElement>) => void
+  highlightFn: (text: string, query: string, currentIndex: number) => string
+}
+
+function ReaderView({ content, searchQuery, currentMatchIndex, clipUrl, onTextSelection, highlightFn }: ReaderViewProps) {
+  const [copyButton, setCopyButton] = useState<{ x: number; y: number; text: string } | null>(null)
+  const [copied, setCopied] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    onTextSelection(e)
+
+    const selection = window.getSelection()
+    const selected = selection?.toString().trim()
+    if (!selected) {
+      setCopyButton(null)
+      return
+    }
+
+    const range = selection?.getRangeAt(0)
+    if (!range) return
+    const rect = range.getBoundingClientRect()
+    const containerRect = containerRef.current?.getBoundingClientRect()
+    if (!containerRect) return
+
+    setCopyButton({
+      x: rect.left - containerRect.left + rect.width / 2,
+      y: rect.top - containerRect.top - 8,
+      text: selected,
+    })
+    setCopied(false)
+  }
+
+  const handleCopyWithSource = () => {
+    if (!copyButton) return
+    const textToCopy = `${copyButton.text}\n\nSource: ${clipUrl}`
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopied(true)
+      setTimeout(() => {
+        setCopyButton(null)
+        setCopied(false)
+      }, 1200)
+    })
+  }
+
+  const paragraphs = content.split(/\n\n+/).filter(p => p.trim())
+
+  return (
+    <div className="flex-1 bg-muted/30 overflow-auto relative" ref={containerRef}>
+      <div className="max-w-2xl mx-auto px-6 py-8">
+        {searchQuery ? (
+          <div
+            className="text-lg font-serif leading-8 text-slate-800 whitespace-pre-wrap break-words"
+            onMouseUp={handleMouseUp}
+            dangerouslySetInnerHTML={{
+              __html: highlightFn(content, searchQuery, currentMatchIndex),
+            }}
+          />
+        ) : (
+          <div className="space-y-5" onMouseUp={handleMouseUp}>
+            {paragraphs.map((para, i) => (
+              <p
+                key={i}
+                className="text-lg font-serif leading-8 text-slate-800 break-words"
+              >
+                {para.trim()}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Floating "Copy with source" button */}
+      {copyButton && (
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={handleCopyWithSource}
+          className="absolute z-10 -translate-x-1/2 -translate-y-full px-3 py-1.5 text-xs font-semibold bg-slate-900 text-white rounded-lg shadow-xl hover:bg-slate-700 transition-colors whitespace-nowrap"
+          style={{ left: copyButton.x, top: copyButton.y }}
+        >
+          {copied ? '✓ Copied!' : 'Copy with source'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export function ClipViewer({ 
   clip, 
   clips, 
@@ -91,6 +183,47 @@ export function ClipViewer({
   const [availableTags, setAvailableTags] = useState<Array<{id: string, name: string, color?: string}>>([])
   const [clipTags, setClipTags] = useState<Array<{id: string, name: string, color?: string}>>([])
   const [newTagName, setNewTagName] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  // Full clip data (html_content / text_content not sent in list responses — fetched on open)
+  const [fullClip, setFullClip] = useState<Clip | null>(null)
+  const [isLoadingContent, setIsLoadingContent] = useState(false)
+
+  // Lazy-load full clip content when viewer opens or clip changes
+  useEffect(() => {
+    if (!isOpen || !clip) {
+      setFullClip(null)
+      return
+    }
+    // If the prop already carries full content (e.g. from extension), skip fetch
+    if (clip.html_content != null || clip.text_content != null) {
+      setFullClip(clip)
+      return
+    }
+    let cancelled = false
+    setIsLoadingContent(true)
+    fetch(`/api/clips/${clip.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!cancelled) {
+          setFullClip(data?.clip ?? clip)
+          setIsLoadingContent(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFullClip(clip)
+          setIsLoadingContent(false)
+        }
+      })
+    return () => { cancelled = true }
+  }, [isOpen, clip?.id])
+
+  // Merge live prop updates (title, notes, etc.) into fullClip
+  useEffect(() => {
+    if (clip && fullClip && clip.id === fullClip.id) {
+      setFullClip(prev => prev ? { ...prev, ...clip, html_content: prev.html_content, text_content: prev.text_content } : null)
+    }
+  }, [clip])
 
   useEffect(() => {
     if (clip) {
@@ -132,30 +265,21 @@ export function ClipViewer({
     return annotations
   }
 
-  // Load available tags and clip tags
+  // Load available tags and clip tags in parallel
   useEffect(() => {
     if (!isOpen || !clip) return
 
     const loadTags = async () => {
       try {
-        // Load all available tags
-        const tagsResponse = await fetch('/api/tags')
-        if (tagsResponse.ok) {
-          const tags = await tagsResponse.json()
-          setAvailableTags(tags)
-        }
-
-        // Load tags for this clip
-        const clipTagsResponse = await fetch(`/api/clips/${clip.id}/tags`)
-        if (clipTagsResponse.ok) {
-          const tags = await clipTagsResponse.json()
+        const [tagsRes, clipTagsRes] = await Promise.all([
+          fetch('/api/tags'),
+          fetch(`/api/clips/${clip.id}/tags`),
+        ])
+        if (tagsRes.ok) setAvailableTags(await tagsRes.json())
+        if (clipTagsRes.ok) {
+          const tags = await clipTagsRes.json()
           setClipTags(tags)
-          
-          // Update the edit form with the loaded tags
-          setEditForm(prev => ({
-            ...prev,
-            tags: tags.map((tag: any) => tag.name)
-          }))
+          setEditForm(prev => ({ ...prev, tags: tags.map((tag: any) => tag.name) }))
         }
       } catch (error) {
         console.error('Error loading tags:', error)
@@ -163,7 +287,7 @@ export function ClipViewer({
     }
 
     loadTags()
-  }, [isOpen, clip])
+  }, [isOpen, clip?.id])
 
   // Calculate navigation state
   const currentIndex = clip ? clips.findIndex(c => c.id === clip.id) : -1
@@ -273,15 +397,15 @@ export function ClipViewer({
     }
 
     let matches = 0
-    if (activeTab === 'text' && clip.text_content) {
-      matches = countMatches(clip.text_content, searchQuery)
-    } else if (activeTab === 'html' && clip.html_content) {
-      matches = countMatches(clip.html_content, searchQuery)
+    if (activeTab === 'text' && fullClip?.text_content) {
+      matches = countMatches(fullClip.text_content, searchQuery)
+    } else if (activeTab === 'html' && fullClip?.html_content) {
+      matches = countMatches(fullClip.html_content, searchQuery)
     }
     
     setTotalMatches(matches)
     setCurrentMatchIndex(0)
-  }, [searchQuery, activeTab, clip?.text_content, clip?.html_content, clip])
+  }, [searchQuery, activeTab, fullClip?.text_content, fullClip?.html_content, fullClip])
 
   const updateIframeHighlighting = (newIndex: number) => {
     const iframe = document.querySelector('iframe[title="HTML Content Preview"]') as HTMLIFrameElement
@@ -518,8 +642,7 @@ export function ClipViewer({
   if (!isOpen || !clip) return null
 
   const handleDelete = async () => {
-    if (!clip || !confirm('Are you sure you want to delete this clip?')) return
-    
+    if (!clip) return
     setIsLoading(true)
     try {
       await onDelete(clip.id)
@@ -528,6 +651,7 @@ export function ClipViewer({
       console.error('Failed to delete clip:', error)
     } finally {
       setIsLoading(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -550,16 +674,22 @@ export function ClipViewer({
     setHasUnsavedChanges(true)
   }
 
-  const handleTextSelection = (event?: any) => {
-    let selection;
-    
-    // Check if this is from an iframe
-    if (event?.target?.ownerDocument && event.target.ownerDocument !== document) {
-      selection = event.target.ownerDocument.getSelection();
-    } else {
-      selection = window.getSelection();
+  // Receive text selections from the sandboxed iframe via postMessage
+  useEffect(() => {
+    if (!isOpen) return
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'ps-selection' && event.data.text) {
+        setSelectedText(event.data.text)
+        setShowAddNote(true)
+      }
     }
-    
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [isOpen])
+
+  const handleTextSelection = (event?: any) => {
+    // For non-iframe contexts (text/source tabs)
+    const selection = window.getSelection()
     if (selection && selection.toString().trim()) {
       setSelectedText(selection.toString().trim())
       setShowAddNote(true)
@@ -569,7 +699,7 @@ export function ClipViewer({
   const folder = folders.find(f => f.id === clip.folder_id)
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-2">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[10010] flex items-center justify-center p-2">
       <div className="bg-background rounded-lg shadow-2xl w-[98vw] h-[96vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -627,7 +757,7 @@ export function ClipViewer({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Clip
                 </DropdownMenuItem>
@@ -646,105 +776,78 @@ export function ClipViewer({
           <div className="flex-1 flex flex-col overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
               {/* Tab Navigation */}
-              <div className="border-b bg-background px-4 py-2">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <TabsList className="grid w-full max-w-md grid-cols-3 flex-shrink-0">
-                      <TabsTrigger value="screenshot" className="flex items-center gap-2">
-                        <Camera className="h-4 w-4" />
-                        Screenshot
-                      </TabsTrigger>
-                      <TabsTrigger value="html" className="flex items-center gap-2">
-                        <Code className="h-4 w-4" />
-                        HTML
-                      </TabsTrigger>
-                      <TabsTrigger value="text" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Text
-                      </TabsTrigger>
-                    </TabsList>
-                    
-                    {/* Helpful hints for each tab */}
-                    {activeTab === 'html' && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 whitespace-nowrap">
-                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                        <span className="font-medium">Highlight text to annotate</span>
-                      </div>
-                    )}
-                    {activeTab === 'text' && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 whitespace-nowrap">
-                        <Highlighter className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                        <span className="font-medium">Highlight text to annotate</span>
-                      </div>
-                    )}
-                    {activeTab === 'screenshot' && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-purple-50 dark:bg-purple-950/30 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800 whitespace-nowrap">
-                        <StickyNote className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                        <span className="font-medium">Draw rectangles to annotate</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Search Bar - Only show for HTML and Text tabs */}
+              <div className="border-b bg-background px-4 py-2.5">
+                <div className="flex items-center gap-3">
+                  {/* Tabs */}
+                  <TabsList className="flex-shrink-0 h-9">
+                    <TabsTrigger value="screenshot" className="flex items-center gap-1.5 px-3 text-xs">
+                      <Camera className="h-3.5 w-3.5" />
+                      Screenshot
+                    </TabsTrigger>
+                    <TabsTrigger value="html" className="flex items-center gap-1.5 px-3 text-xs">
+                      <Code className="h-3.5 w-3.5" />
+                      HTML
+                    </TabsTrigger>
+                    <TabsTrigger value="text" className="flex items-center gap-1.5 px-3 text-xs">
+                      <FileText className="h-3.5 w-3.5" />
+                      Text
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Search — shown for HTML and Text tabs, takes remaining width */}
                   {(activeTab === 'html' || activeTab === 'text') && (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                         <Input
                           placeholder="Search content..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9 w-48 sm:w-64"
+                          className="pl-9 h-9 text-sm w-full"
                         />
+                        {searchQuery && (
+                          <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
-                      
+
                       {searchQuery && totalMatches > 0 && (
-                        <div className="flex items-center gap-2">
-                          {/* Match count */}
-                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                            {currentMatchIndex + 1} of {totalMatches}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                            {currentMatchIndex + 1}/{totalMatches}
                           </span>
-                          
-                          {/* Navigation buttons */}
-                          <div className="flex">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigateToMatch('prev')}
-                              disabled={totalMatches <= 1}
-                              className="h-8 w-8 p-0"
-                            >
-                              <ChevronUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigateToMatch('next')}
-                              disabled={totalMatches <= 1}
-                              className="h-8 w-8 p-0"
-                            >
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <button
+                            onClick={() => navigateToMatch('prev')}
+                            disabled={totalMatches <= 1}
+                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted disabled:opacity-40 transition-colors"
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => navigateToMatch('next')}
+                            disabled={totalMatches <= 1}
+                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted disabled:opacity-40 transition-colors"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </button>
                         </div>
                       )}
-                      
+
                       {searchQuery && totalMatches === 0 && (
-                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                          No matches
-                        </span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">No matches</span>
                       )}
-                      
-                      {searchQuery && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSearchQuery('')}
-                          className="h-8 w-8 p-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
+                    </div>
+                  )}
+
+                  {/* Screenshot hint — icon only, doesn't crowd */}
+                  {activeTab === 'screenshot' && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground ml-1">
+                      <StickyNote className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span>Draw to annotate</span>
                     </div>
                   )}
                 </div>
@@ -769,13 +872,11 @@ export function ClipViewer({
                         
                         handleFormChange('notes', currentNotes)
                       }}
-                      onDeleteAnnotation={async (annotationId) => {
+                      onDeleteAnnotation={async (_annotationId) => {
                         // TODO: Delete annotation note
-                        console.log('Delete annotation:', annotationId)
                       }}
-                      onClickAnnotation={(annotation) => {
+                      onClickAnnotation={(_annotation) => {
                         // TODO: Show annotation note in sidebar
-                        console.log('Click annotation:', annotation)
                       }}
                     />
                   ) : (
@@ -790,42 +891,132 @@ export function ClipViewer({
 
                 {/* HTML Tab */}
                 <TabsContent value="html" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  {clip.html_content ? (
+                  {isLoadingContent ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3 text-slate-400">
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm">Loading content…</span>
+                      </div>
+                    </div>
+                  ) : fullClip?.html_content ? (
                     <div className="flex-1 flex flex-col">
-                      <div className="p-4 border-b bg-background">
-                        <div className="text-sm text-muted-foreground mb-2">
-                          Choose how to view the HTML content:
-                        </div>
-                        <div className="flex gap-2">
+                      <div className="px-4 py-2.5 border-b bg-background flex items-center gap-3">
+                        <div className="flex items-center p-0.5 bg-muted rounded-lg text-xs gap-0.5">
                           <button
                             onClick={() => setHtmlViewMode('html-rendered')}
-                            className={`px-3 py-1 text-xs rounded border ${
-                              htmlViewMode === 'html-rendered' 
-                                ? 'bg-primary text-primary-foreground' 
-                                : 'bg-background hover:bg-muted'
+                            className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                              htmlViewMode === 'html-rendered'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            Rendered View
+                            Rendered
                           </button>
                           <button
                             onClick={() => setHtmlViewMode('html-source')}
-                            className={`px-3 py-1 text-xs rounded border ${
-                              htmlViewMode === 'html-source' 
-                                ? 'bg-primary text-primary-foreground' 
-                                : 'bg-background hover:bg-muted'
+                            className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                              htmlViewMode === 'html-source'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
-                            Source Code
+                            Source
                           </button>
                         </div>
+                        {htmlViewMode === 'html-rendered' && (
+                          <span className="text-xs text-muted-foreground">Scripts are blocked for safety</span>
+                        )}
                       </div>
                       
                       {htmlViewMode === 'html-rendered' ? (
                         <div className="flex-1 bg-muted/30 p-4">
                           <div className="bg-white rounded border shadow-sm h-full">
                             <iframe
-                              srcDoc={`
-                                ${clip.html_content}
+                              srcDoc={`<script>
+                                (function() {
+                                  /* ── PageStash network isolation layer ──────────────────────────
+                                   * The archived HTML is stored in our database exactly as captured.
+                                   * We block all outbound network requests so the viewer is fully
+                                   * self-contained and never touches the live site.
+                                   * ─────────────────────────────────────────────────────────────*/
+                                  var noop = function() {};
+                                  var rejectAll = function() { return Promise.reject(new Error('Blocked')); };
+
+                                  /* 1. Block fetch / XHR / WebSocket / beacon */
+                                  window.fetch = rejectAll;
+                                  window.XMLHttpRequest = function() {
+                                    return { open: noop, send: noop, abort: noop, setRequestHeader: noop,
+                                      getResponseHeader: function() { return null; }, addEventListener: noop,
+                                      removeEventListener: noop, onreadystatechange: null,
+                                      readyState: 4, status: 0, responseText: '', response: null };
+                                  };
+                                  window.WebSocket = function() { return { send: noop, close: noop, addEventListener: noop }; };
+                                  if (navigator.sendBeacon) navigator.sendBeacon = noop;
+                                  if (typeof EventSource !== 'undefined') window.EventSource = function() { return { close: noop }; };
+
+                                  /* 2. Block dynamic <script src="…"> and <link href="…"> injection */
+                                  var _isExternal = function(url) {
+                                    return url && typeof url === 'string' &&
+                                      (url.startsWith('http') || url.startsWith('//') || url.startsWith('www.'));
+                                  };
+                                  var _origCreate = document.createElement.bind(document);
+                                  document.createElement = function(tag) {
+                                    var el = _origCreate(tag);
+                                    var lower = (tag || '').toLowerCase();
+                                    if (lower === 'script') {
+                                      var _src = '';
+                                      Object.defineProperty(el, 'src', {
+                                        get: function() { return _src; },
+                                        set: function(v) { if (!_isExternal(v)) _src = v; },
+                                        configurable: true
+                                      });
+                                    }
+                                    if (lower === 'link') {
+                                      var _href = '';
+                                      Object.defineProperty(el, 'href', {
+                                        get: function() { return _href; },
+                                        set: function(v) { if (!_isExternal(v)) _href = v; },
+                                        configurable: true
+                                      });
+                                    }
+                                    return el;
+                                  };
+
+                                  /* 3. Block setAttribute on script/link nodes */
+                                  var _origSetAttr = Element.prototype.setAttribute;
+                                  Element.prototype.setAttribute = function(name, value) {
+                                    var tag = this.tagName;
+                                    if ((tag === 'SCRIPT' && name === 'src') || (tag === 'LINK' && name === 'href')) {
+                                      if (_isExternal(value)) return;
+                                    }
+                                    return _origSetAttr.call(this, name, value);
+                                  };
+
+                                  /* 4. MutationObserver — remove any external script/preload nodes
+                                   *    that slip through (e.g. created before our override was active) */
+                                  var _observer = new MutationObserver(function(mutations) {
+                                    mutations.forEach(function(m) {
+                                      m.addedNodes.forEach(function(node) {
+                                        if (!node.tagName) return;
+                                        var t = node.tagName;
+                                        if (t === 'SCRIPT' && _isExternal(node.src)) { node.remove(); return; }
+                                        if (t === 'LINK' && node.rel === 'preload' && node.as === 'script' && _isExternal(node.href)) { node.remove(); }
+                                      });
+                                    });
+                                  });
+                                  _observer.observe(document.documentElement || document.body || document, { childList: true, subtree: true });
+
+                                  /* 5. Relay text selection back to parent without needing allow-same-origin */
+                                  document.addEventListener('mouseup', function() {
+                                    var sel = window.getSelection ? window.getSelection() : null;
+                                    var text = sel ? sel.toString().trim() : '';
+                                    if (text) {
+                                      try { window.parent.postMessage({ type: 'ps-selection', text: text }, '*'); } catch(e) {}
+                                    }
+                                  });
+                                })();
+                                </script>
+                                ${fullClip?.html_content ?? ''}
                                 <style>
                                   /* Block specific ad networks and tracking */
                                   iframe[src*="doubleclick"], iframe[src*="googlesyndication"],
@@ -1018,37 +1209,19 @@ export function ClipViewer({
                                 </script>
                               `}
                               className="w-full h-full rounded"
-                              sandbox="allow-same-origin allow-scripts"
+                              sandbox="allow-scripts"
                               title="HTML Content Preview"
                               style={{ minHeight: '500px' }}
                               onLoad={(e) => {
+                                // No same-origin access needed — text selection is relayed via postMessage.
+                                // Send current search term for in-page highlighting.
                                 const iframe = e.target as HTMLIFrameElement;
-                                try {
-                                  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                                  if (iframeDoc) {
-                                    // Add text selection handler
-                                    iframeDoc.addEventListener('mouseup', () => {
-                                      const selection = iframeDoc.getSelection();
-                                      if (selection && selection.toString().trim()) {
-                                        handleTextSelection({
-                                          target: {
-                                            ownerDocument: iframeDoc
-                                          }
-                                        } as any);
-                                      }
-                                    });
-                                    
-                                    // Send search term for highlighting
-                                    if (searchQuery) {
-                                      iframe.contentWindow?.postMessage({
-                                        type: 'highlight',
-                                        searchTerm: searchQuery,
-                                        currentIndex: currentMatchIndex
-                                      }, '*');
-                                    }
-                                  }
-                                } catch (error) {
-                                  console.log('Cannot access iframe content due to security restrictions');
+                                if (searchQuery) {
+                                  iframe.contentWindow?.postMessage({
+                                    type: 'highlight',
+                                    searchTerm: searchQuery,
+                                    currentIndex: currentMatchIndex
+                                  }, '*');
                                 }
                               }}
                             />
@@ -1066,7 +1239,7 @@ export function ClipViewer({
                               }}
                               onMouseUp={handleTextSelection}
                               dangerouslySetInnerHTML={{
-                                __html: highlightSearchTextForSourceCode(clip.html_content, searchQuery, currentMatchIndex)
+                                __html: highlightSearchTextForSourceCode(fullClip?.html_content ?? '', searchQuery, currentMatchIndex)
                               }}
                             />
                           </div>
@@ -1085,25 +1258,22 @@ export function ClipViewer({
 
                 {/* Text Tab */}
                 <TabsContent value="text" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
-                  {clip.text_content ? (
-                    <div className="flex-1 bg-muted/30 p-4">
-                      <div className="bg-white rounded border shadow-sm overflow-auto" style={{ height: 'calc(100vh - 200px)' }}>
-                        <div className="p-4">
-                          <div 
-                            className="text-sm whitespace-pre-wrap leading-relaxed"
-                            style={{ 
-                              maxWidth: '100%',
-                              wordBreak: 'break-word',
-                              overflowWrap: 'break-word'
-                            }}
-                            onMouseUp={handleTextSelection}
-                            dangerouslySetInnerHTML={{
-                              __html: highlightSearchText(clip.text_content, searchQuery, currentMatchIndex)
-                            }}
-                          />
-                        </div>
+                  {isLoadingContent ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3 text-slate-400">
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm">Loading content…</span>
                       </div>
                     </div>
+                  ) : fullClip?.text_content ? (
+                    <ReaderView
+                      content={fullClip.text_content}
+                      searchQuery={searchQuery}
+                      currentMatchIndex={currentMatchIndex}
+                      clipUrl={clip.url}
+                      onTextSelection={handleTextSelection}
+                      highlightFn={highlightSearchText}
+                    />
                   ) : (
                     <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
@@ -1118,7 +1288,7 @@ export function ClipViewer({
           </div>
 
           {/* Metadata & Edit Panel */}
-          <div className="w-80 border-l bg-muted/20 flex flex-col overflow-hidden">
+          <div className="w-80 border-l bg-slate-50/60 dark:bg-slate-900/60 flex flex-col overflow-hidden">
             <div className="p-4 space-y-4 overflow-y-auto">
               {/* Title */}
               <div>
@@ -1322,6 +1492,39 @@ export function ClipViewer({
             </div>
           </div>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        {showDeleteConfirm && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-20">
+            <div className="bg-background rounded-xl shadow-2xl max-w-sm w-full p-6 border">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="flex-shrink-0 p-2.5 bg-red-100 dark:bg-red-950/50 rounded-full">
+                  <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-base mb-1">Delete this clip?</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    This will permanently delete <span className="font-medium text-foreground">&ldquo;{clip.title}&rdquo;</span> and all its notes and annotations. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)} disabled={isLoading}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  {isLoading ? 'Deleting...' : 'Delete clip'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Text Selection Note Modal */}
         {showAddNote && selectedText && (

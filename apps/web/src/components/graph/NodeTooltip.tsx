@@ -3,7 +3,7 @@
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   Users, 
   Building2, 
@@ -12,13 +12,11 @@ import {
   Calendar, 
   Tag,
   FileText,
-  ExternalLink,
   Eye,
-  TrendingUp,
   Clock,
-  Shield,
   Star,
-  Link as LinkIcon
+  Link as LinkIcon,
+  X
 } from 'lucide-react'
 import { EnhancedGraphNode } from '@/types/graph-filters'
 
@@ -27,17 +25,31 @@ interface NodeTooltipProps {
   position: { x: number; y: number }
   connectionCount: number
   onViewEvidence: (clipId: string) => void
+  onClose?: () => void
   onAddNote?: (nodeId: string) => void
   onMarkImportant?: (nodeId: string) => void
   isPersistent?: boolean
   isClipViewerOpen?: boolean
 }
 
+/** Strip internal annotation metadata (screenshot coords, base64 thumbs) from display text */
+function cleanSnippet(text: string): string {
+  if (!text) return text
+  // Remove 📍 SCREENSHOT [...] annotation blocks
+  let cleaned = text.replace(/📍 SCREENSHOT \[[^\]]*\]/g, '').trim()
+  // Remove leftover "> " quote prefixes from formatted notes
+  cleaned = cleaned.replace(/^>\s*[""]|[""]$/gm, '').trim()
+  // Collapse multiple newlines
+  cleaned = cleaned.replace(/\n{2,}/g, '\n').trim()
+  return cleaned || text // fall back to original if nothing remains
+}
+
 export function NodeTooltip({ 
   node, 
   position, 
   connectionCount, 
-  onViewEvidence, 
+  onViewEvidence,
+  onClose,
   onAddNote, 
   onMarkImportant,
   isPersistent = false,
@@ -55,14 +67,6 @@ export function NodeTooltip({
       default: return <FileText className="h-4 w-4" />
     }
   }
-
-  const getConfidenceBadge = (confidence: number) => {
-    if (confidence >= 0.8) return { variant: 'default' as const, label: 'High', color: 'bg-green-100 text-green-800' }
-    if (confidence >= 0.6) return { variant: 'secondary' as const, label: 'Medium', color: 'bg-yellow-100 text-yellow-800' }
-    return { variant: 'outline' as const, label: 'Low', color: 'bg-red-100 text-red-800' }
-  }
-
-  const confidenceBadge = getConfidenceBadge(node.confidence || 0.5)
 
   // Smart positioning to avoid going off-screen
   const getTooltipPosition = () => {
@@ -114,86 +118,68 @@ export function NodeTooltip({
     position: 'fixed',
     left,
     top,
-    zIndex: isClipViewerOpen ? 99999 : 100000, // Lower z-index when clip viewer is open
+    zIndex: isClipViewerOpen ? 10001 : 10002,
     maxWidth: '300px',
-    pointerEvents: isPersistent ? 'auto' : 'none' // Allow interaction when persistent
+    pointerEvents: isPersistent ? 'auto' : 'none'
   }
 
   return (
     <div style={tooltipStyle} className="relative">
       {/* Connection indicator */}
       <div 
-        className={`absolute w-2 h-2 bg-white border-2 border-gray-300 rotate-45 ${
-          isTooltipLeft 
-            ? 'right-[-5px] top-4' 
-            : isTooltipAbove 
-              ? 'bottom-[-5px] left-4' 
+        className={`absolute w-2 h-2 bg-white dark:bg-slate-800 border-2 rotate-45 ${
+          isTooltipLeft
+            ? 'right-[-5px] top-4'
+            : isTooltipAbove
+              ? 'bottom-[-5px] left-4'
               : 'left-[-5px] top-4'
-        } ${isPersistent ? 'border-blue-400' : ''}`}
+        } ${isPersistent ? 'border-blue-400' : 'border-slate-200 dark:border-slate-700'}`}
       />
-      <Card className={`shadow-lg border-2 bg-white/95 backdrop-blur-sm ${isPersistent ? 'border-blue-400 shadow-blue-200/50' : ''}`}>
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div 
-                className="p-1.5 rounded-full"
-                style={{ backgroundColor: `${node.color}20`, color: node.color }}
-              >
-                {getNodeIcon(node.type)}
-              </div>
-              <div>
-                <CardTitle className="text-sm font-semibold">
-                  {node.label}
-                </CardTitle>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-xs capitalize">
-                    {node.type}
-                  </Badge>
-                  <Badge variant={confidenceBadge.variant} className={`text-xs ${confidenceBadge.color}`}>
-                    {confidenceBadge.label}
-                  </Badge>
-                  {node.verified && (
-                    <Badge variant="default" className="text-xs bg-blue-100 text-blue-800">
-                      <Shield className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  )}
-                </div>
+      <Card className={`shadow-2xl border bg-white dark:bg-slate-800 ${isPersistent ? 'border-blue-400/60 shadow-blue-500/10' : 'border-slate-200 dark:border-slate-700'}`}>
+        <CardHeader className="pb-2 pr-2">
+          <div className="flex items-start gap-2">
+            <div 
+              className="p-1.5 rounded-full flex-shrink-0 mt-0.5"
+              style={{ backgroundColor: `${node.color}20`, color: node.color }}
+            >
+              {getNodeIcon(node.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-sm font-semibold leading-snug text-slate-900 dark:text-white">
+                {node.label}
+              </CardTitle>
+              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <span className="capitalize">{node.type === 'clip' ? 'page' : node.type === 'domain' ? 'website' : node.type}</span>
               </div>
             </div>
+            {isPersistent && onClose && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onClose() }}
+                className="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </CardHeader>
 
         <CardContent className="pt-0 space-y-3">
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-slate-600">
-                <TrendingUp className="h-3 w-3" />
-              </div>
-              <div className="font-medium">{(node.importance * 100).toFixed(0)}%</div>
-              <div className="text-slate-500">Importance</div>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="text-center px-3 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+              <div className="font-semibold text-slate-900 dark:text-white text-base">{connectionCount}</div>
+              <div className="text-slate-500 dark:text-slate-400 mt-0.5">Connections</div>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-slate-600">
-                <LinkIcon className="h-3 w-3" />
-              </div>
-              <div className="font-medium">{connectionCount}</div>
-              <div className="text-slate-500">Connections</div>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-slate-600">
-                <FileText className="h-3 w-3" />
-              </div>
-              <div className="font-medium">{node.evidence.length}</div>
-              <div className="text-slate-500">Evidence</div>
+            <div className="text-center px-3 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+              <div className="font-semibold text-slate-900 dark:text-white text-base">{node.evidence.length}</div>
+              <div className="text-slate-500 dark:text-slate-400 mt-0.5">Clip{node.evidence.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
 
           {/* Topics */}
           {node.topics.length > 0 && (
             <div>
-              <div className="text-xs font-medium text-slate-700 mb-1">Topics</div>
+              <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Topics</div>
               <div className="flex flex-wrap gap-1">
                 {node.topics.slice(0, 3).map(topic => (
                   <Badge key={topic} variant="secondary" className="text-xs">
@@ -212,25 +198,28 @@ export function NodeTooltip({
           {/* Recent Evidence */}
           {node.evidence.length > 0 && (
             <div>
-              <div className="text-xs font-medium text-slate-700 mb-1">Recent Evidence</div>
-              <div 
-                className="bg-slate-50 rounded p-2 text-xs cursor-pointer hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
+              <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Recent Evidence</div>
+                <div 
+                className="bg-slate-50 dark:bg-slate-800/60 rounded p-2 text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                 onClick={(e) => {
                   e.stopPropagation()
                   onViewEvidence(node.evidence[0].clipId)
                 }}
               >
-                <div className="font-medium text-slate-700 truncate mb-1">
+                <div className="font-medium text-slate-700 dark:text-slate-200 truncate mb-1">
                   {node.evidence[0].clipTitle}
                 </div>
-                <p className="text-slate-600 line-clamp-2 mb-1">
-                  {node.evidence[0].snippet}
-                </p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-xs">
+                {(() => {
+                  const cleaned = cleanSnippet(node.evidence[0].snippet)
+                  return cleaned ? (
+                    <p className="text-slate-500 dark:text-slate-400 line-clamp-2 mb-1">{cleaned}</p>
+                  ) : null
+                })()}
+                <div className="flex items-center justify-between mt-1">
+                  <Badge variant="outline" className="text-xs px-1.5 py-0">
                     {node.evidence[0].folderName}
                   </Badge>
-                  <div className="flex items-center gap-1 text-slate-500">
+                  <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
                     <Clock className="h-3 w-3" />
                     {new Date(node.lastMention).toLocaleDateString()}
                   </div>
