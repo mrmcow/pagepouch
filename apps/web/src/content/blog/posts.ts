@@ -1,4 +1,8 @@
 import { BlogPost } from '@/types/blog'
+import { webClippingArchivingExplained2026 } from './web-clipping-archiving-explained-2026'
+import { pagestashVsPocketEvernoteNotion } from './pagestash-vs-pocket-evernote-notion'
+import { osintResearchToolsPricing2026 } from './osint-research-tools-pricing-2026'
+import { osintBrowserResearchStack2026 } from './osint-browser-research-stack-2026'
 import { gscPagestashWhatIs } from './gsc-pagestash-what-is'
 import { gscBestEClippingResearch } from './gsc-best-e-clipping-research'
 import { gscBestClipperBusinessResearch } from './gsc-best-clipper-business-research'
@@ -103,6 +107,10 @@ import { bestClipperBusinessResearch2025 } from './best-clipper-business-researc
 import { competitorAnalysisUXDesign } from './competitor-analysis-ux-design'
 
 export const allPosts: BlogPost[] = [
+  webClippingArchivingExplained2026,
+  pagestashVsPocketEvernoteNotion,
+  osintResearchToolsPricing2026,
+  osintBrowserResearchStack2026,
   gscPagestashWhatIs,
   gscBestEClippingResearch,
   gscBestClipperBusinessResearch,
