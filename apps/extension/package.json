@@ -15,6 +15,7 @@
     "build:download:chrome": "node scripts/create-downloadable.js chrome",
     "build:download:firefox": "node scripts/create-downloadable.js firefox",
     "build:download:all": "npm run build:download:chrome && npm run build:download:firefox",
+    "sign:firefox": "npm run build:firefox && npx web-ext sign --source-dir dist-firefox/ --artifacts-dir downloads/firefox/signed/ --channel unlisted",
     "clean": "rm -rf dist dist-firefox build",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx"
@@ -38,6 +39,7 @@
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.4",
     "typescript": "^5.0.0",
+    "web-ext": "^10.1.0",
     "webpack": "^5.101.3",
     "webpack-cli": "^5.1.4"
   }

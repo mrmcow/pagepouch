@@ -118,7 +118,7 @@ function ReaderView({ content, searchQuery, currentMatchIndex, clipUrl, onTextSe
       <div className="max-w-2xl mx-auto px-6 py-8">
         {searchQuery ? (
           <div
-            className="text-lg font-serif leading-8 text-slate-800 whitespace-pre-wrap break-words"
+            className="text-lg font-serif leading-8 text-slate-800 dark:text-slate-200 whitespace-pre-wrap break-words"
             onMouseUp={handleMouseUp}
             dangerouslySetInnerHTML={{
               __html: highlightFn(content, searchQuery, currentMatchIndex),
@@ -129,7 +129,7 @@ function ReaderView({ content, searchQuery, currentMatchIndex, clipUrl, onTextSe
             {paragraphs.map((para, i) => (
               <p
                 key={i}
-                className="text-lg font-serif leading-8 text-slate-800 break-words"
+                className="text-lg font-serif leading-8 text-slate-800 dark:text-slate-200 break-words"
               >
                 {para.trim()}
               </p>
@@ -639,6 +639,19 @@ export function ClipViewer({
     return result
   }
 
+  // Receive text selections from the sandboxed iframe via postMessage
+  useEffect(() => {
+    if (!isOpen) return
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'ps-selection' && event.data.text) {
+        setSelectedText(event.data.text)
+        setShowAddNote(true)
+      }
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [isOpen])
+
   if (!isOpen || !clip) return null
 
   const handleDelete = async () => {
@@ -673,19 +686,6 @@ export function ClipViewer({
     }))
     setHasUnsavedChanges(true)
   }
-
-  // Receive text selections from the sandboxed iframe via postMessage
-  useEffect(() => {
-    if (!isOpen) return
-    const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'ps-selection' && event.data.text) {
-        setSelectedText(event.data.text)
-        setShowAddNote(true)
-      }
-    }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [isOpen])
 
   const handleTextSelection = (event?: any) => {
     // For non-iframe contexts (text/source tabs)

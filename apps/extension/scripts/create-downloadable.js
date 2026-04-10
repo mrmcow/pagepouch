@@ -34,81 +34,53 @@ if (!fs.existsSync(downloadsDir)) {
 }
 
 // Create installation guide
-const installationGuide = `# 📦 PageStash Extension - Direct Installation
+const installationGuide = `# PageStash Extension — Installation Guide
 
-## 🎯 **What is this?**
+## Recommended: Install from your browser's store
 
-This is the PageStash browser extension that you can install directly without going through the Chrome Web Store. Perfect for beta testing and early access!
+The easiest way to install PageStash with automatic updates:
 
-## 🔧 **Installation Instructions**
+- **Chrome / Edge / Chromium:** [Chrome Web Store](https://chromewebstore.google.com/detail/pagestash/pimbnkabbjeacahcclicmfdkhojnjmif)
+- **Firefox:** [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/pagestash/)
 
-### **For Chrome/Chromium browsers:**
+## Manual Install (Advanced)
 
-1. **Download the extension**
-   - Download \`pagestash-extension.zip\`
-   - Extract it to a folder on your computer
+### Chrome / Chromium
 
-2. **Enable Developer Mode**
-   - Open Chrome and go to \`chrome://extensions/\`
-   - Toggle "Developer mode" ON (top right corner)
+1. Download \`pagestash-extension-chrome.zip\`
+2. Extract it to a folder on your computer
+3. Open \`chrome://extensions/\`
+4. Toggle **Developer mode** ON (top right corner)
+5. Click **Load unpacked** and select the extracted folder
+6. The PageStash icon should appear in your toolbar
 
-3. **Load the extension**
-   - Click "Load unpacked"
-   - Select the extracted folder
-   - The PageStash icon should appear in your toolbar!
+### Firefox
 
-### **For Firefox:**
+1. Download \`pagestash-extension-firefox.zip\`
+2. Open \`about:debugging\`
+3. Click **This Firefox**
+4. Click **Load Temporary Add-on**
+5. Select the ZIP or the \`manifest.json\` inside the extracted folder
 
-1. **Download the extension**
-   - Download \`pagestash-extension.zip\`
-   - Keep it as a ZIP file (don't extract)
+*Note: Temporary add-ons are removed when Firefox restarts.*
 
-2. **Install temporarily**
-   - Open Firefox and go to \`about:debugging\`
-   - Click "This Firefox"
-   - Click "Load Temporary Add-on"
-   - Select the \`pagestash-extension.zip\` file
+## Features
 
-   *Note: Temporary add-ons are removed when Firefox restarts*
+- Full page scroll capture and visible area screenshots
+- Cloud sync across all your devices
+- Full-text search across your entire library
+- Folder organization with tags and notes
+- Encrypted storage with enterprise-grade security
 
-## 🎨 **Features**
+## Need Help?
 
-- ✅ **Full Page Capture** - Scroll and stitch entire pages
-- ✅ **Visible Area Capture** - Quick screenshots of current view
-- ✅ **Cloud Sync** - Sign in to sync across devices
-- ✅ **Beautiful UI** - Modern, clean interface
-- ✅ **Fast & Reliable** - Optimized for performance
-
-## 🔐 **Privacy & Security**
-
-- Your data stays private and secure
-- Optional cloud sync with your own account
-- No tracking or analytics
-- Open source and transparent
-
-## 🆘 **Need Help?**
-
-If you encounter any issues:
-
-1. **Check browser compatibility** - Chrome 88+ or Firefox 78+
-2. **Refresh the page** - Try reloading the page you want to capture
-3. **Check permissions** - Make sure the extension has access to the current site
-4. **Contact support** - Email us at support@pagestash.app
-
-## 🚀 **What's Next?**
-
-After installation:
-
-1. **Try capturing** - Click the PageStash icon and capture a page
-2. **Sign up** - Create an account for cloud sync
-3. **Visit the web app** - Go to http://localhost:3000 to manage your clips
-4. **Give feedback** - Help us improve PageStash!
+- **Support:** support@pagestash.app
+- **Web app:** https://pagestash.app/dashboard
+- **Docs:** https://pagestash.app/docs
 
 ---
 
-**PageStash v1.0.0** - Capture • Organize • Retrieve
-
-*This is a beta version for testing. The official Chrome Web Store version will be available soon!*
+**PageStash v2.0.0** — Capture · Organize · Retrieve
 `;
 
 // Write installation guide
@@ -205,141 +177,36 @@ const downloadPageHtml = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Download PageStash Extension</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            line-height: 1.6;
-            color: #1f2937;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .logo {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 20px;
-        }
-        .download-card {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 20px 0;
-        }
-        .download-button {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            margin-right: 12px;
-            margin-bottom: 12px;
-        }
-        .download-button:hover {
-            background: #1d4ed8;
-        }
-        .secondary-button {
-            background: #6b7280;
-        }
-        .secondary-button:hover {
-            background: #4b5563;
-        }
-        .feature-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin: 24px 0;
-        }
-        .feature {
-            background: white;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-        }
-        .version-badge {
-            display: inline-block;
-            background: #dbeafe;
-            color: #1d4ed8;
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
-        }
+        *{box-sizing:border-box}body{font-family:'Inter',system-ui,-apple-system,sans-serif;max-width:720px;margin:0 auto;padding:48px 24px;line-height:1.6;color:#0f172a;-webkit-font-smoothing:antialiased}.header{text-align:center;margin-bottom:40px}.header h1{font-size:28px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px}.header p{color:#64748b;font-size:15px;margin:0 0 12px}.version-badge{display:inline-block;background:#dbeafe;color:#1d4ed8;padding:3px 12px;border-radius:10px;font-size:13px;font-weight:600}.card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:28px;margin:20px 0}.card h2{font-size:18px;font-weight:600;margin:0 0 8px}.card p{color:#475569;font-size:14px;margin:0 0 16px}.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}.store-link{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:12px;text-decoration:none;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-weight:500;font-size:14px;transition:all .15s ease}.store-link:hover{border-color:#2563eb;box-shadow:0 2px 8px rgba(37,99,235,.1)}.store-link small{display:block;color:#64748b;font-weight:400;font-size:12px}.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:500;font-size:13px;margin-right:8px;margin-bottom:8px;background:#fff;color:#475569;border:1px solid #e2e8f0;transition:background .15s ease}.btn:hover{background:#f1f5f9}.footer{text-align:center;margin-top:40px;font-size:13px;color:#94a3b8}@media(max-width:520px){.store-grid{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="logo">
-            <svg width="64" height="64" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-                <path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
-                <path d="M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
-                <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
-                <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
-            </svg>
-        </div>
+        <div style="margin-bottom:16px"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/><path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/><path d="M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/><rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/><rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/></svg></div>
         <h1>PageStash Extension</h1>
         <p>Capture, organize, and retrieve web content with zero friction</p>
-        <span class="version-badge">v${versionInfo.version} Beta</span>
+        <span class="version-badge">v\${versionInfo.version}</span>
     </div>
-
-    <div class="download-card">
-        <h2>🚀 Download Extension</h2>
-        <p>Get early access to PageStash before it hits the Chrome Web Store!</p>
-        
-        <a href="pagestash-extension.zip" class="download-button" download>
-            📦 Download ZIP (Chrome & Firefox)
-        </a>
-        
-        <a href="INSTALLATION_GUIDE.md" class="download-button secondary-button" target="_blank">
-            📖 Installation Guide
-        </a>
-        
-        <p><strong>Build Date:</strong> ${new Date(versionInfo.buildDate).toLocaleDateString()}</p>
-    </div>
-
-    <div class="feature-list">
-        <div class="feature">
-            <h3>📸 Smart Capture</h3>
-            <p>Full page scroll capture and visible area screenshots with perfect quality</p>
-        </div>
-        <div class="feature">
-            <h3>☁️ Cloud Sync</h3>
-            <p>Sign in to sync your captures across all devices and never lose them</p>
-        </div>
-        <div class="feature">
-            <h3>🎨 Beautiful UI</h3>
-            <p>Modern, clean interface with the new PageStash logo and smooth animations</p>
-        </div>
-        <div class="feature">
-            <h3>⚡ Fast & Reliable</h3>
-            <p>Optimized for performance with instant captures and responsive design</p>
+    <div class="card">
+        <h2>Install from your browser's store</h2>
+        <p>One-click install with automatic updates — recommended for most users.</p>
+        <div class="store-grid">
+            <a href="https://chromewebstore.google.com/detail/pagestash/pimbnkabbjeacahcclicmfdkhojnjmif" class="store-link" target="_blank" rel="noopener noreferrer"><span><strong>Chrome Web Store</strong><small>For Chrome, Edge &amp; Chromium</small></span></a>
+            <a href="https://addons.mozilla.org/en-US/firefox/addon/pagestash/" class="store-link" target="_blank" rel="noopener noreferrer"><span><strong>Firefox Add-ons</strong><small>For Firefox</small></span></a>
         </div>
     </div>
-
-    <div class="download-card">
-        <h2>🔧 Installation Steps</h2>
-        <ol>
-            <li><strong>Download</strong> the ZIP file above</li>
-            <li><strong>Extract</strong> to a folder (Chrome) or keep as ZIP (Firefox)</li>
-            <li><strong>Open</strong> your browser's extension page</li>
-            <li><strong>Enable</strong> Developer Mode</li>
-            <li><strong>Load</strong> the extension</li>
-        </ol>
-        <p>See the full installation guide for detailed instructions!</p>
+    <div class="card">
+        <h2>Manual Install (Advanced)</h2>
+        <p>Download the ZIP and load it manually.</p>
+        <a href="pagestash-extension-\${browserTarget}.zip" class="btn" download>Download ZIP</a>
+        <a href="INSTALLATION_GUIDE.md" class="btn" target="_blank">Installation Guide</a>
+        <p style="margin-top:12px;font-size:12px;color:#94a3b8"><strong>Build:</strong> \${new Date(versionInfo.buildDate).toLocaleDateString()}</p>
     </div>
-
-    <div style="text-align: center; margin-top: 40px; color: #6b7280;">
-        <p>PageStash - Making web content capture effortless</p>
-        <p>This is a beta version for testing. Official store release coming soon!</p>
-    </div>
+    <div class="footer"><p>PageStash &mdash; Making web content capture effortless</p><p><a href="https://pagestash.app" style="color:#2563eb;text-decoration:none">pagestash.app</a></p></div>
 </body>
 </html>`;
 

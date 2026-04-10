@@ -200,65 +200,14 @@ export class FullPageCapture {
       );
       console.log('Image stitching completed');
 
-      // Compress the image for API upload to avoid payload size limits
-      console.log('Compressing image for API upload...');
-      
-      // Ultra aggressive compression based on number of sections
-      let compressionQuality = 0.4; // Much lower default
-      
-      if (screenshots.length > 15) {
-        compressionQuality = 0.15; // Ultra aggressive for extremely long pages
-        console.log('🔧 Chrome: Extremely long page detected - using ultra compression (15%)');
-      } else if (screenshots.length > 10) {
-        compressionQuality = 0.2; // Very aggressive for very long pages
-        console.log('🔧 Chrome: Very long page detected - using aggressive compression (20%)');
-      } else if (screenshots.length > 6) {
-        compressionQuality = 0.3; // Aggressive compression for long pages
-        console.log('🔧 Chrome: Long page detected - using aggressive compression (30%)');
-      } else if (screenshots.length > 3) {
-        compressionQuality = 0.35; // Medium compression for medium pages
-        console.log('🔧 Chrome: Medium page detected - using medium compression (35%)');
-      } else {
-        console.log('🔧 Chrome: Short page - using standard compression (40%)');
+      const maxW = screenshots.length > 6 ? 1024 : 1440;
+      const quality = screenshots.length > 10 ? 0.45 : screenshots.length > 4 ? 0.55 : 0.65;
+      let finalImage = await this.resizeAndCompress(stitchedImage, quality, maxW);
+
+      const sizeMB = (finalImage.length * 0.75) / (1024 * 1024);
+      if (sizeMB > 1.5) {
+        finalImage = await this.resizeAndCompress(stitchedImage, 0.35, 960);
       }
-      
-      const compressedImage = await this.compressImage(stitchedImage, compressionQuality);
-      
-      // Check final size and apply emergency compression if needed
-      const imageSizeMB = (compressedImage.length * 0.75) / (1024 * 1024); // Rough estimate
-      console.log('🔧 Chrome: Final image size estimate:', Math.round(imageSizeMB * 100) / 100, 'MB');
-      
-      let finalImage = compressedImage;
-      
-      if (imageSizeMB > 1.5) { // Very low threshold for emergency compression
-        let emergencyQuality = 0.1; // Start with ultra aggressive compression
-        
-        if (imageSizeMB > 3) {
-          emergencyQuality = 0.08; // Extreme compression for very large images
-          console.log('🔧 Chrome: Image extremely large - applying extreme emergency compression (8%)');
-        } else if (imageSizeMB > 2) {
-          emergencyQuality = 0.09; // Ultra aggressive for large images
-          console.log('🔧 Chrome: Image very large - applying ultra emergency compression (9%)');
-        } else {
-          console.log('🔧 Chrome: Image too large - applying emergency compression (10%)');
-        }
-        
-        finalImage = await this.compressImage(stitchedImage, emergencyQuality);
-        
-        const emergencySizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-        console.log('🔧 Chrome: Emergency compressed size:', Math.round(emergencySizeMB * 100) / 100, 'MB');
-        
-        // Final check - if still too large, apply absolute minimum quality
-        if (emergencySizeMB > 1.2) {
-          console.log('🔧 Chrome: Still too large - applying absolute minimum compression (5%)');
-          finalImage = await this.compressImage(stitchedImage, 0.05);
-          
-          const finalSizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-          console.log('🔧 Chrome: Final absolute minimum size:', Math.round(finalSizeMB * 100) / 100, 'MB');
-        }
-      }
-      
-      console.log('Image compression completed');
 
       return {
         dataUrl: finalImage,
@@ -350,59 +299,13 @@ export class FullPageCapture {
       pageInfo.viewportHeight
     );
     
-    // Ultra aggressive compression to stay under payload limits
-    let compressionQuality = 0.4; // Much lower default
-    
-    if (screenshots.length > 15) {
-      compressionQuality = 0.15; // Ultra aggressive for extremely long pages
-      console.log('🔧 Firefox: Extremely long page detected - using ultra compression (15%)');
-    } else if (screenshots.length > 10) {
-      compressionQuality = 0.2; // Very aggressive for very long pages
-      console.log('🔧 Firefox: Very long page detected - using aggressive compression (20%)');
-    } else if (screenshots.length > 6) {
-      compressionQuality = 0.3; // Aggressive compression for long pages
-      console.log('🔧 Firefox: Long page detected - using aggressive compression (30%)');
-    } else if (screenshots.length > 3) {
-      compressionQuality = 0.35; // Medium compression for medium pages
-      console.log('🔧 Firefox: Medium page detected - using medium compression (35%)');
-    } else {
-      console.log('🔧 Firefox: Short page - using standard compression (40%)');
-    }
-    
-    const compressedImage = await this.compressImage(stitchedImage, compressionQuality);
-    
-    // Check final size and apply emergency compression if needed
-    const imageSizeMB = (compressedImage.length * 0.75) / (1024 * 1024); // Rough estimate
-    console.log('🔧 Firefox: Final image size estimate:', Math.round(imageSizeMB * 100) / 100, 'MB');
-    
-    let finalImage = compressedImage;
-    
-    if (imageSizeMB > 1.5) { // Very low threshold for emergency compression
-      let emergencyQuality = 0.1; // Start with ultra aggressive compression
-      
-      if (imageSizeMB > 3) {
-        emergencyQuality = 0.08; // Extreme compression for very large images
-        console.log('🔧 Firefox: Image extremely large - applying extreme emergency compression (8%)');
-      } else if (imageSizeMB > 2) {
-        emergencyQuality = 0.09; // Ultra aggressive for large images
-        console.log('🔧 Firefox: Image very large - applying ultra emergency compression (9%)');
-      } else {
-        console.log('🔧 Firefox: Image too large - applying emergency compression (10%)');
-      }
-      
-      finalImage = await this.compressImage(stitchedImage, emergencyQuality);
-      
-      const emergencySizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-      console.log('🔧 Firefox: Emergency compressed size:', Math.round(emergencySizeMB * 100) / 100, 'MB');
-      
-      // Final check - if still too large, apply absolute minimum quality
-      if (emergencySizeMB > 1.2) {
-        console.log('🔧 Firefox: Still too large - applying absolute minimum compression (5%)');
-        finalImage = await this.compressImage(stitchedImage, 0.05);
-        
-        const finalSizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-        console.log('🔧 Firefox: Final absolute minimum size:', Math.round(finalSizeMB * 100) / 100, 'MB');
-      }
+    const maxW = screenshots.length > 6 ? 1024 : 1440;
+    const quality = screenshots.length > 10 ? 0.45 : screenshots.length > 4 ? 0.55 : 0.65;
+    let finalImage = await this.resizeAndCompress(stitchedImage, quality, maxW);
+
+    const sizeMB = (finalImage.length * 0.75) / (1024 * 1024);
+    if (sizeMB > 1.5) {
+      finalImage = await this.resizeAndCompress(stitchedImage, 0.35, 960);
     }
     
     return {
@@ -1275,35 +1178,37 @@ export class FullPageCapture {
   }
 
   /**
-   * Compress image to reduce payload size for API upload
+   * Resize then compress — far more effective than lowering JPEG quality alone.
+   * maxWidth caps the output; aspect ratio is preserved.
    */
-  private static async compressImage(dataUrl: string, quality: number = 0.7): Promise<string> {
+  private static async resizeAndCompress(
+    dataUrl: string,
+    quality: number = 0.7,
+    maxWidth: number = 1440
+  ): Promise<string> {
     try {
-      // Convert data URL to blob
       const response = await fetch(dataUrl);
       const blob = await response.blob();
-      
-      // Create ImageBitmap (works in service workers, unlike Image())
       const imageBitmap = await createImageBitmap(blob);
 
-      // Create canvas for compression
-      const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        throw new Error('Failed to get canvas context for compression');
+      let outW = imageBitmap.width;
+      let outH = imageBitmap.height;
+
+      if (outW > maxWidth) {
+        const scale = maxWidth / outW;
+        outW = maxWidth;
+        outH = Math.round(imageBitmap.height * scale);
       }
 
-      // Draw image to canvas
-      ctx.drawImage(imageBitmap, 0, 0);
+      const canvas = new OffscreenCanvas(outW, outH);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context unavailable');
 
-      // Convert to compressed JPEG
-      const compressedBlob = await canvas.convertToBlob({
-        type: 'image/jpeg',
-        quality: quality
-      });
+      ctx.drawImage(imageBitmap, 0, 0, outW, outH);
+      imageBitmap.close();
 
-      // Convert blob back to data URL
+      const compressedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
+
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -1311,9 +1216,16 @@ export class FullPageCapture {
         reader.readAsDataURL(compressedBlob);
       });
     } catch (error) {
-      console.error('Image compression failed:', error);
-      return dataUrl; // Fallback to original if compression fails
+      console.error('Image resize/compress failed:', error);
+      return dataUrl;
     }
+  }
+
+  /**
+   * @deprecated Use resizeAndCompress instead.
+   */
+  private static async compressImage(dataUrl: string, quality: number = 0.7): Promise<string> {
+    return this.resizeAndCompress(dataUrl, quality, Infinity);
   }
 
   /**

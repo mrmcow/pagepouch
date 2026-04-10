@@ -33,7 +33,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       status: 'available',
       description: 'Free • 2-minute setup • Works offline',
       buttonText: 'Add to Chrome - It\'s Free',
-      storeUrl: '#', // Will be Chrome Web Store URL
+      storeUrl: 'https://chromewebstore.google.com/detail/pagestash/pimbnkabbjeacahcclicmfdkhojnjmif',
       downloadUrl: '/extension/downloads/pagestash-extension-chrome.zip'
     },
     {
@@ -43,7 +43,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       status: 'available',
       description: 'Free • 2-minute setup • Works offline',
       buttonText: 'Add to Firefox - It\'s Free',
-      storeUrl: '#', // Will be Firefox Add-ons URL
+      storeUrl: 'https://addons.mozilla.org/en-US/firefox/addon/pagestash/',
       downloadUrl: '/extension/downloads/pagestash-extension-firefox.zip'
     }
   ]

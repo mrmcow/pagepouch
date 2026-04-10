@@ -100,6 +100,7 @@ exports.useMemo=function(a,b){return U.current.useMemo(a,b)};exports.useReducer=
 /***/ 335:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+var __webpack_unused_export__;
 /**
  * @license React
  * react-jsx-runtime.production.min.js
@@ -110,7 +111,7 @@ exports.useMemo=function(a,b){return U.current.useMemo(a,b)};exports.useReducer=
  * LICENSE file in the root directory of this source tree.
  */
 var f=__webpack_require__(41),k=Symbol.for("react.element"),l=Symbol.for("react.fragment"),m=Object.prototype.hasOwnProperty,n=f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner,p={key:!0,ref:!0,__self:!0,__source:!0};
-function q(c,a,g){var b,d={},e=null,h=null;void 0!==g&&(e=""+g);void 0!==a.key&&(e=""+a.key);void 0!==a.ref&&(h=a.ref);for(b in a)m.call(a,b)&&!p.hasOwnProperty(b)&&(d[b]=a[b]);if(c&&c.defaultProps)for(b in a=c.defaultProps,a)void 0===d[b]&&(d[b]=a[b]);return{$$typeof:k,type:c,key:e,ref:h,props:d,_owner:n.current}}exports.Fragment=l;exports.jsx=q;exports.jsxs=q;
+function q(c,a,g){var b,d={},e=null,h=null;void 0!==g&&(e=""+g);void 0!==a.key&&(e=""+a.key);void 0!==a.ref&&(h=a.ref);for(b in a)m.call(a,b)&&!p.hasOwnProperty(b)&&(d[b]=a[b]);if(c&&c.defaultProps)for(b in a=c.defaultProps,a)void 0===d[b]&&(d[b]=a[b]);return{$$typeof:k,type:c,key:e,ref:h,props:d,_owner:n.current}}__webpack_unused_export__=l;exports.jsx=q;exports.jsxs=q;
 
 
 /***/ }),
@@ -470,13 +471,71 @@ exports.unstable_shouldYield=M;exports.unstable_wrapCallback=function(a){var b=y
 
 /***/ }),
 
-/***/ 858:
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ 873:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   ExtensionAuth: () => (/* binding */ ExtensionAuth)
-/* harmony export */ });
-/* unused harmony export ExtensionAPI */
+var __webpack_unused_export__;
+
+
+var m = __webpack_require__(144);
+if (true) {
+  exports.H = m.createRoot;
+  __webpack_unused_export__ = m.hydrateRoot;
+} else // removed by dead control flow
+{ var i; }
+
+
+/***/ }),
+
+/***/ 967:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+
+
+if (true) {
+  module.exports = __webpack_require__(568);
+} else // removed by dead control flow
+{}
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+
+// EXTERNAL MODULE: ../../node_modules/react/jsx-runtime.js
+var jsx_runtime = __webpack_require__(85);
+// EXTERNAL MODULE: ../../node_modules/react/index.js
+var react = __webpack_require__(41);
+// EXTERNAL MODULE: ../../node_modules/react-dom/client.js
+var client = __webpack_require__(873);
+;// ./src/utils/supabase.ts
 // Supabase client for browser extension
 // SECURITY NOTE: Extension does NOT include Supabase credentials
 // All authentication and data operations go through the web app's API
@@ -623,11 +682,38 @@ class ExtensionAuth {
         });
     }
     static async refreshSession() {
-        // For now, we don't implement token refresh
-        // The API will handle token validation and return 401 if expired
-        // In that case, user will need to sign in again
-        console.log('🔐 Token refresh not implemented - user will need to sign in again if token expires');
-        return { data: null, error: new Error('Token refresh not implemented') };
+        try {
+            const stored = await new Promise((resolve) => {
+                extensionAPI.storage.local.get(['refreshToken'], (result) => {
+                    resolve({ refreshToken: result.refreshToken || null });
+                });
+            });
+            if (!stored.refreshToken) {
+                await this.signOut();
+                return { data: null, error: new Error('No refresh token available') };
+            }
+            const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: stored.refreshToken }),
+            });
+            const result = await response.json();
+            if (!response.ok || !result.session) {
+                await this.signOut();
+                return { data: null, error: new Error(result.error || 'Session expired — please sign in again') };
+            }
+            await extensionAPI.storage.local.set({
+                authToken: result.session.access_token,
+                refreshToken: result.session.refresh_token,
+                userEmail: result.user?.email,
+                userId: result.user?.id,
+            });
+            return { data: { session: result.session, user: result.user }, error: null };
+        }
+        catch (err) {
+            await this.signOut();
+            return { data: null, error: new Error(err.message || 'Session refresh failed') };
+        }
     }
 }
 // API helpers for extension
@@ -654,14 +740,14 @@ class ExtensionAPI {
                 'Authorization': `Bearer ${token}`,
             },
         });
-        // Handle 401 - token might have expired mid-request
         if (response.status === 401) {
-            console.log('Token expired, refreshing and retrying...');
-            await ExtensionAuth.refreshSession();
-            // Retry with new token
+            const refreshResult = await ExtensionAuth.refreshSession();
+            if (refreshResult.error) {
+                throw new Error('Session expired — please sign in again');
+            }
             const { token: newToken } = await ExtensionAuth.getSession();
             if (!newToken) {
-                throw new Error('Authentication failed after refresh');
+                throw new Error('Session expired — please sign in again');
             }
             response = await fetch(url, {
                 ...options,
@@ -750,797 +836,324 @@ class ExtensionAPI {
     }
 }
 
-
-/***/ }),
-
-/***/ 873:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-var __webpack_unused_export__;
-
-
-var m = __webpack_require__(144);
-if (true) {
-  exports.H = m.createRoot;
-  __webpack_unused_export__ = m.hydrateRoot;
-} else // removed by dead control flow
-{ var i; }
-
-
-/***/ }),
-
-/***/ 967:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+;// ./src/popup/enhanced-popup.tsx
 
 
 
-if (true) {
-  module.exports = __webpack_require__(568);
-} else // removed by dead control flow
-{}
 
-
-/***/ })
-
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/************************************************************************/
-var __webpack_exports__ = {};
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(85);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41);
-/* harmony import */ var react_dom_client__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(873);
-/* harmony import */ var _utils_supabase__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(858);
-
-// Enhanced PageStash Extension Popup
-// Modern, beautiful UI with new logo and improved UX
-
-
-
-// Beautiful PageStash Logo component
-const Logo = ({ size = 32 }) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { position: 'relative' }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("svg", { width: size, height: size, viewBox: "0 0 48 48", fill: "none", xmlns: "http://www.w3.org/2000/svg", style: { filter: 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.3))' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("defs", { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("filter", { id: `emboss-${size}`, x: "-20%", y: "-20%", width: "140%", height: "140%", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("feDropShadow", { dx: "0.5", dy: "0.5", stdDeviation: "0.3", floodColor: "#1d4ed8", floodOpacity: "0.3" }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("path", { d: "M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z", fill: "#f8fafc", stroke: "#2563eb", strokeWidth: "2" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("path", { d: "M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z", fill: "#2563eb", stroke: "#2563eb", strokeWidth: "2", strokeLinejoin: "round" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("path", { d: "M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5", stroke: "#ffffff", strokeWidth: "1", strokeLinecap: "round", strokeLinejoin: "round", filter: `url(#emboss-${size})` }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("rect", { x: "15", y: "14", width: "14", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("rect", { x: "15", y: "18", width: "10", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("rect", { x: "15", y: "22", width: "12", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" })] }) }));
-// Inline styles for the extension popup
-const styles = {
-    container: {
-        width: '380px',
-        minHeight: '520px',
-        maxHeight: '600px',
-        height: 'auto',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        backgroundColor: '#ffffff',
-        color: '#1f2937',
-        fontSize: '14px',
-        lineHeight: '1.5',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-    },
-    header: {
-        padding: '16px 20px 12px 20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        borderBottom: '1px solid #f1f5f9',
-    },
-    logoSection: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '6px',
-        marginBottom: '8px',
-    },
-    brandName: {
-        fontSize: '20px',
-        fontWeight: '600',
-        color: '#1e293b',
-        margin: 0,
-        letterSpacing: '-0.025em',
-        textAlign: 'center',
-    },
-    content: {
-        padding: '20px 24px',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '16px',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-    },
-    button: {
-        padding: '14px 24px',
-        borderRadius: '12px',
-        border: 'none',
-        fontWeight: '500',
-        fontSize: '14px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        width: '100%',
-        maxWidth: '320px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    },
-    primaryButton: {
-        backgroundColor: '#3b82f6',
-        color: 'white',
-        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-    },
-    secondaryButton: {
-        backgroundColor: '#ffffff',
-        color: '#475569',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-    },
-    dangerButton: {
-        backgroundColor: '#dc2626',
-        color: 'white',
-    },
-    input: {
-        width: '320px',
-        padding: '12px 16px',
-        border: '1.5px solid #e2e8f0',
-        borderRadius: '8px',
-        fontSize: '14px',
-        boxSizing: 'border-box',
-        backgroundColor: '#ffffff',
-        transition: 'all 0.2s ease',
-        outline: 'none',
-        color: '#1f2937',
-        fontFamily: 'inherit',
-    },
-    card: {
-        backgroundColor: '#f8fafc',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '20px',
-        width: '100%',
-        maxWidth: '320px',
-        textAlign: 'center',
-        boxSizing: 'border-box',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-    },
-    progressBar: {
-        width: '100%',
-        height: '4px',
-        backgroundColor: '#e5e7eb',
-        borderRadius: '2px',
-        overflow: 'hidden',
-        marginBottom: '8px',
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: '#2563eb',
-        borderRadius: '2px',
-        transition: 'width 0.3s ease',
-    },
-    badge: {
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '4px 8px',
-        backgroundColor: '#dbeafe',
-        color: '#1d4ed8',
-        borderRadius: '12px',
-        fontSize: '12px',
-        fontWeight: '500',
-    },
-    errorText: {
-        color: '#dc2626',
-        fontSize: '12px',
-        marginTop: '4px',
-    },
-    successText: {
-        color: '#059669',
-        fontSize: '12px',
-        marginTop: '4px',
-    },
-    tabInfo: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '12px',
-        padding: '16px',
-        backgroundColor: '#f8fafc',
-        borderRadius: '12px',
-        border: '1px solid #e2e8f0',
-        width: '100%',
-        maxWidth: '320px',
-        boxSizing: 'border-box',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-    },
-    tabIcon: {
-        width: '16px',
-        height: '16px',
-        borderRadius: '2px',
-    },
-    tabTitle: {
-        fontWeight: '500',
-        fontSize: '13px',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        flex: 1,
-    },
-    tabUrl: {
-        fontSize: '11px',
-        color: '#6b7280',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-    },
+const BRAND = {
+    primary: '#2563eb',
+    primaryHover: '#1d4ed8',
+    primaryLight: '#dbeafe',
+    primaryText: '#1d4ed8',
+    bg: '#ffffff',
+    bgSurface: '#f8fafc',
+    bgMuted: '#f1f5f9',
+    text: '#0f172a',
+    textSecondary: '#475569',
+    textMuted: '#64748b',
+    textFaint: '#94a3b8',
+    border: '#e2e8f0',
+    borderLight: '#f1f5f9',
+    success: '#10b981',
+    successBg: '#ecfdf5',
+    successBorder: '#a7f3d0',
+    error: '#ef4444',
+    errorBg: '#fef2f2',
+    errorBorder: '#fecaca',
+    warning: '#f59e0b',
+    warningBg: '#fffbeb',
+    critical: '#dc2626',
+    radius: '8px',
+    radiusLg: '12px',
+    shadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+    shadowMd: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    font: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
+const LogoSVG = ({ size = 28 }) => ((0,jsx_runtime.jsxs)("svg", { width: size, height: size, viewBox: "0 0 48 48", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [(0,jsx_runtime.jsx)("path", { d: "M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z", fill: "#f8fafc", stroke: "#2563eb", strokeWidth: "2" }), (0,jsx_runtime.jsx)("path", { d: "M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z", fill: "#2563eb", stroke: "#2563eb", strokeWidth: "2", strokeLinejoin: "round" }), (0,jsx_runtime.jsx)("path", { d: "M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5", stroke: "#ffffff", strokeWidth: "1", strokeLinecap: "round", strokeLinejoin: "round" }), (0,jsx_runtime.jsx)("rect", { x: "15", y: "14", width: "14", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" }), (0,jsx_runtime.jsx)("rect", { x: "15", y: "18", width: "10", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" }), (0,jsx_runtime.jsx)("rect", { x: "15", y: "22", width: "12", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" })] }));
 function EnhancedPopupApp() {
-    const [state, setState] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({
+    const [state, setState] = (0,react.useState)({
         isCapturing: false,
         isAuthenticated: false,
-        isCheckingAuth: true, // Start with checking auth
+        isCheckingAuth: true,
         showAuth: false,
         folders: [],
         selectedFolderId: null,
         loadingFolders: false,
-        // Usage tracking defaults
-        clipsRemaining: 10, // Default for free tier
+        clipsRemaining: 10,
         clipsLimit: 10,
         subscriptionTier: 'free',
         warningLevel: 'safe',
         usageLoading: false,
     });
-    const [authForm, setAuthForm] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({
-        email: '',
-        password: '',
-        isSignUp: false,
-        isLoading: false,
+    const [authForm, setAuthForm] = (0,react.useState)({
+        email: '', password: '', isSignUp: false, isLoading: false,
     });
-    (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
-        // Get current tab info
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]) {
-                setState(prev => ({ ...prev, currentTab: tabs[0] }));
-            }
-        });
-        // Check authentication status
-        checkAuthStatus();
-        // Listen for capture progress updates
-        chrome.runtime.onMessage.addListener((message) => {
-            if (message.type === 'CAPTURE_PROGRESS') {
-                setState(prev => ({
-                    ...prev,
-                    captureProgress: {
-                        status: message.payload.status,
-                        message: message.payload.message,
-                        progress: message.payload.progress,
-                    },
-                }));
-                if (message.payload.status === 'complete') {
-                    // Update usage data if provided in the response
-                    if (message.payload.usage) {
-                        setState(prev => ({
-                            ...prev,
-                            clipsRemaining: message.payload.usage.clips_remaining,
-                            clipsLimit: message.payload.usage.clips_limit,
-                            subscriptionTier: message.payload.usage.subscription_tier,
-                            warningLevel: message.payload.usage.warning_level,
-                        }));
-                    }
-                    setTimeout(() => {
-                        setState(prev => ({ ...prev, captureProgress: undefined, isCapturing: false }));
-                    }, 2000);
-                }
-            }
-        });
-    }, []);
-    const loadUsage = async () => {
-        setState(prev => ({ ...prev, usageLoading: true }));
+    const loadUsage = (0,react.useCallback)(async () => {
+        setState(p => ({ ...p, usageLoading: true }));
         try {
-            const response = await chrome.runtime.sendMessage({
-                type: 'GET_USAGE'
-            });
-            if (response && !response.error) {
-                setState(prev => ({
-                    ...prev,
-                    clipsRemaining: response.clips_remaining,
-                    clipsLimit: response.clips_limit,
-                    subscriptionTier: response.subscription_tier,
-                    warningLevel: response.warning_level,
+            const r = await chrome.runtime.sendMessage({ type: 'GET_USAGE' });
+            if (r && !r.error) {
+                setState(p => ({
+                    ...p,
+                    clipsRemaining: r.clips_remaining,
+                    clipsLimit: r.clips_limit,
+                    subscriptionTier: r.subscription_tier,
+                    warningLevel: r.warning_level,
                     usageLoading: false,
                 }));
             }
             else {
-                console.error('Failed to load usage:', response?.error);
-                setState(prev => ({ ...prev, usageLoading: false }));
+                setState(p => ({ ...p, usageLoading: false }));
             }
         }
-        catch (error) {
-            console.error('Error loading usage:', error);
-            setState(prev => ({ ...prev, usageLoading: false }));
+        catch {
+            setState(p => ({ ...p, usageLoading: false }));
         }
-    };
-    const checkAuthStatus = async () => {
+    }, []);
+    const loadFolders = (0,react.useCallback)(async () => {
+        setState(p => ({ ...p, loadingFolders: true }));
         try {
-            // Restore session first
-            const isAuthenticated = await _utils_supabase__WEBPACK_IMPORTED_MODULE_3__.ExtensionAuth.restoreSession();
-            if (isAuthenticated) {
-                const session = await _utils_supabase__WEBPACK_IMPORTED_MODULE_3__.ExtensionAuth.getSession();
-                // Get stored folder preference and user email
-                const result = await chrome.storage.local.get(['selectedFolderId', 'userEmail']);
-                setState(prev => ({
-                    ...prev,
-                    isAuthenticated: true,
-                    isCheckingAuth: false,
-                    userEmail: result.userEmail || '',
-                    showAuth: false,
-                    selectedFolderId: result.selectedFolderId || null,
-                }));
-                // Load folders and usage
-                await Promise.all([loadFolders(), loadUsage()]);
-            }
-            else {
-                setState(prev => ({
-                    ...prev,
-                    isAuthenticated: false,
-                    isCheckingAuth: false,
-                    showAuth: true
-                }));
-            }
-        }
-        catch (error) {
-            console.error('Auth check error:', error);
-            setState(prev => ({
-                ...prev,
-                isAuthenticated: false,
-                isCheckingAuth: false,
-                showAuth: true
-            }));
-        }
-    };
-    const handleCapture = async (captureType) => {
-        if (!state.currentTab?.id)
-            return;
-        // Check if user is authenticated before capturing
-        if (!state.isAuthenticated) {
-            setState(prev => ({ ...prev, showAuth: true }));
-            return;
-        }
-        setState(prev => ({
-            ...prev,
-            isCapturing: true,
-            captureProgress: {
-                status: 'starting',
-                message: captureType === 'fullPage' ? 'Preparing full page capture...' : 'Preparing visible area capture...'
-            }
-        }));
-        try {
-            // Show immediate feedback
-            setTimeout(() => {
-                setState(prev => ({
-                    ...prev,
-                    captureProgress: {
-                        status: 'capturing',
-                        message: captureType === 'fullPage' ? 'Capturing full page...' : 'Capturing visible area...'
+            const r = await chrome.runtime.sendMessage({ type: 'GET_FOLDERS' });
+            if (r?.folders) {
+                setState(p => {
+                    let folderId = p.selectedFolderId;
+                    if (!folderId && r.folders.length > 0) {
+                        const inbox = r.folders.find((f) => f.name.toLowerCase() === 'inbox');
+                        folderId = inbox ? inbox.id : r.folders[0].id;
+                        chrome.storage.local.set({ selectedFolderId: folderId });
                     }
-                }));
-            }, 100);
-            await chrome.runtime.sendMessage({
-                type: 'CAPTURE_PAGE',
-                payload: {
-                    tabId: state.currentTab.id,
-                    captureType,
-                    url: state.currentTab.url,
-                    // Only include folderId if it's a valid UUID (not a fallback string)
-                    ...(state.selectedFolderId && state.selectedFolderId !== 'inbox' ? { folderId: state.selectedFolderId } : {}),
-                    title: state.currentTab.title
-                },
-            });
-            // Show success feedback
-            setState(prev => ({
-                ...prev,
-                captureProgress: {
-                    status: 'complete',
-                    message: 'Capture successful! 🎉'
-                }
-            }));
-            // Auto-hide after 2 seconds
-            setTimeout(() => {
-                setState(prev => ({ ...prev, isCapturing: false, captureProgress: undefined }));
-            }, 2000);
-        }
-        catch (error) {
-            console.error('Capture failed:', error);
-            setState(prev => ({
-                ...prev,
-                isCapturing: false,
-                captureProgress: {
-                    status: 'error',
-                    message: 'Capture failed. Please refresh the page and try again.'
-                }
-            }));
-            // Auto-hide error after 3 seconds
-            setTimeout(() => {
-                setState(prev => ({ ...prev, captureProgress: undefined }));
-            }, 3000);
-        }
-    };
-    const handleAuth = async () => {
-        setAuthForm(prev => ({ ...prev, isLoading: true, error: undefined }));
-        try {
-            // Import auth utilities dynamically
-            const { ExtensionAuth } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, 858));
-            let result;
-            if (authForm.isSignUp) {
-                result = await ExtensionAuth.signUp(authForm.email, authForm.password);
-            }
-            else {
-                result = await ExtensionAuth.signIn(authForm.email, authForm.password);
-            }
-            if (result.error) {
-                setAuthForm(prev => ({
-                    ...prev,
-                    error: result.error?.message || 'Authentication failed',
-                    isLoading: false
-                }));
-            }
-            else {
-                setState(prev => ({
-                    ...prev,
-                    isAuthenticated: true,
-                    userEmail: result.data?.user?.email,
-                    showAuth: false
-                }));
-                setAuthForm({ email: '', password: '', isSignUp: false, isLoading: false });
-                // Load folders and usage after successful authentication
-                await Promise.all([loadFolders(), loadUsage()]);
-            }
-        }
-        catch (error) {
-            setAuthForm(prev => ({
-                ...prev,
-                error: 'Authentication failed. Please try again.',
-                isLoading: false
-            }));
-        }
-    };
-    // Load user folders
-    const loadFolders = async () => {
-        setState(prev => ({ ...prev, loadingFolders: true }));
-        try {
-            const response = await chrome.runtime.sendMessage({
-                type: 'GET_FOLDERS'
-            });
-            if (response && response.folders) {
-                setState(prev => {
-                    let selectedFolderId = prev.selectedFolderId;
-                    // Set default folder if none selected
-                    if (!selectedFolderId && response.folders.length > 0) {
-                        // Try to find "Inbox" folder first
-                        const inboxFolder = response.folders.find((f) => f.name.toLowerCase() === 'inbox');
-                        selectedFolderId = inboxFolder ? inboxFolder.id : response.folders[0].id;
-                        // Save selection to storage
-                        chrome.storage.local.set({ selectedFolderId });
-                    }
-                    return {
-                        ...prev,
-                        folders: response.folders,
-                        selectedFolderId,
-                        loadingFolders: false,
-                    };
+                    return { ...p, folders: r.folders, selectedFolderId: folderId, loadingFolders: false };
                 });
             }
             else {
-                setState(prev => ({
-                    ...prev,
-                    folders: [],
-                    selectedFolderId: null,
-                    loadingFolders: false
-                }));
+                setState(p => ({ ...p, folders: [], loadingFolders: false }));
             }
         }
-        catch (error) {
-            console.error('Failed to load folders:', error);
-            setState(prev => ({
-                ...prev,
-                folders: [],
-                selectedFolderId: null,
-                loadingFolders: false
+        catch {
+            setState(p => ({ ...p, folders: [], loadingFolders: false }));
+        }
+    }, []);
+    (0,react.useEffect)(() => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0])
+                setState(p => ({ ...p, currentTab: tabs[0] }));
+        });
+        (async () => {
+            try {
+                const ok = await ExtensionAuth.restoreSession();
+                if (ok) {
+                    const result = await chrome.storage.local.get(['selectedFolderId', 'userEmail']);
+                    setState(p => ({
+                        ...p, isAuthenticated: true, isCheckingAuth: false,
+                        userEmail: result.userEmail || '', showAuth: false,
+                        selectedFolderId: result.selectedFolderId || null,
+                    }));
+                    await Promise.all([loadFolders(), loadUsage()]);
+                }
+                else {
+                    setState(p => ({ ...p, isAuthenticated: false, isCheckingAuth: false, showAuth: true }));
+                }
+            }
+            catch {
+                setState(p => ({ ...p, isAuthenticated: false, isCheckingAuth: false, showAuth: true }));
+            }
+        })();
+        const listener = (message) => {
+            if (message.type !== 'CAPTURE_PROGRESS')
+                return;
+            setState(p => ({
+                ...p,
+                captureProgress: { status: message.payload.status, message: message.payload.message, progress: message.payload.progress },
             }));
+            if (message.payload.status === 'complete') {
+                if (message.payload.usage) {
+                    setState(p => ({
+                        ...p,
+                        clipsRemaining: message.payload.usage.clips_remaining,
+                        clipsLimit: message.payload.usage.clips_limit,
+                        subscriptionTier: message.payload.usage.subscription_tier,
+                        warningLevel: message.payload.usage.warning_level,
+                    }));
+                }
+                setTimeout(() => setState(p => ({ ...p, captureProgress: undefined, isCapturing: false })), 2200);
+            }
+        };
+        chrome.runtime.onMessage.addListener(listener);
+        return () => chrome.runtime.onMessage.removeListener(listener);
+    }, [loadFolders, loadUsage]);
+    const handleCapture = async (captureType) => {
+        if (!state.currentTab?.id)
+            return;
+        if (!state.isAuthenticated) {
+            setState(p => ({ ...p, showAuth: true }));
+            return;
+        }
+        setState(p => ({
+            ...p, isCapturing: true,
+            captureProgress: { status: 'starting', message: captureType === 'fullPage' ? 'Preparing full page capture...' : 'Preparing screenshot...' },
+        }));
+        try {
+            await chrome.runtime.sendMessage({
+                type: 'CAPTURE_PAGE',
+                payload: {
+                    tabId: state.currentTab.id, captureType,
+                    url: state.currentTab.url, title: state.currentTab.title,
+                    ...(state.selectedFolderId && state.selectedFolderId !== 'inbox' ? { folderId: state.selectedFolderId } : {}),
+                },
+            });
+        }
+        catch {
+            setState(p => ({
+                ...p, isCapturing: false,
+                captureProgress: { status: 'error', message: 'Capture failed. Please refresh the page and try again.' },
+            }));
+            setTimeout(() => setState(p => ({ ...p, captureProgress: undefined })), 3000);
         }
     };
-    // Handle folder selection change
-    const handleFolderChange = async (folderId) => {
-        setState(prev => ({ ...prev, selectedFolderId: folderId }));
-        await chrome.storage.local.set({ selectedFolderId: folderId });
-    };
-    const getUsageBadgeStyle = () => {
-        const baseStyle = { ...styles.badge };
-        switch (state.warningLevel) {
-            case 'critical':
-                return { ...baseStyle, backgroundColor: '#dc2626', color: 'white' };
-            case 'warning':
-                return { ...baseStyle, backgroundColor: '#f59e0b', color: 'white' };
-            case 'exceeded':
-                return { ...baseStyle, backgroundColor: '#7f1d1d', color: 'white' };
-            default:
-                return baseStyle;
+    const handleAuth = async () => {
+        setAuthForm(p => ({ ...p, isLoading: true, error: undefined }));
+        try {
+            const result = authForm.isSignUp
+                ? await ExtensionAuth.signUp(authForm.email, authForm.password)
+                : await ExtensionAuth.signIn(authForm.email, authForm.password);
+            if (result.error) {
+                setAuthForm(p => ({ ...p, error: result.error?.message || 'Authentication failed', isLoading: false }));
+            }
+            else {
+                setState(p => ({ ...p, isAuthenticated: true, userEmail: result.data?.user?.email, showAuth: false }));
+                setAuthForm({ email: '', password: '', isSignUp: false, isLoading: false });
+                await Promise.all([loadFolders(), loadUsage()]);
+            }
         }
-    };
-    const getUsageBadgeText = () => {
-        if (state.usageLoading)
-            return 'Loading...';
-        if (state.warningLevel === 'exceeded')
-            return 'Limit reached';
-        return `${state.clipsRemaining} clips left`;
+        catch {
+            setAuthForm(p => ({ ...p, error: 'Authentication failed. Please try again.', isLoading: false }));
+        }
     };
     const handleSignOut = async () => {
         try {
-            const { ExtensionAuth } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, 858));
             await ExtensionAuth.signOut();
-            setState(prev => ({
-                ...prev,
-                isAuthenticated: false,
-                userEmail: undefined,
-                showAuth: false
-            }));
         }
-        catch (error) {
-            console.error('Sign out failed:', error);
-        }
+        catch { /* force local cleanup below */ }
+        setState(p => ({ ...p, isAuthenticated: false, userEmail: undefined, showAuth: false }));
     };
     const openWebApp = () => {
-        // Use production URL in production, localhost in development
-        const webAppUrl =  true
-            ? 'https://pagestash.app/dashboard'
-            : 0;
-        chrome.tabs.create({ url: webAppUrl });
+        const url =  true ? 'https://pagestash.app/dashboard' : 0;
+        chrome.tabs.create({ url });
     };
-    // Show loading state while checking authentication
+    const usageBadge = () => {
+        if (state.usageLoading)
+            return { text: '...', bg: BRAND.primaryLight, color: BRAND.primaryText };
+        if (state.warningLevel === 'exceeded')
+            return { text: 'Limit reached', bg: '#fef2f2', color: BRAND.error };
+        if (state.warningLevel === 'critical')
+            return { text: `${state.clipsRemaining} left`, bg: '#fef2f2', color: BRAND.critical };
+        if (state.warningLevel === 'warning')
+            return { text: `${state.clipsRemaining} left`, bg: BRAND.warningBg, color: '#92400e' };
+        return { text: `${state.clipsRemaining} clips left`, bg: BRAND.primaryLight, color: BRAND.primaryText };
+    };
+    // --- Loading ---
     if (state.isCheckingAuth) {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: styles.container, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                    ...styles.content,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100%',
-                }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Logo, { size: 48 }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", { style: { marginTop: '16px', color: '#64748b', fontSize: '14px' }, children: "Loading..." })] }) }) }));
+        return ((0,jsx_runtime.jsx)("div", { style: css.root, children: (0,jsx_runtime.jsxs)("div", { style: { ...css.centeredFill, gap: '12px' }, children: [(0,jsx_runtime.jsx)(LogoSVG, { size: 40 }), (0,jsx_runtime.jsx)("span", { style: { color: BRAND.textMuted, fontSize: '13px' }, children: "Loading..." })] }) }));
     }
-    // Render authentication form
+    // --- Auth ---
     if (state.showAuth) {
-        return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.container, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.header, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.logoSection, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Logo, { size: 32 }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("h1", { style: styles.brandName, children: "PageStash" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: () => setState(prev => ({ ...prev, showAuth: false })), style: {
-                                position: 'absolute',
-                                top: '16px',
-                                right: '16px',
-                                background: 'none',
-                                border: 'none',
-                                fontSize: '20px',
-                                cursor: 'pointer',
-                                color: '#64748b',
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }, children: "\u00D7" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: {
-                        ...styles.content,
-                        padding: '24px 20px',
-                        gap: '20px'
-                    }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: { textAlign: 'center', marginBottom: '4px', width: '100%' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("h2", { style: { margin: '0 0 6px 0', fontSize: '20px', fontWeight: '600', color: '#1e293b' }, children: authForm.isSignUp ? 'Create Account' : 'Welcome Back' }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", { style: { margin: 0, color: '#64748b', fontSize: '14px', lineHeight: '1.4' }, children: authForm.isSignUp
-                                        ? 'Start capturing and organizing web content'
-                                        : 'Sign in to access your library' })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("form", { onSubmit: (e) => {
-                                e.preventDefault();
-                                handleAuth();
-                            }, action: "#", method: "post", style: {
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '14px',
-                                width: '100%'
-                            }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("label", { htmlFor: "pagestash-email", style: {
-                                        position: 'absolute',
-                                        width: '1px',
-                                        height: '1px',
-                                        padding: 0,
-                                        margin: '-1px',
-                                        overflow: 'hidden',
-                                        clip: 'rect(0,0,0,0)',
-                                        whiteSpace: 'nowrap',
-                                        border: 0
-                                    }, children: "Email" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("input", { id: "pagestash-email", name: "email", type: "email", placeholder: "Email address", value: authForm.email, onChange: (e) => setAuthForm(prev => ({ ...prev, email: e.target.value })), autoComplete: authForm.isSignUp ? "email" : "username", required: true, style: {
-                                        ...styles.input,
-                                        margin: 0,
-                                    }, onFocus: (e) => e.target.style.borderColor = '#3b82f6', onBlur: (e) => e.target.style.borderColor = '#e2e8f0' }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("label", { htmlFor: "pagestash-password", style: {
-                                        position: 'absolute',
-                                        width: '1px',
-                                        height: '1px',
-                                        padding: 0,
-                                        margin: '-1px',
-                                        overflow: 'hidden',
-                                        clip: 'rect(0,0,0,0)',
-                                        whiteSpace: 'nowrap',
-                                        border: 0
-                                    }, children: "Password" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("input", { id: "pagestash-password", name: "password", type: "password", placeholder: "Password", value: authForm.password, onChange: (e) => setAuthForm(prev => ({ ...prev, password: e.target.value })), autoComplete: authForm.isSignUp ? "new-password" : "current-password", required: true, style: {
-                                        ...styles.input,
-                                        margin: 0,
-                                    }, onFocus: (e) => e.target.style.borderColor = '#3b82f6', onBlur: (e) => e.target.style.borderColor = '#e2e8f0' }), authForm.error && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                        ...styles.errorText,
-                                        textAlign: 'center',
-                                        padding: '12px',
-                                        backgroundColor: '#fef2f2',
-                                        borderRadius: '8px',
-                                        border: '1px solid #fecaca'
-                                    }, children: authForm.error })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { type: "submit", disabled: authForm.isLoading || !authForm.email || !authForm.password, style: {
-                                        ...styles.button,
-                                        ...styles.primaryButton,
-                                        maxWidth: '100%',
-                                        marginTop: '4px',
-                                        opacity: authForm.isLoading || !authForm.email || !authForm.password ? 0.5 : 1,
-                                        cursor: authForm.isLoading || !authForm.email || !authForm.password ? 'not-allowed' : 'pointer',
-                                    }, children: authForm.isLoading ? '⏳ Processing...' : (authForm.isSignUp ? '✨ Create Account' : '🔓 Sign In') })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                width: '100%',
-                                textAlign: 'center',
-                                paddingTop: '8px',
-                                borderTop: '1px solid #f1f5f9'
-                            }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: () => setAuthForm(prev => ({ ...prev, isSignUp: !prev.isSignUp, error: undefined, email: '', password: '' })), style: {
-                                    background: 'none',
-                                    border: 'none',
-                                    color: '#3b82f6',
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    cursor: 'pointer',
-                                    padding: '8px',
-                                    textDecoration: 'none'
-                                }, onMouseEnter: (e) => e.currentTarget.style.textDecoration = 'underline', onMouseLeave: (e) => e.currentTarget.style.textDecoration = 'none', children: authForm.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up' }) })] })] }));
+        return ((0,jsx_runtime.jsxs)("div", { style: css.root, children: [(0,jsx_runtime.jsxs)("header", { style: css.header, children: [(0,jsx_runtime.jsxs)("div", { style: css.headerLeft, children: [(0,jsx_runtime.jsx)(LogoSVG, { size: 24 }), (0,jsx_runtime.jsx)("span", { style: css.brandName, children: "PageStash" })] }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: false })), style: css.closeBtn, "aria-label": "Close", children: "\u00D7" })] }), (0,jsx_runtime.jsxs)("div", { style: css.body, children: [(0,jsx_runtime.jsxs)("div", { style: { textAlign: 'center', marginBottom: '4px' }, children: [(0,jsx_runtime.jsx)("h2", { style: { margin: '0 0 4px', fontSize: '17px', fontWeight: 600, color: BRAND.text }, children: authForm.isSignUp ? 'Create account' : 'Welcome back' }), (0,jsx_runtime.jsx)("p", { style: { margin: 0, color: BRAND.textMuted, fontSize: '13px' }, children: authForm.isSignUp ? 'Start archiving web pages' : 'Sign in to your library' })] }), (0,jsx_runtime.jsxs)("form", { onSubmit: e => { e.preventDefault(); handleAuth(); }, style: { display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }, children: [(0,jsx_runtime.jsx)("input", { type: "email", placeholder: "Email", value: authForm.email, onChange: e => setAuthForm(p => ({ ...p, email: e.target.value })), autoComplete: authForm.isSignUp ? 'email' : 'username', required: true, style: css.input }), (0,jsx_runtime.jsx)("input", { type: "password", placeholder: "Password", value: authForm.password, onChange: e => setAuthForm(p => ({ ...p, password: e.target.value })), autoComplete: authForm.isSignUp ? 'new-password' : 'current-password', required: true, style: css.input }), authForm.error && (0,jsx_runtime.jsx)("div", { style: css.errorBanner, children: authForm.error }), (0,jsx_runtime.jsx)("button", { type: "submit", disabled: authForm.isLoading || !authForm.email || !authForm.password, style: { ...css.btnPrimary, opacity: authForm.isLoading || !authForm.email || !authForm.password ? 0.55 : 1 }, children: authForm.isLoading ? 'Processing...' : authForm.isSignUp ? 'Create account' : 'Sign in' })] }), (0,jsx_runtime.jsx)("button", { onClick: () => setAuthForm(p => ({ ...p, isSignUp: !p.isSignUp, error: undefined })), style: css.linkBtn, children: authForm.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up' })] })] }));
     }
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.container, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: styles.header, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.logoSection, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Logo, { size: 40 }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("h1", { style: styles.brandName, children: "PageStash" }), state.isAuthenticated && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: getUsageBadgeStyle(), children: getUsageBadgeText() }))] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.content, children: [state.currentTab && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: {
-                            ...styles.tabInfo,
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            textAlign: 'center',
-                            gap: '8px'
-                        }, children: [state.currentTab.favIconUrl && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("img", { src: state.currentTab.favIconUrl, alt: "Site icon", style: {
-                                    ...styles.tabIcon,
-                                    marginBottom: '4px'
-                                } })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: { textAlign: 'center', width: '100%' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                            ...styles.tabTitle,
-                                            textAlign: 'center',
-                                            marginBottom: '4px'
-                                        }, children: state.currentTab.title || 'Untitled' }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                            ...styles.tabUrl,
-                                            textAlign: 'center'
-                                        }, children: state.currentTab.url })] })] })), state.captureProgress && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: {
-                            ...styles.card,
-                            backgroundColor: state.captureProgress.status === 'error' ? '#fef2f2' :
-                                state.captureProgress.status === 'complete' ? '#f0fdf4' : '#f0f9ff',
-                            border: state.captureProgress.status === 'error' ? '1px solid #fecaca' :
-                                state.captureProgress.status === 'complete' ? '1px solid #bbf7d0' : '1px solid #bfdbfe'
-                        }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                    marginBottom: '12px',
-                                    fontWeight: '600',
-                                    color: state.captureProgress.status === 'error' ? '#dc2626' :
-                                        state.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb'
-                                }, children: state.captureProgress.status === 'complete' ? '✅ Capture Complete!' :
-                                    state.captureProgress.status === 'error' ? '❌ Capture Failed' : '📸 Capturing...' }), state.captureProgress.status !== 'error' && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: styles.progressBar, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                        ...styles.progressFill,
-                                        width: state.captureProgress.status === 'complete' ? '100%' :
-                                            state.captureProgress.progress ? `${state.captureProgress.progress}%` :
-                                                state.captureProgress.status === 'capturing' ? '10%' : '5%',
-                                        backgroundColor: state.captureProgress.status === 'complete' ? '#16a34a' : '#2563eb',
-                                        transition: 'width 0.3s ease-out'
-                                    } }) })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                    fontSize: '13px',
-                                    color: state.captureProgress.status === 'error' ? '#dc2626' : '#6b7280',
-                                    marginTop: '8px'
-                                }, children: state.captureProgress.message })] })), state.isAuthenticated && state.folders && state.folders.length > 0 && !state.isCapturing && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: { width: '100%', maxWidth: '320px' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("label", { style: {
-                                    display: 'block',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    color: '#6b7280',
-                                    marginBottom: '8px',
-                                    textAlign: 'center'
-                                }, children: "Save to folder:" }), state.loadingFolders ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: {
-                                    padding: '12px',
-                                    textAlign: 'center',
-                                    color: '#6b7280',
-                                    fontSize: '13px'
-                                }, children: "Loading folders..." })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("select", { value: state.selectedFolderId || '', onChange: (e) => handleFolderChange(e.target.value), style: {
-                                    width: '100%',
-                                    padding: '12px 16px',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: '12px',
-                                    fontSize: '14px',
-                                    backgroundColor: '#ffffff',
-                                    color: '#1f2937',
-                                    cursor: 'pointer',
-                                    outline: 'none',
-                                    appearance: 'none',
-                                    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>")`,
-                                    backgroundRepeat: 'no-repeat',
-                                    backgroundPosition: 'right 12px center',
-                                    backgroundSize: '12px',
-                                    paddingRight: '40px',
-                                }, children: state.folders.map(folder => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("option", { value: folder.id, children: [folder.name, folder.is_default ? ' (Default)' : ''] }, folder.id))) }))] })), !state.isCapturing && !state.captureProgress && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, { children: state.warningLevel === 'exceeded' ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: {
-                                width: '100%',
-                                maxWidth: '320px',
-                                padding: '16px',
-                                backgroundColor: '#fef2f2',
-                                border: '1px solid #fecaca',
-                                borderRadius: '12px',
-                                textAlign: 'center',
-                                boxSizing: 'border-box'
-                            }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { fontSize: '14px', fontWeight: '500', color: '#dc2626', marginBottom: '8px' }, children: "Monthly limit reached" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: { fontSize: '12px', color: '#7f1d1d', marginBottom: '12px' }, children: ["You've used all ", state.clipsLimit, " clips this month. Upgrade to Pro for unlimited clips!"] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: () => window.open('https://pagestash.app/pricing', '_blank'), style: {
-                                        ...styles.button,
-                                        ...styles.primaryButton,
-                                        backgroundColor: '#dc2626',
-                                    }, children: "\uD83D\uDE80 Upgrade to Pro" })] })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: () => handleCapture('fullPage'), style: {
-                                        ...styles.button,
-                                        ...styles.primaryButton,
-                                    }, children: "\uD83D\uDCC4 Capture Full Page" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: () => handleCapture('visible'), style: {
-                                        ...styles.button,
-                                        ...styles.secondaryButton,
-                                    }, children: "\uD83D\uDCF1 Capture Visible Area" })] })) })), !state.isAuthenticated ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.card, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: { marginBottom: '12px' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { fontWeight: '500', marginBottom: '4px' }, children: "\uD83D\uDD12 Sign in for cloud sync" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { fontSize: '12px', color: '#6b7280' }, children: "Access your clips anywhere and never lose them" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: () => setState(prev => ({ ...prev, showAuth: true })), style: {
-                                    ...styles.button,
-                                    ...styles.secondaryButton,
-                                }, children: "Sign In / Sign Up" })] })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: styles.card, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: { marginBottom: '12px' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { fontWeight: '500', marginBottom: '4px' }, children: "\uD83D\uDC4B Welcome back!" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { fontSize: '12px', color: '#6b7280' }, children: state.userEmail })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: openWebApp, style: {
-                                    ...styles.button,
-                                    ...styles.primaryButton,
-                                }, children: "\uD83C\uDF10 Open Web App" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("button", { onClick: handleSignOut, style: {
-                                    ...styles.button,
-                                    ...styles.secondaryButton,
-                                }, children: "Sign Out" })] })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", { style: {
-                            textAlign: 'center',
-                            marginTop: 'auto',
-                            paddingTop: '16px',
-                            paddingBottom: '16px',
-                            borderTop: '1px solid #f1f5f9',
-                            fontSize: '12px',
-                            color: '#64748b',
-                        }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { fontWeight: '500', marginBottom: '4px', color: '#64748b' }, children: "PageStash v1.1.0" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { style: { fontSize: '11px', color: '#94a3b8' }, children: "Capture \u2022 Organize \u2022 Retrieve" })] })] })] }));
+    // --- Main ---
+    const badge = usageBadge();
+    return ((0,jsx_runtime.jsxs)("div", { style: css.root, children: [(0,jsx_runtime.jsxs)("header", { style: css.header, children: [(0,jsx_runtime.jsxs)("div", { style: css.headerLeft, children: [(0,jsx_runtime.jsx)(LogoSVG, { size: 24 }), (0,jsx_runtime.jsx)("span", { style: css.brandName, children: "PageStash" })] }), state.isAuthenticated && ((0,jsx_runtime.jsx)("span", { style: { ...css.badge, backgroundColor: badge.bg, color: badge.color }, children: badge.text }))] }), (0,jsx_runtime.jsxs)("div", { style: css.body, children: [state.currentTab && ((0,jsx_runtime.jsxs)("div", { style: css.tabCard, children: [state.currentTab.favIconUrl && (0,jsx_runtime.jsx)("img", { src: state.currentTab.favIconUrl, alt: "", style: { width: 16, height: 16, borderRadius: 3 } }), (0,jsx_runtime.jsxs)("div", { style: { flex: 1, minWidth: 0 }, children: [(0,jsx_runtime.jsx)("div", { style: css.tabTitle, children: state.currentTab.title || 'Untitled' }), (0,jsx_runtime.jsx)("div", { style: css.tabUrl, children: (() => { try {
+                                            return new URL(state.currentTab.url || '').hostname;
+                                        }
+                                        catch {
+                                            return state.currentTab.url;
+                                        } })() })] })] })), state.captureProgress && ((0,jsx_runtime.jsxs)("div", { style: {
+                            ...css.card,
+                            backgroundColor: state.captureProgress.status === 'error' ? BRAND.errorBg : state.captureProgress.status === 'complete' ? BRAND.successBg : BRAND.bgSurface,
+                            borderColor: state.captureProgress.status === 'error' ? BRAND.errorBorder : state.captureProgress.status === 'complete' ? BRAND.successBorder : BRAND.border,
+                            animation: state.captureProgress.status === 'complete' ? 'popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' : undefined,
+                        }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', marginBottom: '6px',
+                                    color: state.captureProgress.status === 'error' ? BRAND.error : state.captureProgress.status === 'complete' ? BRAND.success : BRAND.primary }, children: state.captureProgress.status === 'complete' ? 'Saved!' : state.captureProgress.status === 'error' ? 'Capture failed' : 'Capturing...' }), state.captureProgress.status !== 'error' && state.captureProgress.status !== 'complete' && ((0,jsx_runtime.jsx)("div", { style: { width: '100%', height: 3, backgroundColor: BRAND.bgMuted, borderRadius: 2, overflow: 'hidden', marginBottom: 6 }, children: (0,jsx_runtime.jsx)("div", { style: { height: '100%', backgroundColor: BRAND.primary, borderRadius: 2, transition: 'width 0.4s ease',
+                                        width: state.captureProgress.progress ? `${state.captureProgress.progress}%` : '30%' } }) })), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: state.captureProgress.status === 'error' ? BRAND.error : BRAND.textMuted }, children: state.captureProgress.message })] })), state.isAuthenticated && state.folders.length > 0 && !state.isCapturing && ((0,jsx_runtime.jsxs)("div", { style: { width: '100%' }, children: [(0,jsx_runtime.jsx)("label", { style: { display: 'block', fontSize: '11px', fontWeight: 500, color: BRAND.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }, children: "Save to" }), (0,jsx_runtime.jsx)("select", { value: state.selectedFolderId || '', onChange: e => { setState(p => ({ ...p, selectedFolderId: e.target.value })); chrome.storage.local.set({ selectedFolderId: e.target.value }); }, style: css.select, children: state.folders.map(f => (0,jsx_runtime.jsx)("option", { value: f.id, children: f.name }, f.id)) })] })), !state.isCapturing && !state.captureProgress && (state.warningLevel === 'exceeded' ? ((0,jsx_runtime.jsxs)("div", { style: { ...css.card, backgroundColor: BRAND.errorBg, borderColor: BRAND.errorBorder, textAlign: 'center' }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', color: BRAND.error, marginBottom: 4 }, children: "Monthly limit reached" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Upgrade to Pro for more clips." }), (0,jsx_runtime.jsx)("button", { onClick: () => chrome.tabs.create({ url: 'https://pagestash.app/dashboard' }), style: { ...css.btnPrimary, backgroundColor: BRAND.error }, children: "Upgrade to Pro" })] })) : ((0,jsx_runtime.jsxs)("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('fullPage'), style: css.btnPrimary, children: "Capture full page" }), (0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('visible'), style: css.btnSecondary, children: "Capture visible area" })] }))), !state.isAuthenticated ? ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 500, fontSize: '13px', marginBottom: 2, color: BRAND.text }, children: "Sign in for cloud sync" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Access your clips anywhere" }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: true })), style: css.btnSecondary, children: "Sign in" })] })) : ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 8 }, children: state.userEmail }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: 8 }, children: [(0,jsx_runtime.jsx)("button", { onClick: openWebApp, style: { ...css.btnPrimary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Open library" }), (0,jsx_runtime.jsx)("button", { onClick: handleSignOut, style: { ...css.btnSecondary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Sign out" })] })] }))] }), (0,jsx_runtime.jsx)("footer", { style: css.footer, children: "PageStash v2.0.0" })] }));
 }
-// Initialize the popup
+const css = {
+    root: {
+        width: 360, minHeight: 440, maxHeight: 580, fontFamily: BRAND.font,
+        backgroundColor: BRAND.bg, color: BRAND.text, fontSize: 13, lineHeight: 1.5,
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+    },
+    header: {
+        padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: `1px solid ${BRAND.border}`,
+    },
+    headerLeft: { display: 'flex', alignItems: 'center', gap: '8px' },
+    brandName: { fontSize: '15px', fontWeight: 700, color: BRAND.text, letterSpacing: '-0.02em' },
+    closeBtn: {
+        background: 'none', border: 'none', fontSize: 20, cursor: 'pointer',
+        color: BRAND.textMuted, width: 28, height: 28, borderRadius: BRAND.radius,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+    },
+    body: {
+        padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column',
+        gap: '12px', overflowY: 'auto', overflowX: 'hidden',
+    },
+    centeredFill: {
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+    },
+    badge: {
+        display: 'inline-flex', alignItems: 'center', padding: '2px 8px',
+        borderRadius: '10px', fontSize: '11px', fontWeight: 600,
+    },
+    tabCard: {
+        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+        backgroundColor: BRAND.bgSurface, borderRadius: BRAND.radius, border: `1px solid ${BRAND.border}`,
+    },
+    tabTitle: { fontWeight: 500, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    tabUrl: { fontSize: 11, color: BRAND.textFaint, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    card: {
+        backgroundColor: BRAND.bgSurface, border: `1px solid ${BRAND.border}`, borderRadius: BRAND.radiusLg,
+        padding: '14px', width: '100%', boxSizing: 'border-box',
+    },
+    input: {
+        width: '100%', padding: '10px 12px', border: `1.5px solid ${BRAND.border}`, borderRadius: BRAND.radius,
+        fontSize: 13, boxSizing: 'border-box', backgroundColor: BRAND.bg, outline: 'none',
+        color: BRAND.text, fontFamily: 'inherit', transition: 'border-color 0.15s ease',
+    },
+    select: {
+        width: '100%', padding: '9px 12px', border: `1px solid ${BRAND.border}`, borderRadius: BRAND.radius,
+        fontSize: 13, backgroundColor: BRAND.bg, color: BRAND.text, cursor: 'pointer', outline: 'none',
+        fontFamily: 'inherit',
+    },
+    btnPrimary: {
+        width: '100%', padding: '10px 16px', borderRadius: BRAND.radius, border: 'none',
+        fontWeight: 500, fontSize: 13, cursor: 'pointer', backgroundColor: BRAND.primary, color: '#fff',
+        fontFamily: 'inherit', transition: 'background-color 0.15s ease, transform 0.1s ease',
+        boxShadow: '0 1px 2px 0 rgb(37 99 235 / 0.2)',
+    },
+    btnSecondary: {
+        width: '100%', padding: '10px 16px', borderRadius: BRAND.radius,
+        border: `1px solid ${BRAND.border}`, fontWeight: 500, fontSize: 13,
+        cursor: 'pointer', backgroundColor: BRAND.bg, color: BRAND.textSecondary,
+        fontFamily: 'inherit', transition: 'background-color 0.15s ease',
+    },
+    linkBtn: {
+        background: 'none', border: 'none', color: BRAND.primary, fontSize: 13,
+        fontWeight: 500, cursor: 'pointer', padding: '4px 0', fontFamily: 'inherit',
+    },
+    errorBanner: {
+        textAlign: 'center', padding: '8px 12px', backgroundColor: BRAND.errorBg,
+        borderRadius: BRAND.radius, border: `1px solid ${BRAND.errorBorder}`, color: BRAND.error, fontSize: 12,
+    },
+    footer: {
+        padding: '8px 16px', textAlign: 'center', fontSize: 11,
+        color: BRAND.textFaint, borderTop: `1px solid ${BRAND.borderLight}`,
+    },
+};
 const container = document.getElementById('popup-root');
 if (container) {
-    const root = (0,react_dom_client__WEBPACK_IMPORTED_MODULE_2__/* .createRoot */ .H)(container);
-    root.render((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(EnhancedPopupApp, {}));
+    const root = (0,client/* createRoot */.H)(container);
+    root.render((0,jsx_runtime.jsx)(EnhancedPopupApp, {}));
 }
 
 /******/ })()

@@ -219,95 +219,51 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
 
     let pageContent: any = {};
     try {
-      // Send message to content script to extract page data (Firefox compatible)
-      const response = await extensionAPI.tabs.sendMessage(tab.id, {
-        type: 'EXTRACT_PAGE_DATA'
+      const extractionResults = await extensionAPI.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          const html = document.documentElement.outerHTML;
+          const cleanedHtml = html
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+            .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
+
+          const text = cleanedHtml
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          const faviconLink = document.querySelector('link[rel*="icon"]') as HTMLLinkElement;
+          const favicon = faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`;
+
+          return {
+            url: window.location.href,
+            title: document.title || '',
+            html: cleanedHtml,
+            text: text,
+            favicon: favicon
+          };
+        }
       });
-      
-      if (response && response.success) {
-        pageContent = response.data;
-        console.log('✅ Page content extracted from content script:', {
-          htmlLength: pageContent.html?.length || 0,
-          textLength: pageContent.text?.length || 0,
-          title: pageContent.title
-        });
-        
-        if (!pageContent.html || pageContent.html.length === 0) {
-          console.warn('⚠️ Content script returned empty HTML!');
-        }
-        if (!pageContent.text || pageContent.text.length === 0) {
-          console.warn('⚠️ Content script returned empty text!');
-        }
+
+      if (extractionResults && extractionResults[0]?.result) {
+        pageContent = extractionResults[0].result;
       } else {
-        console.warn('⚠️ Failed to extract page content from content script:', response);
-        console.warn('⚠️ Using fallback data from popup (may be empty)');
-        // Use fallback data from popup
-        pageContent = {
-          url: payload.url,
-          title: payload.title,
-          html: payload.html || '',
-          text: payload.text || '',
-          favicon: payload.favicon
-        };
+        throw new Error('Content extraction returned no results');
       }
-    } catch (contentError) {
-      console.warn('⚠️ Content script not available, trying dynamic injection:', contentError);
-      
-      // Try to dynamically inject and extract content
-      try {
-        const extractionResults = await extensionAPI.scripting.executeScript({
-          target: { tabId: tab.id },
-          func: () => {
-            // Inline content extraction function
-            const html = document.documentElement.outerHTML;
-            const cleanedHtml = html
-              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-              .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-              .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
-            
-            const text = cleanedHtml
-              .replace(/<[^>]*>/g, ' ')
-              .replace(/&nbsp;/g, ' ')
-              .replace(/&amp;/g, '&')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/\s+/g, ' ')
-              .trim();
-            
-            const faviconLink = document.querySelector('link[rel*="icon"]') as HTMLLinkElement;
-            const favicon = faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`;
-            
-            return {
-              url: window.location.href,
-              title: document.title || '',
-              html: cleanedHtml,
-              text: text,
-              favicon: favicon
-            };
-          }
-        });
-        
-        if (extractionResults && extractionResults[0]?.result) {
-          pageContent = extractionResults[0].result;
-          console.log('✅ Content extracted via dynamic injection:', {
-            htmlLength: pageContent.html?.length || 0,
-            textLength: pageContent.text?.length || 0,
-            title: pageContent.title
-          });
-        } else {
-          throw new Error('Dynamic extraction returned no results');
-        }
-      } catch (dynamicError) {
-        console.error('❌ Dynamic content extraction failed:', dynamicError);
-        // Final fallback
-        pageContent = {
-          url: payload.url,
-          title: payload.title,
-          html: '',
-          text: '',
-          favicon: payload.favicon
-        };
-      }
+    } catch (extractError) {
+      log('Content extraction failed, using tab metadata:', extractError);
+      pageContent = {
+        url: payload.url,
+        title: payload.title,
+        html: '',
+        text: '',
+        favicon: payload.favicon
+      };
     }
 
     // Check if cancelled after content extraction
@@ -600,10 +556,10 @@ async function handleGetUsage(sendResponse: (response: any) => void) {
     console.error('Failed to get usage:', error);
     sendResponse({ 
       error: 'Failed to load usage data',
-      clips_remaining: 50,
-      clips_limit: 50,
+      clips_remaining: 0,
+      clips_limit: 10,
       subscription_tier: 'free',
-      warning_level: 'safe'
+      warning_level: 'critical'
     });
   }
 }

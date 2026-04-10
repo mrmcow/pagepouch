@@ -7,7 +7,7 @@
     "types": ["chrome", "node"],
     "baseUrl": ".",
     "paths": {
-      "@pagepouch/shared": ["../../packages/shared/src/index.ts"]
+      "@pagestash/shared": ["../../packages/shared/src/index.ts"]
     },
     "skipLibCheck": true
   },

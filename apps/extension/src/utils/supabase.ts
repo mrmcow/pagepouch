@@ -170,12 +170,44 @@ export class ExtensionAuth {
     })
   }
 
-  static async refreshSession() {
-    // For now, we don't implement token refresh
-    // The API will handle token validation and return 401 if expired
-    // In that case, user will need to sign in again
-    console.log('🔐 Token refresh not implemented - user will need to sign in again if token expires');
-    return { data: null, error: new Error('Token refresh not implemented') }
+  static async refreshSession(): Promise<{ data: any; error: Error | null }> {
+    try {
+      const stored = await new Promise<{ refreshToken: string | null }>((resolve) => {
+        extensionAPI.storage.local.get(['refreshToken'], (result) => {
+          resolve({ refreshToken: result.refreshToken || null })
+        })
+      })
+
+      if (!stored.refreshToken) {
+        await this.signOut()
+        return { data: null, error: new Error('No refresh token available') }
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: stored.refreshToken }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.session) {
+        await this.signOut()
+        return { data: null, error: new Error(result.error || 'Session expired — please sign in again') }
+      }
+
+      await extensionAPI.storage.local.set({
+        authToken: result.session.access_token,
+        refreshToken: result.session.refresh_token,
+        userEmail: result.user?.email,
+        userId: result.user?.id,
+      })
+
+      return { data: { session: result.session, user: result.user }, error: null }
+    } catch (err: any) {
+      await this.signOut()
+      return { data: null, error: new Error(err.message || 'Session refresh failed') }
+    }
   }
 }
 
@@ -208,18 +240,19 @@ export class ExtensionAPI {
       },
     })
 
-    // Handle 401 - token might have expired mid-request
     if (response.status === 401) {
-      console.log('Token expired, refreshing and retrying...');
-      await ExtensionAuth.refreshSession();
-      
-      // Retry with new token
-      const { token: newToken } = await ExtensionAuth.getSession();
-      
-      if (!newToken) {
-        throw new Error('Authentication failed after refresh')
+      const refreshResult = await ExtensionAuth.refreshSession()
+
+      if (refreshResult.error) {
+        throw new Error('Session expired — please sign in again')
       }
-      
+
+      const { token: newToken } = await ExtensionAuth.getSession()
+
+      if (!newToken) {
+        throw new Error('Session expired — please sign in again')
+      }
+
       response = await fetch(url, {
         ...options,
         headers: {

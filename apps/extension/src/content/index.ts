@@ -3,11 +3,8 @@
 
 import { ExtensionMessage, cleanHtmlContent, extractTextFromHtml } from '@pagestash/shared';
 
-console.log('PageStash content script loaded on:', window.location.href);
-
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
-  console.log('Content script received message:', message);
   
   switch (message.type) {
     case 'CAPTURE_PAGE':
@@ -44,29 +41,11 @@ function handleCapturePage() {
 function handleExtractPageData(sendResponse: (response: any) => void) {
   try {
     const pageData = extractPageData();
-    console.log('✅ Content script extracted page data:', {
-      url: pageData.url,
-      title: pageData.title,
-      htmlLength: pageData.html?.length || 0,
-      textLength: pageData.text?.length || 0,
-      favicon: pageData.favicon
-    });
-    
-    // DEBUG: Warn if content is empty
-    if (!pageData.html || pageData.html.length === 0) {
-      console.warn('⚠️ WARNING: Extracted HTML is empty!');
-      console.warn('⚠️ document.documentElement.outerHTML length:', document.documentElement.outerHTML?.length || 0);
-    }
-    if (!pageData.text || pageData.text.length === 0) {
-      console.warn('⚠️ WARNING: Extracted text is empty!');
-    }
-    
     sendResponse({
       success: true,
       data: pageData
     });
   } catch (error) {
-    console.error('❌ Failed to extract page data:', error);
     sendResponse({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'
@@ -111,20 +90,3 @@ function getFaviconUrl(): string | undefined {
   return `${baseUrl.protocol}//${baseUrl.host}/favicon.ico`;
 }
 
-// Auto-capture functionality (optional)
-function setupAutoCapture() {
-  // Listen for specific events that might trigger auto-capture
-  // This could be useful for monitoring specific sites or content changes
-  
-  // Example: Capture when page is fully loaded
-  if (document.readyState === 'complete') {
-    console.log('Page fully loaded, ready for capture');
-  } else {
-    window.addEventListener('load', () => {
-      console.log('Page fully loaded, ready for capture');
-    });
-  }
-}
-
-// Initialize
-setupAutoCapture();

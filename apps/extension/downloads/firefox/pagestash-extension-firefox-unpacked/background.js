@@ -148,11 +148,38 @@ class ExtensionAuth {
         });
     }
     static async refreshSession() {
-        // For now, we don't implement token refresh
-        // The API will handle token validation and return 401 if expired
-        // In that case, user will need to sign in again
-        console.log('🔐 Token refresh not implemented - user will need to sign in again if token expires');
-        return { data: null, error: new Error('Token refresh not implemented') };
+        try {
+            const stored = await new Promise((resolve) => {
+                extensionAPI.storage.local.get(['refreshToken'], (result) => {
+                    resolve({ refreshToken: result.refreshToken || null });
+                });
+            });
+            if (!stored.refreshToken) {
+                await this.signOut();
+                return { data: null, error: new Error('No refresh token available') };
+            }
+            const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: stored.refreshToken }),
+            });
+            const result = await response.json();
+            if (!response.ok || !result.session) {
+                await this.signOut();
+                return { data: null, error: new Error(result.error || 'Session expired — please sign in again') };
+            }
+            await extensionAPI.storage.local.set({
+                authToken: result.session.access_token,
+                refreshToken: result.session.refresh_token,
+                userEmail: result.user?.email,
+                userId: result.user?.id,
+            });
+            return { data: { session: result.session, user: result.user }, error: null };
+        }
+        catch (err) {
+            await this.signOut();
+            return { data: null, error: new Error(err.message || 'Session refresh failed') };
+        }
     }
 }
 // API helpers for extension
@@ -179,14 +206,14 @@ class ExtensionAPI {
                 'Authorization': `Bearer ${token}`,
             },
         });
-        // Handle 401 - token might have expired mid-request
         if (response.status === 401) {
-            console.log('Token expired, refreshing and retrying...');
-            await ExtensionAuth.refreshSession();
-            // Retry with new token
+            const refreshResult = await ExtensionAuth.refreshSession();
+            if (refreshResult.error) {
+                throw new Error('Session expired — please sign in again');
+            }
             const { token: newToken } = await ExtensionAuth.getSession();
             if (!newToken) {
-                throw new Error('Authentication failed after refresh');
+                throw new Error('Session expired — please sign in again');
             }
             response = await fetch(url, {
                 ...options,
@@ -415,59 +442,13 @@ class FullPageCapture {
             });
             const stitchedImage = await this.stitchGridScreenshots(screenshots, stitchedWidth, stitchedHeight, pageInfo.viewportWidth, pageInfo.viewportHeight);
             console.log('Image stitching completed');
-            // Compress the image for API upload to avoid payload size limits
-            console.log('Compressing image for API upload...');
-            // Ultra aggressive compression based on number of sections
-            let compressionQuality = 0.4; // Much lower default
-            if (screenshots.length > 15) {
-                compressionQuality = 0.15; // Ultra aggressive for extremely long pages
-                console.log('🔧 Chrome: Extremely long page detected - using ultra compression (15%)');
+            const maxW = screenshots.length > 6 ? 1024 : 1440;
+            const quality = screenshots.length > 10 ? 0.45 : screenshots.length > 4 ? 0.55 : 0.65;
+            let finalImage = await this.resizeAndCompress(stitchedImage, quality, maxW);
+            const sizeMB = (finalImage.length * 0.75) / (1024 * 1024);
+            if (sizeMB > 1.5) {
+                finalImage = await this.resizeAndCompress(stitchedImage, 0.35, 960);
             }
-            else if (screenshots.length > 10) {
-                compressionQuality = 0.2; // Very aggressive for very long pages
-                console.log('🔧 Chrome: Very long page detected - using aggressive compression (20%)');
-            }
-            else if (screenshots.length > 6) {
-                compressionQuality = 0.3; // Aggressive compression for long pages
-                console.log('🔧 Chrome: Long page detected - using aggressive compression (30%)');
-            }
-            else if (screenshots.length > 3) {
-                compressionQuality = 0.35; // Medium compression for medium pages
-                console.log('🔧 Chrome: Medium page detected - using medium compression (35%)');
-            }
-            else {
-                console.log('🔧 Chrome: Short page - using standard compression (40%)');
-            }
-            const compressedImage = await this.compressImage(stitchedImage, compressionQuality);
-            // Check final size and apply emergency compression if needed
-            const imageSizeMB = (compressedImage.length * 0.75) / (1024 * 1024); // Rough estimate
-            console.log('🔧 Chrome: Final image size estimate:', Math.round(imageSizeMB * 100) / 100, 'MB');
-            let finalImage = compressedImage;
-            if (imageSizeMB > 1.5) { // Very low threshold for emergency compression
-                let emergencyQuality = 0.1; // Start with ultra aggressive compression
-                if (imageSizeMB > 3) {
-                    emergencyQuality = 0.08; // Extreme compression for very large images
-                    console.log('🔧 Chrome: Image extremely large - applying extreme emergency compression (8%)');
-                }
-                else if (imageSizeMB > 2) {
-                    emergencyQuality = 0.09; // Ultra aggressive for large images
-                    console.log('🔧 Chrome: Image very large - applying ultra emergency compression (9%)');
-                }
-                else {
-                    console.log('🔧 Chrome: Image too large - applying emergency compression (10%)');
-                }
-                finalImage = await this.compressImage(stitchedImage, emergencyQuality);
-                const emergencySizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-                console.log('🔧 Chrome: Emergency compressed size:', Math.round(emergencySizeMB * 100) / 100, 'MB');
-                // Final check - if still too large, apply absolute minimum quality
-                if (emergencySizeMB > 1.2) {
-                    console.log('🔧 Chrome: Still too large - applying absolute minimum compression (5%)');
-                    finalImage = await this.compressImage(stitchedImage, 0.05);
-                    const finalSizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-                    console.log('🔧 Chrome: Final absolute minimum size:', Math.round(finalSizeMB * 100) / 100, 'MB');
-                }
-            }
-            console.log('Image compression completed');
             return {
                 dataUrl: finalImage,
                 width: stitchedWidth,
@@ -532,55 +513,12 @@ class FullPageCapture {
         console.log('🔧 Firefox: SIMPLE vertical stitching', screenshots.length, 'screenshots');
         const stitchedImage = await this.stitchFirefoxVertical(screenshots, pageInfo.viewportWidth, // Use original viewport width
         pageInfo.viewportHeight);
-        // Ultra aggressive compression to stay under payload limits
-        let compressionQuality = 0.4; // Much lower default
-        if (screenshots.length > 15) {
-            compressionQuality = 0.15; // Ultra aggressive for extremely long pages
-            console.log('🔧 Firefox: Extremely long page detected - using ultra compression (15%)');
-        }
-        else if (screenshots.length > 10) {
-            compressionQuality = 0.2; // Very aggressive for very long pages
-            console.log('🔧 Firefox: Very long page detected - using aggressive compression (20%)');
-        }
-        else if (screenshots.length > 6) {
-            compressionQuality = 0.3; // Aggressive compression for long pages
-            console.log('🔧 Firefox: Long page detected - using aggressive compression (30%)');
-        }
-        else if (screenshots.length > 3) {
-            compressionQuality = 0.35; // Medium compression for medium pages
-            console.log('🔧 Firefox: Medium page detected - using medium compression (35%)');
-        }
-        else {
-            console.log('🔧 Firefox: Short page - using standard compression (40%)');
-        }
-        const compressedImage = await this.compressImage(stitchedImage, compressionQuality);
-        // Check final size and apply emergency compression if needed
-        const imageSizeMB = (compressedImage.length * 0.75) / (1024 * 1024); // Rough estimate
-        console.log('🔧 Firefox: Final image size estimate:', Math.round(imageSizeMB * 100) / 100, 'MB');
-        let finalImage = compressedImage;
-        if (imageSizeMB > 1.5) { // Very low threshold for emergency compression
-            let emergencyQuality = 0.1; // Start with ultra aggressive compression
-            if (imageSizeMB > 3) {
-                emergencyQuality = 0.08; // Extreme compression for very large images
-                console.log('🔧 Firefox: Image extremely large - applying extreme emergency compression (8%)');
-            }
-            else if (imageSizeMB > 2) {
-                emergencyQuality = 0.09; // Ultra aggressive for large images
-                console.log('🔧 Firefox: Image very large - applying ultra emergency compression (9%)');
-            }
-            else {
-                console.log('🔧 Firefox: Image too large - applying emergency compression (10%)');
-            }
-            finalImage = await this.compressImage(stitchedImage, emergencyQuality);
-            const emergencySizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-            console.log('🔧 Firefox: Emergency compressed size:', Math.round(emergencySizeMB * 100) / 100, 'MB');
-            // Final check - if still too large, apply absolute minimum quality
-            if (emergencySizeMB > 1.2) {
-                console.log('🔧 Firefox: Still too large - applying absolute minimum compression (5%)');
-                finalImage = await this.compressImage(stitchedImage, 0.05);
-                const finalSizeMB = (finalImage.length * 0.75) / (1024 * 1024);
-                console.log('🔧 Firefox: Final absolute minimum size:', Math.round(finalSizeMB * 100) / 100, 'MB');
-            }
+        const maxW = screenshots.length > 6 ? 1024 : 1440;
+        const quality = screenshots.length > 10 ? 0.45 : screenshots.length > 4 ? 0.55 : 0.65;
+        let finalImage = await this.resizeAndCompress(stitchedImage, quality, maxW);
+        const sizeMB = (finalImage.length * 0.75) / (1024 * 1024);
+        if (sizeMB > 1.5) {
+            finalImage = await this.resizeAndCompress(stitchedImage, 0.35, 960);
         }
         return {
             dataUrl: finalImage,
@@ -1261,29 +1199,28 @@ class FullPageCapture {
         }
     }
     /**
-     * Compress image to reduce payload size for API upload
+     * Resize then compress — far more effective than lowering JPEG quality alone.
+     * maxWidth caps the output; aspect ratio is preserved.
      */
-    static async compressImage(dataUrl, quality = 0.7) {
+    static async resizeAndCompress(dataUrl, quality = 0.7, maxWidth = 1440) {
         try {
-            // Convert data URL to blob
             const response = await fetch(dataUrl);
             const blob = await response.blob();
-            // Create ImageBitmap (works in service workers, unlike Image())
             const imageBitmap = await createImageBitmap(blob);
-            // Create canvas for compression
-            const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                throw new Error('Failed to get canvas context for compression');
+            let outW = imageBitmap.width;
+            let outH = imageBitmap.height;
+            if (outW > maxWidth) {
+                const scale = maxWidth / outW;
+                outW = maxWidth;
+                outH = Math.round(imageBitmap.height * scale);
             }
-            // Draw image to canvas
-            ctx.drawImage(imageBitmap, 0, 0);
-            // Convert to compressed JPEG
-            const compressedBlob = await canvas.convertToBlob({
-                type: 'image/jpeg',
-                quality: quality
-            });
-            // Convert blob back to data URL
+            const canvas = new OffscreenCanvas(outW, outH);
+            const ctx = canvas.getContext('2d');
+            if (!ctx)
+                throw new Error('Canvas context unavailable');
+            ctx.drawImage(imageBitmap, 0, 0, outW, outH);
+            imageBitmap.close();
+            const compressedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result);
@@ -1292,9 +1229,15 @@ class FullPageCapture {
             });
         }
         catch (error) {
-            console.error('Image compression failed:', error);
-            return dataUrl; // Fallback to original if compression fails
+            console.error('Image resize/compress failed:', error);
+            return dataUrl;
         }
+    }
+    /**
+     * @deprecated Use resizeAndCompress instead.
+     */
+    static async compressImage(dataUrl, quality = 0.7) {
+        return this.resizeAndCompress(dataUrl, quality, Infinity);
     }
     /**
      * Check if full page capture is supported
@@ -1520,92 +1463,49 @@ async function handlePageCapture(payload, tab) {
         });
         let pageContent = {};
         try {
-            // Send message to content script to extract page data (Firefox compatible)
-            const response = await background_extensionAPI.tabs.sendMessage(tab.id, {
-                type: 'EXTRACT_PAGE_DATA'
+            const extractionResults = await background_extensionAPI.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => {
+                    const html = document.documentElement.outerHTML;
+                    const cleanedHtml = html
+                        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                        .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
+                    const text = cleanedHtml
+                        .replace(/<[^>]*>/g, ' ')
+                        .replace(/&nbsp;/g, ' ')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    const faviconLink = document.querySelector('link[rel*="icon"]');
+                    const favicon = faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`;
+                    return {
+                        url: window.location.href,
+                        title: document.title || '',
+                        html: cleanedHtml,
+                        text: text,
+                        favicon: favicon
+                    };
+                }
             });
-            if (response && response.success) {
-                pageContent = response.data;
-                console.log('✅ Page content extracted from content script:', {
-                    htmlLength: pageContent.html?.length || 0,
-                    textLength: pageContent.text?.length || 0,
-                    title: pageContent.title
-                });
-                if (!pageContent.html || pageContent.html.length === 0) {
-                    console.warn('⚠️ Content script returned empty HTML!');
-                }
-                if (!pageContent.text || pageContent.text.length === 0) {
-                    console.warn('⚠️ Content script returned empty text!');
-                }
+            if (extractionResults && extractionResults[0]?.result) {
+                pageContent = extractionResults[0].result;
             }
             else {
-                console.warn('⚠️ Failed to extract page content from content script:', response);
-                console.warn('⚠️ Using fallback data from popup (may be empty)');
-                // Use fallback data from popup
-                pageContent = {
-                    url: payload.url,
-                    title: payload.title,
-                    html: payload.html || '',
-                    text: payload.text || '',
-                    favicon: payload.favicon
-                };
+                throw new Error('Content extraction returned no results');
             }
         }
-        catch (contentError) {
-            console.warn('⚠️ Content script not available, trying dynamic injection:', contentError);
-            // Try to dynamically inject and extract content
-            try {
-                const extractionResults = await background_extensionAPI.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    func: () => {
-                        // Inline content extraction function
-                        const html = document.documentElement.outerHTML;
-                        const cleanedHtml = html
-                            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-                            .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
-                        const text = cleanedHtml
-                            .replace(/<[^>]*>/g, ' ')
-                            .replace(/&nbsp;/g, ' ')
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                            .replace(/\s+/g, ' ')
-                            .trim();
-                        const faviconLink = document.querySelector('link[rel*="icon"]');
-                        const favicon = faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`;
-                        return {
-                            url: window.location.href,
-                            title: document.title || '',
-                            html: cleanedHtml,
-                            text: text,
-                            favicon: favicon
-                        };
-                    }
-                });
-                if (extractionResults && extractionResults[0]?.result) {
-                    pageContent = extractionResults[0].result;
-                    console.log('✅ Content extracted via dynamic injection:', {
-                        htmlLength: pageContent.html?.length || 0,
-                        textLength: pageContent.text?.length || 0,
-                        title: pageContent.title
-                    });
-                }
-                else {
-                    throw new Error('Dynamic extraction returned no results');
-                }
-            }
-            catch (dynamicError) {
-                console.error('❌ Dynamic content extraction failed:', dynamicError);
-                // Final fallback
-                pageContent = {
-                    url: payload.url,
-                    title: payload.title,
-                    html: '',
-                    text: '',
-                    favicon: payload.favicon
-                };
-            }
+        catch (extractError) {
+            log('Content extraction failed, using tab metadata:', extractError);
+            pageContent = {
+                url: payload.url,
+                title: payload.title,
+                html: '',
+                text: '',
+                favicon: payload.favicon
+            };
         }
         // Check if cancelled after content extraction
         if (signal.aborted) {
@@ -1861,10 +1761,10 @@ async function handleGetUsage(sendResponse) {
         console.error('Failed to get usage:', error);
         sendResponse({
             error: 'Failed to load usage data',
-            clips_remaining: 50,
-            clips_limit: 50,
+            clips_remaining: 0,
+            clips_limit: 10,
             subscription_tier: 'free',
-            warning_level: 'safe'
+            warning_level: 'critical'
         });
     }
 }

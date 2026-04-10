@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "PageStash",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Capture any webpage with one click. Perfect for researchers, analysts, and anyone who needs to archive web content reliably.",
   "author": "PageStash Team",
   "homepage_url": "https://pagestash.app",
@@ -48,17 +48,6 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_end"
-    }
-  ],
   "web_accessible_resources": [
     "icons/*"
   ],

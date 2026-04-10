@@ -6,13 +6,18 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LogoIcon } from '@/components/ui/logo'
 import { ChromeIcon, FirefoxIcon } from '@/components/ui/browser-icons'
-import { DownloadIcon, CheckIcon, ShieldCheckIcon, ZapIcon, SearchIcon, CloudIcon } from 'lucide-react'
+import { DownloadIcon, CheckIcon, ShieldCheckIcon, ZapIcon, SearchIcon, CloudIcon, ExternalLinkIcon } from 'lucide-react'
 
 interface DownloadModalProps {
   isOpen: boolean
   onClose: () => void
   selectedBrowser: 'chrome' | 'firefox'
 }
+
+const STORE_URLS = {
+  chrome: 'https://chromewebstore.google.com/detail/pagestash/pimbnkabbjeacahcclicmfdkhojnjmif',
+  firefox: 'https://addons.mozilla.org/en-US/firefox/addon/pagestash/',
+} as const
 
 export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModalProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
@@ -21,9 +26,11 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     chrome: {
       name: 'Chrome',
       icon: ChromeIcon,
+      storeName: 'Chrome Web Store',
+      storeUrl: STORE_URLS.chrome,
       downloadUrl: '/extension/downloads/pagestash-extension-chrome.zip',
-      instructions: [
-        'Click "Download for Chrome" above to save the extension package',
+      manualInstructions: [
+        'Download the ZIP file using the link below',
         'Extract the ZIP file to a folder on your computer',
         'Open chrome://extensions in your Chrome browser',
         'Enable "Developer mode" using the toggle in the top-right corner',
@@ -34,9 +41,11 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     firefox: {
       name: 'Firefox',
       icon: FirefoxIcon,
+      storeName: 'Firefox Add-ons',
+      storeUrl: STORE_URLS.firefox,
       downloadUrl: '/extension/downloads/pagestash-extension-firefox.zip',
-      instructions: [
-        'Click "Download for Firefox" above to save the extension package',
+      manualInstructions: [
+        'Download the ZIP file using the link below',
         'Open about:debugging in your Firefox browser',
         'Click "This Firefox" in the left sidebar',
         'Click "Load Temporary Add-on..." button',
@@ -76,7 +85,6 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] border-none bg-transparent p-0 gap-0 overflow-hidden">
         <div ref={scrollRef} className="relative rounded-[40px] border border-slate-200/50 bg-white shadow-[0_50px_140px_-70px_rgba(15,23,42,0.5)] dark:bg-slate-950 dark:border-white/10 overflow-y-auto max-h-[90vh]">
-          {/* Subtle gradient backdrop */}
           <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-blue-50/40 to-transparent dark:from-blue-950/20 pointer-events-none" />
           
           {/* Header */}
@@ -91,25 +99,25 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
                   Add to {browser.name}
                 </DialogTitle>
                 <DialogDescription className="sr-only">
-                  Download and install the PageStash extension for {browser.name}
+                  Install the PageStash extension for {browser.name}
                 </DialogDescription>
               </div>
             </div>
             <Badge className="rounded-full px-4 py-1.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-semibold">
-              v1.2.5
+              v2.0.0
             </Badge>
           </div>
 
           <div className="relative px-8 sm:px-10 pb-10 space-y-8 mt-2">
-            {/* Main Download CTA */}
+            {/* Primary CTA — Store install */}
             <div className="rounded-[32px] border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 dark:from-slate-900/40 dark:to-slate-950 dark:border-white/5 shadow-sm">
               <div className="text-center space-y-6">
                 <div>
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                    Start capturing in under a minute
+                    Install from the {browser.storeName}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Early access • No credit card • Free trial included
+                    Recommended — automatic updates, one-click install
                   </p>
                 </div>
 
@@ -118,19 +126,27 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
                   className="h-14 px-8 text-base font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 shadow-lg hover:shadow-xl transition-all group" 
                   asChild
                 >
-                  <a href={browser.downloadUrl} download>
-                    <DownloadIcon className="mr-2.5 h-5 w-5 group-hover:translate-y-0.5 transition-transform" />
-                    Download for {browser.name}
+                  <a href={browser.storeUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLinkIcon className="mr-2.5 h-5 w-5 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                    Get from {browser.storeName}
                   </a>
                 </Button>
 
                 <div className="flex items-center justify-center gap-4 text-xs text-slate-400 pt-2">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    2.1 MB
+                    <CheckIcon className="h-3.5 w-3.5 text-emerald-500" />
+                    Free
                   </span>
                   <span className="w-1 h-1 rounded-full bg-slate-300" />
-                  <span>Build: Jan 7, 2026</span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckIcon className="h-3.5 w-3.5 text-emerald-500" />
+                    Auto-updates
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                  <span className="flex items-center gap-1.5">
+                    <CheckIcon className="h-3.5 w-3.5 text-emerald-500" />
+                    Verified
+                  </span>
                 </div>
               </div>
             </div>
@@ -158,15 +174,14 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
               })}
             </div>
 
-            {/* Installation Steps - Collapsible Style */}
+            {/* Manual / Direct Download — collapsible */}
             <details 
-              id="installation-instructions"
+              id="manual-install"
               className="group rounded-[28px] border border-slate-200 dark:border-white/5 overflow-hidden"
               onToggle={(e) => {
                 const details = e.currentTarget as HTMLDetailsElement
                 if (details.open) {
                   setTimeout(() => {
-                    // Scroll the modal content container down smoothly
                     if (scrollRef.current) {
                       scrollRef.current.scrollBy({ top: 300, behavior: 'smooth' })
                     }
@@ -176,7 +191,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
             >
               <summary className="px-6 py-5 cursor-pointer list-none flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
                 <span className="font-semibold text-base text-slate-900 dark:text-white">
-                  Installation Instructions
+                  Manual Install (Direct Download)
                 </span>
                 <span className="text-slate-400 group-open:rotate-180 transition-transform duration-300">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -185,8 +200,20 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
                 </span>
               </summary>
               <div className="px-6 pb-6 pt-2 bg-slate-50/50 dark:bg-slate-900/20 border-t border-slate-100 dark:border-white/5 animate-in slide-in-from-top-2 duration-300">
-                <ol className="space-y-3 mt-4">
-                  {browser.instructions.map((step, index) => (
+                <div className="mb-5">
+                  <Button 
+                    variant="outline" 
+                    className="rounded-full" 
+                    asChild
+                  >
+                    <a href={browser.downloadUrl} download>
+                      <DownloadIcon className="mr-2 h-4 w-4" />
+                      Download ZIP for {browser.name}
+                    </a>
+                  </Button>
+                </div>
+                <ol className="space-y-3">
+                  {browser.manualInstructions.map((step, index) => (
                     <li key={index} className="flex gap-3.5 items-start">
                       <span className="w-7 h-7 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs font-bold dark:bg-white dark:text-slate-900 flex-shrink-0 mt-0.5">
                         {index + 1}

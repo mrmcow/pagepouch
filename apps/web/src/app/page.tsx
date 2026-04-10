@@ -83,7 +83,7 @@ const getBrowserInfo = () => {
     name: 'Chrome', 
     icon: 'chrome', 
     downloadUrl: '/extension/downloads/pagestash-extension-chrome.zip',
-    storeUrl: 'https://chrome.google.com/webstore/detail/pagestash/extension-id',
+    storeUrl: 'https://chromewebstore.google.com/detail/pagestash/pimbnkabbjeacahcclicmfdkhojnjmif',
     directDownload: true,
     installInstructions: 'Download and install via chrome://extensions'
   }

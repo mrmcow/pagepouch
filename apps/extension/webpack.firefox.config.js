@@ -9,8 +9,6 @@ const isProduction = process.env.NODE_ENV === 'production';
 module.exports = {
   entry: {
     background: './src/background/index.ts',
-    content: './src/content/index.ts',
-    // Use vanilla JS popup for Firefox to avoid React CSP issues
   },
   output: {
     path: path.resolve(__dirname, 'dist-firefox'),

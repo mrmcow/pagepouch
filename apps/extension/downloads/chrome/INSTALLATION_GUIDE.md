@@ -1,75 +1,47 @@
-# 📦 PageStash Extension - Direct Installation
+# PageStash Extension — Installation Guide
 
-## 🎯 **What is this?**
+## Recommended: Install from your browser's store
 
-This is the PageStash browser extension that you can install directly without going through the Chrome Web Store. Perfect for beta testing and early access!
+The easiest way to install PageStash with automatic updates:
 
-## 🔧 **Installation Instructions**
+- **Chrome / Edge / Chromium:** [Chrome Web Store](https://chromewebstore.google.com/detail/pagestash/pimbnkabbjeacahcclicmfdkhojnjmif)
+- **Firefox:** [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/pagestash/)
 
-### **For Chrome/Chromium browsers:**
+## Manual Install (Advanced)
 
-1. **Download the extension**
-   - Download `pagestash-extension.zip`
-   - Extract it to a folder on your computer
+### Chrome / Chromium
 
-2. **Enable Developer Mode**
-   - Open Chrome and go to `chrome://extensions/`
-   - Toggle "Developer mode" ON (top right corner)
+1. Download `pagestash-extension-chrome.zip`
+2. Extract it to a folder on your computer
+3. Open `chrome://extensions/`
+4. Toggle **Developer mode** ON (top right corner)
+5. Click **Load unpacked** and select the extracted folder
+6. The PageStash icon should appear in your toolbar
 
-3. **Load the extension**
-   - Click "Load unpacked"
-   - Select the extracted folder
-   - The PageStash icon should appear in your toolbar!
+### Firefox
 
-### **For Firefox:**
+1. Download `pagestash-extension-firefox.zip`
+2. Open `about:debugging`
+3. Click **This Firefox**
+4. Click **Load Temporary Add-on**
+5. Select the ZIP or the `manifest.json` inside the extracted folder
 
-1. **Download the extension**
-   - Download `pagestash-extension.zip`
-   - Keep it as a ZIP file (don't extract)
+*Note: Temporary add-ons are removed when Firefox restarts.*
 
-2. **Install temporarily**
-   - Open Firefox and go to `about:debugging`
-   - Click "This Firefox"
-   - Click "Load Temporary Add-on"
-   - Select the `pagestash-extension.zip` file
+## Features
 
-   *Note: Temporary add-ons are removed when Firefox restarts*
+- Full page scroll capture and visible area screenshots
+- Cloud sync across all your devices
+- Full-text search across your entire library
+- Folder organization with tags and notes
+- Encrypted storage with enterprise-grade security
 
-## 🎨 **Features**
+## Need Help?
 
-- ✅ **Full Page Capture** - Scroll and stitch entire pages
-- ✅ **Visible Area Capture** - Quick screenshots of current view
-- ✅ **Cloud Sync** - Sign in to sync across devices
-- ✅ **Beautiful UI** - Modern, clean interface
-- ✅ **Fast & Reliable** - Optimized for performance
-
-## 🔐 **Privacy & Security**
-
-- Your data stays private and secure
-- Optional cloud sync with your own account
-- No tracking or analytics
-- Open source and transparent
-
-## 🆘 **Need Help?**
-
-If you encounter any issues:
-
-1. **Check browser compatibility** - Chrome 88+ or Firefox 78+
-2. **Refresh the page** - Try reloading the page you want to capture
-3. **Check permissions** - Make sure the extension has access to the current site
-4. **Contact support** - Email us at support@pagestash.app
-
-## 🚀 **What's Next?**
-
-After installation:
-
-1. **Try capturing** - Click the PageStash icon and capture a page
-2. **Sign up** - Create an account for cloud sync
-3. **Visit the web app** - Go to http://localhost:3000 to manage your clips
-4. **Give feedback** - Help us improve PageStash!
+- **Support:** support@pagestash.app
+- **Web app:** https://pagestash.app/dashboard
+- **Docs:** https://pagestash.app/docs
 
 ---
 
-**PageStash v1.0.0** - Capture • Organize • Retrieve
-
-*This is a beta version for testing. The official Chrome Web Store version will be available soon!*
+**PageStash v2.0.0** — Capture · Organize · Retrieve
