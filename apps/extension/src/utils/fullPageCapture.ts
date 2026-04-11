@@ -3,6 +3,9 @@
  * Captures entire webpage by scrolling and stitching screenshots
  */
 
+const _DEBUG = process.env.NODE_ENV !== 'production';
+const _log = (...args: any[]) => { if (_DEBUG) console.log('[PageStash:FullPage]', ...args); };
+
 // Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
 
@@ -48,7 +51,7 @@ export class FullPageCapture {
       // Get page dimensions and current scroll position
       const pageInfo = await this.getPageInfo(tabId);
       
-      console.log('Full page capture - Page info:', {
+      _log('Full page capture - Page info:', {
         scrollHeight: pageInfo.scrollHeight,
         scrollWidth: pageInfo.scrollWidth,
         viewportWidth: pageInfo.viewportWidth,
@@ -59,18 +62,18 @@ export class FullPageCapture {
       
       if (pageInfo.scrollHeight <= pageInfo.viewportHeight) {
         // Page fits in viewport, use simple capture
-        console.log('Page fits in viewport, using simple capture');
+        _log('Page fits in viewport, using simple capture');
         return this.captureVisibleArea(tabId, opts, pageInfo, startTime);
       }
 
       // Firefox needs special handling due to captureVisibleTab limitations
       const isFirefox = typeof browser !== 'undefined';
       if (isFirefox) {
-        console.log('🔧 Firefox: Using SIMPLE vertical sections - same as visible area');
+        _log('🔧 Firefox: Using SIMPLE vertical sections - same as visible area');
         return this.captureVerticalOnlyFirefox(tabId, opts, pageInfo, startTime);
       }
       
-      console.log('🔧 Chrome: Using full grid capture');
+      _log('🔧 Chrome: Using full grid capture');
 
       // Check if we need horizontal scrolling
       // Only do horizontal capture if page is SIGNIFICANTLY wider (50%+ wider)
@@ -78,7 +81,7 @@ export class FullPageCapture {
       const needsHorizontalScroll = pageInfo.scrollWidth >= pageInfo.viewportWidth * 1.5;
       const finalNeedsHorizontalScroll = needsHorizontalScroll;
       
-      console.log('🔧 Horizontal scroll analysis:', {
+      _log('🔧 Horizontal scroll analysis:', {
         scrollWidth: pageInfo.scrollWidth,
         viewportWidth: pageInfo.viewportWidth,
         ratio: pageInfo.scrollWidth / pageInfo.viewportWidth,
@@ -101,7 +104,7 @@ export class FullPageCapture {
       const screenshots: Array<{dataUrl: string, x: number, y: number}> = [];
       const totalSections = verticalPositions.length * horizontalPositions.length;
       
-      console.log(`🔧 Firefox capture grid analysis:`, {
+      _log(`🔧 Firefox capture grid analysis:`, {
         verticalPositions: verticalPositions.length,
         horizontalPositions: horizontalPositions.length,
         totalSections,
@@ -109,7 +112,7 @@ export class FullPageCapture {
         horizontalPositionsArray: horizontalPositions
       });
 
-      console.log(`Capturing ${totalSections} sections...`);
+      _log(`Capturing ${totalSections} sections...`);
 
       for (let vIndex = 0; vIndex < verticalPositions.length; vIndex++) {
         for (let hIndex = 0; hIndex < horizontalPositions.length; hIndex++) {
@@ -163,7 +166,7 @@ export class FullPageCapture {
       await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
 
       // Stitch screenshots together
-      console.log('Starting image stitching...');
+      _log('Starting image stitching...');
       
       // Calculate actual canvas dimensions based on how we'll stitch
       const overlap = Math.floor(pageInfo.viewportHeight * 0.1);
@@ -178,7 +181,7 @@ export class FullPageCapture {
         ? pageInfo.viewportHeight
         : pageInfo.viewportHeight + ((verticalPositions.length - 1) * (pageInfo.viewportHeight - overlap));
       
-      console.log('Stitching parameters:', {
+      _log('Stitching parameters:', {
         screenshotCount: screenshots.length,
         stitchedWidth,
         stitchedHeight,
@@ -198,7 +201,7 @@ export class FullPageCapture {
         pageInfo.viewportWidth,
         pageInfo.viewportHeight
       );
-      console.log('Image stitching completed');
+      _log('Image stitching completed');
 
       const maxW = screenshots.length > 6 ? 1024 : 1440;
       const quality = screenshots.length > 10 ? 0.45 : screenshots.length > 4 ? 0.55 : 0.65;
@@ -232,9 +235,9 @@ export class FullPageCapture {
     pageInfo: any,
     startTime: number
   ): Promise<CaptureResult> {
-    console.log('🔧 Firefox: SIMPLE vertical sections - same as visible area capture');
+    _log('🔧 Firefox: SIMPLE vertical sections - same as visible area capture');
     
-    console.log('🔧 Firefox: Page dimensions:', {
+    _log('🔧 Firefox: Page dimensions:', {
       scrollWidth: pageInfo.scrollWidth,
       viewportWidth: pageInfo.viewportWidth,
       scrollHeight: pageInfo.scrollHeight,
@@ -248,7 +251,7 @@ export class FullPageCapture {
       options.maxHeight
     );
     
-    console.log('🔧 Firefox: SIMPLE capture plan:', {
+    _log('🔧 Firefox: SIMPLE capture plan:', {
       verticalSections: verticalPositions.length,
       captureWidth: pageInfo.viewportWidth, // Use original viewport width
       totalHeight: pageInfo.scrollHeight,
@@ -261,7 +264,7 @@ export class FullPageCapture {
     for (let i = 0; i < verticalPositions.length; i++) {
       const scrollY = verticalPositions[i];
       
-      console.log(`🔧 Firefox: SIMPLE capture section ${i + 1}/${verticalPositions.length} at Y=${scrollY}`);
+      _log(`🔧 Firefox: SIMPLE capture section ${i + 1}/${verticalPositions.length} at Y=${scrollY}`);
       
       // Scroll to position
       await this.scrollToPosition(tabId, scrollY, 0);
@@ -281,7 +284,7 @@ export class FullPageCapture {
         
         screenshots.push(screenshot);
         
-        console.log(`🔧 Firefox: SIMPLE section ${i + 1} captured successfully`);
+        _log(`🔧 Firefox: SIMPLE section ${i + 1} captured successfully`);
       } catch (error) {
         console.error(`🔧 Firefox: SIMPLE capture failed section ${i + 1}:`, error);
         throw new Error(`Failed to capture section ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -292,7 +295,7 @@ export class FullPageCapture {
     await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
     
     // Stitch vertical screenshots - simple and clean
-    console.log('🔧 Firefox: SIMPLE vertical stitching', screenshots.length, 'screenshots');
+    _log('🔧 Firefox: SIMPLE vertical stitching', screenshots.length, 'screenshots');
     const stitchedImage = await this.stitchFirefoxVertical(
       screenshots,
       pageInfo.viewportWidth, // Use original viewport width
@@ -330,8 +333,8 @@ export class FullPageCapture {
     horizontalSections: number
   ): Promise<string> {
     try {
-      console.log('🔧 Firefox: BULLETPROOF grid stitching');
-      console.log('🔧 Firefox: Grid dimensions:', {
+      _log('🔧 Firefox: BULLETPROOF grid stitching');
+      _log('🔧 Firefox: Grid dimensions:', {
         totalWidth,
         totalHeight,
         viewportWidth,
@@ -352,7 +355,7 @@ export class FullPageCapture {
       const verticalOverlap = Math.floor(viewportHeight * 0.1); // 90px
       const horizontalOverlap = Math.floor(viewportWidth * 0.1); // 128px
       
-      console.log('🔧 Firefox: Grid overlaps:', {
+      _log('🔧 Firefox: Grid overlaps:', {
         verticalOverlap,
         horizontalOverlap
       });
@@ -375,7 +378,7 @@ export class FullPageCapture {
           
           const screenshot = screenshots[screenshotIndex];
           
-          console.log(`🔧 Firefox: Processing V${vIndex + 1}H${hIndex + 1} at (${screenshot.x}, ${screenshot.y})`);
+          _log(`🔧 Firefox: Processing V${vIndex + 1}H${hIndex + 1} at (${screenshot.x}, ${screenshot.y})`);
           
           // Convert data URL to ImageBitmap
           const response = await fetch(screenshot.dataUrl);
@@ -392,7 +395,7 @@ export class FullPageCapture {
           const sourceWidth = hIndex > 0 ? viewportWidth - horizontalOverlap : viewportWidth;
           const sourceHeight = vIndex > 0 ? viewportHeight - verticalOverlap : viewportHeight;
           
-          console.log(`🔧 Firefox: V${vIndex + 1}H${hIndex + 1} -> Canvas(${destX}, ${destY}) from Source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight})`);
+          _log(`🔧 Firefox: V${vIndex + 1}H${hIndex + 1} -> Canvas(${destX}, ${destY}) from Source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight})`);
           
           // Draw the image section
           ctx.drawImage(
@@ -406,7 +409,7 @@ export class FullPageCapture {
         }
       }
       
-      console.log('🔧 Firefox: BULLETPROOF grid stitching completed');
+      _log('🔧 Firefox: BULLETPROOF grid stitching completed');
       
       // Convert to data URL
       const blob = await canvas.convertToBlob({ type: 'image/png' });
@@ -433,14 +436,14 @@ export class FullPageCapture {
     viewportHeight: number
   ): Promise<string> {
     try {
-      console.log('🔧 Firefox: DEAD SIMPLE vertical stacking - NO width manipulation');
+      _log('🔧 Firefox: DEAD SIMPLE vertical stacking - NO width manipulation');
       
       if (screenshots.length === 0) {
         throw new Error('No screenshots to stitch');
       }
       
       if (screenshots.length === 1) {
-        console.log('🔧 Firefox: Single screenshot, returning as-is');
+        _log('🔧 Firefox: Single screenshot, returning as-is');
         return screenshots[0];
       }
       
@@ -452,7 +455,7 @@ export class FullPageCapture {
       const actualWidth = firstImage.naturalWidth || firstImage.width;
       const actualHeight = firstImage.naturalHeight || firstImage.height;
       
-      console.log('🔧 Firefox: Actual screenshot dimensions:', {
+      _log('🔧 Firefox: Actual screenshot dimensions:', {
         actualWidth,
         actualHeight,
         providedWidth: width,
@@ -465,7 +468,7 @@ export class FullPageCapture {
       const sectionHeight = actualHeight - overlapPixels;
       const totalHeight = actualHeight + (sectionHeight * (screenshots.length - 1));
       
-      console.log('🔧 Firefox: SIMPLE stacking plan:', {
+      _log('🔧 Firefox: SIMPLE stacking plan:', {
         actualWidth,
         totalHeight,
         overlapPixels,
@@ -491,7 +494,7 @@ export class FullPageCapture {
         const blob = await response.blob();
         const imageBitmap = await createImageBitmap(blob);
         
-        console.log(`🔧 Firefox: SIMPLE stacking section ${i + 1} at Y=${currentY}`);
+        _log(`🔧 Firefox: SIMPLE stacking section ${i + 1} at Y=${currentY}`);
         
         if (i === 0) {
           // First image - draw completely at Y=0
@@ -517,7 +520,7 @@ export class FullPageCapture {
       // Clean up first image
       firstImage.close();
       
-      console.log('🔧 Firefox: SIMPLE stacking completed - final size:', actualWidth, 'x', totalHeight);
+      _log('🔧 Firefox: SIMPLE stacking completed - final size:', actualWidth, 'x', totalHeight);
       
       // Convert to data URL
       const blob = await canvas.convertToBlob({ type: 'image/png' });
@@ -590,21 +593,6 @@ export class FullPageCapture {
         // Firefox often underreports width, so add a safety margin if we detect potential issues
         const finalWidth = contentWidth > window.innerWidth ? contentWidth : Math.max(contentWidth, window.innerWidth * 1.2);
         
-        console.log('🔧 Firefox page dimensions debug:', {
-          bodyScrollWidth,
-          bodyOffsetWidth,
-          docScrollWidth,
-          docOffsetWidth,
-          docClientWidth,
-          windowInnerWidth: window.innerWidth,
-          windowOuterWidth: window.outerWidth,
-          screenWidth: screen.width,
-          maxElementWidth,
-          calculatedContentWidth: contentWidth,
-          finalWidth,
-          allMeasurements: allWidthMeasurements
-        });
-        
         return {
           scrollHeight: Math.max(
             document.body.scrollHeight,
@@ -639,7 +627,7 @@ export class FullPageCapture {
     const positions: number[] = [];
     const effectiveHeight = Math.min(scrollHeight, maxHeight);
     
-    console.log('🔧 Calculating vertical positions:', { scrollHeight, viewportHeight, effectiveHeight });
+    _log('🔧 Calculating vertical positions:', { scrollHeight, viewportHeight, effectiveHeight });
     
     // Use percentage-based overlap to match stitching logic
     const overlap = Math.floor(viewportHeight * 0.1); // 10% overlap to match stitching
@@ -664,7 +652,7 @@ export class FullPageCapture {
       positions.push(bottomPosition);
     }
     
-    console.log('🔧 Vertical positions calculated:', positions);
+    _log('🔧 Vertical positions calculated:', positions);
     return positions;
   }
 
@@ -677,7 +665,7 @@ export class FullPageCapture {
   ): number[] {
     const positions: number[] = [];
     
-    console.log('🔧 Calculating horizontal positions:', { scrollWidth, viewportWidth });
+    _log('🔧 Calculating horizontal positions:', { scrollWidth, viewportWidth });
     
     // Always start at 0
     positions.push(0);
@@ -707,7 +695,7 @@ export class FullPageCapture {
       }
     }
     
-    console.log('🔧 Horizontal positions calculated:', positions);
+    _log('🔧 Horizontal positions calculated:', positions);
     return positions;
   }
 
@@ -826,7 +814,7 @@ export class FullPageCapture {
     viewportHeight: number
   ): Promise<string> {
     try {
-      console.log('Stitching grid screenshots:', {
+      _log('Stitching grid screenshots:', {
         totalScreenshots: screenshots.length,
         totalWidth,
         totalHeight,
@@ -843,7 +831,7 @@ export class FullPageCapture {
       const actualHeight = firstImage.height;
       const devicePixelRatio = actualWidth / viewportWidth;
       
-      console.log('🔧 Device pixel ratio detected:', {
+      _log('🔧 Device pixel ratio detected:', {
         logicalViewport: `${viewportWidth}x${viewportHeight}`,
         actualScreenshot: `${actualWidth}x${actualHeight}`,
         devicePixelRatio
@@ -875,7 +863,7 @@ export class FullPageCapture {
       const verticalOverlap = Math.floor(scaledViewportHeight * 0.1);
       const horizontalOverlap = Math.floor(scaledViewportWidth * 0.1);
       
-      console.log('🔧 Stitching with overlaps (scaled for DPR):', {
+      _log('🔧 Stitching with overlaps (scaled for DPR):', {
         verticalOverlap,
         horizontalOverlap,
         scaledViewportWidth,
@@ -912,7 +900,7 @@ export class FullPageCapture {
         for (let colIndex = 0; colIndex < rowScreenshots.length; colIndex++) {
           const screenshot = rowScreenshots[colIndex];
           
-          console.log(`🔧 Processing screenshot at scroll position (${screenshot.x}, ${screenshot.y}), row ${rowIndex}, col ${colIndex}`);
+          _log(`🔧 Processing screenshot at scroll position (${screenshot.x}, ${screenshot.y}), row ${rowIndex}, col ${colIndex}`);
           
           // Convert data URL to ImageBitmap
           const response = await fetch(screenshot.dataUrl);
@@ -941,7 +929,7 @@ export class FullPageCapture {
           const destX = currentCanvasX;
           const destY = currentCanvasY;
           
-          console.log(`🔧 Drawing: source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight}) -> canvas(${destX}, ${destY}, ${sourceWidth}x${sourceHeight})`);
+          _log(`🔧 Drawing: source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight}) -> canvas(${destX}, ${destY}, ${sourceWidth}x${sourceHeight})`);
           
           // Draw the non-overlapping portion
           ctx.drawImage(
@@ -966,7 +954,7 @@ export class FullPageCapture {
         currentCanvasY += rowHeight;
       }
 
-      console.log('🔧 Grid stitching completed successfully');
+      _log('🔧 Grid stitching completed successfully');
 
       // Convert to blob and then to data URL
       const blob = await canvas.convertToBlob({ type: 'image/png' });
@@ -1007,11 +995,11 @@ export class FullPageCapture {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         
-        console.log(`Capture attempt ${attempt}/${maxRetries} failed:`, errorMessage);
+        _log(`Capture attempt ${attempt}/${maxRetries} failed:`, errorMessage);
         
         // Handle rate limiting
         if (errorMessage.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
-          console.log(`Rate limit hit on attempt ${attempt}/${maxRetries}, waiting...`);
+          _log(`Rate limit hit on attempt ${attempt}/${maxRetries}, waiting...`);
           
           if (attempt < maxRetries) {
             // More aggressive backoff: 2s, 4s, 8s...
@@ -1023,7 +1011,7 @@ export class FullPageCapture {
         
         // Handle permission errors
         if (errorMessage.includes('permission') || errorMessage.includes('activeTab') || errorMessage.includes('all_urls')) {
-          console.log(`Permission error on attempt ${attempt}/${maxRetries}, waiting longer...`);
+          _log(`Permission error on attempt ${attempt}/${maxRetries}, waiting longer...`);
           
           if (attempt < maxRetries) {
             // Wait longer for permission issues: 3s, 6s, 12s...
@@ -1035,7 +1023,7 @@ export class FullPageCapture {
         
         // For other errors, wait a bit before retrying
         if (attempt < maxRetries) {
-          console.log(`Generic error, waiting before retry...`);
+          _log(`Generic error, waiting before retry...`);
           await this.delay(1000 * attempt);
           continue;
         }
@@ -1061,7 +1049,7 @@ export class FullPageCapture {
   private static async executeScript(tabId: number, func: Function, args?: any[]): Promise<any[]> {
     if (extensionAPI?.scripting && typeof extensionAPI.scripting.executeScript === 'function') {
       // Chrome Manifest V3 approach
-      console.log('🔧 Using scripting.executeScript (Chrome)');
+      _log('🔧 Using scripting.executeScript (Chrome)');
       const results = await extensionAPI.scripting.executeScript({
         target: { tabId },
         func,
@@ -1070,7 +1058,7 @@ export class FullPageCapture {
       return results.map(result => result.result);
     } else if (extensionAPI?.tabs && typeof extensionAPI.tabs.executeScript === 'function') {
       // Firefox Manifest V2 approach
-      console.log('🔧 Using tabs.executeScript (Firefox)');
+      _log('🔧 Using tabs.executeScript (Firefox)');
       return new Promise((resolve, reject) => {
         const code = args ? `(${func.toString()})(${args.map(arg => JSON.stringify(arg)).join(', ')})` : `(${func.toString()})()`;
         extensionAPI.tabs.executeScript(tabId, { code }, (results) => {
@@ -1098,7 +1086,7 @@ export class FullPageCapture {
     overlap: number
   ): Promise<string> {
     try {
-      console.log('🔧 Firefox PRECISION stitching:', {
+      _log('🔧 Firefox PRECISION stitching:', {
         screenshots: screenshots.length,
         targetWidth: width,
         viewportHeight,
@@ -1124,7 +1112,7 @@ export class FullPageCapture {
         const screenshot = screenshots[i];
         const scrollY = scrollPositions[i];
         
-        console.log(`🔧 Firefox: Stitching section ${i + 1} at scroll Y=${scrollY}`);
+        _log(`🔧 Firefox: Stitching section ${i + 1} at scroll Y=${scrollY}`);
         
         // Convert data URL to ImageBitmap
         const response = await fetch(screenshot);
@@ -1134,7 +1122,7 @@ export class FullPageCapture {
         if (i === 0) {
           // First image - draw completely
           ctx.drawImage(imageBitmap, 0, 0, width, viewportHeight, 0, 0, width, viewportHeight);
-          console.log(`🔧 Firefox: Drew first section at Y=0`);
+          _log(`🔧 Firefox: Drew first section at Y=0`);
         } else {
           // Subsequent images - handle overlap
           const prevScrollY = scrollPositions[i - 1];
@@ -1152,14 +1140,14 @@ export class FullPageCapture {
               0, destY, width, finalHeight     // Destination
             );
             
-            console.log(`🔧 Firefox: Drew section ${i + 1} from sourceY=${sourceY} to destY=${destY}, height=${finalHeight}`);
+            _log(`🔧 Firefox: Drew section ${i + 1} from sourceY=${sourceY} to destY=${destY}, height=${finalHeight}`);
           }
         }
         
         imageBitmap.close();
       }
 
-      console.log(`🔧 Firefox: Stitching completed, canvas height: ${totalHeight}`);
+      _log(`🔧 Firefox: Stitching completed, canvas height: ${totalHeight}`);
 
       // Convert to data URL
       const blob = await canvas.convertToBlob({ type: 'image/png' });
@@ -1232,29 +1220,16 @@ export class FullPageCapture {
    * Check if full page capture is supported
    */
   static isSupported(): boolean {
-    console.log('🔧 Checking FullPageCapture support...');
-    console.log('🔧 extensionAPI available:', !!extensionAPI);
-    console.log('🔧 tabs API available:', !!extensionAPI?.tabs);
-    console.log('🔧 captureVisibleTab available:', typeof extensionAPI?.tabs?.captureVisibleTab === 'function');
-    console.log('🔧 scripting API available:', !!extensionAPI?.scripting);
-    console.log('🔧 executeScript available:', typeof extensionAPI?.scripting?.executeScript === 'function');
-    console.log('🔧 tabs.executeScript available:', typeof extensionAPI?.tabs?.executeScript === 'function');
-    
-    // Firefox uses tabs.executeScript (Manifest V2), Chrome uses scripting.executeScript (Manifest V3)
     const hasScriptExecution = !!(
       (extensionAPI?.scripting && typeof extensionAPI.scripting.executeScript === 'function') ||
       (extensionAPI?.tabs && typeof extensionAPI.tabs.executeScript === 'function')
     );
     
-    const isSupported = !!(
+    return !!(
       extensionAPI &&
       extensionAPI.tabs &&
       typeof extensionAPI.tabs.captureVisibleTab === 'function' &&
       hasScriptExecution
     );
-    
-    console.log('🔧 hasScriptExecution:', hasScriptExecution);
-    console.log('🔧 FullPageCapture isSupported:', isSupported);
-    return isSupported;
   }
 }

@@ -60,8 +60,14 @@
 
     if (rect.width < 10 || rect.height < 10) return
 
-    const api = typeof browser !== 'undefined' ? browser : chrome
-    api.runtime.sendMessage({ type: 'AREA_SELECTED', payload: rect })
+    // Wait for the browser to repaint without the overlay before
+    // telling the background script to capture the visible tab.
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const api = typeof browser !== 'undefined' ? browser : chrome
+        api.runtime.sendMessage({ type: 'AREA_SELECTED', payload: rect })
+      }, 120)
+    })
   })
 
   const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cleanup() }

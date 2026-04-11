@@ -14,7 +14,6 @@ const API_BASE_URL =  true
 // Extension-specific auth helpers
 class ExtensionAuth {
     static async signIn(email, password) {
-        console.log('🔐 ExtensionAuth.signIn called for:', email);
         try {
             const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
@@ -25,16 +24,9 @@ class ExtensionAuth {
             });
             const result = await response.json();
             if (!response.ok) {
-                console.error('🔐 Login error:', result.error);
                 return { data: null, error: { message: result.error } };
             }
-            console.log('🔐 Login successful:', {
-                hasSession: !!result.session,
-                hasUser: !!result.user,
-            });
             if (result.session) {
-                console.log('🔐 Storing session in extension storage');
-                // Store session in extension storage
                 await extensionAPI.storage.local.set({
                     authToken: result.session.access_token,
                     refreshToken: result.session.refresh_token,
@@ -51,7 +43,6 @@ class ExtensionAuth {
             };
         }
         catch (err) {
-            console.error('🔐 Login request failed:', err);
             return {
                 data: null,
                 error: { message: err.message || 'Network error' }
@@ -69,11 +60,9 @@ class ExtensionAuth {
             });
             const result = await response.json();
             if (!response.ok) {
-                console.error('🔐 Signup error:', result.error);
                 return { data: null, error: { message: result.error } };
             }
             if (result.session) {
-                // Store session in extension storage
                 await extensionAPI.storage.local.set({
                     authToken: result.session.access_token,
                     refreshToken: result.session.refresh_token,
@@ -90,7 +79,6 @@ class ExtensionAuth {
             };
         }
         catch (err) {
-            console.error('🔐 Signup request failed:', err);
             return {
                 data: null,
                 error: { message: err.message || 'Network error' }
@@ -98,14 +86,12 @@ class ExtensionAuth {
         }
     }
     static async signOut() {
-        // Just clear local storage - no need to call API for logout
         await extensionAPI.storage.local.remove([
             'authToken',
             'refreshToken',
             'userEmail',
             'userId',
         ]);
-        console.log('🔐 Signed out and cleared local storage');
         return { error: null };
     }
     static async restoreSession() {
@@ -120,18 +106,26 @@ class ExtensionAuth {
                     });
                 });
             });
-            // No stored session
             if (!stored.authToken) {
-                console.log('🔐 No stored session found');
                 return false;
             }
-            console.log('🔐 Session found for user:', stored.userEmail);
-            // Token validation will happen when making actual API calls
-            // The API will return 401 if token is invalid, and we'll handle it there
-            return true;
+            // Validate token with a lightweight API call
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/usage`, {
+                    headers: { 'Authorization': `Bearer ${stored.authToken}` },
+                });
+                if (res.status === 401 && stored.refreshToken) {
+                    const refreshResult = await this.refreshSession();
+                    return !refreshResult.error;
+                }
+                return res.ok;
+            }
+            catch {
+                // Network error — trust the stored token and let real calls handle failures
+                return true;
+            }
         }
         catch (err) {
-            console.error('🔐 Session restoration error:', err);
             await this.signOut();
             return false;
         }
@@ -227,7 +221,6 @@ class ExtensionAPI {
     }
     static async saveClip(clipData) {
         const apiUrl = `${this.getApiBaseUrl()}/api/clips`;
-        console.log('Saving clip to API endpoint:', apiUrl);
         const response = await this.authenticatedFetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -235,22 +228,30 @@ class ExtensionAPI {
             },
             body: JSON.stringify(clipData),
         });
-        console.log('API response status:', response.status);
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('API error response:', errorText);
-            let error;
+            let errorData;
             try {
-                error = JSON.parse(errorText);
+                errorData = JSON.parse(errorText);
             }
             catch {
-                error = { error: errorText || 'Failed to save clip' };
+                errorData = { error: errorText || 'Failed to save clip' };
             }
-            throw new Error(error.error || 'Failed to save clip');
+            if (response.status === 429) {
+                const limitError = new Error(errorData.error || 'Clip limit reached');
+                limitError.isLimitReached = true;
+                limitError.limitInfo = {
+                    clips_limit: errorData.clips_limit,
+                    clips_this_month: errorData.clips_this_month,
+                    subscription_tier: errorData.subscription_tier,
+                    days_until_reset: errorData.days_until_reset,
+                    reset_date: errorData.reset_date,
+                };
+                throw limitError;
+            }
+            throw new Error(errorData.error || 'Failed to save clip');
         }
-        const result = await response.json();
-        console.log('Clip saved successfully:', result);
-        return result;
+        return response.json();
     }
     static async getClips(params) {
         const searchParams = new URLSearchParams();
@@ -307,6 +308,9 @@ class ExtensionAPI {
  * Full-page screenshot capture utility
  * Captures entire webpage by scrolling and stitching screenshots
  */
+const _DEBUG = "production" !== 'production';
+const _log = (...args) => { if (_DEBUG)
+    console.log('[PageStash:FullPage]', ...args); };
 // Firefox compatibility layer
 const fullPageCapture_extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
 class FullPageCapture {
@@ -323,7 +327,7 @@ class FullPageCapture {
             }
             // Get page dimensions and current scroll position
             const pageInfo = await this.getPageInfo(tabId);
-            console.log('Full page capture - Page info:', {
+            _log('Full page capture - Page info:', {
                 scrollHeight: pageInfo.scrollHeight,
                 scrollWidth: pageInfo.scrollWidth,
                 viewportWidth: pageInfo.viewportWidth,
@@ -333,22 +337,22 @@ class FullPageCapture {
             });
             if (pageInfo.scrollHeight <= pageInfo.viewportHeight) {
                 // Page fits in viewport, use simple capture
-                console.log('Page fits in viewport, using simple capture');
+                _log('Page fits in viewport, using simple capture');
                 return this.captureVisibleArea(tabId, opts, pageInfo, startTime);
             }
             // Firefox needs special handling due to captureVisibleTab limitations
             const isFirefox = typeof browser !== 'undefined';
             if (isFirefox) {
-                console.log('🔧 Firefox: Using SIMPLE vertical sections - same as visible area');
+                _log('🔧 Firefox: Using SIMPLE vertical sections - same as visible area');
                 return this.captureVerticalOnlyFirefox(tabId, opts, pageInfo, startTime);
             }
-            console.log('🔧 Chrome: Using full grid capture');
+            _log('🔧 Chrome: Using full grid capture');
             // Check if we need horizontal scrolling
             // Only do horizontal capture if page is SIGNIFICANTLY wider (50%+ wider)
             // Most responsive sites (like Reddit) don't need horizontal capture
             const needsHorizontalScroll = pageInfo.scrollWidth >= pageInfo.viewportWidth * 1.5;
             const finalNeedsHorizontalScroll = needsHorizontalScroll;
-            console.log('🔧 Horizontal scroll analysis:', {
+            _log('🔧 Horizontal scroll analysis:', {
                 scrollWidth: pageInfo.scrollWidth,
                 viewportWidth: pageInfo.viewportWidth,
                 ratio: pageInfo.scrollWidth / pageInfo.viewportWidth,
@@ -363,14 +367,14 @@ class FullPageCapture {
             // Capture each section (grid of horizontal x vertical positions)
             const screenshots = [];
             const totalSections = verticalPositions.length * horizontalPositions.length;
-            console.log(`🔧 Firefox capture grid analysis:`, {
+            _log(`🔧 Firefox capture grid analysis:`, {
                 verticalPositions: verticalPositions.length,
                 horizontalPositions: horizontalPositions.length,
                 totalSections,
                 verticalPositionsArray: verticalPositions,
                 horizontalPositionsArray: horizontalPositions
             });
-            console.log(`Capturing ${totalSections} sections...`);
+            _log(`Capturing ${totalSections} sections...`);
             for (let vIndex = 0; vIndex < verticalPositions.length; vIndex++) {
                 for (let hIndex = 0; hIndex < horizontalPositions.length; hIndex++) {
                     const scrollY = verticalPositions[vIndex];
@@ -417,7 +421,7 @@ class FullPageCapture {
             // Restore original scroll position
             await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
             // Stitch screenshots together
-            console.log('Starting image stitching...');
+            _log('Starting image stitching...');
             // Calculate actual canvas dimensions based on how we'll stitch
             const overlap = Math.floor(pageInfo.viewportHeight * 0.1);
             const horizontalOverlap = Math.floor(pageInfo.viewportWidth * 0.1);
@@ -428,7 +432,7 @@ class FullPageCapture {
             const stitchedHeight = verticalPositions.length === 1
                 ? pageInfo.viewportHeight
                 : pageInfo.viewportHeight + ((verticalPositions.length - 1) * (pageInfo.viewportHeight - overlap));
-            console.log('Stitching parameters:', {
+            _log('Stitching parameters:', {
                 screenshotCount: screenshots.length,
                 stitchedWidth,
                 stitchedHeight,
@@ -441,7 +445,7 @@ class FullPageCapture {
                 screenshotPositions: screenshots.map(s => ({ x: s.x, y: s.y }))
             });
             const stitchedImage = await this.stitchGridScreenshots(screenshots, stitchedWidth, stitchedHeight, pageInfo.viewportWidth, pageInfo.viewportHeight);
-            console.log('Image stitching completed');
+            _log('Image stitching completed');
             const maxW = screenshots.length > 6 ? 1024 : 1440;
             const quality = screenshots.length > 10 ? 0.45 : screenshots.length > 4 ? 0.55 : 0.65;
             let finalImage = await this.resizeAndCompress(stitchedImage, quality, maxW);
@@ -466,8 +470,8 @@ class FullPageCapture {
      * Firefox SIMPLE capture - exactly like visible area but multiple vertical sections
      */
     static async captureVerticalOnlyFirefox(tabId, options, pageInfo, startTime) {
-        console.log('🔧 Firefox: SIMPLE vertical sections - same as visible area capture');
-        console.log('🔧 Firefox: Page dimensions:', {
+        _log('🔧 Firefox: SIMPLE vertical sections - same as visible area capture');
+        _log('🔧 Firefox: Page dimensions:', {
             scrollWidth: pageInfo.scrollWidth,
             viewportWidth: pageInfo.viewportWidth,
             scrollHeight: pageInfo.scrollHeight,
@@ -475,7 +479,7 @@ class FullPageCapture {
         });
         // Calculate vertical positions - same scroll logic as before
         const verticalPositions = this.calculateScrollPositions(pageInfo.scrollHeight, pageInfo.viewportHeight, options.maxHeight);
-        console.log('🔧 Firefox: SIMPLE capture plan:', {
+        _log('🔧 Firefox: SIMPLE capture plan:', {
             verticalSections: verticalPositions.length,
             captureWidth: pageInfo.viewportWidth, // Use original viewport width
             totalHeight: pageInfo.scrollHeight,
@@ -485,7 +489,7 @@ class FullPageCapture {
         const screenshots = [];
         for (let i = 0; i < verticalPositions.length; i++) {
             const scrollY = verticalPositions[i];
-            console.log(`🔧 Firefox: SIMPLE capture section ${i + 1}/${verticalPositions.length} at Y=${scrollY}`);
+            _log(`🔧 Firefox: SIMPLE capture section ${i + 1}/${verticalPositions.length} at Y=${scrollY}`);
             // Scroll to position
             await this.scrollToPosition(tabId, scrollY, 0);
             await this.delay(options.scrollDelay);
@@ -500,7 +504,7 @@ class FullPageCapture {
                     quality: options.quality
                 });
                 screenshots.push(screenshot);
-                console.log(`🔧 Firefox: SIMPLE section ${i + 1} captured successfully`);
+                _log(`🔧 Firefox: SIMPLE section ${i + 1} captured successfully`);
             }
             catch (error) {
                 console.error(`🔧 Firefox: SIMPLE capture failed section ${i + 1}:`, error);
@@ -510,7 +514,7 @@ class FullPageCapture {
         // Restore original scroll position
         await this.scrollToPosition(tabId, pageInfo.originalScrollY, pageInfo.originalScrollX);
         // Stitch vertical screenshots - simple and clean
-        console.log('🔧 Firefox: SIMPLE vertical stitching', screenshots.length, 'screenshots');
+        _log('🔧 Firefox: SIMPLE vertical stitching', screenshots.length, 'screenshots');
         const stitchedImage = await this.stitchFirefoxVertical(screenshots, pageInfo.viewportWidth, // Use original viewport width
         pageInfo.viewportHeight);
         const maxW = screenshots.length > 6 ? 1024 : 1440;
@@ -533,8 +537,8 @@ class FullPageCapture {
      */
     static async stitchFirefoxGrid(screenshots, totalWidth, totalHeight, viewportWidth, viewportHeight, verticalSections, horizontalSections) {
         try {
-            console.log('🔧 Firefox: BULLETPROOF grid stitching');
-            console.log('🔧 Firefox: Grid dimensions:', {
+            _log('🔧 Firefox: BULLETPROOF grid stitching');
+            _log('🔧 Firefox: Grid dimensions:', {
                 totalWidth,
                 totalHeight,
                 viewportWidth,
@@ -551,7 +555,7 @@ class FullPageCapture {
             // Calculate overlaps
             const verticalOverlap = Math.floor(viewportHeight * 0.1); // 90px
             const horizontalOverlap = Math.floor(viewportWidth * 0.1); // 128px
-            console.log('🔧 Firefox: Grid overlaps:', {
+            _log('🔧 Firefox: Grid overlaps:', {
                 verticalOverlap,
                 horizontalOverlap
             });
@@ -570,7 +574,7 @@ class FullPageCapture {
                         continue;
                     }
                     const screenshot = screenshots[screenshotIndex];
-                    console.log(`🔧 Firefox: Processing V${vIndex + 1}H${hIndex + 1} at (${screenshot.x}, ${screenshot.y})`);
+                    _log(`🔧 Firefox: Processing V${vIndex + 1}H${hIndex + 1} at (${screenshot.x}, ${screenshot.y})`);
                     // Convert data URL to ImageBitmap
                     const response = await fetch(screenshot.dataUrl);
                     const blob = await response.blob();
@@ -583,7 +587,7 @@ class FullPageCapture {
                     const sourceY = vIndex > 0 ? verticalOverlap : 0;
                     const sourceWidth = hIndex > 0 ? viewportWidth - horizontalOverlap : viewportWidth;
                     const sourceHeight = vIndex > 0 ? viewportHeight - verticalOverlap : viewportHeight;
-                    console.log(`🔧 Firefox: V${vIndex + 1}H${hIndex + 1} -> Canvas(${destX}, ${destY}) from Source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight})`);
+                    _log(`🔧 Firefox: V${vIndex + 1}H${hIndex + 1} -> Canvas(${destX}, ${destY}) from Source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight})`);
                     // Draw the image section
                     ctx.drawImage(imageBitmap, sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle
                     destX, destY, sourceWidth, sourceHeight // Destination rectangle
@@ -592,7 +596,7 @@ class FullPageCapture {
                     imageBitmap.close();
                 }
             }
-            console.log('🔧 Firefox: BULLETPROOF grid stitching completed');
+            _log('🔧 Firefox: BULLETPROOF grid stitching completed');
             // Convert to data URL
             const blob = await canvas.convertToBlob({ type: 'image/png' });
             return new Promise((resolve, reject) => {
@@ -613,12 +617,12 @@ class FullPageCapture {
      */
     static async stitchFirefoxVertical(screenshots, width, viewportHeight) {
         try {
-            console.log('🔧 Firefox: DEAD SIMPLE vertical stacking - NO width manipulation');
+            _log('🔧 Firefox: DEAD SIMPLE vertical stacking - NO width manipulation');
             if (screenshots.length === 0) {
                 throw new Error('No screenshots to stitch');
             }
             if (screenshots.length === 1) {
-                console.log('🔧 Firefox: Single screenshot, returning as-is');
+                _log('🔧 Firefox: Single screenshot, returning as-is');
                 return screenshots[0];
             }
             // Get actual dimensions from first screenshot
@@ -627,7 +631,7 @@ class FullPageCapture {
             const firstImage = await createImageBitmap(firstBlob);
             const actualWidth = firstImage.naturalWidth || firstImage.width;
             const actualHeight = firstImage.naturalHeight || firstImage.height;
-            console.log('🔧 Firefox: Actual screenshot dimensions:', {
+            _log('🔧 Firefox: Actual screenshot dimensions:', {
                 actualWidth,
                 actualHeight,
                 providedWidth: width,
@@ -638,7 +642,7 @@ class FullPageCapture {
             const overlapPixels = Math.floor(actualHeight * 0.1);
             const sectionHeight = actualHeight - overlapPixels;
             const totalHeight = actualHeight + (sectionHeight * (screenshots.length - 1));
-            console.log('🔧 Firefox: SIMPLE stacking plan:', {
+            _log('🔧 Firefox: SIMPLE stacking plan:', {
                 actualWidth,
                 totalHeight,
                 overlapPixels,
@@ -658,7 +662,7 @@ class FullPageCapture {
                 const response = await fetch(screenshot);
                 const blob = await response.blob();
                 const imageBitmap = await createImageBitmap(blob);
-                console.log(`🔧 Firefox: SIMPLE stacking section ${i + 1} at Y=${currentY}`);
+                _log(`🔧 Firefox: SIMPLE stacking section ${i + 1} at Y=${currentY}`);
                 if (i === 0) {
                     // First image - draw completely at Y=0
                     ctx.drawImage(imageBitmap, 0, 0);
@@ -679,7 +683,7 @@ class FullPageCapture {
             }
             // Clean up first image
             firstImage.close();
-            console.log('🔧 Firefox: SIMPLE stacking completed - final size:', actualWidth, 'x', totalHeight);
+            _log('🔧 Firefox: SIMPLE stacking completed - final size:', actualWidth, 'x', totalHeight);
             // Convert to data URL
             const blob = await canvas.convertToBlob({ type: 'image/png' });
             return new Promise((resolve, reject) => {
@@ -738,20 +742,6 @@ class FullPageCapture {
             const contentWidth = Math.max(...allWidthMeasurements);
             // Firefox often underreports width, so add a safety margin if we detect potential issues
             const finalWidth = contentWidth > window.innerWidth ? contentWidth : Math.max(contentWidth, window.innerWidth * 1.2);
-            console.log('🔧 Firefox page dimensions debug:', {
-                bodyScrollWidth,
-                bodyOffsetWidth,
-                docScrollWidth,
-                docOffsetWidth,
-                docClientWidth,
-                windowInnerWidth: window.innerWidth,
-                windowOuterWidth: window.outerWidth,
-                screenWidth: screen.width,
-                maxElementWidth,
-                calculatedContentWidth: contentWidth,
-                finalWidth,
-                allMeasurements: allWidthMeasurements
-            });
             return {
                 scrollHeight: Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight),
                 scrollWidth: finalWidth,
@@ -772,7 +762,7 @@ class FullPageCapture {
     static calculateScrollPositions(scrollHeight, viewportHeight, maxHeight) {
         const positions = [];
         const effectiveHeight = Math.min(scrollHeight, maxHeight);
-        console.log('🔧 Calculating vertical positions:', { scrollHeight, viewportHeight, effectiveHeight });
+        _log('🔧 Calculating vertical positions:', { scrollHeight, viewportHeight, effectiveHeight });
         // Use percentage-based overlap to match stitching logic
         const overlap = Math.floor(viewportHeight * 0.1); // 10% overlap to match stitching
         const step = viewportHeight - overlap;
@@ -791,7 +781,7 @@ class FullPageCapture {
         if (!positions.includes(bottomPosition) && bottomPosition > 0) {
             positions.push(bottomPosition);
         }
-        console.log('🔧 Vertical positions calculated:', positions);
+        _log('🔧 Vertical positions calculated:', positions);
         return positions;
     }
     /**
@@ -799,7 +789,7 @@ class FullPageCapture {
      */
     static calculateHorizontalScrollPositions(scrollWidth, viewportWidth) {
         const positions = [];
-        console.log('🔧 Calculating horizontal positions:', { scrollWidth, viewportWidth });
+        _log('🔧 Calculating horizontal positions:', { scrollWidth, viewportWidth });
         // Always start at 0
         positions.push(0);
         // If content is wider than viewport, calculate overlapping positions
@@ -823,7 +813,7 @@ class FullPageCapture {
                 positions.push(rightmostPosition);
             }
         }
-        console.log('🔧 Horizontal positions calculated:', positions);
+        _log('🔧 Horizontal positions calculated:', positions);
         return positions;
     }
     /**
@@ -914,7 +904,7 @@ class FullPageCapture {
      */
     static async stitchGridScreenshots(screenshots, totalWidth, totalHeight, viewportWidth, viewportHeight) {
         try {
-            console.log('Stitching grid screenshots:', {
+            _log('Stitching grid screenshots:', {
                 totalScreenshots: screenshots.length,
                 totalWidth,
                 totalHeight,
@@ -928,7 +918,7 @@ class FullPageCapture {
             const actualWidth = firstImage.width;
             const actualHeight = firstImage.height;
             const devicePixelRatio = actualWidth / viewportWidth;
-            console.log('🔧 Device pixel ratio detected:', {
+            _log('🔧 Device pixel ratio detected:', {
                 logicalViewport: `${viewportWidth}x${viewportHeight}`,
                 actualScreenshot: `${actualWidth}x${actualHeight}`,
                 devicePixelRatio
@@ -954,7 +944,7 @@ class FullPageCapture {
             // Calculate overlap amounts (10% of viewport, scaled by DPR)
             const verticalOverlap = Math.floor(scaledViewportHeight * 0.1);
             const horizontalOverlap = Math.floor(scaledViewportWidth * 0.1);
-            console.log('🔧 Stitching with overlaps (scaled for DPR):', {
+            _log('🔧 Stitching with overlaps (scaled for DPR):', {
                 verticalOverlap,
                 horizontalOverlap,
                 scaledViewportWidth,
@@ -983,7 +973,7 @@ class FullPageCapture {
                 let rowHeight = 0;
                 for (let colIndex = 0; colIndex < rowScreenshots.length; colIndex++) {
                     const screenshot = rowScreenshots[colIndex];
-                    console.log(`🔧 Processing screenshot at scroll position (${screenshot.x}, ${screenshot.y}), row ${rowIndex}, col ${colIndex}`);
+                    _log(`🔧 Processing screenshot at scroll position (${screenshot.x}, ${screenshot.y}), row ${rowIndex}, col ${colIndex}`);
                     // Convert data URL to ImageBitmap
                     const response = await fetch(screenshot.dataUrl);
                     const blob = await response.blob();
@@ -1006,7 +996,7 @@ class FullPageCapture {
                     // Calculate destination position on canvas
                     const destX = currentCanvasX;
                     const destY = currentCanvasY;
-                    console.log(`🔧 Drawing: source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight}) -> canvas(${destX}, ${destY}, ${sourceWidth}x${sourceHeight})`);
+                    _log(`🔧 Drawing: source(${sourceX}, ${sourceY}, ${sourceWidth}x${sourceHeight}) -> canvas(${destX}, ${destY}, ${sourceWidth}x${sourceHeight})`);
                     // Draw the non-overlapping portion
                     ctx.drawImage(imageBitmap, sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle (skip overlaps)
                     destX, destY, sourceWidth, sourceHeight // Destination rectangle
@@ -1023,7 +1013,7 @@ class FullPageCapture {
                 // Update canvas Y position for next row
                 currentCanvasY += rowHeight;
             }
-            console.log('🔧 Grid stitching completed successfully');
+            _log('🔧 Grid stitching completed successfully');
             // Convert to blob and then to data URL
             const blob = await canvas.convertToBlob({ type: 'image/png' });
             return new Promise((resolve, reject) => {
@@ -1057,10 +1047,10 @@ class FullPageCapture {
             }
             catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                console.log(`Capture attempt ${attempt}/${maxRetries} failed:`, errorMessage);
+                _log(`Capture attempt ${attempt}/${maxRetries} failed:`, errorMessage);
                 // Handle rate limiting
                 if (errorMessage.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
-                    console.log(`Rate limit hit on attempt ${attempt}/${maxRetries}, waiting...`);
+                    _log(`Rate limit hit on attempt ${attempt}/${maxRetries}, waiting...`);
                     if (attempt < maxRetries) {
                         // More aggressive backoff: 2s, 4s, 8s...
                         const waitTime = Math.pow(2, attempt) * 1000;
@@ -1070,7 +1060,7 @@ class FullPageCapture {
                 }
                 // Handle permission errors
                 if (errorMessage.includes('permission') || errorMessage.includes('activeTab') || errorMessage.includes('all_urls')) {
-                    console.log(`Permission error on attempt ${attempt}/${maxRetries}, waiting longer...`);
+                    _log(`Permission error on attempt ${attempt}/${maxRetries}, waiting longer...`);
                     if (attempt < maxRetries) {
                         // Wait longer for permission issues: 3s, 6s, 12s...
                         const waitTime = Math.pow(2, attempt) * 1500;
@@ -1080,7 +1070,7 @@ class FullPageCapture {
                 }
                 // For other errors, wait a bit before retrying
                 if (attempt < maxRetries) {
-                    console.log(`Generic error, waiting before retry...`);
+                    _log(`Generic error, waiting before retry...`);
                     await this.delay(1000 * attempt);
                     continue;
                 }
@@ -1102,7 +1092,7 @@ class FullPageCapture {
     static async executeScript(tabId, func, args) {
         if (fullPageCapture_extensionAPI?.scripting && typeof fullPageCapture_extensionAPI.scripting.executeScript === 'function') {
             // Chrome Manifest V3 approach
-            console.log('🔧 Using scripting.executeScript (Chrome)');
+            _log('🔧 Using scripting.executeScript (Chrome)');
             const results = await fullPageCapture_extensionAPI.scripting.executeScript({
                 target: { tabId },
                 func,
@@ -1112,7 +1102,7 @@ class FullPageCapture {
         }
         else if (fullPageCapture_extensionAPI?.tabs && typeof fullPageCapture_extensionAPI.tabs.executeScript === 'function') {
             // Firefox Manifest V2 approach
-            console.log('🔧 Using tabs.executeScript (Firefox)');
+            _log('🔧 Using tabs.executeScript (Firefox)');
             return new Promise((resolve, reject) => {
                 const code = args ? `(${func.toString()})(${args.map(arg => JSON.stringify(arg)).join(', ')})` : `(${func.toString()})()`;
                 fullPageCapture_extensionAPI.tabs.executeScript(tabId, { code }, (results) => {
@@ -1134,7 +1124,7 @@ class FullPageCapture {
      */
     static async stitchFirefoxScreenshotsWithOverlap(screenshots, width, viewportHeight, totalHeight, scrollPositions, overlap) {
         try {
-            console.log('🔧 Firefox PRECISION stitching:', {
+            _log('🔧 Firefox PRECISION stitching:', {
                 screenshots: screenshots.length,
                 targetWidth: width,
                 viewportHeight,
@@ -1155,7 +1145,7 @@ class FullPageCapture {
             for (let i = 0; i < screenshots.length; i++) {
                 const screenshot = screenshots[i];
                 const scrollY = scrollPositions[i];
-                console.log(`🔧 Firefox: Stitching section ${i + 1} at scroll Y=${scrollY}`);
+                _log(`🔧 Firefox: Stitching section ${i + 1} at scroll Y=${scrollY}`);
                 // Convert data URL to ImageBitmap
                 const response = await fetch(screenshot);
                 const blob = await response.blob();
@@ -1163,7 +1153,7 @@ class FullPageCapture {
                 if (i === 0) {
                     // First image - draw completely
                     ctx.drawImage(imageBitmap, 0, 0, width, viewportHeight, 0, 0, width, viewportHeight);
-                    console.log(`🔧 Firefox: Drew first section at Y=0`);
+                    _log(`🔧 Firefox: Drew first section at Y=0`);
                 }
                 else {
                     // Subsequent images - handle overlap
@@ -1177,12 +1167,12 @@ class FullPageCapture {
                         ctx.drawImage(imageBitmap, 0, sourceY, width, finalHeight, // Source
                         0, destY, width, finalHeight // Destination
                         );
-                        console.log(`🔧 Firefox: Drew section ${i + 1} from sourceY=${sourceY} to destY=${destY}, height=${finalHeight}`);
+                        _log(`🔧 Firefox: Drew section ${i + 1} from sourceY=${sourceY} to destY=${destY}, height=${finalHeight}`);
                     }
                 }
                 imageBitmap.close();
             }
-            console.log(`🔧 Firefox: Stitching completed, canvas height: ${totalHeight}`);
+            _log(`🔧 Firefox: Stitching completed, canvas height: ${totalHeight}`);
             // Convert to data URL
             const blob = await canvas.convertToBlob({ type: 'image/png' });
             return new Promise((resolve, reject) => {
@@ -1243,23 +1233,12 @@ class FullPageCapture {
      * Check if full page capture is supported
      */
     static isSupported() {
-        console.log('🔧 Checking FullPageCapture support...');
-        console.log('🔧 extensionAPI available:', !!fullPageCapture_extensionAPI);
-        console.log('🔧 tabs API available:', !!fullPageCapture_extensionAPI?.tabs);
-        console.log('🔧 captureVisibleTab available:', typeof fullPageCapture_extensionAPI?.tabs?.captureVisibleTab === 'function');
-        console.log('🔧 scripting API available:', !!fullPageCapture_extensionAPI?.scripting);
-        console.log('🔧 executeScript available:', typeof fullPageCapture_extensionAPI?.scripting?.executeScript === 'function');
-        console.log('🔧 tabs.executeScript available:', typeof fullPageCapture_extensionAPI?.tabs?.executeScript === 'function');
-        // Firefox uses tabs.executeScript (Manifest V2), Chrome uses scripting.executeScript (Manifest V3)
         const hasScriptExecution = !!((fullPageCapture_extensionAPI?.scripting && typeof fullPageCapture_extensionAPI.scripting.executeScript === 'function') ||
             (fullPageCapture_extensionAPI?.tabs && typeof fullPageCapture_extensionAPI.tabs.executeScript === 'function'));
-        const isSupported = !!(fullPageCapture_extensionAPI &&
+        return !!(fullPageCapture_extensionAPI &&
             fullPageCapture_extensionAPI.tabs &&
             typeof fullPageCapture_extensionAPI.tabs.captureVisibleTab === 'function' &&
             hasScriptExecution);
-        console.log('🔧 hasScriptExecution:', hasScriptExecution);
-        console.log('🔧 FullPageCapture isSupported:', isSupported);
-        return isSupported;
     }
 }
 FullPageCapture.DEFAULT_OPTIONS = {
@@ -1274,20 +1253,95 @@ FullPageCapture.DEFAULT_OPTIONS = {
 // Service Worker for Manifest V3
 
 
-// Debug mode - set to true for verbose logging
-const DEBUG = false;
-const log = (...args) => {
-    if (DEBUG)
-        console.log(...args);
-};
-console.log('PageStash background script loaded');
-// Firefox compatibility layer
+const DEBUG = "production" !== 'production';
+const log = (...args) => { if (DEBUG)
+    console.log('[PageStash]', ...args); };
 const background_extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+const UNSCRIPTABLE_PATTERNS = [
+    /^chrome:/i,
+    /^chrome-extension:/i,
+    /^about:/i,
+    /^edge:/i,
+    /^brave:/i,
+    /^moz-extension:/i,
+    /^view-source:/i,
+    /^devtools:/i,
+    /^chrome\.google\.com\/webstore/i,
+    /^chromewebstore\.google\.com/i,
+    /^addons\.mozilla\.org/i,
+    /^microsoftedge\.microsoft\.com\/addons/i,
+];
+function isUnscriptablePage(url) {
+    if (!url)
+        return true;
+    return UNSCRIPTABLE_PATTERNS.some(p => p.test(url));
+}
+function sendProgress(status, message, extra) {
+    background_extensionAPI.runtime.sendMessage({
+        type: 'CAPTURE_PROGRESS',
+        payload: { status, message, ...extra }
+    }).catch(() => { });
+}
+async function showPageToast(tabId, message, type = 'success') {
+    try {
+        await background_extensionAPI.scripting.executeScript({
+            target: { tabId },
+            func: (msg, toastType) => {
+                const existing = document.getElementById('__pagestash-toast');
+                if (existing)
+                    existing.remove();
+                const toast = document.createElement('div');
+                toast.id = '__pagestash-toast';
+                const isSuccess = toastType === 'success';
+                const isSaving = toastType === 'saving';
+                const bg = isSuccess ? '#059669' : isSaving ? '#2563eb' : '#dc2626';
+                const icon = isSuccess ? '✓' : isSaving ? '⟳' : '✕';
+                Object.assign(toast.style, {
+                    position: 'fixed', top: '20px', right: '20px', zIndex: '2147483647',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '12px 20px', borderRadius: '12px',
+                    background: bg, color: '#fff', fontFamily: "'Inter', system-ui, sans-serif",
+                    fontSize: '14px', fontWeight: '600', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                    transform: 'translateY(-10px)', opacity: '0',
+                    transition: 'transform 0.3s ease, opacity 0.3s ease',
+                });
+                const iconSpan = document.createElement('span');
+                Object.assign(iconSpan.style, { fontSize: '16px', ...(isSaving ? { animation: 'pagestash-spin 1s linear infinite', display: 'inline-block' } : {}) });
+                iconSpan.textContent = icon;
+                toast.appendChild(iconSpan);
+                const text = document.createElement('span');
+                text.textContent = msg;
+                toast.appendChild(text);
+                if (isSaving) {
+                    const style = document.createElement('style');
+                    style.textContent = '@keyframes pagestash-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+                    toast.appendChild(style);
+                }
+                document.body.appendChild(toast);
+                requestAnimationFrame(() => {
+                    toast.style.transform = 'translateY(0)';
+                    toast.style.opacity = '1';
+                });
+                if (!isSaving) {
+                    setTimeout(() => {
+                        toast.style.transform = 'translateY(-10px)';
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+            },
+            args: [message, type],
+        });
+    }
+    catch {
+        // Tab may have navigated away — ignore
+    }
+}
 // Session monitor state
 let sessionRefreshInterval = null;
 // Handle extension installation
 background_extensionAPI.runtime.onInstalled.addListener((details) => {
-    console.log('PageStash extension installed:', details.reason);
+    log('Extension installed:', details.reason);
     if (details.reason === 'install') {
         // Set up initial extension state
         background_extensionAPI.storage.local.set({
@@ -1303,7 +1357,7 @@ background_extensionAPI.runtime.onInstalled.addListener((details) => {
 // Restore session on browser startup
 if (background_extensionAPI.runtime.onStartup) {
     background_extensionAPI.runtime.onStartup.addListener(async () => {
-        console.log('🔐 Extension startup - restoring session');
+        log('Restoring session');
         await ExtensionAuth.restoreSession();
         startSessionMonitor();
     });
@@ -1319,24 +1373,24 @@ function startSessionMonitor() {
         try {
             const { token } = await ExtensionAuth.getSession();
             if (token) {
-                console.log('🔐 Session is active');
+                log('Session is active');
                 // Token validation happens on API calls
                 // If token is expired, API will return 401 and user will need to sign in again
             }
             else {
-                console.log('🔐 No active session');
+                log('No active session');
             }
         }
         catch (error) {
             console.error('Session monitor error:', error);
         }
     }, 5 * 60 * 1000); // Every 5 minutes
-    console.log('🔐 Session monitor started');
+    log('Session monitor started');
 }
 // Stop monitor on shutdown
 if (background_extensionAPI.runtime.onSuspend) {
     background_extensionAPI.runtime.onSuspend.addListener(() => {
-        console.log('🔐 Stopping session monitor');
+        log('Stopping session monitor');
         if (sessionRefreshInterval) {
             clearInterval(sessionRefreshInterval);
         }
@@ -1348,11 +1402,11 @@ const actionAPI = background_extensionAPI.action || background_extensionAPI.brow
 if (actionAPI && actionAPI.onClicked) {
     actionAPI.onClicked.addListener(async (tab) => {
         // The popup will handle the interaction
-        console.log('Extension clicked on tab:', tab?.url);
+        log('Extension clicked on tab:', tab?.url);
     });
 }
 else {
-    console.log('🔧 Action API not available (popup will be used instead)');
+    log('Action API not available (popup will be used instead)');
 }
 // Global capture state
 let currentCaptureController = null;
@@ -1383,52 +1437,178 @@ background_extensionAPI.runtime.onMessage.addListener((message, sender, sendResp
             return true; // Keep message channel open for async response
         case 'CREATE_FOLDER':
             handleCreateFolder(message.payload, sendResponse);
-            return true; // Keep message channel open for async response
+            return true;
+        case 'AREA_SELECT':
+            handleAreaSelect();
+            break;
+        case 'AREA_SELECTED':
+            handleAreaSelected(message.payload, sender);
+            break;
         default:
             console.warn('Unknown message type:', message.type);
     }
 });
+async function handleAreaSelect() {
+    try {
+        const [tab] = await background_extensionAPI.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id)
+            return;
+        if (isUnscriptablePage(tab.url)) {
+            sendProgress('error', 'This page is protected by the browser and cannot be captured. Try a regular webpage.');
+            return;
+        }
+        await background_extensionAPI.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['areaSelect.js'],
+        });
+    }
+    catch (err) {
+        console.error('Area select injection failed:', err);
+        sendProgress('error', 'Could not open area selector on this page.');
+    }
+}
+async function handleAreaSelected(rect, sender) {
+    try {
+        sendProgress('capturing', 'Capturing selected area...');
+        const tab = sender?.tab || (await background_extensionAPI.tabs.query({ active: true, currentWindow: true }))[0];
+        if (!tab?.id)
+            throw new Error('No active tab');
+        const fullScreenshot = await background_extensionAPI.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
+        // Crop to selected area using offscreen canvas
+        const dpr = rect.devicePixelRatio || 1;
+        const cropResult = await background_extensionAPI.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: (dataUrl, x, y, w, h, dpr) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w * dpr;
+                        canvas.height = h * dpr;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, x * dpr, y * dpr, w * dpr, h * dpr, 0, 0, w * dpr, h * dpr);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.src = dataUrl;
+                });
+            },
+            args: [fullScreenshot, rect.x, rect.y, rect.width, rect.height, dpr],
+        });
+        const croppedDataUrl = cropResult?.[0]?.result;
+        if (!croppedDataUrl)
+            throw new Error('Failed to crop screenshot');
+        // Extract page content (HTML + text)
+        let pageContent = {};
+        try {
+            const result = await background_extensionAPI.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => {
+                    const rawHtml = document.documentElement.outerHTML;
+                    const cleaned = rawHtml
+                        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                        .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
+                    const text = document.body.innerText?.substring(0, 50000) || '';
+                    const faviconEl = document.querySelector('link[rel*="icon"]');
+                    return {
+                        html_content: cleaned,
+                        text_content: text,
+                        favicon_url: faviconEl?.href || `${location.protocol}//${location.host}/favicon.ico`,
+                    };
+                },
+            });
+            pageContent = result?.[0]?.result || {};
+        }
+        catch (e) {
+            console.warn('Area capture content extraction failed:', e);
+        }
+        sendProgress('saving', 'Saving capture...');
+        showPageToast(tab.id, 'Saving area capture...', 'saving');
+        const clipData = {
+            url: tab.url || '',
+            title: tab.title || '',
+            screenshot_data: croppedDataUrl,
+            html_content: pageContent.html_content || '',
+            text_content: pageContent.text_content || '',
+            favicon_url: pageContent.favicon_url || '',
+            notes: `Area capture (${rect.width}×${rect.height}px)`,
+        };
+        log('Area clip data:', {
+            url: clipData.url,
+            title: clipData.title,
+            hasScreenshot: !!clipData.screenshot_data,
+            htmlLength: clipData.html_content.length,
+            textLength: clipData.text_content.length,
+        });
+        const isAuthenticated = await ExtensionAuth.restoreSession();
+        if (isAuthenticated) {
+            try {
+                const saveResult = await ExtensionAPI.saveClip(clipData);
+                sendProgress('complete', 'Area captured!', { usage: saveResult.usage });
+                showPageToast(tab.id, 'Area saved to PageStash', 'success');
+            }
+            catch (saveError) {
+                if (saveError?.isLimitReached) {
+                    sendProgress('limit_reached', 'Monthly clip limit reached', { limitInfo: saveError.limitInfo });
+                    showPageToast(tab.id, 'Monthly clip limit reached', 'error');
+                }
+                else {
+                    throw saveError;
+                }
+            }
+        }
+        else {
+            sendProgress('complete', 'Area saved locally (sign in to sync)');
+            showPageToast(tab.id, 'Saved locally (sign in to sync)', 'success');
+        }
+    }
+    catch (error) {
+        console.error('Area capture failed:', error);
+        sendProgress('error', error instanceof Error ? error.message : 'Area capture failed');
+        // Show error toast on the page
+        try {
+            const [activeTab] = await background_extensionAPI.tabs.query({ active: true, currentWindow: true });
+            if (activeTab?.id)
+                showPageToast(activeTab.id, 'Capture failed — please try again', 'error');
+        }
+        catch { /* ignore */ }
+    }
+}
 function handleCancelCapture() {
-    console.log('Cancelling current capture...');
+    log('Cancelling current capture');
     if (currentCaptureController) {
         currentCaptureController.abort();
         currentCaptureController = null;
     }
-    background_extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'cancelled', message: 'Capture cancelled by user' }
-    });
+    sendProgress('cancelled', 'Capture cancelled');
 }
 async function handlePageCaptureWithActiveTab(payload) {
     try {
-        // Get the active tab since popup messages don't have sender.tab
         const [activeTab] = await background_extensionAPI.tabs.query({ active: true, currentWindow: true });
         if (!activeTab) {
-            console.error('No active tab found');
-            background_extensionAPI.runtime.sendMessage({
-                type: 'CAPTURE_PROGRESS',
-                payload: { status: 'error', message: 'No active tab found' }
-            });
+            sendProgress('error', 'No active tab found');
             return;
         }
-        console.log('Found active tab:', activeTab.url);
+        if (isUnscriptablePage(activeTab.url)) {
+            sendProgress('error', 'This page is protected by the browser and cannot be captured. Navigate to a regular webpage and try again.');
+            return;
+        }
+        if (activeTab.status === 'loading') {
+            sendProgress('error', 'Page is still loading. Wait for it to finish, then try again.');
+            return;
+        }
+        log('Found active tab:', activeTab.url);
         await handlePageCapture(payload, activeTab);
     }
     catch (error) {
         console.error('Failed to get active tab:', error);
-        background_extensionAPI.runtime.sendMessage({
-            type: 'CAPTURE_PROGRESS',
-            payload: { status: 'error', message: 'Failed to access active tab' }
-        });
+        sendProgress('error', 'Failed to access active tab');
     }
 }
 async function handlePageCapture(payload, tab) {
     if (!tab?.id) {
         console.error('No tab ID provided for capture');
-        background_extensionAPI.runtime.sendMessage({
-            type: 'CAPTURE_PROGRESS',
-            payload: { status: 'error', message: 'No active tab found' }
-        });
+        sendProgress('error', 'No active tab found');
         return;
     }
     // Create abort controller for this capture
@@ -1440,13 +1620,9 @@ async function handlePageCapture(payload, tab) {
     const timeoutId = setTimeout(() => {
         if (currentCaptureController) {
             currentCaptureController.abort();
-            const errorMsg = captureType === 'fullPage'
-                ? 'This page is very large and took too long to capture. Try capturing just the visible area instead.'
-                : 'Capture timed out. Please try again.';
-            background_extensionAPI.runtime.sendMessage({
-                type: 'CAPTURE_PROGRESS',
-                payload: { status: 'error', message: errorMsg }
-            });
+            sendProgress('error', captureType === 'fullPage'
+                ? 'This page is very large. Try capturing just the visible area instead.'
+                : 'Capture timed out. Please try again.');
         }
     }, timeoutMs);
     try {
@@ -1456,56 +1632,81 @@ async function handlePageCapture(payload, tab) {
             clearTimeout(timeoutId);
             return;
         }
-        // Step 1: Get page content from content script
-        background_extensionAPI.runtime.sendMessage({
-            type: 'CAPTURE_PROGRESS',
-            payload: { status: 'extracting', message: 'Extracting page content...' }
-        });
+        sendProgress('extracting', 'Extracting page content...');
         let pageContent = {};
-        try {
+        let contentExtractionFailed = false;
+        const extractContent = async (tabId) => {
             const extractionResults = await background_extensionAPI.scripting.executeScript({
-                target: { tabId: tab.id },
+                target: { tabId },
                 func: () => {
-                    const html = document.documentElement.outerHTML;
-                    const cleanedHtml = html
-                        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-                        .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
-                    const text = cleanedHtml
-                        .replace(/<[^>]*>/g, ' ')
-                        .replace(/&nbsp;/g, ' ')
-                        .replace(/&amp;/g, '&')
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        .replace(/\s+/g, ' ')
-                        .trim();
-                    const faviconLink = document.querySelector('link[rel*="icon"]');
-                    const favicon = faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`;
-                    return {
-                        url: window.location.href,
-                        title: document.title || '',
-                        html: cleanedHtml,
-                        text: text,
-                        favicon: favicon
-                    };
+                    try {
+                        const rawHtml = document.documentElement.outerHTML || '';
+                        const cleanedHtml = rawHtml
+                            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                            .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
+                        const bodyText = document.body?.innerText?.substring(0, 50000) || '';
+                        const faviconLink = document.querySelector('link[rel*="icon"]');
+                        const favicon = faviconLink?.href || `${location.protocol}//${location.host}/favicon.ico`;
+                        const metaDesc = document.querySelector('meta[name="description"]')?.content || '';
+                        const metaKeywords = document.querySelector('meta[name="keywords"]')?.content || '';
+                        return {
+                            url: location.href,
+                            title: document.title || '',
+                            html: cleanedHtml,
+                            text: bodyText,
+                            favicon,
+                            metaDescription: metaDesc,
+                            metaKeywords,
+                            htmlLength: cleanedHtml.length,
+                            textLength: bodyText.length,
+                        };
+                    }
+                    catch (innerErr) {
+                        return { error: String(innerErr), url: location.href, title: document.title || '' };
+                    }
                 }
             });
-            if (extractionResults && extractionResults[0]?.result) {
-                pageContent = extractionResults[0].result;
+            const result = extractionResults?.[0]?.result;
+            if (!result || result.error) {
+                throw new Error(result?.error || 'Content extraction returned no results');
             }
-            else {
-                throw new Error('Content extraction returned no results');
+            return result;
+        };
+        // Attempt extraction with one retry
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                pageContent = await extractContent(tab.id);
+                log(`Content extraction (attempt ${attempt}):`, {
+                    url: pageContent.url,
+                    htmlLength: pageContent.htmlLength,
+                    textLength: pageContent.textLength,
+                    hasTitle: !!pageContent.title,
+                });
+                if (pageContent.htmlLength === 0 && pageContent.textLength === 0) {
+                    console.warn(`⚠️ Extraction returned empty content on attempt ${attempt}`);
+                    if (attempt === 1) {
+                        await new Promise(r => setTimeout(r, 500));
+                        continue;
+                    }
+                    contentExtractionFailed = true;
+                }
+                break;
             }
-        }
-        catch (extractError) {
-            log('Content extraction failed, using tab metadata:', extractError);
-            pageContent = {
-                url: payload.url,
-                title: payload.title,
-                html: '',
-                text: '',
-                favicon: payload.favicon
-            };
+            catch (extractError) {
+                console.error(`Content extraction attempt ${attempt} failed:`, extractError);
+                if (attempt === 2) {
+                    contentExtractionFailed = true;
+                    pageContent = {
+                        url: payload.url,
+                        title: payload.title,
+                        html: '',
+                        text: '',
+                        favicon: payload.favicon
+                    };
+                }
+                await new Promise(r => setTimeout(r, 500));
+            }
         }
         // Check if cancelled after content extraction
         if (signal.aborted) {
@@ -1515,123 +1716,88 @@ async function handlePageCapture(payload, tab) {
         // Step 2: Capture screenshot
         let screenshot;
         if (captureType === 'fullPage' && FullPageCapture.isSupported()) {
-            console.log('Starting full-page capture for:', payload.url);
-            // Send progress message to popup
-            background_extensionAPI.runtime.sendMessage({
-                type: 'CAPTURE_PROGRESS',
-                payload: { status: 'capturing', message: 'Capturing full page...' }
-            });
-            const result = await FullPageCapture.captureFullPage(tab.id, {
-                quality: 90,
-                format: 'png',
-                scrollDelay: 500, // Increased to match the rate limiting
-            });
-            // Check if cancelled during capture
-            if (signal.aborted) {
-                clearTimeout(timeoutId);
-                return;
+            log('Starting full-page capture for:', payload.url);
+            sendProgress('capturing', 'Capturing full page screenshot...');
+            try {
+                const result = await FullPageCapture.captureFullPage(tab.id, {
+                    quality: 90,
+                    format: 'png',
+                    scrollDelay: 500,
+                });
+                if (signal.aborted) {
+                    clearTimeout(timeoutId);
+                    return;
+                }
+                screenshot = result.dataUrl;
+                log(`Full-page capture completed: ${result.width}x${result.height}px in ${result.captureTime}ms`);
             }
-            screenshot = result.dataUrl;
-            console.log(`Full-page capture completed: ${result.width}x${result.height}px in ${result.captureTime}ms`);
+            catch (fullPageErr) {
+                console.warn('Full-page capture failed, falling back to visible area:', fullPageErr);
+                sendProgress('capturing', 'Full page failed — capturing visible area instead...');
+                screenshot = await background_extensionAPI.tabs.captureVisibleTab(tab.windowId, { format: 'png', quality: 90 });
+            }
         }
         else {
-            // Fallback to visible area capture
-            console.log('Capturing visible area for:', payload.url);
-            background_extensionAPI.runtime.sendMessage({
-                type: 'CAPTURE_PROGRESS',
-                payload: { status: 'capturing', message: 'Capturing visible area...' }
-            });
-            screenshot = await background_extensionAPI.tabs.captureVisibleTab(tab.windowId, {
-                format: 'png',
-                quality: 90
-            });
+            log('Capturing visible area for:', payload.url);
+            sendProgress('capturing', 'Capturing visible area...');
+            screenshot = await background_extensionAPI.tabs.captureVisibleTab(tab.windowId, { format: 'png', quality: 90 });
         }
         // Check if cancelled after capture
         if (signal.aborted) {
             clearTimeout(timeoutId);
             return;
         }
-        console.log('Screenshot captured successfully');
-        // Send saving progress
-        background_extensionAPI.runtime.sendMessage({
-            type: 'CAPTURE_PROGRESS',
-            payload: { status: 'saving', message: 'Saving capture...' }
-        });
-        // Prepare clip data using extracted page content
+        log('Screenshot captured successfully');
+        sendProgress('saving', 'Saving capture...');
+        const faviconUrl = pageContent.favicon || payload.favicon || '';
         const clipData = {
             url: pageContent.url || payload.url,
             title: pageContent.title || payload.title,
             screenshot_data: screenshot,
             html_content: pageContent.html || '',
             text_content: pageContent.text || '',
-            // Use favicon from content script or fallback to popup data
-            ...((pageContent.favicon || payload.favicon) && (pageContent.favicon || payload.favicon).startsWith('http')
-                ? { favicon_url: pageContent.favicon || payload.favicon }
-                : {}),
-            // Include folder ID if provided
+            ...(faviconUrl.startsWith('http') ? { favicon_url: faviconUrl } : {}),
             ...(payload.folderId ? { folder_id: payload.folderId } : {}),
+            ...(pageContent.metaDescription ? { meta_description: pageContent.metaDescription } : {}),
         };
-        console.log('✅ Prepared clip data:', {
+        log('Prepared clip data:', {
             url: clipData.url,
             title: clipData.title,
             hasScreenshot: !!clipData.screenshot_data,
             htmlLength: clipData.html_content.length,
             textLength: clipData.text_content.length,
-            hasFavicon: !!clipData.favicon_url
+            hasFavicon: !!clipData.favicon_url,
+            contentExtractionFailed,
         });
-        // DEBUG: Check if content is actually empty
-        if (!clipData.html_content || clipData.html_content.length === 0) {
-            console.warn('⚠️ WARNING: html_content is empty!');
-        }
-        if (!clipData.text_content || clipData.text_content.length === 0) {
-            console.warn('⚠️ WARNING: text_content is empty!');
-        }
-        // Check if user is authenticated
         const { token } = await ExtensionAuth.getSession();
+        const contentNote = contentExtractionFailed ? ' (screenshot only — text extraction failed on this page)' : '';
         if (token) {
             try {
-                // Save to Supabase
                 const saveResult = await ExtensionAPI.saveClip(clipData);
-                console.log('Clip saved to Supabase successfully');
-                // Check if cancelled during save
+                log('Clip saved successfully');
                 if (signal.aborted) {
                     clearTimeout(timeoutId);
                     return;
                 }
-                // Send success message to popup with usage data
-                background_extensionAPI.runtime.sendMessage({
-                    type: 'CAPTURE_PROGRESS',
-                    payload: {
-                        status: 'complete',
-                        message: 'Capture saved to cloud!',
-                        usage: saveResult.usage // Include usage data from API response
-                    }
-                });
+                sendProgress('complete', `Capture saved!${contentNote}`, { usage: saveResult.usage });
             }
             catch (error) {
                 console.error('Failed to save to Supabase:', error);
-                // Check if cancelled during error handling
                 if (signal.aborted) {
                     clearTimeout(timeoutId);
                     return;
                 }
-                // Fallback to local storage
+                if (error?.isLimitReached) {
+                    sendProgress('limit_reached', 'Monthly clip limit reached', { limitInfo: error.limitInfo });
+                    return;
+                }
                 await saveClipLocally(clipData);
-                // Send success message (local only)
-                background_extensionAPI.runtime.sendMessage({
-                    type: 'CAPTURE_PROGRESS',
-                    payload: { status: 'complete', message: 'Capture saved locally (will sync when online)' }
-                });
+                sendProgress('complete', 'Saved locally (will sync when online).' + contentNote);
             }
         }
         else {
-            // Save locally when not authenticated
             await saveClipLocally(clipData);
-            // Send success message (local only)
-            background_extensionAPI.runtime.sendMessage({
-                type: 'CAPTURE_PROGRESS',
-                payload: { status: 'complete', message: 'Capture saved locally (sign in to sync)' }
-            });
+            sendProgress('complete', `Saved locally (sign in to sync)${contentNote}`);
         }
         // Update capture count
         background_extensionAPI.storage.local.get(['captureCount'], (result) => {
@@ -1651,11 +1817,7 @@ async function handlePageCapture(payload, tab) {
         if (signal.aborted) {
             return;
         }
-        // Send error message to popup
-        background_extensionAPI.runtime.sendMessage({
-            type: 'CAPTURE_PROGRESS',
-            payload: { status: 'error', message: error instanceof Error ? error.message : 'Capture failed' }
-        });
+        sendProgress('error', error instanceof Error ? error.message : 'Capture failed. Please try again.');
     }
 }
 async function saveClipLocally(clipData) {
@@ -1674,7 +1836,7 @@ async function saveClipLocally(clipData) {
                 localClips.splice(100);
             }
             background_extensionAPI.storage.local.set({ localClips }, () => {
-                console.log('Clip saved locally');
+                log('Clip saved locally');
                 resolve();
             });
         });
@@ -1694,17 +1856,17 @@ async function handleGetAuthToken(sendResponse) {
 }
 async function handleAuthenticate(payload, sendResponse) {
     try {
-        console.log('🔧 Background: Handling authentication:', payload.isSignUp ? 'sign up' : 'sign in', 'for', payload.email);
+        log('Handling authentication:', payload.isSignUp ? 'sign up' : 'sign in');
         let result;
         if (payload.isSignUp) {
-            console.log('🔧 Background: Calling ExtensionAuth.signUp');
+            log('Calling signUp');
             result = await ExtensionAuth.signUp(payload.email, payload.password);
         }
         else {
-            console.log('🔧 Background: Calling ExtensionAuth.signIn');
+            log('Calling signIn');
             result = await ExtensionAuth.signIn(payload.email, payload.password);
         }
-        console.log('🔧 Background: Auth result:', {
+        log('Auth result:', {
             hasData: !!result.data,
             hasError: !!result.error,
             errorMessage: result.error?.message
@@ -1714,7 +1876,7 @@ async function handleAuthenticate(payload, sendResponse) {
             sendResponse({ error: result.error });
         }
         else {
-            console.log('🔧 Background: Authentication successful, sending response');
+            log('Authentication successful');
             sendResponse({ data: result.data });
         }
     }
@@ -1725,7 +1887,7 @@ async function handleAuthenticate(payload, sendResponse) {
 }
 async function handleSignOut(sendResponse) {
     try {
-        console.log('Handling sign out');
+        log('Handling sign out');
         await ExtensionAuth.signOut();
         sendResponse({ success: true });
     }
@@ -1800,7 +1962,7 @@ async function syncLocalClips() {
         if (unsyncedClips.length === 0) {
             return;
         }
-        console.log(`Syncing ${unsyncedClips.length} local clips...`);
+        log(`Syncing ${unsyncedClips.length} local clips`);
         for (const clip of unsyncedClips) {
             try {
                 await ExtensionAPI.saveClip({
@@ -1820,7 +1982,7 @@ async function syncLocalClips() {
         }
         // Update local storage with synced status
         background_extensionAPI.storage.local.set({ localClips: result.localClips });
-        console.log('Local clips sync completed');
+        log('Local clips sync completed');
     }
     catch (error) {
         console.error('Failed to sync local clips:', error);

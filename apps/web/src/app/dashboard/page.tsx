@@ -37,7 +37,9 @@ import {
   CheckSquare,
   Square,
   Moon,
-  Sun
+  Sun,
+  ChevronDown,
+  Check
 } from 'lucide-react'
 import { 
   DropdownMenu,
@@ -128,6 +130,158 @@ interface DashboardState {
   // Server-side search results (populated when searchQuery is non-empty)
   searchResults: Clip[] | null
   isSearching: boolean
+}
+
+function TagFilterDropdown({
+  tags,
+  selectedTagId,
+  onSelect,
+}: {
+  tags: Array<{ id: string; name: string; color?: string }>
+  selectedTagId: string | null
+  onSelect: (tagId: string | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!open) { setSearch(''); return }
+    const t = setTimeout(() => inputRef.current?.focus(), 50)
+    return () => clearTimeout(t)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [open])
+
+  const filtered = tags.filter(t =>
+    t.name.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const selectedTag = tags.find(t => t.id === selectedTagId)
+  const DEFAULT_COLORS = ['#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#6366f1', '#14b8a6']
+  const tagColor = (tag: { color?: string }, i: number) => tag.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length]
+
+  return (
+    <div ref={containerRef} className="relative flex-shrink-0">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={`h-9 flex items-center gap-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-150 border ${
+          selectedTagId
+            ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/40 text-blue-700 dark:text-blue-300'
+            : 'bg-slate-100 dark:bg-slate-800 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+        }`}
+      >
+        <Tag className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
+        <span className="max-w-[120px] truncate">
+          {selectedTag ? selectedTag.name : 'All Tags'}
+        </span>
+        {selectedTagId ? (
+          <span
+            role="button"
+            onClick={(e) => { e.stopPropagation(); onSelect(null); setOpen(false) }}
+            className="ml-0.5 rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors"
+          >
+            <X className="h-3 w-3" />
+          </span>
+        ) : (
+          <ChevronDown className={`h-3.5 w-3.5 opacity-50 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 rounded-xl shadow-xl shadow-slate-200/40 dark:shadow-black/30 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
+          {/* Search */}
+          <div className="p-2 border-b border-slate-100 dark:border-slate-800">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                ref={inputRef}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search tags..."
+                className="w-full h-8 pl-8 pr-3 text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-300 dark:focus:border-blue-600 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Options */}
+          <div className="max-h-56 overflow-y-auto overscroll-contain py-1">
+            {/* All Tags option */}
+            <button
+              onClick={() => { onSelect(null); setOpen(false) }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                !selectedTagId
+                  ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <div className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                <Tag className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+              </div>
+              <span className="font-medium">All Tags</span>
+              {!selectedTagId && <Check className="h-3.5 w-3.5 ml-auto text-blue-600 dark:text-blue-400" />}
+            </button>
+
+            {filtered.length > 0 && (
+              <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2 my-1" />
+            )}
+
+            {filtered.map((tag, i) => {
+              const isSelected = tag.id === selectedTagId
+              const color = tagColor(tag, i)
+              return (
+                <button
+                  key={tag.id}
+                  onClick={() => { onSelect(tag.id); setOpen(false) }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                    isSelected
+                      ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-slate-900"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="truncate">{tag.name}</span>
+                  {isSelected && <Check className="h-3.5 w-3.5 ml-auto text-blue-600 dark:text-blue-400 flex-shrink-0" />}
+                </button>
+              )
+            })}
+
+            {filtered.length === 0 && search && (
+              <div className="px-3 py-6 text-center">
+                <p className="text-sm text-slate-400 dark:text-slate-500">No tags matching &ldquo;{search}&rdquo;</p>
+              </div>
+            )}
+
+            {tags.length === 0 && (
+              <div className="px-3 py-6 text-center">
+                <Tag className="h-5 w-5 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-400 dark:text-slate-500">No tags yet</p>
+                <p className="text-xs text-slate-400/70 dark:text-slate-500/70 mt-0.5">Add tags to clips to filter here</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function DashboardContent() {
@@ -1163,7 +1317,11 @@ function DashboardContent() {
 
             {/* Usage Stats - Only show when subscription data is loaded */}
             {!state.isSubscriptionLoading && (
-              <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
+              <Card className={`border shadow-sm ${
+                state.clipsThisMonth >= state.clipsLimit
+                  ? 'border-red-200 dark:border-red-800/30 bg-red-50/50 dark:bg-red-950/10'
+                  : 'border-slate-200/70 dark:border-white/10 bg-white dark:bg-slate-900'
+              }`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">Usage</CardTitle>
@@ -1182,7 +1340,11 @@ function DashboardContent() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-600 dark:text-slate-400">Clips this month</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">{state.clipsThisMonth}/{state.clipsLimit}</span>
+                      <span className={`font-semibold ${
+                        state.clipsThisMonth >= state.clipsLimit 
+                          ? 'text-red-600 dark:text-red-400' 
+                          : 'text-slate-900 dark:text-white'
+                      }`}>{state.clipsThisMonth}/{state.clipsLimit}</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
                       <div 
@@ -1196,9 +1358,15 @@ function DashboardContent() {
                         style={{ width: `${Math.min((state.clipsThisMonth / state.clipsLimit) * 100, 100)}%` }}
                       />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {state.clipsLimit - state.clipsThisMonth} clips remaining this month
-                    </p>
+                    {state.clipsThisMonth >= state.clipsLimit ? (
+                      <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                        Monthly limit reached — resets next month
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {state.clipsLimit - state.clipsThisMonth} clips remaining this month
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1330,16 +1498,11 @@ function DashboardContent() {
 
               {/* Secondary row: filters + sort + view — scrollable on mobile */}
               <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
-                <select
-                  value={state.selectedTag || 'all-tags'}
-                  onChange={(e) => handleTagFilterChange(e.target.value)}
-                  className="h-9 px-2 bg-slate-100 dark:bg-slate-800 border border-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-0 transition-all duration-200 rounded-lg text-sm flex-shrink-0"
-                >
-                  <option value="all-tags">All Tags</option>
-                  {state.availableTags.map((tag) => (
-                    <option key={tag.id} value={tag.id}>{tag.name}</option>
-                  ))}
-                </select>
+                <TagFilterDropdown
+                  tags={state.availableTags}
+                  selectedTagId={state.selectedTag}
+                  onSelect={(tagId) => handleTagFilterChange(tagId || 'all-tags')}
+                />
 
                 <select
                   value={state.sortBy}
@@ -1590,9 +1753,17 @@ function DashboardContent() {
       <ClipUrlModal
         isOpen={state.isClipUrlModalOpen}
         onClose={() => setState(prev => ({ ...prev, isClipUrlModalOpen: false }))}
-        onSuccess={() => {
-          // Reload clips after successful capture
+        onSuccess={(usage) => {
           loadData(true)
+          if (usage) {
+            setState(prev => ({
+              ...prev,
+              clipsThisMonth: usage.clips_this_month,
+              clipsLimit: usage.clips_limit,
+            }))
+          } else {
+            refreshSubscriptionData()
+          }
         }}
       />
 

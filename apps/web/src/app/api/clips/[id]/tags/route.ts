@@ -87,7 +87,7 @@ export async function PUT(
       .eq('clip_id', id)
 
     if (tagNames.length === 0) {
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ success: true, tags: [] })
     }
 
     // Create tags that don't exist and get all tag IDs
@@ -100,12 +100,16 @@ export async function PUT(
       if (trimmedName.length === 0) continue
 
       // Try to get existing tag
-      let { data: existingTag } = await supabase
+      let { data: existingTag, error: lookupError } = await supabase
         .from('tags')
         .select('id')
         .eq('user_id', user.id)
         .eq('name', trimmedName)
-        .single()
+        .maybeSingle()
+
+      if (lookupError) {
+        console.error('Error looking up tag:', lookupError)
+      }
 
       if (!existingTag) {
         // Create new tag
@@ -119,10 +123,26 @@ export async function PUT(
           .single()
 
         if (tagError) {
-          console.error('Error creating tag:', tagError)
-          continue
+          console.error('Error creating tag:', tagError, 'for name:', trimmedName)
+          // If it's a unique constraint violation, try fetching the tag again
+          if (tagError.code === '23505') {
+            const { data: retryTag } = await supabase
+              .from('tags')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('name', trimmedName)
+              .maybeSingle()
+            if (retryTag) {
+              existingTag = retryTag
+            } else {
+              continue
+            }
+          } else {
+            continue
+          }
+        } else {
+          existingTag = newTag
         }
-        existingTag = newTag
       }
 
       if (existingTag) {
@@ -147,7 +167,14 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json({ success: true })
+    // Return the saved tags so the client can update its state
+    const { data: savedClipTags } = await supabase
+      .from('clip_tags')
+      .select('tag_id, tags ( id, name, color )')
+      .eq('clip_id', id)
+
+    const savedTags = (savedClipTags || []).map((ct: any) => ct.tags).filter(Boolean)
+    return NextResponse.json({ success: true, tags: savedTags })
   } catch (error) {
     console.error('Error updating clip tags:', error)
     return NextResponse.json({ error: 'Failed to update tags' }, { status: 500 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -254,11 +255,11 @@ export function ClipViewer({
     title: '',
     notes: '',
     folder_id: '',
-    tags: [] as string[]
   })
   const [newTag, setNewTag] = useState('')
   const [showTagSuggestions, setShowTagSuggestions] = useState(false)
-  const tagInputRef = useRef<HTMLInputElement>(null)
+  const [tagSaveStatus, setTagSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const tagInputRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [activeTab, setActiveTab] = useState(clip?.screenshot_url ? 'screenshot' : 'html')
@@ -316,18 +317,18 @@ export function ClipViewer({
 
   useEffect(() => {
     if (clip) {
-      const newForm = {
+      setEditForm({
         title: clip.title,
         notes: clip.notes || '',
         folder_id: clip.folder_id || '',
-        tags: clipTags.map(tag => tag.name)
-      }
-      setEditForm(newForm)
+      })
       setHasUnsavedChanges(false)
-      // Default to HTML tab if no screenshot
       setActiveTab(clip.screenshot_url ? 'screenshot' : 'html')
+      isInitialTagLoad.current = true
+      isApiTagUpdate.current = false
+      setTagSaveStatus('idle')
     }
-  }, [clip, clipTags])
+  }, [clip?.id])
 
   // Parse screenshot annotations from notes
   const parseScreenshotAnnotations = (notes: string): Annotation[] => {
@@ -357,6 +358,7 @@ export function ClipViewer({
   // Load available tags and clip tags in parallel
   useEffect(() => {
     if (!isOpen || !clip) return
+    let cancelled = false
 
     const loadTags = async () => {
       try {
@@ -364,18 +366,16 @@ export function ClipViewer({
           fetch('/api/tags'),
           fetch(`/api/clips/${clip.id}/tags`),
         ])
+        if (cancelled) return
         if (tagsRes.ok) setAvailableTags(await tagsRes.json())
-        if (clipTagsRes.ok) {
-          const tags = await clipTagsRes.json()
-          setClipTags(tags)
-          setEditForm(prev => ({ ...prev, tags: tags.map((tag: any) => tag.name) }))
-        }
+        if (clipTagsRes.ok) setClipTags(await clipTagsRes.json())
       } catch (error) {
         console.error('Error loading tags:', error)
       }
     }
 
     loadTags()
+    return () => { cancelled = true }
   }, [isOpen, clip?.id])
 
   // Calculate navigation state
@@ -433,42 +433,70 @@ export function ClipViewer({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, canNavigatePrev, canNavigateNext, onNavigate, onClose])
 
-  // Auto-save when form changes
+  // Auto-save metadata when form changes
   useEffect(() => {
     if (!clip || !hasUnsavedChanges) return
 
     const timeoutId = setTimeout(async () => {
       try {
-        // Save clip metadata
         await onUpdate(clip.id, {
           title: editForm.title,
           notes: editForm.notes,
           folder_id: editForm.folder_id || undefined,
         })
-        
-        // Save tags separately
-        const response = await fetch(`/api/clips/${clip.id}/tags`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            tagNames: editForm.tags
-          }),
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to save tags')
-        }
-        
         setHasUnsavedChanges(false)
       } catch (error) {
         console.error('Auto-save failed:', error)
       }
-    }, 1000) // Auto-save after 1 second of no changes
+    }, 1000)
 
     return () => clearTimeout(timeoutId)
   }, [editForm, clip, hasUnsavedChanges, onUpdate])
+
+  // Refs for tag save logic — prevent infinite loops and initial-load saves
+  const isInitialTagLoad = useRef(true)
+  const isApiTagUpdate = useRef(false)
+  useEffect(() => {
+    if (!clip || !isOpen) return
+    if (isInitialTagLoad.current) {
+      isInitialTagLoad.current = false
+      return
+    }
+    if (isApiTagUpdate.current) {
+      isApiTagUpdate.current = false
+      return
+    }
+
+    setTagSaveStatus('saving')
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/clips/${clip.id}/tags`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tagNames: clipTags.map(t => t.name) }),
+        })
+        if (response.ok) {
+          const result = await response.json()
+          if (result.tags) {
+            isApiTagUpdate.current = true
+            setClipTags(result.tags)
+            const tagsRes = await fetch('/api/tags')
+            if (tagsRes.ok) setAvailableTags(await tagsRes.json())
+          }
+          setTagSaveStatus('saved')
+          setTimeout(() => setTagSaveStatus('idle'), 1500)
+        } else {
+          console.error('Tag save failed with status:', response.status)
+          setTagSaveStatus('idle')
+        }
+      } catch (error) {
+        console.error('Tag save failed:', error)
+        setTagSaveStatus('idle')
+      }
+    }, 600)
+
+    return () => clearTimeout(timeoutId)
+  }, [clipTags])
 
   const handleFormChange = (field: string, value: string) => {
     // Handle special "no-folder" value
@@ -757,23 +785,17 @@ export function ClipViewer({
     }
   }
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !editForm.tags.includes(newTag.trim())) {
-      setEditForm(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }))
-      setNewTag('')
-      setHasUnsavedChanges(true)
-    }
+  const handleAddTag = (tagName?: string) => {
+    const name = (tagName || newTag).trim()
+    if (!name) return
+    if (clipTags.some(t => t.name.toLowerCase() === name.toLowerCase())) return
+    const existing = availableTags.find(t => t.name.toLowerCase() === name.toLowerCase())
+    setClipTags(prev => [...prev, existing || { id: `temp-${Date.now()}`, name, color: undefined }])
+    setNewTag('')
   }
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setEditForm(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }))
-    setHasUnsavedChanges(true)
+  const handleRemoveTag = (tagName: string) => {
+    setClipTags(prev => prev.filter(t => t.name !== tagName))
   }
 
   const handleTextSelection = (event?: any) => {
@@ -895,7 +917,7 @@ export function ClipViewer({
         <div className="flex-1 overflow-hidden flex">
           {/* Main Content Area - Tabbed Interface */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
               {/* Tab Navigation */}
               <div className="border-b bg-background px-4 py-2.5">
                 <div className="flex items-center gap-3">
@@ -979,7 +1001,7 @@ export function ClipViewer({
               </div>
 
               {/* Tab Content */}
-              <div className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 {/* Screenshot Tab */}
                 <TabsContent value="screenshot" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
                   {clip.screenshot_url ? (
@@ -1015,7 +1037,7 @@ export function ClipViewer({
                 </TabsContent>
 
                 {/* HTML Tab */}
-                <TabsContent value="html" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col">
+                <TabsContent value="html" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col min-h-0">
                   {isLoadingContent ? (
                     <div className="flex-1 flex items-center justify-center">
                       <div className="flex flex-col items-center gap-3 text-slate-400">
@@ -1024,7 +1046,7 @@ export function ClipViewer({
                       </div>
                     </div>
                   ) : fullClip?.html_content ? (
-                    <div className="flex-1 flex flex-col">
+                    <div className="flex-1 flex flex-col min-h-0">
                       <div className="px-4 py-2.5 border-b bg-background flex items-center gap-3">
                         <div className="flex items-center p-0.5 bg-muted rounded-lg text-xs gap-0.5">
                           <button
@@ -1382,7 +1404,7 @@ export function ClipViewer({
                 </TabsContent>
 
                 {/* Text Tab */}
-                <TabsContent value="text" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
+                <TabsContent value="text" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1 min-h-0">
                   {isLoadingContent ? (
                     <div className="flex-1 flex items-center justify-center">
                       <div className="flex flex-col items-center gap-3 text-slate-400">
@@ -1410,7 +1432,7 @@ export function ClipViewer({
                 </TabsContent>
 
                 {/* Entities Tab */}
-                <TabsContent value="entities" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
+                <TabsContent value="entities" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1 min-h-0">
                   <EntitiesView clip={clip} />
                 </TabsContent>
               </div>
@@ -1418,8 +1440,8 @@ export function ClipViewer({
           </div>
 
           {/* Metadata & Edit Panel */}
-          <div className="w-80 border-l bg-slate-50/60 dark:bg-slate-900/60 flex flex-col overflow-hidden">
-            <div className="p-4 space-y-4 overflow-y-auto">
+          <div className="w-80 border-l bg-slate-50/60 dark:bg-slate-900/60 flex flex-col">
+            <div className="p-4 space-y-4 overflow-y-auto flex-1">
               {/* Title */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
@@ -1567,30 +1589,45 @@ export function ClipViewer({
 
               {/* Tags */}
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Tags</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-muted-foreground">Tags</label>
+                  {tagSaveStatus === 'saving' && (
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                      Saving...
+                    </span>
+                  )}
+                  {tagSaveStatus === 'saved' && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-1">
+                      <Check className="h-2.5 w-2.5" />
+                      Saved
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-2">
-                  <div className="flex flex-wrap gap-1">
-                    {editForm.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs group/tag">
-                        {tag}
-                        <button
-                          onClick={() => handleRemoveTag(tag)}
-                          className="ml-1 opacity-50 hover:opacity-100 hover:text-destructive transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
+                  {clipTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {clipTags.map((tag) => (
+                        <Badge key={tag.id} variant="secondary" className="text-xs group/tag pr-1">
+                          {tag.name}
+                          <button
+                            onClick={() => handleRemoveTag(tag.name)}
+                            className="ml-1 opacity-0 group-hover/tag:opacity-100 hover:text-destructive transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   
-                  <div className="relative">
+                  <div className="relative" ref={tagInputRef}>
                     <div className="flex space-x-1">
                       <Input
-                        ref={tagInputRef}
                         value={newTag}
                         onChange={(e) => { setNewTag(e.target.value); setShowTagSuggestions(true); }}
                         onFocus={() => setShowTagSuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowTagSuggestions(false), 150)}
+                        onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
                         placeholder="Search or create tag..."
                         className="text-xs h-7"
                         onKeyDown={(e) => {
@@ -1603,26 +1640,80 @@ export function ClipViewer({
                       </Button>
                     </div>
                     {showTagSuggestions && (() => {
+                      const currentNames = new Set(clipTags.map(t => t.name.toLowerCase()));
                       const suggestions = availableTags
-                        .filter(t => !editForm.tags.includes(t.name))
+                        .filter(t => !currentNames.has(t.name.toLowerCase()))
                         .filter(t => !newTag.trim() || t.name.toLowerCase().includes(newTag.toLowerCase()));
+
+                      const rect = tagInputRef.current?.getBoundingClientRect();
+                      const dropdownStyle: React.CSSProperties = rect ? {
+                        position: 'fixed',
+                        top: rect.bottom + 4,
+                        left: rect.left,
+                        width: rect.width - 32,
+                        zIndex: 10020,
+                      } : {};
+
+                      if (suggestions.length === 0 && newTag.trim()) {
+                        return createPortal(
+                          <div className="bg-popover border rounded-lg shadow-xl" style={dropdownStyle}>
+                            <button
+                              className="w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center gap-2 rounded-lg"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleAddTag();
+                                setShowTagSuggestions(false);
+                              }}
+                            >
+                              <Plus className="h-3 w-3 text-blue-600" />
+                              <span>Create <span className="font-semibold">&ldquo;{newTag.trim()}&rdquo;</span></span>
+                            </button>
+                          </div>,
+                          document.body
+                        );
+                      }
                       if (suggestions.length === 0) return null;
-                      return (
-                        <div className="absolute z-50 top-full left-0 right-8 mt-1 bg-popover border rounded-md shadow-md max-h-32 overflow-y-auto">
+                      return createPortal(
+                        <div className="bg-popover border rounded-lg shadow-xl max-h-48 overflow-y-auto" style={dropdownStyle}>
                           {suggestions.map(t => (
                             <button key={t.id} className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors flex items-center gap-2"
                               onMouseDown={(e) => {
                                 e.preventDefault();
-                                setEditForm(prev => ({ ...prev, tags: [...prev.tags, t.name] }));
-                                setHasUnsavedChanges(true);
-                                setNewTag('');
+                                handleAddTag(t.name);
                                 setShowTagSuggestions(false);
                               }}>
-                              <Tag className="h-3 w-3 text-muted-foreground" />
-                              {t.name}
+                              {t.color && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: t.color }} />}
+                              {!t.color && <Tag className="h-3 w-3 text-muted-foreground flex-shrink-0" />}
+                              {newTag.trim() ? (
+                                <span dangerouslySetInnerHTML={{
+                                  __html: t.name.replace(
+                                    new RegExp(`(${newTag.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+                                    '<strong class="text-foreground">$1</strong>'
+                                  )
+                                }} />
+                              ) : (
+                                <span>{t.name}</span>
+                              )}
                             </button>
                           ))}
-                        </div>
+                          {newTag.trim() && !suggestions.some(s => s.name.toLowerCase() === newTag.trim().toLowerCase()) && (
+                            <>
+                              <div className="border-t" />
+                              <button
+                                className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors flex items-center gap-2"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleAddTag();
+                                  setShowTagSuggestions(false);
+                                }}
+                              >
+                                <Plus className="h-3 w-3 text-blue-600" />
+                                <span>Create <span className="font-semibold">&ldquo;{newTag.trim()}&rdquo;</span></span>
+                              </button>
+                            </>
+                          )}
+                        </div>,
+                        document.body
                       );
                     })()}
                   </div>
@@ -1790,36 +1881,45 @@ export function ClipViewer({
               <div className="flex-1 flex flex-col gap-4 p-6 overflow-auto">
                 {/* Tags Section */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Tags</label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {clipTags.map((tag) => (
-                      <Badge 
-                        key={tag.id}
-                        variant="secondary"
-                        className="px-3 py-1"
-                        style={{
-                          backgroundColor: tag.color ? `${tag.color}20` : undefined,
-                          borderColor: tag.color ? `${tag.color}40` : undefined,
-                          color: tag.color || undefined
-                        }}
-                      >
-                        {tag.name}
-                        <button
-                          onClick={() => {
-                            setClipTags(prev => prev.filter(t => t.id !== tag.id))
-                            setEditForm(prev => ({
-                              ...prev,
-                              tags: prev.tags.filter(t => t !== tag.name)
-                            }))
-                            setHasUnsavedChanges(true)
-                          }}
-                          className="ml-2 hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">Tags</label>
+                    {tagSaveStatus === 'saving' && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                        Saving...
+                      </span>
+                    )}
+                    {tagSaveStatus === 'saved' && (
+                      <span className="text-xs text-emerald-600 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        Saved
+                      </span>
+                    )}
                   </div>
+                  {clipTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {clipTags.map((tag) => (
+                        <Badge 
+                          key={tag.id}
+                          variant="secondary"
+                          className="px-3 py-1"
+                          style={{
+                            backgroundColor: tag.color ? `${tag.color}20` : undefined,
+                            borderColor: tag.color ? `${tag.color}40` : undefined,
+                            color: tag.color || undefined
+                          }}
+                        >
+                          {tag.name}
+                          <button
+                            onClick={() => handleRemoveTag(tag.name)}
+                            className="ml-2 hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Input
                       value={newTagName}
@@ -1829,31 +1929,15 @@ export function ClipViewer({
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
-                          if (newTagName.trim()) {
-                            const newTag = { id: Date.now().toString(), name: newTagName.trim(), color: undefined }
-                            setClipTags(prev => [...prev, newTag])
-                            setEditForm(prev => ({
-                              ...prev,
-                              tags: [...prev.tags, newTagName.trim()]
-                            }))
-                            setNewTagName('')
-                            setHasUnsavedChanges(true)
-                          }
+                          handleAddTag(newTagName)
+                          setNewTagName('')
                         }
                       }}
                     />
                     <Button
                       onClick={() => {
-                        if (newTagName.trim()) {
-                          const newTag = { id: Date.now().toString(), name: newTagName.trim(), color: undefined }
-                          setClipTags(prev => [...prev, newTag])
-                          setEditForm(prev => ({
-                            ...prev,
-                            tags: [...prev.tags, newTagName.trim()]
-                          }))
-                          setNewTagName('')
-                          setHasUnsavedChanges(true)
-                        }
+                        handleAddTag(newTagName)
+                        setNewTagName('')
                       }}
                       disabled={!newTagName.trim()}
                     >

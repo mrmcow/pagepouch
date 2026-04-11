@@ -6,7 +6,8 @@ import {
   getClipsRemaining, 
   getUsageWarningLevel,
   getDaysUntilReset,
-  getNextResetDate 
+  getNextResetDate,
+  ensureUsageRow
 } from '@/lib/subscription-limits'
 
 export interface UsageResponse {
@@ -85,31 +86,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user usage data
-    const { data: usageData, error: usageError } = await supabase
-      .from('user_usage')
-      .select('clips_this_month, storage_used_mb, last_reset_date')
-      .eq('user_id', user.id)
-      .single()
-
-    if (usageError) {
-      console.error('Error fetching usage data:', usageError)
-      return NextResponse.json(
-        { error: 'Failed to fetch usage data' },
-        { status: 500 }
-      )
-    }
-
     const subscriptionTier = userProfile.subscription_tier || 'free'
+    const clipsThisMonth = await ensureUsageRow(supabase, user.id)
     const limits = getSubscriptionLimits(subscriptionTier)
-    const clipsThisMonth = usageData?.clips_this_month || 0
+
+    // Also fetch storage info
+    const { data: storageRow } = await supabase
+      .from('user_usage')
+      .select('storage_used_mb')
+      .eq('user_id', user.id)
+      .maybeSingle()
     
     const response: UsageResponse = {
       subscription_tier: subscriptionTier,
       clips_this_month: clipsThisMonth,
       clips_limit: limits.clipsPerMonth,
       clips_remaining: getClipsRemaining(clipsThisMonth, subscriptionTier),
-      storage_used_mb: usageData?.storage_used_mb || 0,
+      storage_used_mb: storageRow?.storage_used_mb || 0,
       storage_limit_mb: limits.storageLimit,
       reset_date: getNextResetDate(),
       days_until_reset: getDaysUntilReset(),

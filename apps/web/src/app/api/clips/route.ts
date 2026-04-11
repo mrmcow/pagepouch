@@ -6,7 +6,11 @@ import {
   getSubscriptionLimits, 
   getClipsRemaining, 
   getUsageWarningLevel,
-  hasReachedClipLimit 
+  hasReachedClipLimit,
+  getDaysUntilReset,
+  getNextResetDate,
+  ensureUsageRow,
+  incrementUsage
 } from '@/lib/subscription-limits'
 
 export async function GET(request: NextRequest) {
@@ -181,22 +185,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: usageData, error: usageError } = await supabase
-      .from('user_usage')
-      .select('clips_this_month')
-      .eq('user_id', user.id)
-      .single()
-
-    if (usageError) {
-      console.error('Error fetching usage data:', usageError)
-      return NextResponse.json(
-        { error: 'Failed to fetch usage data' },
-        { status: 500 }
-      )
-    }
-
     const subscriptionTier = userProfile.subscription_tier || 'free'
-    const clipsThisMonth = usageData?.clips_this_month || 0
+    const clipsThisMonth = await ensureUsageRow(supabase, user.id)
 
     // Pre-check limit (for better UX), but database trigger will enforce it atomically
     // This prevents unnecessary processing of screenshots for over-limit requests
@@ -205,12 +195,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Clip limit reached',
-          message: `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.`,
+          message: `You have reached your monthly limit of ${limits.clipsPerMonth} clips.`,
           clips_limit: limits.clipsPerMonth,
           clips_this_month: clipsThisMonth,
-          subscription_tier: subscriptionTier
+          subscription_tier: subscriptionTier,
+          days_until_reset: getDaysUntilReset(),
+          reset_date: getNextResetDate(),
         },
-        { status: 429 } // Too Many Requests
+        { status: 429 }
       )
     }
 
@@ -287,12 +279,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { 
             error: 'Clip limit reached',
-            message: error.message || `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.`,
+            message: error.message || `You have reached your monthly limit of ${limits.clipsPerMonth} clips.`,
             clips_limit: limits.clipsPerMonth,
             clips_this_month: clipsThisMonth,
-            subscription_tier: subscriptionTier
+            subscription_tier: subscriptionTier,
+            days_until_reset: getDaysUntilReset(),
+            reset_date: getNextResetDate(),
           },
-          { status: 429 } // Too Many Requests
+          { status: 429 }
         )
       }
       
@@ -302,14 +296,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get updated usage data after clip creation (the trigger will have updated it)
-    const { data: updatedUsage, error: updatedUsageError } = await supabase
-      .from('user_usage')
-      .select('clips_this_month')
-      .eq('user_id', user.id)
-      .single()
-
-    const newClipsThisMonth = updatedUsage?.clips_this_month || (clipsThisMonth + 1)
+    const newClipsThisMonth = await incrementUsage(supabase, user.id)
     const limits = getSubscriptionLimits(subscriptionTier)
 
     return NextResponse.json({ 

@@ -80,7 +80,7 @@ The easiest way to install PageStash with automatic updates:
 
 ---
 
-**PageStash v2.2.0** — Capture · Organize · Retrieve
+**PageStash v3.0.0** — Capture · Organize · Retrieve
 `;
 
 // Write installation guide
@@ -97,14 +97,17 @@ const versionInfo = {
   buildNumber: Date.now(),
   features: [
     'Full page scroll capture',
-    'Visible area capture', 
+    'Visible area capture',
+    'Area selection capture',
+    'HTML + text content extraction',
+    'Entity detection (domains, emails, IPs, phones)',
     'Cloud synchronization',
-    'Modern UI with new logo',
-    'Cross-browser compatibility'
+    'Protected page detection',
+    'Cross-browser compatibility (Chrome, Firefox, Edge)'
   ],
   requirements: {
     chrome: '88+',
-    firefox: '78+',
+    firefox: '102+',
     permissions: ['activeTab', 'storage', 'scripting']
   }
 };

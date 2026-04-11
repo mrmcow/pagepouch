@@ -764,14 +764,26 @@ class ExtensionAPI {
         });
         if (!response.ok) {
             const errorText = await response.text();
-            let error;
+            let errorData;
             try {
-                error = JSON.parse(errorText);
+                errorData = JSON.parse(errorText);
             }
             catch {
-                error = { error: errorText || 'Failed to save clip' };
+                errorData = { error: errorText || 'Failed to save clip' };
             }
-            throw new Error(error.error || 'Failed to save clip');
+            if (response.status === 429) {
+                const limitError = new Error(errorData.error || 'Clip limit reached');
+                limitError.isLimitReached = true;
+                limitError.limitInfo = {
+                    clips_limit: errorData.clips_limit,
+                    clips_this_month: errorData.clips_this_month,
+                    subscription_tier: errorData.subscription_tier,
+                    days_until_reset: errorData.days_until_reset,
+                    reset_date: errorData.reset_date,
+                };
+                throw limitError;
+            }
+            throw new Error(errorData.error || 'Failed to save clip');
         }
         return response.json();
     }
@@ -859,6 +871,21 @@ const BRAND = {
     shadowMd: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
     font: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
+const UNSCRIPTABLE_RE = [
+    /^chrome:/i, /^chrome-extension:/i, /^about:/i, /^edge:/i, /^brave:/i,
+    /^moz-extension:/i, /^view-source:/i, /^devtools:/i,
+    /^chrome\.google\.com\/webstore/i, /^chromewebstore\.google\.com/i,
+    /^addons\.mozilla\.org/i, /^microsoftedge\.microsoft\.com\/addons/i,
+];
+function isPageCapturable(url) {
+    if (!url)
+        return { ok: false, reason: 'No page URL detected.' };
+    if (UNSCRIPTABLE_RE.some(p => p.test(url)))
+        return { ok: false, reason: 'This is a browser-protected page and cannot be captured. Navigate to a regular website.' };
+    if (url === 'about:blank' || url === 'chrome://newtab/' || url === 'about:newtab')
+        return { ok: false, reason: 'Open a webpage first, then capture it.' };
+    return { ok: true };
+}
 const LogoSVG = ({ size = 28 }) => ((0,jsx_runtime.jsxs)("svg", { width: size, height: size, viewBox: "0 0 48 48", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [(0,jsx_runtime.jsx)("path", { d: "M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z", fill: "#f8fafc", stroke: "#2563eb", strokeWidth: "2" }), (0,jsx_runtime.jsx)("path", { d: "M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z", fill: "#2563eb", stroke: "#2563eb", strokeWidth: "2", strokeLinejoin: "round" }), (0,jsx_runtime.jsx)("path", { d: "M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5", stroke: "#ffffff", strokeWidth: "1", strokeLinecap: "round", strokeLinejoin: "round" }), (0,jsx_runtime.jsx)("rect", { x: "15", y: "14", width: "14", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" }), (0,jsx_runtime.jsx)("rect", { x: "15", y: "18", width: "10", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" }), (0,jsx_runtime.jsx)("rect", { x: "15", y: "22", width: "12", height: "1.5", rx: "0.75", fill: "#64748b", opacity: "0.3" })] }));
 function EnhancedPopupApp() {
     const [state, setState] = (0,react.useState)({
@@ -951,21 +978,35 @@ function EnhancedPopupApp() {
         const listener = (message) => {
             if (message.type !== 'CAPTURE_PROGRESS')
                 return;
+            const { status, usage, limitInfo } = message.payload;
             setState(p => ({
                 ...p,
-                captureProgress: { status: message.payload.status, message: message.payload.message, progress: message.payload.progress },
+                captureProgress: { status, message: message.payload.message, progress: message.payload.progress },
             }));
-            if (message.payload.status === 'complete') {
-                if (message.payload.usage) {
+            if (status === 'limit_reached') {
+                setState(p => ({
+                    ...p,
+                    limitInfo: limitInfo || undefined,
+                    warningLevel: 'exceeded',
+                    clipsRemaining: 0,
+                    isCapturing: false,
+                    captureProgress: undefined,
+                }));
+            }
+            else if (status === 'complete') {
+                if (usage) {
                     setState(p => ({
                         ...p,
-                        clipsRemaining: message.payload.usage.clips_remaining,
-                        clipsLimit: message.payload.usage.clips_limit,
-                        subscriptionTier: message.payload.usage.subscription_tier,
-                        warningLevel: message.payload.usage.warning_level,
+                        clipsRemaining: usage.clips_remaining,
+                        clipsLimit: usage.clips_limit,
+                        subscriptionTier: usage.subscription_tier,
+                        warningLevel: usage.warning_level,
                     }));
                 }
-                setTimeout(() => setState(p => ({ ...p, captureProgress: undefined, isCapturing: false })), 2200);
+                setTimeout(() => setState(p => ({ ...p, captureProgress: undefined, isCapturing: false })), 2500);
+            }
+            else if (status === 'error' || status === 'cancelled') {
+                setTimeout(() => setState(p => ({ ...p, captureProgress: undefined, isCapturing: false })), 4500);
             }
         };
         chrome.runtime.onMessage.addListener(listener);
@@ -976,6 +1017,12 @@ function EnhancedPopupApp() {
             return;
         if (!state.isAuthenticated) {
             setState(p => ({ ...p, showAuth: true }));
+            return;
+        }
+        const check = isPageCapturable(state.currentTab.url);
+        if (!check.ok) {
+            setState(p => ({ ...p, captureProgress: { status: 'error', message: check.reason } }));
+            setTimeout(() => setState(p => ({ ...p, captureProgress: undefined })), 4000);
             return;
         }
         setState(p => ({
@@ -995,17 +1042,26 @@ function EnhancedPopupApp() {
         catch {
             setState(p => ({
                 ...p, isCapturing: false,
-                captureProgress: { status: 'error', message: 'Capture failed. Please refresh the page and try again.' },
+                captureProgress: { status: 'error', message: 'Capture failed. Refresh the page and try again.' },
             }));
-            setTimeout(() => setState(p => ({ ...p, captureProgress: undefined })), 3000);
+            setTimeout(() => setState(p => ({ ...p, captureProgress: undefined })), 4000);
         }
     };
     const handleAuth = async () => {
-        setAuthForm(p => ({ ...p, isLoading: true, error: undefined }));
+        // Read directly from DOM to catch password manager autofill that bypasses React onChange
+        const emailEl = document.getElementById('email');
+        const passEl = document.getElementById('password');
+        const email = emailEl?.value || authForm.email;
+        const password = passEl?.value || authForm.password;
+        if (!email || !password) {
+            setAuthForm(p => ({ ...p, error: 'Please enter your email and password' }));
+            return;
+        }
+        setAuthForm(p => ({ ...p, email, password, isLoading: true, error: undefined }));
         try {
             const result = authForm.isSignUp
-                ? await ExtensionAuth.signUp(authForm.email, authForm.password)
-                : await ExtensionAuth.signIn(authForm.email, authForm.password);
+                ? await ExtensionAuth.signUp(email, password)
+                : await ExtensionAuth.signIn(email, password);
             if (result.error) {
                 setAuthForm(p => ({ ...p, error: result.error?.message || 'Authentication failed', isLoading: false }));
             }
@@ -1050,7 +1106,16 @@ function EnhancedPopupApp() {
     }
     // --- Auth ---
     if (state.showAuth) {
-        return ((0,jsx_runtime.jsxs)("div", { style: css.root, children: [(0,jsx_runtime.jsxs)("header", { style: css.header, children: [(0,jsx_runtime.jsxs)("div", { style: css.headerLeft, children: [(0,jsx_runtime.jsx)(LogoSVG, { size: 24 }), (0,jsx_runtime.jsx)("span", { style: css.brandName, children: "PageStash" })] }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: false })), style: css.closeBtn, "aria-label": "Close", children: "\u00D7" })] }), (0,jsx_runtime.jsxs)("div", { style: css.body, children: [(0,jsx_runtime.jsxs)("div", { style: { textAlign: 'center', marginBottom: '4px' }, children: [(0,jsx_runtime.jsx)("h2", { style: { margin: '0 0 4px', fontSize: '17px', fontWeight: 600, color: BRAND.text }, children: authForm.isSignUp ? 'Create account' : 'Welcome back' }), (0,jsx_runtime.jsx)("p", { style: { margin: 0, color: BRAND.textMuted, fontSize: '13px' }, children: authForm.isSignUp ? 'Start archiving web pages' : 'Sign in to your library' })] }), (0,jsx_runtime.jsxs)("form", { onSubmit: e => { e.preventDefault(); handleAuth(); }, style: { display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }, children: [(0,jsx_runtime.jsx)("input", { type: "email", placeholder: "Email", value: authForm.email, onChange: e => setAuthForm(p => ({ ...p, email: e.target.value })), autoComplete: authForm.isSignUp ? 'email' : 'username', required: true, style: css.input }), (0,jsx_runtime.jsx)("input", { type: "password", placeholder: "Password", value: authForm.password, onChange: e => setAuthForm(p => ({ ...p, password: e.target.value })), autoComplete: authForm.isSignUp ? 'new-password' : 'current-password', required: true, style: css.input }), authForm.error && (0,jsx_runtime.jsx)("div", { style: css.errorBanner, children: authForm.error }), (0,jsx_runtime.jsx)("button", { type: "submit", disabled: authForm.isLoading || !authForm.email || !authForm.password, style: { ...css.btnPrimary, opacity: authForm.isLoading || !authForm.email || !authForm.password ? 0.55 : 1 }, children: authForm.isLoading ? 'Processing...' : authForm.isSignUp ? 'Create account' : 'Sign in' })] }), (0,jsx_runtime.jsx)("button", { onClick: () => setAuthForm(p => ({ ...p, isSignUp: !p.isSignUp, error: undefined })), style: css.linkBtn, children: authForm.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up' })] })] }));
+        return ((0,jsx_runtime.jsxs)("div", { style: css.root, children: [(0,jsx_runtime.jsxs)("header", { style: css.header, children: [(0,jsx_runtime.jsxs)("div", { style: css.headerLeft, children: [(0,jsx_runtime.jsx)(LogoSVG, { size: 24 }), (0,jsx_runtime.jsx)("span", { style: css.brandName, children: "PageStash" })] }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: false })), style: css.closeBtn, "aria-label": "Close", children: "\u00D7" })] }), (0,jsx_runtime.jsxs)("div", { style: css.body, children: [(0,jsx_runtime.jsxs)("div", { style: { textAlign: 'center', marginBottom: '4px' }, children: [(0,jsx_runtime.jsx)("h2", { style: { margin: '0 0 4px', fontSize: '17px', fontWeight: 600, color: BRAND.text }, children: authForm.isSignUp ? 'Create account' : 'Welcome back' }), (0,jsx_runtime.jsx)("p", { style: { margin: 0, color: BRAND.textMuted, fontSize: '13px' }, children: authForm.isSignUp ? 'Start archiving web pages' : 'Sign in to your library' })] }), (0,jsx_runtime.jsxs)("form", { id: "pagestash-auth-form", onSubmit: e => {
+                                e.preventDefault();
+                                const form = e.currentTarget;
+                                const emailInput = form.querySelector('input[name="email"]');
+                                const passInput = form.querySelector('input[name="password"]');
+                                if (emailInput && passInput) {
+                                    setAuthForm(p => ({ ...p, email: emailInput.value, password: passInput.value }));
+                                }
+                                setTimeout(() => handleAuth(), 0);
+                            }, style: { display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }, children: [(0,jsx_runtime.jsx)("input", { type: "email", name: "email", id: "email", placeholder: "Email", defaultValue: authForm.email, onChange: e => setAuthForm(p => ({ ...p, email: e.target.value })), autoComplete: authForm.isSignUp ? 'email' : 'username', required: true, style: css.input }), (0,jsx_runtime.jsx)("input", { type: "password", name: "password", id: "password", placeholder: "Password", defaultValue: authForm.password, onChange: e => setAuthForm(p => ({ ...p, password: e.target.value })), autoComplete: authForm.isSignUp ? 'new-password' : 'current-password', required: true, style: css.input }), authForm.error && (0,jsx_runtime.jsx)("div", { style: css.errorBanner, children: authForm.error }), (0,jsx_runtime.jsx)("button", { type: "submit", disabled: authForm.isLoading, style: { ...css.btnPrimary, opacity: authForm.isLoading ? 0.55 : 1 }, children: authForm.isLoading ? 'Processing...' : authForm.isSignUp ? 'Create account' : 'Sign in' })] }), (0,jsx_runtime.jsx)("button", { onClick: () => setAuthForm(p => ({ ...p, isSignUp: !p.isSignUp, error: undefined })), style: css.linkBtn, children: authForm.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up' })] })] }));
     }
     // --- Main ---
     const badge = usageBadge();
@@ -1059,14 +1124,30 @@ function EnhancedPopupApp() {
                                         }
                                         catch {
                                             return state.currentTab.url;
-                                        } })() })] })] })), state.captureProgress && ((0,jsx_runtime.jsxs)("div", { style: {
-                            ...css.card,
-                            backgroundColor: state.captureProgress.status === 'error' ? BRAND.errorBg : state.captureProgress.status === 'complete' ? BRAND.successBg : BRAND.bgSurface,
-                            borderColor: state.captureProgress.status === 'error' ? BRAND.errorBorder : state.captureProgress.status === 'complete' ? BRAND.successBorder : BRAND.border,
-                            animation: state.captureProgress.status === 'complete' ? 'popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' : undefined,
-                        }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', marginBottom: '6px',
-                                    color: state.captureProgress.status === 'error' ? BRAND.error : state.captureProgress.status === 'complete' ? BRAND.success : BRAND.primary }, children: state.captureProgress.status === 'complete' ? 'Saved!' : state.captureProgress.status === 'error' ? 'Capture failed' : 'Capturing...' }), state.captureProgress.status !== 'error' && state.captureProgress.status !== 'complete' && ((0,jsx_runtime.jsx)("div", { style: { width: '100%', height: 3, backgroundColor: BRAND.bgMuted, borderRadius: 2, overflow: 'hidden', marginBottom: 6 }, children: (0,jsx_runtime.jsx)("div", { style: { height: '100%', backgroundColor: BRAND.primary, borderRadius: 2, transition: 'width 0.4s ease',
-                                        width: state.captureProgress.progress ? `${state.captureProgress.progress}%` : '30%' } }) })), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: state.captureProgress.status === 'error' ? BRAND.error : BRAND.textMuted }, children: state.captureProgress.message })] })), state.isAuthenticated && state.folders.length > 0 && !state.isCapturing && ((0,jsx_runtime.jsxs)("div", { style: { width: '100%' }, children: [(0,jsx_runtime.jsx)("label", { style: { display: 'block', fontSize: '11px', fontWeight: 500, color: BRAND.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }, children: "Save to" }), (0,jsx_runtime.jsx)("select", { value: state.selectedFolderId || '', onChange: e => { setState(p => ({ ...p, selectedFolderId: e.target.value })); chrome.storage.local.set({ selectedFolderId: e.target.value }); }, style: css.select, children: state.folders.map(f => (0,jsx_runtime.jsx)("option", { value: f.id, children: f.name }, f.id)) })] })), !state.isCapturing && !state.captureProgress && (state.warningLevel === 'exceeded' ? ((0,jsx_runtime.jsxs)("div", { style: { ...css.card, backgroundColor: BRAND.errorBg, borderColor: BRAND.errorBorder, textAlign: 'center' }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', color: BRAND.error, marginBottom: 4 }, children: "Monthly limit reached" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Upgrade to Pro for more clips." }), (0,jsx_runtime.jsx)("button", { onClick: () => chrome.tabs.create({ url: 'https://pagestash.app/dashboard' }), style: { ...css.btnPrimary, backgroundColor: BRAND.error }, children: "Upgrade to Pro" })] })) : ((0,jsx_runtime.jsxs)("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('fullPage'), style: css.btnPrimary, children: "Capture full page" }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: '8px' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('visible'), style: { ...css.btnSecondary, flex: 1 }, children: "Visible area" }), (0,jsx_runtime.jsx)("button", { onClick: () => { chrome.runtime.sendMessage({ type: 'AREA_SELECT' }); window.close(); }, style: { ...css.btnSecondary, flex: 1 }, children: "Select area" })] })] }))), !state.isAuthenticated ? ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 500, fontSize: '13px', marginBottom: 2, color: BRAND.text }, children: "Sign in for cloud sync" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Access your clips anywhere" }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: true })), style: css.btnSecondary, children: "Sign in" })] })) : ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 8 }, children: state.userEmail }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: 8 }, children: [(0,jsx_runtime.jsx)("button", { onClick: openWebApp, style: { ...css.btnPrimary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Open library" }), (0,jsx_runtime.jsx)("button", { onClick: handleSignOut, style: { ...css.btnSecondary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Sign out" })] })] }))] }), (0,jsx_runtime.jsx)("footer", { style: css.footer, children: "PageStash v2.0.0" })] }));
+                                        } })() })] })] })), state.captureProgress && (() => {
+                        const s = state.captureProgress.status;
+                        const isErr = s === 'error';
+                        const isDone = s === 'complete';
+                        const isCancelled = s === 'cancelled';
+                        const bg = isErr || isCancelled ? BRAND.errorBg : isDone ? BRAND.successBg : BRAND.bgSurface;
+                        const border = isErr || isCancelled ? BRAND.errorBorder : isDone ? BRAND.successBorder : BRAND.border;
+                        const titleColor = isErr || isCancelled ? BRAND.error : isDone ? BRAND.success : BRAND.primary;
+                        const title = isDone ? '✓ Saved!' : isErr ? 'Capture failed' : isCancelled ? 'Cancelled' : 'Capturing...';
+                        const progressPct = s === 'saving' ? '90%' : s === 'capturing' ? '60%' : s === 'extracting' ? '30%' : state.captureProgress.progress ? `${state.captureProgress.progress}%` : '15%';
+                        return ((0,jsx_runtime.jsxs)("div", { style: {
+                                ...css.card, backgroundColor: bg, borderColor: border,
+                                animation: isDone ? 'popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' : undefined,
+                            }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', marginBottom: '6px', color: titleColor }, children: title }), !isErr && !isDone && !isCancelled && ((0,jsx_runtime.jsx)("div", { style: { width: '100%', height: 3, backgroundColor: BRAND.bgMuted, borderRadius: 2, overflow: 'hidden', marginBottom: 6 }, children: (0,jsx_runtime.jsx)("div", { style: { height: '100%', backgroundColor: BRAND.primary, borderRadius: 2, transition: 'width 0.5s ease', width: progressPct } }) })), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: isErr || isCancelled ? BRAND.error : BRAND.textMuted, lineHeight: '1.4' }, children: state.captureProgress.message })] }));
+                    })(), state.isAuthenticated && state.folders.length > 0 && !state.isCapturing && ((0,jsx_runtime.jsxs)("div", { style: { width: '100%' }, children: [(0,jsx_runtime.jsx)("label", { style: { display: 'block', fontSize: '11px', fontWeight: 500, color: BRAND.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }, children: "Save to" }), (0,jsx_runtime.jsx)("select", { value: state.selectedFolderId || '', onChange: e => { setState(p => ({ ...p, selectedFolderId: e.target.value })); chrome.storage.local.set({ selectedFolderId: e.target.value }); }, style: css.select, children: state.folders.map(f => (0,jsx_runtime.jsx)("option", { value: f.id, children: f.name }, f.id)) })] })), !state.isCapturing && !state.captureProgress && (state.warningLevel === 'exceeded' ? ((0,jsx_runtime.jsxs)("div", { style: { ...css.card, backgroundColor: BRAND.errorBg, borderColor: BRAND.errorBorder, textAlign: 'center', padding: '16px' }, children: [(0,jsx_runtime.jsx)("div", { style: { fontSize: '24px', marginBottom: 6 }, children: "\u23F3" }), (0,jsx_runtime.jsx)("div", { style: { fontWeight: 700, fontSize: '15px', color: BRAND.error, marginBottom: 4 }, children: "Monthly Limit Reached" }), (0,jsx_runtime.jsxs)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 8 }, children: ["You've used all ", state.limitInfo?.clips_limit ?? state.clipsLimit, " clips this month"] }), state.limitInfo?.days_until_reset != null && ((0,jsx_runtime.jsxs)("div", { style: { fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: 10, padding: '6px 10px', backgroundColor: '#f3f4f6', borderRadius: 8, display: 'inline-block' }, children: ["Resets in ", state.limitInfo.days_until_reset, " day", state.limitInfo.days_until_reset !== 1 ? 's' : ''] })), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }, children: [state.subscriptionTier === 'pro' ? ((0,jsx_runtime.jsx)("button", { onClick: () => chrome.tabs.create({ url: 'mailto:support@pagestash.app?subject=Pro%20Plan%20-%20Clip%20Limit%20Inquiry' }), style: { ...css.btnPrimary, backgroundColor: '#d97706' }, children: "Contact Support" })) : ((0,jsx_runtime.jsx)("button", { onClick: () => chrome.tabs.create({ url: 'https://pagestash.app/dashboard?upgrade=true' }), style: { ...css.btnPrimary, background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }, children: "Upgrade to Pro \u2014 1,000 clips/mo" })), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, limitInfo: undefined })), style: { ...css.btnSecondary, fontSize: '11px', padding: '6px 12px' }, children: "Dismiss" })] })] })) : ((0,jsx_runtime.jsxs)("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('fullPage'), style: css.btnPrimary, children: "Capture full page" }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: '8px' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('visible'), style: { ...css.btnSecondary, flex: 1 }, children: "Visible area" }), (0,jsx_runtime.jsx)("button", { onClick: () => {
+                                            const check = isPageCapturable(state.currentTab?.url);
+                                            if (!check.ok) {
+                                                setState(p => ({ ...p, captureProgress: { status: 'error', message: check.reason } }));
+                                                setTimeout(() => setState(p => ({ ...p, captureProgress: undefined })), 4000);
+                                                return;
+                                            }
+                                            chrome.runtime.sendMessage({ type: 'AREA_SELECT' });
+                                            window.close();
+                                        }, style: { ...css.btnSecondary, flex: 1 }, children: "Select area" })] })] }))), !state.isAuthenticated ? ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 500, fontSize: '13px', marginBottom: 2, color: BRAND.text }, children: "Sign in for cloud sync" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Access your clips anywhere" }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: true })), style: css.btnSecondary, children: "Sign in" })] })) : ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 8 }, children: state.userEmail }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: 8 }, children: [(0,jsx_runtime.jsx)("button", { onClick: openWebApp, style: { ...css.btnPrimary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Open library" }), (0,jsx_runtime.jsx)("button", { onClick: handleSignOut, style: { ...css.btnSecondary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Sign out" })] })] }))] }), (0,jsx_runtime.jsx)("footer", { style: css.footer, children: "PageStash v3.0.0" })] }));
 }
 const css = {
     root: {

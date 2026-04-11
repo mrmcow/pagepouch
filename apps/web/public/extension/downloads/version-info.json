@@ -1,18 +1,21 @@
 {
   "name": "PageStash Extension",
-  "version": "2.0.0",
-  "buildDate": "2025-11-21T12:39:32.280Z",
-  "buildNumber": 1763728772280,
+  "version": "3.0.0",
+  "buildDate": "2026-04-11T06:47:25.235Z",
+  "buildNumber": 1775890045236,
   "features": [
     "Full page scroll capture",
     "Visible area capture",
+    "Area selection capture",
+    "HTML + text content extraction",
+    "Entity detection (domains, emails, IPs, phones)",
     "Cloud synchronization",
-    "Modern UI with new logo",
-    "Cross-browser compatibility"
+    "Protected page detection",
+    "Cross-browser compatibility (Chrome, Firefox, Edge)"
   ],
   "requirements": {
     "chrome": "88+",
-    "firefox": "78+",
+    "firefox": "102+",
     "permissions": [
       "activeTab",
       "storage",

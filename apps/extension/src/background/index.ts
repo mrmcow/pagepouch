@@ -5,24 +5,102 @@ import { ExtensionMessage } from '@pagestash/shared';
 import { ExtensionAuth, ExtensionAPI } from '../utils/supabase';
 import { FullPageCapture } from '../utils/fullPageCapture';
 
-// Debug mode - set to true for verbose logging
-const DEBUG = false;
+const DEBUG = process.env.NODE_ENV !== 'production';
+const log = (...args: any[]) => { if (DEBUG) console.log('[PageStash]', ...args); };
 
-const log = (...args: any[]) => {
-  if (DEBUG) console.log(...args);
-};
-
-console.log('PageStash background script loaded');
-
-// Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
+
+const UNSCRIPTABLE_PATTERNS = [
+  /^chrome:/i,
+  /^chrome-extension:/i,
+  /^about:/i,
+  /^edge:/i,
+  /^brave:/i,
+  /^moz-extension:/i,
+  /^view-source:/i,
+  /^devtools:/i,
+  /^chrome\.google\.com\/webstore/i,
+  /^chromewebstore\.google\.com/i,
+  /^addons\.mozilla\.org/i,
+  /^microsoftedge\.microsoft\.com\/addons/i,
+];
+
+function isUnscriptablePage(url?: string): boolean {
+  if (!url) return true;
+  return UNSCRIPTABLE_PATTERNS.some(p => p.test(url));
+}
+
+function sendProgress(status: string, message: string, extra?: Record<string, any>) {
+  extensionAPI.runtime.sendMessage({
+    type: 'CAPTURE_PROGRESS',
+    payload: { status, message, ...extra }
+  } as ExtensionMessage).catch(() => {});
+}
+
+async function showPageToast(tabId: number, message: string, type: 'saving' | 'success' | 'error' = 'success') {
+  try {
+    await extensionAPI.scripting.executeScript({
+      target: { tabId },
+      func: (msg: string, toastType: string) => {
+        const existing = document.getElementById('__pagestash-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.id = '__pagestash-toast';
+        const isSuccess = toastType === 'success';
+        const isSaving = toastType === 'saving';
+        const bg = isSuccess ? '#059669' : isSaving ? '#2563eb' : '#dc2626';
+        const icon = isSuccess ? '✓' : isSaving ? '⟳' : '✕';
+        Object.assign(toast.style, {
+          position: 'fixed', top: '20px', right: '20px', zIndex: '2147483647',
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '12px 20px', borderRadius: '12px',
+          background: bg, color: '#fff', fontFamily: "'Inter', system-ui, sans-serif",
+          fontSize: '14px', fontWeight: '600', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          transform: 'translateY(-10px)', opacity: '0',
+          transition: 'transform 0.3s ease, opacity 0.3s ease',
+        });
+        const iconSpan = document.createElement('span');
+        Object.assign(iconSpan.style, { fontSize: '16px', ...(isSaving ? { animation: 'pagestash-spin 1s linear infinite', display: 'inline-block' } : {}) });
+        iconSpan.textContent = icon;
+        toast.appendChild(iconSpan);
+        const text = document.createElement('span');
+        text.textContent = msg;
+        toast.appendChild(text);
+
+        if (isSaving) {
+          const style = document.createElement('style');
+          style.textContent = '@keyframes pagestash-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+          toast.appendChild(style);
+        }
+
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => {
+          toast.style.transform = 'translateY(0)';
+          toast.style.opacity = '1';
+        });
+
+        if (!isSaving) {
+          setTimeout(() => {
+            toast.style.transform = 'translateY(-10px)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+          }, 3000);
+        }
+      },
+      args: [message, type],
+    });
+  } catch {
+    // Tab may have navigated away — ignore
+  }
+}
 
 // Session monitor state
 let sessionRefreshInterval: NodeJS.Timeout | null = null;
 
 // Handle extension installation
 extensionAPI.runtime.onInstalled.addListener((details) => {
-  console.log('PageStash extension installed:', details.reason);
+  log('Extension installed:', details.reason);
   
   if (details.reason === 'install') {
     // Set up initial extension state
@@ -41,7 +119,7 @@ extensionAPI.runtime.onInstalled.addListener((details) => {
 // Restore session on browser startup
 if (extensionAPI.runtime.onStartup) {
   extensionAPI.runtime.onStartup.addListener(async () => {
-    console.log('🔐 Extension startup - restoring session');
+    log('Restoring session');
     await ExtensionAuth.restoreSession();
     startSessionMonitor();
   });
@@ -60,24 +138,24 @@ function startSessionMonitor() {
       const { token } = await ExtensionAuth.getSession();
       
       if (token) {
-        console.log('🔐 Session is active');
+        log('Session is active');
         // Token validation happens on API calls
         // If token is expired, API will return 401 and user will need to sign in again
       } else {
-        console.log('🔐 No active session');
+        log('No active session');
       }
     } catch (error) {
       console.error('Session monitor error:', error);
     }
   }, 5 * 60 * 1000); // Every 5 minutes
   
-  console.log('🔐 Session monitor started');
+  log('Session monitor started');
 }
 
 // Stop monitor on shutdown
 if (extensionAPI.runtime.onSuspend) {
   extensionAPI.runtime.onSuspend.addListener(() => {
-    console.log('🔐 Stopping session monitor');
+    log('Stopping session monitor');
     if (sessionRefreshInterval) {
       clearInterval(sessionRefreshInterval);
     }
@@ -90,10 +168,10 @@ const actionAPI = extensionAPI.action || extensionAPI.browserAction;
 if (actionAPI && actionAPI.onClicked) {
   actionAPI.onClicked.addListener(async (tab) => {
     // The popup will handle the interaction
-    console.log('Extension clicked on tab:', tab?.url);
+    log('Extension clicked on tab:', tab?.url);
   });
 } else {
-  console.log('🔧 Action API not available (popup will be used instead)');
+  log('Action API not available (popup will be used instead)');
 }
 
 // Global capture state
@@ -143,25 +221,23 @@ async function handleAreaSelect() {
   try {
     const [tab] = await extensionAPI.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
+    if (isUnscriptablePage(tab.url)) {
+      sendProgress('error', 'This page is protected by the browser and cannot be captured. Try a regular webpage.');
+      return;
+    }
     await extensionAPI.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['areaSelect.js'],
     });
   } catch (err) {
     console.error('Area select injection failed:', err);
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'error', message: 'Could not open area selector on this page.' }
-    } as ExtensionMessage);
+    sendProgress('error', 'Could not open area selector on this page.');
   }
 }
 
 async function handleAreaSelected(rect: { x: number; y: number; width: number; height: number; devicePixelRatio: number }, sender: any) {
   try {
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'capturing', message: 'Capturing selected area...' }
-    } as ExtensionMessage);
+    sendProgress('capturing', 'Capturing selected area...');
 
     const tab = sender?.tab || (await extensionAPI.tabs.query({ active: true, currentWindow: true }))[0];
     if (!tab?.id) throw new Error('No active tab');
@@ -192,101 +268,122 @@ async function handleAreaSelected(rect: { x: number; y: number; width: number; h
     const croppedDataUrl = cropResult?.[0]?.result;
     if (!croppedDataUrl) throw new Error('Failed to crop screenshot');
 
-    // Extract page content
+    // Extract page content (HTML + text)
     let pageContent: any = {};
     try {
       const result = await extensionAPI.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
+          const rawHtml = document.documentElement.outerHTML;
+          const cleaned = rawHtml
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+            .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
           const text = document.body.innerText?.substring(0, 50000) || '';
-          return { text_content: text, favicon_url: (document.querySelector('link[rel*="icon"]') as HTMLLinkElement)?.href || '' };
+          const faviconEl = document.querySelector('link[rel*="icon"]') as HTMLLinkElement;
+          return {
+            html_content: cleaned,
+            text_content: text,
+            favicon_url: faviconEl?.href || `${location.protocol}//${location.host}/favicon.ico`,
+          };
         },
       });
       pageContent = result?.[0]?.result || {};
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.warn('Area capture content extraction failed:', e);
+    }
 
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'saving', message: 'Saving capture...' }
-    } as ExtensionMessage);
+    sendProgress('saving', 'Saving capture...');
+    showPageToast(tab.id!, 'Saving area capture...', 'saving');
 
     const clipData = {
       url: tab.url || '',
       title: tab.title || '',
       screenshot_data: croppedDataUrl,
+      html_content: pageContent.html_content || '',
       text_content: pageContent.text_content || '',
       favicon_url: pageContent.favicon_url || '',
-      notes: `Area capture (${rect.width}x${rect.height}px)`,
+      notes: `Area capture (${rect.width}×${rect.height}px)`,
     };
+
+    log('Area clip data:', {
+      url: clipData.url,
+      title: clipData.title,
+      hasScreenshot: !!clipData.screenshot_data,
+      htmlLength: clipData.html_content.length,
+      textLength: clipData.text_content.length,
+    });
 
     const isAuthenticated = await ExtensionAuth.restoreSession();
     if (isAuthenticated) {
-      const saveResult = await ExtensionAPI.saveClip(clipData);
-      extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'complete', message: 'Area captured!', usage: saveResult.usage }
-      } as ExtensionMessage);
+      try {
+        const saveResult = await ExtensionAPI.saveClip(clipData);
+        sendProgress('complete', 'Area captured!', { usage: saveResult.usage });
+        showPageToast(tab.id!, 'Area saved to PageStash', 'success');
+      } catch (saveError: any) {
+        if (saveError?.isLimitReached) {
+          sendProgress('limit_reached', 'Monthly clip limit reached', { limitInfo: saveError.limitInfo });
+          showPageToast(tab.id!, 'Monthly clip limit reached', 'error');
+        } else {
+          throw saveError;
+        }
+      }
     } else {
-      extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'complete', message: 'Area saved locally (sign in to sync)' }
-      } as ExtensionMessage);
+      sendProgress('complete', 'Area saved locally (sign in to sync)');
+      showPageToast(tab.id!, 'Saved locally (sign in to sync)', 'success');
     }
   } catch (error) {
     console.error('Area capture failed:', error);
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'error', message: error instanceof Error ? error.message : 'Area capture failed' }
-    } as ExtensionMessage);
+    sendProgress('error', error instanceof Error ? error.message : 'Area capture failed');
+    // Show error toast on the page
+    try {
+      const [activeTab] = await extensionAPI.tabs.query({ active: true, currentWindow: true });
+      if (activeTab?.id) showPageToast(activeTab.id, 'Capture failed — please try again', 'error');
+    } catch { /* ignore */ }
   }
 }
 
 function handleCancelCapture() {
-  console.log('Cancelling current capture...');
+  log('Cancelling current capture');
   if (currentCaptureController) {
     currentCaptureController.abort();
     currentCaptureController = null;
   }
-  
-  extensionAPI.runtime.sendMessage({
-    type: 'CAPTURE_PROGRESS',
-    payload: { status: 'cancelled', message: 'Capture cancelled by user' }
-  } as ExtensionMessage);
+  sendProgress('cancelled', 'Capture cancelled');
 }
 
 async function handlePageCaptureWithActiveTab(payload: any) {
   try {
-    // Get the active tab since popup messages don't have sender.tab
     const [activeTab] = await extensionAPI.tabs.query({ active: true, currentWindow: true });
     
     if (!activeTab) {
-      console.error('No active tab found');
-      extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'error', message: 'No active tab found' }
-      } as ExtensionMessage);
+      sendProgress('error', 'No active tab found');
       return;
     }
     
-    console.log('Found active tab:', activeTab.url);
+    if (isUnscriptablePage(activeTab.url)) {
+      sendProgress('error', 'This page is protected by the browser and cannot be captured. Navigate to a regular webpage and try again.');
+      return;
+    }
+
+    if (activeTab.status === 'loading') {
+      sendProgress('error', 'Page is still loading. Wait for it to finish, then try again.');
+      return;
+    }
+    
+    log('Found active tab:', activeTab.url);
     await handlePageCapture(payload, activeTab);
     
   } catch (error) {
     console.error('Failed to get active tab:', error);
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'error', message: 'Failed to access active tab' }
-    } as ExtensionMessage);
+    sendProgress('error', 'Failed to access active tab');
   }
 }
 
 async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
   if (!tab?.id) {
     console.error('No tab ID provided for capture');
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'error', message: 'No active tab found' }
-    } as ExtensionMessage);
+    sendProgress('error', 'No active tab found');
     return;
   }
   
@@ -300,13 +397,9 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
   const timeoutId = setTimeout(() => {
     if (currentCaptureController) {
       currentCaptureController.abort();
-      const errorMsg = captureType === 'fullPage' 
-        ? 'This page is very large and took too long to capture. Try capturing just the visible area instead.'
-        : 'Capture timed out. Please try again.';
-      extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'error', message: errorMsg }
-      } as ExtensionMessage);
+      sendProgress('error', captureType === 'fullPage'
+        ? 'This page is very large. Try capturing just the visible area instead.'
+        : 'Capture timed out. Please try again.');
     }
   }, timeoutMs);
   
@@ -319,59 +412,88 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       return;
     }
 
-    // Step 1: Get page content from content script
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'extracting', message: 'Extracting page content...' }
-    } as ExtensionMessage);
+    sendProgress('extracting', 'Extracting page content...');
 
     let pageContent: any = {};
-    try {
+    let contentExtractionFailed = false;
+
+    const extractContent = async (tabId: number): Promise<any> => {
       const extractionResults = await extensionAPI.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId },
         func: () => {
-          const html = document.documentElement.outerHTML;
-          const cleanedHtml = html
-            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-            .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
+          try {
+            const rawHtml = document.documentElement.outerHTML || '';
+            const cleanedHtml = rawHtml
+              .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+              .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+              .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, '');
 
-          const text = cleanedHtml
-            .replace(/<[^>]*>/g, ' ')
-            .replace(/&nbsp;/g, ' ')
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/\s+/g, ' ')
-            .trim();
+            const bodyText = document.body?.innerText?.substring(0, 50000) || '';
 
-          const faviconLink = document.querySelector('link[rel*="icon"]') as HTMLLinkElement;
-          const favicon = faviconLink?.href || `${window.location.protocol}//${window.location.host}/favicon.ico`;
+            const faviconLink = document.querySelector('link[rel*="icon"]') as HTMLLinkElement;
+            const favicon = faviconLink?.href || `${location.protocol}//${location.host}/favicon.ico`;
 
-          return {
-            url: window.location.href,
-            title: document.title || '',
-            html: cleanedHtml,
-            text: text,
-            favicon: favicon
-          };
+            const metaDesc = (document.querySelector('meta[name="description"]') as HTMLMetaElement)?.content || '';
+            const metaKeywords = (document.querySelector('meta[name="keywords"]') as HTMLMetaElement)?.content || '';
+
+            return {
+              url: location.href,
+              title: document.title || '',
+              html: cleanedHtml,
+              text: bodyText,
+              favicon,
+              metaDescription: metaDesc,
+              metaKeywords,
+              htmlLength: cleanedHtml.length,
+              textLength: bodyText.length,
+            };
+          } catch (innerErr) {
+            return { error: String(innerErr), url: location.href, title: document.title || '' };
+          }
         }
       });
 
-      if (extractionResults && extractionResults[0]?.result) {
-        pageContent = extractionResults[0].result;
-      } else {
-        throw new Error('Content extraction returned no results');
+      const result = extractionResults?.[0]?.result;
+      if (!result || result.error) {
+        throw new Error(result?.error || 'Content extraction returned no results');
       }
-    } catch (extractError) {
-      log('Content extraction failed, using tab metadata:', extractError);
-      pageContent = {
-        url: payload.url,
-        title: payload.title,
-        html: '',
-        text: '',
-        favicon: payload.favicon
-      };
+      return result;
+    };
+
+    // Attempt extraction with one retry
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        pageContent = await extractContent(tab.id);
+        log(`Content extraction (attempt ${attempt}):`, {
+          url: pageContent.url,
+          htmlLength: pageContent.htmlLength,
+          textLength: pageContent.textLength,
+          hasTitle: !!pageContent.title,
+        });
+
+        if (pageContent.htmlLength === 0 && pageContent.textLength === 0) {
+          console.warn(`⚠️ Extraction returned empty content on attempt ${attempt}`);
+          if (attempt === 1) {
+            await new Promise(r => setTimeout(r, 500));
+            continue;
+          }
+          contentExtractionFailed = true;
+        }
+        break;
+      } catch (extractError: any) {
+        console.error(`Content extraction attempt ${attempt} failed:`, extractError);
+        if (attempt === 2) {
+          contentExtractionFailed = true;
+          pageContent = {
+            url: payload.url,
+            title: payload.title,
+            html: '',
+            text: '',
+            favicon: payload.favicon
+          };
+        }
+        await new Promise(r => setTimeout(r, 500));
+      }
     }
 
     // Check if cancelled after content extraction
@@ -384,42 +506,30 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
     let screenshot: string;
     
     if (captureType === 'fullPage' && FullPageCapture.isSupported()) {
-      console.log('Starting full-page capture for:', payload.url);
+      log('Starting full-page capture for:', payload.url);
+      sendProgress('capturing', 'Capturing full page screenshot...');
       
-      // Send progress message to popup
-      extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'capturing', message: 'Capturing full page...' }
-      } as ExtensionMessage);
-      
-      const result = await FullPageCapture.captureFullPage(tab.id, {
-        quality: 90,
-        format: 'png',
-        scrollDelay: 500, // Increased to match the rate limiting
-      });
-      
-      // Check if cancelled during capture
-      if (signal.aborted) {
-        clearTimeout(timeoutId);
-        return;
+      try {
+        const result = await FullPageCapture.captureFullPage(tab.id, {
+          quality: 90,
+          format: 'png',
+          scrollDelay: 500,
+        });
+        
+        if (signal.aborted) { clearTimeout(timeoutId); return; }
+        
+        screenshot = result.dataUrl;
+        log(`Full-page capture completed: ${result.width}x${result.height}px in ${result.captureTime}ms`);
+      } catch (fullPageErr) {
+        console.warn('Full-page capture failed, falling back to visible area:', fullPageErr);
+        sendProgress('capturing', 'Full page failed — capturing visible area instead...');
+        screenshot = await extensionAPI.tabs.captureVisibleTab(tab.windowId, { format: 'png', quality: 90 });
       }
       
-      screenshot = result.dataUrl;
-      console.log(`Full-page capture completed: ${result.width}x${result.height}px in ${result.captureTime}ms`);
-      
     } else {
-      // Fallback to visible area capture
-      console.log('Capturing visible area for:', payload.url);
-      
-      extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'capturing', message: 'Capturing visible area...' }
-      } as ExtensionMessage);
-      
-      screenshot = await extensionAPI.tabs.captureVisibleTab(tab.windowId, {
-        format: 'png',
-        quality: 90
-      });
+      log('Capturing visible area for:', payload.url);
+      sendProgress('capturing', 'Capturing visible area...');
+      screenshot = await extensionAPI.tabs.captureVisibleTab(tab.windowId, { format: 'png', quality: 90 });
     }
     
     // Check if cancelled after capture
@@ -428,98 +538,58 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       return;
     }
     
-    console.log('Screenshot captured successfully');
+    log('Screenshot captured successfully');
+    sendProgress('saving', 'Saving capture...');
     
-    // Send saving progress
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'saving', message: 'Saving capture...' }
-    } as ExtensionMessage);
-    
-    // Prepare clip data using extracted page content
+    const faviconUrl = pageContent.favicon || payload.favicon || '';
     const clipData = {
       url: pageContent.url || payload.url,
       title: pageContent.title || payload.title,
       screenshot_data: screenshot,
       html_content: pageContent.html || '',
       text_content: pageContent.text || '',
-      // Use favicon from content script or fallback to popup data
-      ...((pageContent.favicon || payload.favicon) && (pageContent.favicon || payload.favicon).startsWith('http') 
-        ? { favicon_url: pageContent.favicon || payload.favicon } 
-        : {}),
-      // Include folder ID if provided
+      ...(faviconUrl.startsWith('http') ? { favicon_url: faviconUrl } : {}),
       ...(payload.folderId ? { folder_id: payload.folderId } : {}),
+      ...(pageContent.metaDescription ? { meta_description: pageContent.metaDescription } : {}),
     };
 
-    console.log('✅ Prepared clip data:', {
+    log('Prepared clip data:', {
       url: clipData.url,
       title: clipData.title,
       hasScreenshot: !!clipData.screenshot_data,
       htmlLength: clipData.html_content.length,
       textLength: clipData.text_content.length,
-      hasFavicon: !!clipData.favicon_url
+      hasFavicon: !!clipData.favicon_url,
+      contentExtractionFailed,
     });
-    
-    // DEBUG: Check if content is actually empty
-    if (!clipData.html_content || clipData.html_content.length === 0) {
-      console.warn('⚠️ WARNING: html_content is empty!');
-    }
-    if (!clipData.text_content || clipData.text_content.length === 0) {
-      console.warn('⚠️ WARNING: text_content is empty!');
-    }
 
-    // Check if user is authenticated
     const { token } = await ExtensionAuth.getSession();
+    const contentNote = contentExtractionFailed ? ' (screenshot only — text extraction failed on this page)' : '';
     
     if (token) {
       try {
-        // Save to Supabase
         const saveResult = await ExtensionAPI.saveClip(clipData);
-        console.log('Clip saved to Supabase successfully');
+        log('Clip saved successfully');
         
-        // Check if cancelled during save
-        if (signal.aborted) {
-          clearTimeout(timeoutId);
-          return;
-        }
+        if (signal.aborted) { clearTimeout(timeoutId); return; }
         
-        // Send success message to popup with usage data
-        extensionAPI.runtime.sendMessage({
-          type: 'CAPTURE_PROGRESS',
-          payload: { 
-            status: 'complete', 
-            message: 'Capture saved to cloud!',
-            usage: saveResult.usage // Include usage data from API response
-          }
-        } as ExtensionMessage);
+        sendProgress('complete', `Capture saved!${contentNote}`, { usage: saveResult.usage });
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to save to Supabase:', error);
+        if (signal.aborted) { clearTimeout(timeoutId); return; }
         
-        // Check if cancelled during error handling
-        if (signal.aborted) {
-          clearTimeout(timeoutId);
+        if (error?.isLimitReached) {
+          sendProgress('limit_reached', 'Monthly clip limit reached', { limitInfo: error.limitInfo });
           return;
         }
         
-        // Fallback to local storage
         await saveClipLocally(clipData);
-        
-        // Send success message (local only)
-        extensionAPI.runtime.sendMessage({
-          type: 'CAPTURE_PROGRESS',
-          payload: { status: 'complete', message: 'Capture saved locally (will sync when online)' }
-        } as ExtensionMessage);
+        sendProgress('complete', 'Saved locally (will sync when online).' + contentNote);
       }
     } else {
-      // Save locally when not authenticated
       await saveClipLocally(clipData);
-      
-      // Send success message (local only)
-      extensionAPI.runtime.sendMessage({
-        type: 'CAPTURE_PROGRESS',
-        payload: { status: 'complete', message: 'Capture saved locally (sign in to sync)' }
-      } as ExtensionMessage);
+      sendProgress('complete', `Saved locally (sign in to sync)${contentNote}`);
     }
     
     // Update capture count
@@ -544,11 +614,7 @@ async function handlePageCapture(payload: any, tab?: chrome.tabs.Tab) {
       return;
     }
     
-    // Send error message to popup
-    extensionAPI.runtime.sendMessage({
-      type: 'CAPTURE_PROGRESS',
-      payload: { status: 'error', message: error instanceof Error ? error.message : 'Capture failed' }
-    } as ExtensionMessage);
+    sendProgress('error', error instanceof Error ? error.message : 'Capture failed. Please try again.');
   }
 }
 
@@ -571,7 +637,7 @@ async function saveClipLocally(clipData: any) {
       }
       
       extensionAPI.storage.local.set({ localClips }, () => {
-        console.log('Clip saved locally');
+        log('Clip saved locally');
         resolve();
       });
     });
@@ -593,18 +659,18 @@ async function handleGetAuthToken(sendResponse: (response: any) => void) {
 
 async function handleAuthenticate(payload: { email: string; password: string; isSignUp: boolean }, sendResponse: (response: any) => void) {
   try {
-    console.log('🔧 Background: Handling authentication:', payload.isSignUp ? 'sign up' : 'sign in', 'for', payload.email);
+    log('Handling authentication:', payload.isSignUp ? 'sign up' : 'sign in');
     
     let result;
     if (payload.isSignUp) {
-      console.log('🔧 Background: Calling ExtensionAuth.signUp');
+      log('Calling signUp');
       result = await ExtensionAuth.signUp(payload.email, payload.password);
     } else {
-      console.log('🔧 Background: Calling ExtensionAuth.signIn');
+      log('Calling signIn');
       result = await ExtensionAuth.signIn(payload.email, payload.password);
     }
     
-    console.log('🔧 Background: Auth result:', { 
+    log('Auth result:', { 
       hasData: !!result.data, 
       hasError: !!result.error, 
       errorMessage: result.error?.message 
@@ -614,7 +680,7 @@ async function handleAuthenticate(payload: { email: string; password: string; is
       console.error('🔧 Background: Authentication failed:', result.error);
       sendResponse({ error: result.error });
     } else {
-      console.log('🔧 Background: Authentication successful, sending response');
+      log('Authentication successful');
       sendResponse({ data: result.data });
     }
   } catch (error) {
@@ -625,7 +691,7 @@ async function handleAuthenticate(payload: { email: string; password: string; is
 
 async function handleSignOut(sendResponse: (response: any) => void) {
   try {
-    console.log('Handling sign out');
+    log('Handling sign out');
     await ExtensionAuth.signOut();
     sendResponse({ success: true });
   } catch (error) {
@@ -710,7 +776,7 @@ async function syncLocalClips() {
       return;
     }
 
-    console.log(`Syncing ${unsyncedClips.length} local clips...`);
+    log(`Syncing ${unsyncedClips.length} local clips`);
 
     for (const clip of unsyncedClips) {
       try {
@@ -733,7 +799,7 @@ async function syncLocalClips() {
     // Update local storage with synced status
     extensionAPI.storage.local.set({ localClips: result.localClips });
     
-    console.log('Local clips sync completed');
+    log('Local clips sync completed');
   } catch (error) {
     console.error('Failed to sync local clips:', error);
   }

@@ -104,7 +104,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
               </div>
             </div>
             <Badge className="rounded-full px-4 py-1.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-semibold">
-              v2.0.0
+              v3.0.0
             </Badge>
           </div>
 

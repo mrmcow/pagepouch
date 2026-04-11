@@ -112,3 +112,71 @@ export function getNextResetDate(): string {
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
   return nextMonth.toISOString().split('T')[0] // YYYY-MM-DD format
 }
+
+/**
+ * Get the first-of-month date string for the current month (YYYY-MM-DD).
+ */
+export function getCurrentMonthStart(): { date: Date; str: string } {
+  const d = new Date()
+  d.setDate(1)
+  d.setHours(0, 0, 0, 0)
+  return { date: d, str: d.toISOString().split('T')[0] }
+}
+
+/**
+ * Ensure a user_usage row exists and is up-to-date for the current month.
+ * Returns the current clips_this_month value.
+ *
+ * Pass any Supabase client (cookie-based or Bearer-token-based).
+ */
+export async function ensureUsageRow(
+  supabase: any,
+  userId: string
+): Promise<number> {
+  const { date: mStart, str: monthStr } = getCurrentMonthStart()
+
+  // Always count actual clips for the month — this is the source of truth
+  const { count } = await supabase
+    .from('clips')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gte('created_at', mStart.toISOString())
+
+  const realCount = count || 0
+
+  // Upsert the usage row to keep it in sync
+  await supabase.from('user_usage').upsert(
+    { user_id: userId, clips_this_month: realCount, last_reset_date: monthStr },
+    { onConflict: 'user_id' }
+  )
+
+  return realCount
+}
+
+/**
+ * Increment the usage counter after a clip is created.
+ * Counts actual clips from DB to be authoritative, then updates the row.
+ * Returns the new clips_this_month value.
+ */
+export async function incrementUsage(
+  supabase: any,
+  userId: string
+): Promise<number> {
+  const { date: mStart, str: monthStr } = getCurrentMonthStart()
+
+  // Count actual clips — the insert has already committed at this point
+  const { count } = await supabase
+    .from('clips')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gte('created_at', mStart.toISOString())
+
+  const realCount = count || 0
+
+  await supabase.from('user_usage').upsert(
+    { user_id: userId, clips_this_month: realCount, last_reset_date: monthStr },
+    { onConflict: 'user_id' }
+  )
+
+  return realCount
+}

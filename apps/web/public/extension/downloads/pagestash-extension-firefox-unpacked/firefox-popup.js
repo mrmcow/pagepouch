@@ -1,5 +1,21 @@
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
 
+const UNSCRIPTABLE_RE = [
+  /^chrome:/i, /^chrome-extension:/i, /^about:/i, /^edge:/i, /^brave:/i,
+  /^moz-extension:/i, /^view-source:/i, /^devtools:/i,
+  /^chrome\.google\.com\/webstore/i, /^chromewebstore\.google\.com/i,
+  /^addons\.mozilla\.org/i, /^microsoftedge\.microsoft\.com\/addons/i,
+];
+
+function isPageCapturable(url) {
+  if (!url) return { ok: false, reason: 'No page URL detected.' };
+  if (UNSCRIPTABLE_RE.some(p => p.test(url)))
+    return { ok: false, reason: 'This is a browser-protected page and cannot be captured. Navigate to a regular website.' };
+  if (url === 'about:blank' || url === 'about:newtab' || url === 'about:home')
+    return { ok: false, reason: 'Open a webpage first, then capture it.' };
+  return { ok: true };
+}
+
 let appState = {
   isCapturing: false,
   isAuthenticated: false,
@@ -15,7 +31,8 @@ let appState = {
   clipsLimit: 10,
   subscriptionTier: 'free',
   warningLevel: 'safe',
-  usageLoading: false
+  usageLoading: false,
+  limitInfo: null
 };
 
 let authState = { email: '', password: '', isSignUp: false, isLoading: false, error: null };
@@ -34,12 +51,12 @@ const B = {
 
 function logoSVG(size) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-    <path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+      <path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
     <path d="M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
-    <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
-    <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
   </svg>`;
 }
 
@@ -65,10 +82,10 @@ async function loadFolders() {
     const r = await extensionAPI.runtime.sendMessage({ type: 'GET_FOLDERS' });
     if (r?.folders?.length) {
       appState.folders = r.folders;
-      if (!appState.selectedFolderId) {
+        if (!appState.selectedFolderId) {
         const inbox = r.folders.find(f => f.name.toLowerCase() === 'inbox');
         appState.selectedFolderId = inbox ? inbox.id : r.folders[0].id;
-        await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
+          await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
       }
     } else { appState.folders = []; appState.selectedFolderId = null; }
   } catch { appState.folders = []; appState.selectedFolderId = null; }
@@ -119,6 +136,15 @@ async function getCurrentTab() {
 async function capturePage(captureType) {
   if (!appState.currentTab?.id) return;
   if (!appState.isAuthenticated) { appState.showAuth = true; render(); return; }
+
+  const check = isPageCapturable(appState.currentTab.url);
+  if (!check.ok) {
+    appState.captureProgress = { status: 'error', message: check.reason };
+    render();
+    setTimeout(() => { appState.captureProgress = null; render(); }, 4500);
+    return;
+  }
+
   appState.isCapturing = true;
   appState.captureProgress = { status: 'starting', message: captureType === 'fullPage' ? 'Preparing full page capture...' : 'Preparing screenshot...' };
   render();
@@ -133,13 +159,19 @@ async function capturePage(captureType) {
     });
   } catch {
     appState.isCapturing = false;
-    appState.captureProgress = { status: 'error', message: 'Capture failed. Please refresh the page and try again.' };
+    appState.captureProgress = { status: 'error', message: 'Capture failed. Refresh the page and try again.' };
     render();
-    setTimeout(() => { appState.captureProgress = null; render(); }, 3000);
+    setTimeout(() => { appState.captureProgress = null; render(); }, 4500);
   }
 }
 
 async function handleAuth() {
+  // Read directly from DOM to catch password manager autofill
+  const emailEl = document.getElementById('email-input');
+  const passEl = document.getElementById('password-input');
+  if (emailEl) authState.email = emailEl.value || authState.email;
+  if (passEl) authState.password = passEl.value || authState.password;
+  if (!authState.email || !authState.password) { authState.error = 'Please enter your email and password'; render(); return; }
   authState.isLoading = true; authState.error = null; render();
   try {
     const r = await extensionAPI.runtime.sendMessage({
@@ -147,6 +179,7 @@ async function handleAuth() {
     });
     if (r?.error) { authState.error = r.error.message || 'Authentication failed'; authState.isLoading = false; render(); return; }
     if (!r?.data) { authState.error = 'Invalid response from server'; authState.isLoading = false; render(); return; }
+    if (authState.isSignUp && !r.data.session) { authState.error = 'Check your email for a confirmation link, then sign in.'; authState.isSignUp = false; authState.isLoading = false; render(); return; }
     appState.isAuthenticated = true; appState.userEmail = authState.email; appState.showAuth = false;
     authState = { email: '', password: '', isSignUp: false, isLoading: false, error: null };
     await Promise.all([loadFolders(), loadUsage()]);
@@ -156,7 +189,7 @@ async function handleAuth() {
 
 async function signOut() {
   try { await extensionAPI.runtime.sendMessage({ type: 'SIGN_OUT' }); } catch {}
-  await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
+    await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
   appState.isAuthenticated = false; appState.userEmail = null; appState.showAuth = false; render();
 }
 
@@ -186,19 +219,19 @@ function renderAuth() {
         <p style="margin:0;color:${B.textMuted};font-size:13px">${authState.isSignUp ? 'Start archiving web pages' : 'Sign in to your library'}</p>
       </div>
       <form id="auth-form" style="display:flex;flex-direction:column;gap:10px;width:100%">
-        <input id="email-input" type="email" placeholder="Email" value="${esc(authState.email)}" autocomplete="${authState.isSignUp ? 'email' : 'username'}" required
+        <input id="email-input" name="email" type="email" placeholder="Email" value="${esc(authState.email)}" autocomplete="${authState.isSignUp ? 'email' : 'username'}" required
           style="width:100%;padding:10px 12px;border:1.5px solid ${B.border};border-radius:${B.radius};font-size:13px;box-sizing:border-box;background:${B.bg};outline:none;color:${B.text};font-family:inherit;transition:border-color 0.15s ease">
-        <input id="password-input" type="password" placeholder="Password" value="${esc(authState.password)}" autocomplete="${authState.isSignUp ? 'new-password' : 'current-password'}" required
+        <input id="password-input" name="password" type="password" placeholder="Password" value="${esc(authState.password)}" autocomplete="${authState.isSignUp ? 'new-password' : 'current-password'}" required
           style="width:100%;padding:10px 12px;border:1.5px solid ${B.border};border-radius:${B.radius};font-size:13px;box-sizing:border-box;background:${B.bg};outline:none;color:${B.text};font-family:inherit;transition:border-color 0.15s ease">
         ${authState.error ? `<div style="text-align:center;padding:8px 12px;background:${B.errorBg};border-radius:${B.radius};border:1px solid ${B.errorBorder};color:${B.error};font-size:12px">${esc(authState.error)}</div>` : ''}
         <button id="auth-submit" type="submit" ${canSubmit ? '' : 'disabled'}
           style="width:100%;padding:10px 16px;border-radius:${B.radius};border:none;font-weight:500;font-size:13px;cursor:pointer;background:${B.primary};color:#fff;font-family:inherit;transition:background-color 0.15s ease,transform 0.1s ease;box-shadow:0 1px 2px 0 rgb(37 99 235/0.2);opacity:${canSubmit ? '1' : '0.55'}">
           ${authState.isLoading ? 'Processing...' : authState.isSignUp ? 'Create account' : 'Sign in'}
         </button>
-      </form>
+        </form>
       <button id="auth-toggle" style="background:none;border:none;color:${B.primary};font-size:13px;font-weight:500;cursor:pointer;padding:4px 0;font-family:inherit">
-        ${authState.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-      </button>
+            ${authState.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+        </button>
     </div>
   </div>`;
 }
@@ -213,15 +246,17 @@ function renderMain() {
     const cp = appState.captureProgress;
     const isErr = cp.status === 'error';
     const isDone = cp.status === 'complete';
-    const cardBg = isErr ? B.errorBg : isDone ? B.successBg : B.bgSurface;
-    const cardBorder = isErr ? B.errorBorder : isDone ? B.successBorder : B.border;
-    const titleColor = isErr ? B.error : isDone ? B.success : B.primary;
-    const title = isDone ? 'Saved!' : isErr ? 'Capture failed' : 'Capturing...';
-    const barWidth = isDone ? '100%' : cp.status === 'capturing' ? '75%' : '30%';
+    const isCancelled = cp.status === 'cancelled';
+    const cardBg = isErr || isCancelled ? B.errorBg : isDone ? B.successBg : B.bgSurface;
+    const cardBorder = isErr || isCancelled ? B.errorBorder : isDone ? B.successBorder : B.border;
+    const titleColor = isErr || isCancelled ? B.error : isDone ? B.success : B.primary;
+    const title = isDone ? '✓ Saved!' : isErr ? 'Capture failed' : isCancelled ? 'Cancelled' : 'Capturing...';
+    const barPct = cp.status === 'saving' ? '90%' : cp.status === 'capturing' ? '60%' : cp.status === 'extracting' ? '30%' : '15%';
+    const showBar = !isErr && !isDone && !isCancelled;
     progressHTML = `<div style="background:${cardBg};border:1px solid ${cardBorder};border-radius:${B.radiusLg};padding:14px;width:100%;box-sizing:border-box${isDone ? ';animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' : ''}">
       <div style="font-weight:600;font-size:14px;margin-bottom:6px;color:${titleColor}">${title}</div>
-      ${!isErr && !isDone ? `<div style="width:100%;height:3px;background:${B.bgMuted};border-radius:2px;overflow:hidden;margin-bottom:6px"><div style="height:100%;background:${B.primary};border-radius:2px;transition:width 0.4s ease;width:${barWidth}"></div></div>` : ''}
-      <div style="font-size:12px;color:${isErr ? B.error : B.textMuted}">${esc(cp.message)}</div>
+      ${showBar ? `<div style="width:100%;height:3px;background:${B.bgMuted};border-radius:2px;overflow:hidden;margin-bottom:6px"><div style="height:100%;background:${B.primary};border-radius:2px;transition:width 0.5s ease;width:${barPct}"></div></div>` : ''}
+      <div style="font-size:12px;color:${isErr || isCancelled ? B.error : B.textMuted};line-height:1.4">${esc(cp.message)}</div>
     </div>`;
   }
 
@@ -237,15 +272,30 @@ function renderMain() {
   let captureHTML = '';
   if (!appState.isCapturing && !appState.captureProgress) {
     if (appState.warningLevel === 'exceeded') {
-      captureHTML = `<div style="background:${B.errorBg};border:1px solid ${B.errorBorder};border-radius:${B.radiusLg};padding:14px;width:100%;box-sizing:border-box;text-align:center">
-        <div style="font-weight:600;font-size:14px;color:${B.error};margin-bottom:4px">Monthly limit reached</div>
-        <div style="font-size:12px;color:${B.textMuted};margin-bottom:10px">Upgrade to Pro for more clips.</div>
-        <button id="upgrade-pro" style="width:100%;padding:10px 16px;border-radius:${B.radius};border:none;font-weight:500;font-size:13px;cursor:pointer;background:${B.error};color:#fff;font-family:inherit">Upgrade to Pro</button>
+      const li = appState.limitInfo;
+      const isPro = appState.subscriptionTier === 'pro';
+      const daysText = li?.days_until_reset != null ? `Resets in ${li.days_until_reset} day${li.days_until_reset !== 1 ? 's' : ''}` : '';
+      const limitNum = li?.clips_limit ?? appState.clipsLimit;
+      captureHTML = `<div style="background:${B.errorBg};border:1px solid ${B.errorBorder};border-radius:${B.radiusLg};padding:16px;width:100%;box-sizing:border-box;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">⏳</div>
+        <div style="font-weight:700;font-size:15px;color:${B.error};margin-bottom:4px">Monthly Limit Reached</div>
+        <div style="font-size:12px;color:${B.textMuted};margin-bottom:8px">You've used all ${limitNum} clips this month</div>
+        ${daysText ? `<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:10px;padding:6px 10px;background:#f3f4f6;border-radius:8px;display:inline-block">${daysText}</div>` : ''}
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          ${isPro
+            ? `<button id="contact-support" style="width:100%;padding:10px 16px;border-radius:${B.radius};border:none;font-weight:500;font-size:13px;cursor:pointer;background:#d97706;color:#fff;font-family:inherit">Contact Support</button>`
+            : `<button id="upgrade-pro" style="width:100%;padding:10px 16px;border-radius:${B.radius};border:none;font-weight:500;font-size:13px;cursor:pointer;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-family:inherit">Upgrade to Pro — 1,000 clips/mo</button>`
+          }
+          <button id="dismiss-limit" style="width:100%;padding:6px 12px;border-radius:${B.radius};border:1px solid #e2e8f0;font-weight:400;font-size:11px;cursor:pointer;background:#fff;color:${B.textMuted};font-family:inherit">Dismiss</button>
+        </div>
       </div>`;
     } else {
       captureHTML = `<div style="display:flex;flex-direction:column;gap:8px;width:100%">
         <button id="capture-full" style="width:100%;padding:10px 16px;border-radius:${B.radius};border:none;font-weight:500;font-size:13px;cursor:pointer;background:${B.primary};color:#fff;font-family:inherit;transition:background-color 0.15s ease,transform 0.1s ease;box-shadow:0 1px 2px 0 rgb(37 99 235/0.2)">Capture full page</button>
-        <button id="capture-visible" style="width:100%;padding:10px 16px;border-radius:${B.radius};border:1px solid ${B.border};font-weight:500;font-size:13px;cursor:pointer;background:${B.bg};color:${B.textSecondary};font-family:inherit;transition:background-color 0.15s ease">Capture visible area</button>
+        <div style="display:flex;gap:8px">
+          <button id="capture-visible" style="flex:1;padding:10px 12px;border-radius:${B.radius};border:1px solid ${B.border};font-weight:500;font-size:13px;cursor:pointer;background:${B.bg};color:${B.textSecondary};font-family:inherit;transition:background-color 0.15s ease">Visible area</button>
+          <button id="capture-area" style="flex:1;padding:10px 12px;border-radius:${B.radius};border:1px solid ${B.border};font-weight:500;font-size:13px;cursor:pointer;background:${B.bg};color:${B.textSecondary};font-family:inherit;transition:background-color 0.15s ease">Select area</button>
+        </div>
       </div>`;
     }
   }
@@ -281,7 +331,7 @@ function renderMain() {
       </div>` : ''}
       ${progressHTML}${folderHTML}${captureHTML}${accountHTML}
     </div>
-    <footer style="padding:8px 16px;text-align:center;font-size:11px;color:${B.textFaint};border-top:1px solid ${B.borderLight}">PageStash v2.0.0</footer>
+    <footer style="padding:8px 16px;text-align:center;font-size:11px;color:${B.textFaint};border-top:1px solid ${B.borderLight}">PageStash v3.0.0</footer>
   </div>`;
 }
 
@@ -308,10 +358,22 @@ function bindEvents() {
   } else {
     on('capture-full', 'click', () => capturePage('fullPage'));
     on('capture-visible', 'click', () => capturePage('visible'));
+    on('capture-area', 'click', () => {
+      const check = isPageCapturable(appState.currentTab?.url);
+      if (!check.ok) {
+        appState.captureProgress = { status: 'error', message: check.reason };
+        render();
+        setTimeout(() => { appState.captureProgress = null; render(); }, 4500);
+        return;
+      }
+      extensionAPI.runtime.sendMessage({ type: 'AREA_SELECT' }); window.close();
+    });
     on('show-auth', 'click', () => { appState.showAuth = true; render(); });
     on('sign-out', 'click', signOut);
     on('open-webapp', 'click', () => extensionAPI.tabs.create({ url: 'https://pagestash.app/dashboard' }));
-    on('upgrade-pro', 'click', () => extensionAPI.tabs.create({ url: 'https://pagestash.app/pricing' }));
+    on('upgrade-pro', 'click', () => extensionAPI.tabs.create({ url: 'https://pagestash.app/dashboard?upgrade=true' }));
+    on('contact-support', 'click', () => extensionAPI.tabs.create({ url: 'mailto:support@pagestash.app?subject=Pro%20Plan%20-%20Clip%20Limit%20Inquiry' }));
+    on('dismiss-limit', 'click', () => { appState.limitInfo = null; render(); });
     on('folder-select', 'change', e => {
       appState.selectedFolderId = e.target.value;
       extensionAPI.storage.local.set({ selectedFolderId: e.target.value });
@@ -330,22 +392,34 @@ function updateSubmitBtn() {
 async function init() {
   await checkAuthStatus();
   await getCurrentTab();
-
-  extensionAPI.runtime.onMessage.addListener((message) => {
+  
+    extensionAPI.runtime.onMessage.addListener((message) => {
     if (message.type !== 'CAPTURE_PROGRESS') return;
-    appState.captureProgress = { status: message.payload.status, message: message.payload.message };
-    if (message.payload.status === 'complete' && message.payload.usage) {
-      appState.clipsRemaining = message.payload.usage.clips_remaining;
-      appState.clipsLimit = message.payload.usage.clips_limit;
-      appState.subscriptionTier = message.payload.usage.subscription_tier;
-      appState.warningLevel = message.payload.usage.warning_level;
-    }
-    render();
-    if (message.payload.status === 'complete') {
-      setTimeout(() => { appState.captureProgress = null; appState.isCapturing = false; render(); }, 2200);
+    const { status, usage, limitInfo } = message.payload;
+    appState.captureProgress = { status, message: message.payload.message };
+      if (status === 'limit_reached') {
+        appState.limitInfo = limitInfo || null;
+        appState.warningLevel = 'exceeded';
+        appState.clipsRemaining = 0;
+        appState.isCapturing = false;
+        appState.captureProgress = null;
+        render();
+        return;
+      }
+      if (status === 'complete' && usage) {
+        appState.clipsRemaining = usage.clips_remaining;
+        appState.clipsLimit = usage.clips_limit;
+        appState.subscriptionTier = usage.subscription_tier;
+        appState.warningLevel = usage.warning_level;
+      }
+      render();
+      if (status === 'complete') {
+      setTimeout(() => { appState.captureProgress = null; appState.isCapturing = false; render(); }, 2500);
+    } else if (status === 'error' || status === 'cancelled') {
+      setTimeout(() => { appState.captureProgress = null; appState.isCapturing = false; render(); }, 4500);
     }
   });
-
+  
   render();
 }
 

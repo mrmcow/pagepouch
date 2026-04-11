@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PageStash",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Capture any webpage with one click. Perfect for researchers, analysts, and anyone who needs to archive web content reliably.",
   "author": "PageStash Team",
   "homepage_url": "https://pagestash.app",
@@ -40,7 +40,6 @@
     }
   ],
   "minimum_chrome_version": "88",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   }

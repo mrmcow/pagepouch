@@ -4,7 +4,12 @@ import * as cheerio from 'cheerio'
 import { 
   getSubscriptionLimits, 
   getClipsRemaining, 
-  hasReachedClipLimit 
+  getUsageWarningLevel,
+  hasReachedClipLimit,
+  getDaysUntilReset,
+  getNextResetDate,
+  ensureUsageRow,
+  incrementUsage
 } from '@/lib/subscription-limits'
 
 export const runtime = 'nodejs'
@@ -121,20 +126,20 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const { data: usageData } = await supabase
-      .from('user_usage')
-      .select('clips_this_month')
-      .eq('user_id', user.id)
-      .single()
-
     const subscriptionTier = userProfile?.subscription_tier || 'free'
-    const clipsThisMonth = usageData?.clips_this_month || 0
+    const clipsThisMonth = await ensureUsageRow(supabase, user.id)
 
     if (hasReachedClipLimit(clipsThisMonth, subscriptionTier)) {
       const limits = getSubscriptionLimits(subscriptionTier)
       return NextResponse.json(
         { 
-          error: `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.` 
+          error: 'Clip limit reached',
+          message: `You have reached your monthly limit of ${limits.clipsPerMonth} clips.`,
+          clips_limit: limits.clipsPerMonth,
+          clips_this_month: clipsThisMonth,
+          subscription_tier: subscriptionTier,
+          days_until_reset: getDaysUntilReset(),
+          reset_date: getNextResetDate(),
         },
         { status: 429 }
       )
@@ -318,7 +323,15 @@ export async function POST(request: NextRequest) {
       if (insertError.code === '23514' || insertError.message?.includes('Clip limit reached')) {
         const limits = getSubscriptionLimits(subscriptionTier)
         return NextResponse.json(
-          { error: insertError.message || `You have reached your monthly limit of ${limits.clipsPerMonth} clips. Upgrade to Pro for more clips.` },
+          { 
+            error: 'Clip limit reached',
+            message: insertError.message || `You have reached your monthly limit of ${limits.clipsPerMonth} clips.`,
+            clips_limit: limits.clipsPerMonth,
+            clips_this_month: clipsThisMonth,
+            subscription_tier: subscriptionTier,
+            days_until_reset: getDaysUntilReset(),
+            reset_date: getNextResetDate(),
+          },
           { status: 429 }
         )
       }
@@ -328,12 +341,22 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Clip created: ${clip.id} (screenshot: ${screenshotUrl ? 'yes' : 'no'})`)
 
+    const newClipsThisMonth = await incrementUsage(supabase, user.id)
+    const limits = getSubscriptionLimits(subscriptionTier)
+
     return NextResponse.json({
       success: true,
       clip: clip,
       message: screenshotUrl
         ? 'Page captured with screenshot'
         : 'Page captured (screenshot unavailable)',
+      usage: {
+        clips_this_month: newClipsThisMonth,
+        clips_limit: limits.clipsPerMonth,
+        clips_remaining: getClipsRemaining(newClipsThisMonth, subscriptionTier),
+        subscription_tier: subscriptionTier,
+        warning_level: getUsageWarningLevel(newClipsThisMonth, subscriptionTier),
+      },
     })
   } catch (error: any) {
     console.error('❌ Capture error:', error)

@@ -277,14 +277,27 @@ export class ExtensionAPI {
     if (!response.ok) {
       const errorText = await response.text();
       
-      let error;
+      let errorData: any;
       try {
-        error = JSON.parse(errorText);
+        errorData = JSON.parse(errorText);
       } catch {
-        error = { error: errorText || 'Failed to save clip' };
+        errorData = { error: errorText || 'Failed to save clip' };
       }
       
-      throw new Error(error.error || 'Failed to save clip')
+      if (response.status === 429) {
+        const limitError: any = new Error(errorData.error || 'Clip limit reached');
+        limitError.isLimitReached = true;
+        limitError.limitInfo = {
+          clips_limit: errorData.clips_limit,
+          clips_this_month: errorData.clips_this_month,
+          subscription_tier: errorData.subscription_tier,
+          days_until_reset: errorData.days_until_reset,
+          reset_date: errorData.reset_date,
+        };
+        throw limitError;
+      }
+      
+      throw new Error(errorData.error || 'Failed to save clip')
     }
 
     return response.json();
