@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { GlobalProviders } from '@/components/GlobalProviders'
+import { MarketingHomeTheme } from '@/components/MarketingHomeTheme'
 
 // Trigger rebuild with environment variables configured
 
@@ -117,7 +118,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('pagestash-theme');var d=t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){}})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var p=location.pathname||'';if(p==='/'||p===''){document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light';return;}var t=localStorage.getItem('pagestash-theme');if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='';}catch(e){}})()` }} />
         <link rel="dns-prefetch" href="https://gwvsltgmjreructvbpzg.supabase.co" />
         {/* Google Analytics 4 */}
         {GA_MEASUREMENT_ID && (
@@ -145,6 +146,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <GlobalProviders>
+          <MarketingHomeTheme />
           {children}
         </GlobalProviders>
       </body>

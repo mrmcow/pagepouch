@@ -283,7 +283,10 @@ export default function HomePage() {
           <>
             <div className="fixed top-4 left-3 sm:left-6 z-50">
               <div className="inline-flex items-center bg-white dark:bg-slate-900 rounded-full pl-3 pr-4 py-2 shadow-[0_20px_60px_-30px_rgba(2,6,23,1)] border border-white/70 dark:border-white/20 backdrop-blur-xl">
-                <LogoWithText size={32} textClassName="!text-slate-900" />
+                <LogoWithText
+                  size={32}
+                  textClassName="!text-slate-900 dark:!text-white font-semibold !tracking-tight dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)]"
+                />
               </div>
             </div>
             <div className="fixed top-4 right-3 sm:right-6 z-50 flex items-center gap-3">
