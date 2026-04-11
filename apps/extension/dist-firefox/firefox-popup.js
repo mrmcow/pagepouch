@@ -34,12 +34,12 @@ const B = {
 
 function logoSVG(size) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-    <path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M9 6C9 4.89543 9.89543 4 11 4H35C36.1046 4 37 4.89543 37 6V40C37 41.1046 36.1046 42 35 42H11C9.89543 42 9 41.1046 9 40V6Z" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+      <path d="M37 6V18L42 13V8C42 6.89543 41.1046 6 40 6H37Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
     <path d="M38.5 9.5V15.5M38.5 9.5H40C40.5523 9.5 41 9.94772 41 10.5V11.5C41 12.0523 40.5523 12.5 40 12.5H38.5M38.5 9.5V12.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
-    <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
-    <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="14" width="14" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="18" width="10" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
+      <rect x="15" y="22" width="12" height="1.5" rx="0.75" fill="#64748b" opacity="0.3"/>
   </svg>`;
 }
 
@@ -65,10 +65,10 @@ async function loadFolders() {
     const r = await extensionAPI.runtime.sendMessage({ type: 'GET_FOLDERS' });
     if (r?.folders?.length) {
       appState.folders = r.folders;
-      if (!appState.selectedFolderId) {
+        if (!appState.selectedFolderId) {
         const inbox = r.folders.find(f => f.name.toLowerCase() === 'inbox');
         appState.selectedFolderId = inbox ? inbox.id : r.folders[0].id;
-        await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
+          await extensionAPI.storage.local.set({ selectedFolderId: appState.selectedFolderId });
       }
     } else { appState.folders = []; appState.selectedFolderId = null; }
   } catch { appState.folders = []; appState.selectedFolderId = null; }
@@ -147,6 +147,7 @@ async function handleAuth() {
     });
     if (r?.error) { authState.error = r.error.message || 'Authentication failed'; authState.isLoading = false; render(); return; }
     if (!r?.data) { authState.error = 'Invalid response from server'; authState.isLoading = false; render(); return; }
+    if (authState.isSignUp && !r.data.session) { authState.error = 'Check your email for a confirmation link, then sign in.'; authState.isSignUp = false; authState.isLoading = false; render(); return; }
     appState.isAuthenticated = true; appState.userEmail = authState.email; appState.showAuth = false;
     authState = { email: '', password: '', isSignUp: false, isLoading: false, error: null };
     await Promise.all([loadFolders(), loadUsage()]);
@@ -156,7 +157,7 @@ async function handleAuth() {
 
 async function signOut() {
   try { await extensionAPI.runtime.sendMessage({ type: 'SIGN_OUT' }); } catch {}
-  await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
+    await extensionAPI.storage.local.remove(['authToken', 'userEmail', 'userId', 'refreshToken', 'isAuthenticated']);
   appState.isAuthenticated = false; appState.userEmail = null; appState.showAuth = false; render();
 }
 
@@ -195,10 +196,10 @@ function renderAuth() {
           style="width:100%;padding:10px 16px;border-radius:${B.radius};border:none;font-weight:500;font-size:13px;cursor:pointer;background:${B.primary};color:#fff;font-family:inherit;transition:background-color 0.15s ease,transform 0.1s ease;box-shadow:0 1px 2px 0 rgb(37 99 235/0.2);opacity:${canSubmit ? '1' : '0.55'}">
           ${authState.isLoading ? 'Processing...' : authState.isSignUp ? 'Create account' : 'Sign in'}
         </button>
-      </form>
+        </form>
       <button id="auth-toggle" style="background:none;border:none;color:${B.primary};font-size:13px;font-weight:500;cursor:pointer;padding:4px 0;font-family:inherit">
-        ${authState.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-      </button>
+            ${authState.isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+        </button>
     </div>
   </div>`;
 }
@@ -245,7 +246,10 @@ function renderMain() {
     } else {
       captureHTML = `<div style="display:flex;flex-direction:column;gap:8px;width:100%">
         <button id="capture-full" style="width:100%;padding:10px 16px;border-radius:${B.radius};border:none;font-weight:500;font-size:13px;cursor:pointer;background:${B.primary};color:#fff;font-family:inherit;transition:background-color 0.15s ease,transform 0.1s ease;box-shadow:0 1px 2px 0 rgb(37 99 235/0.2)">Capture full page</button>
-        <button id="capture-visible" style="width:100%;padding:10px 16px;border-radius:${B.radius};border:1px solid ${B.border};font-weight:500;font-size:13px;cursor:pointer;background:${B.bg};color:${B.textSecondary};font-family:inherit;transition:background-color 0.15s ease">Capture visible area</button>
+        <div style="display:flex;gap:8px">
+          <button id="capture-visible" style="flex:1;padding:10px 12px;border-radius:${B.radius};border:1px solid ${B.border};font-weight:500;font-size:13px;cursor:pointer;background:${B.bg};color:${B.textSecondary};font-family:inherit;transition:background-color 0.15s ease">Visible area</button>
+          <button id="capture-area" style="flex:1;padding:10px 12px;border-radius:${B.radius};border:1px solid ${B.border};font-weight:500;font-size:13px;cursor:pointer;background:${B.bg};color:${B.textSecondary};font-family:inherit;transition:background-color 0.15s ease">Select area</button>
+        </div>
       </div>`;
     }
   }
@@ -308,6 +312,7 @@ function bindEvents() {
   } else {
     on('capture-full', 'click', () => capturePage('fullPage'));
     on('capture-visible', 'click', () => capturePage('visible'));
+    on('capture-area', 'click', () => { extensionAPI.runtime.sendMessage({ type: 'AREA_SELECT' }); window.close(); });
     on('show-auth', 'click', () => { appState.showAuth = true; render(); });
     on('sign-out', 'click', signOut);
     on('open-webapp', 'click', () => extensionAPI.tabs.create({ url: 'https://pagestash.app/dashboard' }));
@@ -330,22 +335,22 @@ function updateSubmitBtn() {
 async function init() {
   await checkAuthStatus();
   await getCurrentTab();
-
-  extensionAPI.runtime.onMessage.addListener((message) => {
+  
+    extensionAPI.runtime.onMessage.addListener((message) => {
     if (message.type !== 'CAPTURE_PROGRESS') return;
     appState.captureProgress = { status: message.payload.status, message: message.payload.message };
-    if (message.payload.status === 'complete' && message.payload.usage) {
-      appState.clipsRemaining = message.payload.usage.clips_remaining;
-      appState.clipsLimit = message.payload.usage.clips_limit;
-      appState.subscriptionTier = message.payload.usage.subscription_tier;
-      appState.warningLevel = message.payload.usage.warning_level;
-    }
-    render();
-    if (message.payload.status === 'complete') {
+      if (message.payload.status === 'complete' && message.payload.usage) {
+        appState.clipsRemaining = message.payload.usage.clips_remaining;
+        appState.clipsLimit = message.payload.usage.clips_limit;
+        appState.subscriptionTier = message.payload.usage.subscription_tier;
+        appState.warningLevel = message.payload.usage.warning_level;
+      }
+      render();
+      if (message.payload.status === 'complete') {
       setTimeout(() => { appState.captureProgress = null; appState.isCapturing = false; render(); }, 2200);
     }
   });
-
+  
   render();
 }
 

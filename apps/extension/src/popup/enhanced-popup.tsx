@@ -211,6 +211,8 @@ function EnhancedPopupApp() {
 
       if (result.error) {
         setAuthForm(p => ({ ...p, error: result.error?.message || 'Authentication failed', isLoading: false }));
+      } else if (authForm.isSignUp && !result.data?.session) {
+        setAuthForm(p => ({ ...p, error: 'Check your email for a confirmation link, then sign in.', isLoading: false, isSignUp: false }));
       } else {
         setState(p => ({ ...p, isAuthenticated: true, userEmail: result.data?.user?.email, showAuth: false }));
         setAuthForm({ email: '', password: '', isSignUp: false, isLoading: false });
@@ -350,7 +352,10 @@ function EnhancedPopupApp() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px', width: '100%' }}>
               <button onClick={() => handleCapture('fullPage')} style={css.btnPrimary}>Capture full page</button>
-              <button onClick={() => handleCapture('visible')} style={css.btnSecondary}>Capture visible area</button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => handleCapture('visible')} style={{ ...css.btnSecondary, flex: 1 }}>Visible area</button>
+                <button onClick={() => { chrome.runtime.sendMessage({ type: 'AREA_SELECT' }); window.close(); }} style={{ ...css.btnSecondary, flex: 1 }}>Select area</button>
+              </div>
             </div>
           )
         )}

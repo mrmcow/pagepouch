@@ -1,4 +1,29 @@
 import { BlogPost } from '@/types/blog'
+import { pagestashTorBrowserResearchOsint } from './pagestash-tor-browser-research-osint'
+import { saveCompetitorPricingPagesResearch } from './save-competitor-pricing-pages-research'
+import { captureEvidenceBeforeSiteUpdates } from './capture-evidence-before-site-updates'
+import { archiveResearchSourcesForThesis } from './archive-research-sources-for-thesis'
+import { documentUxInspirationPages } from './document-ux-inspiration-pages'
+import { trackNarrativeChangesOnlineResearch } from './track-narrative-changes-online-research'
+import { saveWebpagePermanentlyDeleted } from './save-webpage-permanently-deleted'
+import { archiveWebpageBeforeItChangesGuide } from './archive-webpage-before-it-changes-guide'
+import { captureEvidenceFromWebOsint } from './capture-evidence-from-web-osint'
+import { savePageAsProofVerifiableRecord } from './save-page-as-proof-verifiable-record'
+import { researchSourceArchivingToolGuide } from './research-source-archiving-tool-guide'
+import { webEvidenceModeScreenshotHtmlCompliance } from './web-evidence-mode-screenshot-html-compliance'
+import { whyNotJustNotionLinksVsArchivedPages } from './why-not-just-notion-links-vs-archived-pages'
+import { osintBrowserToolkitStarter2026 } from './osint-browser-toolkit-starter-2026'
+import { pagestashVsRaindrop2026 } from './pagestash-vs-raindrop-2026'
+import { pagestashVsZoteroWebCapture } from './pagestash-vs-zotero-web-capture'
+import { pagestashVsObsidianWebClipper } from './pagestash-vs-obsidian-web-clipper'
+import { pagestashVsEvernoteClipperArchival } from './pagestash-vs-evernote-clipper-archival'
+import { webResearchWorkflowDiagramAiSeo } from './web-research-workflow-diagram-ai-seo'
+import { osintResearchFolderStructureTemplate } from './osint-research-folder-structure-template'
+import { notionWebClipperMissesDynamicContent } from './notion-web-clipper-misses-dynamic-content'
+import { archiveWebpagesBeforeContentChanges } from './archive-webpages-before-content-changes'
+import { toolCaptureWebpagesAsEvidenceBuildNotes } from './tool-capture-webpages-as-evidence-build-notes'
+import { researchStackRecommendationsThread2026 } from './research-stack-recommendations-thread-2026'
+import { trackWebpageChangesCaptureVersions } from './track-webpage-changes-capture-versions'
 import { webClippingArchivingExplained2026 } from './web-clipping-archiving-explained-2026'
 import { pagestashVsPocketEvernoteNotion } from './pagestash-vs-pocket-evernote-notion'
 import { osintResearchToolsPricing2026 } from './osint-research-tools-pricing-2026'
@@ -107,6 +132,31 @@ import { bestClipperBusinessResearch2025 } from './best-clipper-business-researc
 import { competitorAnalysisUXDesign } from './competitor-analysis-ux-design'
 
 export const allPosts: BlogPost[] = [
+  pagestashTorBrowserResearchOsint,
+  saveCompetitorPricingPagesResearch,
+  captureEvidenceBeforeSiteUpdates,
+  archiveResearchSourcesForThesis,
+  documentUxInspirationPages,
+  trackNarrativeChangesOnlineResearch,
+  saveWebpagePermanentlyDeleted,
+  archiveWebpageBeforeItChangesGuide,
+  captureEvidenceFromWebOsint,
+  savePageAsProofVerifiableRecord,
+  researchSourceArchivingToolGuide,
+  webEvidenceModeScreenshotHtmlCompliance,
+  whyNotJustNotionLinksVsArchivedPages,
+  osintBrowserToolkitStarter2026,
+  pagestashVsRaindrop2026,
+  pagestashVsZoteroWebCapture,
+  pagestashVsObsidianWebClipper,
+  pagestashVsEvernoteClipperArchival,
+  webResearchWorkflowDiagramAiSeo,
+  osintResearchFolderStructureTemplate,
+  notionWebClipperMissesDynamicContent,
+  archiveWebpagesBeforeContentChanges,
+  toolCaptureWebpagesAsEvidenceBuildNotes,
+  researchStackRecommendationsThread2026,
+  trackWebpageChangesCaptureVersions,
   webClippingArchivingExplained2026,
   pagestashVsPocketEvernoteNotion,
   osintResearchToolsPricing2026,

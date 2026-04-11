@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200" role="img" aria-labelledby="title desc">
+  <title id="title">Web research workflow diagram</title>
+  <desc id="desc">Flow from Browser through Capture and Graph to Research insights</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="800" height="200" fill="url(#bg)"/>
+  <text x="400" y="36" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#0f172a">Web research workflow</text>
+  <g font-family="system-ui, sans-serif" font-size="13" fill="#1e293b">
+    <rect x="40" y="70" width="140" height="72" rx="12" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+    <text x="110" y="100" text-anchor="middle" font-weight="600">Browser</text>
+    <text x="110" y="120" text-anchor="middle" font-size="11" fill="#64748b">Find sources</text>
+    <path d="M 190 106 L 230 106" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+    <rect x="240" y="70" width="150" height="72" rx="12" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+    <text x="315" y="100" text-anchor="middle" font-weight="600">Capture</text>
+    <text x="315" y="120" text-anchor="middle" font-size="11" fill="#64748b">HTML, text, screenshot</text>
+    <path d="M 400 106 L 440 106" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+    <rect x="450" y="70" width="130" height="72" rx="12" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+    <text x="515" y="100" text-anchor="middle" font-weight="600">Graph</text>
+    <text x="515" y="120" text-anchor="middle" font-size="11" fill="#64748b">Connections</text>
+    <path d="M 590 106 L 630 106" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+    <rect x="640" y="70" width="120" height="72" rx="12" fill="#2563eb" fill-opacity="0.12" stroke="#2563eb" stroke-width="2"/>
+    <text x="700" y="100" text-anchor="middle" font-weight="600" fill="#1d4ed8">Insights</text>
+    <text x="700" y="120" text-anchor="middle" font-size="11" fill="#475569">Cite and decide</text>
+  </g>
+</svg>

@@ -160,6 +160,47 @@ export const ExtensionMessageSchema = z.discriminatedUnion('type', [
     type: z.literal('EXTRACT_PAGE_DATA'),
     payload: z.object({}),
   }),
+  z.object({
+    type: z.literal('AREA_SELECT'),
+    payload: z.object({}).optional(),
+  }),
+  z.object({
+    type: z.literal('AREA_SELECTED'),
+    payload: z.object({
+      x: z.number(),
+      y: z.number(),
+      width: z.number(),
+      height: z.number(),
+      devicePixelRatio: z.number().optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal('AUTHENTICATE'),
+    payload: z.object({
+      email: z.string(),
+      password: z.string(),
+      isSignUp: z.boolean().optional(),
+    }),
+  }),
+  z.object({
+    type: z.literal('SIGN_OUT'),
+    payload: z.object({}).optional(),
+  }),
+  z.object({
+    type: z.literal('GET_FOLDERS'),
+    payload: z.object({}).optional(),
+  }),
+  z.object({
+    type: z.literal('GET_USAGE'),
+    payload: z.object({}).optional(),
+  }),
+  z.object({
+    type: z.literal('CREATE_FOLDER'),
+    payload: z.object({
+      name: z.string(),
+      color: z.string().optional(),
+    }),
+  }),
 ]);
 
 export type ExtensionMessage = z.infer<typeof ExtensionMessageSchema>;

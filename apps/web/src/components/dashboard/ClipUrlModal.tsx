@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { X, Link2, Loader2, CheckCircle2, AlertCircle, Camera, FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 interface ClipUrlModalProps {
@@ -15,9 +15,10 @@ interface ClipUrlModalProps {
 export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) {
   const [url, setUrl] = useState('')
   const [isCapturing, setIsCapturing] = useState(false)
-  const [captureStatus, setCaptureStatus] = useState<'idle' | 'capturing' | 'processing' | 'success' | 'error'>('idle')
+  const [captureStatus, setCaptureStatus] = useState<'idle' | 'capturing' | 'screenshotting' | 'processing' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [progress, setProgress] = useState(0)
+  const [captureMessage, setCaptureMessage] = useState('')
 
   if (!isOpen) return null
 
@@ -51,10 +52,10 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
     setIsCapturing(true)
     setCaptureStatus('capturing')
     setErrorMessage('')
+    setCaptureMessage('Connecting to page...')
     setProgress(10)
 
     try {
-      // Get auth token
       const supabase = createClient()
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
@@ -62,7 +63,10 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
         throw new Error('Please sign in to capture pages')
       }
 
-      // Call the capture API
+      setProgress(20)
+      setCaptureStatus('screenshotting')
+      setCaptureMessage('Rendering page & taking screenshot...')
+
       const response = await fetch('/api/clips/capture-url', {
         method: 'POST',
         headers: {
@@ -72,8 +76,9 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
         body: JSON.stringify({ url: processedUrl }),
       })
 
-      setProgress(50)
+      setProgress(80)
       setCaptureStatus('processing')
+      setCaptureMessage('Saving to your library...')
 
       const data = await response.json()
 
@@ -83,8 +88,9 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
 
       setProgress(100)
       setCaptureStatus('success')
+      const hasScreenshot = data.message?.includes('screenshot')
+      setCaptureMessage(hasScreenshot ? 'Captured with screenshot!' : 'Captured successfully!')
 
-      // Close modal after a brief success message
       setTimeout(() => {
         onSuccess()
         handleClose()
@@ -98,11 +104,12 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
   }
 
   const handleClose = () => {
-    if (isCapturing) return // Prevent closing during capture
+    if (isCapturing) return
     setUrl('')
     setIsCapturing(false)
     setCaptureStatus('idle')
     setErrorMessage('')
+    setCaptureMessage('')
     setProgress(0)
     onClose()
   }
@@ -165,28 +172,44 @@ export function ClipUrlModal({ isOpen, onClose, onSuccess }: ClipUrlModalProps) 
               autoFocus
             />
             <p className="text-xs text-muted-foreground">
-              💡 <strong>Tip:</strong> Works great for most sites! If a site blocks automated access, use the browser extension instead.
+              Captures HTML, text, and a screenshot of the page. If a site blocks automated access, use the browser extension instead.
             </p>
           </div>
 
-          {/* Progress Bar */}
+          {/* Progress */}
           {isCapturing && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 ease-out"
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-700 ease-out"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {captureStatus === 'capturing' && 'Capturing webpage...'}
-                {captureStatus === 'processing' && 'Processing content...'}
-                {captureStatus === 'success' && (
-                  <span className="flex items-center gap-1 text-green-600">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Captured successfully!
+
+              {/* Step indicators */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-sm">
+                  {captureStatus === 'success' ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600 flex-shrink-0" />
+                  )}
+                  <span className={captureStatus === 'success' ? 'text-green-600 font-medium' : 'text-muted-foreground'}>
+                    {captureMessage}
                   </span>
+                </div>
+
+                {captureStatus !== 'success' && (
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground/60 pl-6">
+                    <span className="flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      HTML + Text
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Camera className="h-3 w-3" />
+                      Screenshot
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

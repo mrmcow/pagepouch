@@ -548,7 +548,6 @@ const API_BASE_URL =  true
 // Extension-specific auth helpers
 class ExtensionAuth {
     static async signIn(email, password) {
-        console.log('🔐 ExtensionAuth.signIn called for:', email);
         try {
             const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
@@ -559,16 +558,9 @@ class ExtensionAuth {
             });
             const result = await response.json();
             if (!response.ok) {
-                console.error('🔐 Login error:', result.error);
                 return { data: null, error: { message: result.error } };
             }
-            console.log('🔐 Login successful:', {
-                hasSession: !!result.session,
-                hasUser: !!result.user,
-            });
             if (result.session) {
-                console.log('🔐 Storing session in extension storage');
-                // Store session in extension storage
                 await extensionAPI.storage.local.set({
                     authToken: result.session.access_token,
                     refreshToken: result.session.refresh_token,
@@ -585,7 +577,6 @@ class ExtensionAuth {
             };
         }
         catch (err) {
-            console.error('🔐 Login request failed:', err);
             return {
                 data: null,
                 error: { message: err.message || 'Network error' }
@@ -603,11 +594,9 @@ class ExtensionAuth {
             });
             const result = await response.json();
             if (!response.ok) {
-                console.error('🔐 Signup error:', result.error);
                 return { data: null, error: { message: result.error } };
             }
             if (result.session) {
-                // Store session in extension storage
                 await extensionAPI.storage.local.set({
                     authToken: result.session.access_token,
                     refreshToken: result.session.refresh_token,
@@ -624,7 +613,6 @@ class ExtensionAuth {
             };
         }
         catch (err) {
-            console.error('🔐 Signup request failed:', err);
             return {
                 data: null,
                 error: { message: err.message || 'Network error' }
@@ -632,14 +620,12 @@ class ExtensionAuth {
         }
     }
     static async signOut() {
-        // Just clear local storage - no need to call API for logout
         await extensionAPI.storage.local.remove([
             'authToken',
             'refreshToken',
             'userEmail',
             'userId',
         ]);
-        console.log('🔐 Signed out and cleared local storage');
         return { error: null };
     }
     static async restoreSession() {
@@ -654,18 +640,26 @@ class ExtensionAuth {
                     });
                 });
             });
-            // No stored session
             if (!stored.authToken) {
-                console.log('🔐 No stored session found');
                 return false;
             }
-            console.log('🔐 Session found for user:', stored.userEmail);
-            // Token validation will happen when making actual API calls
-            // The API will return 401 if token is invalid, and we'll handle it there
-            return true;
+            // Validate token with a lightweight API call
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/usage`, {
+                    headers: { 'Authorization': `Bearer ${stored.authToken}` },
+                });
+                if (res.status === 401 && stored.refreshToken) {
+                    const refreshResult = await this.refreshSession();
+                    return !refreshResult.error;
+                }
+                return res.ok;
+            }
+            catch {
+                // Network error — trust the stored token and let real calls handle failures
+                return true;
+            }
         }
         catch (err) {
-            console.error('🔐 Session restoration error:', err);
             await this.signOut();
             return false;
         }
@@ -761,7 +755,6 @@ class ExtensionAPI {
     }
     static async saveClip(clipData) {
         const apiUrl = `${this.getApiBaseUrl()}/api/clips`;
-        console.log('Saving clip to API endpoint:', apiUrl);
         const response = await this.authenticatedFetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -769,10 +762,8 @@ class ExtensionAPI {
             },
             body: JSON.stringify(clipData),
         });
-        console.log('API response status:', response.status);
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('API error response:', errorText);
             let error;
             try {
                 error = JSON.parse(errorText);
@@ -782,9 +773,7 @@ class ExtensionAPI {
             }
             throw new Error(error.error || 'Failed to save clip');
         }
-        const result = await response.json();
-        console.log('Clip saved successfully:', result);
-        return result;
+        return response.json();
     }
     static async getClips(params) {
         const searchParams = new URLSearchParams();
@@ -1020,6 +1009,9 @@ function EnhancedPopupApp() {
             if (result.error) {
                 setAuthForm(p => ({ ...p, error: result.error?.message || 'Authentication failed', isLoading: false }));
             }
+            else if (authForm.isSignUp && !result.data?.session) {
+                setAuthForm(p => ({ ...p, error: 'Check your email for a confirmation link, then sign in.', isLoading: false, isSignUp: false }));
+            }
             else {
                 setState(p => ({ ...p, isAuthenticated: true, userEmail: result.data?.user?.email, showAuth: false }));
                 setAuthForm({ email: '', password: '', isSignUp: false, isLoading: false });
@@ -1074,7 +1066,7 @@ function EnhancedPopupApp() {
                             animation: state.captureProgress.status === 'complete' ? 'popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' : undefined,
                         }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', marginBottom: '6px',
                                     color: state.captureProgress.status === 'error' ? BRAND.error : state.captureProgress.status === 'complete' ? BRAND.success : BRAND.primary }, children: state.captureProgress.status === 'complete' ? 'Saved!' : state.captureProgress.status === 'error' ? 'Capture failed' : 'Capturing...' }), state.captureProgress.status !== 'error' && state.captureProgress.status !== 'complete' && ((0,jsx_runtime.jsx)("div", { style: { width: '100%', height: 3, backgroundColor: BRAND.bgMuted, borderRadius: 2, overflow: 'hidden', marginBottom: 6 }, children: (0,jsx_runtime.jsx)("div", { style: { height: '100%', backgroundColor: BRAND.primary, borderRadius: 2, transition: 'width 0.4s ease',
-                                        width: state.captureProgress.progress ? `${state.captureProgress.progress}%` : '30%' } }) })), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: state.captureProgress.status === 'error' ? BRAND.error : BRAND.textMuted }, children: state.captureProgress.message })] })), state.isAuthenticated && state.folders.length > 0 && !state.isCapturing && ((0,jsx_runtime.jsxs)("div", { style: { width: '100%' }, children: [(0,jsx_runtime.jsx)("label", { style: { display: 'block', fontSize: '11px', fontWeight: 500, color: BRAND.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }, children: "Save to" }), (0,jsx_runtime.jsx)("select", { value: state.selectedFolderId || '', onChange: e => { setState(p => ({ ...p, selectedFolderId: e.target.value })); chrome.storage.local.set({ selectedFolderId: e.target.value }); }, style: css.select, children: state.folders.map(f => (0,jsx_runtime.jsx)("option", { value: f.id, children: f.name }, f.id)) })] })), !state.isCapturing && !state.captureProgress && (state.warningLevel === 'exceeded' ? ((0,jsx_runtime.jsxs)("div", { style: { ...css.card, backgroundColor: BRAND.errorBg, borderColor: BRAND.errorBorder, textAlign: 'center' }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', color: BRAND.error, marginBottom: 4 }, children: "Monthly limit reached" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Upgrade to Pro for more clips." }), (0,jsx_runtime.jsx)("button", { onClick: () => chrome.tabs.create({ url: 'https://pagestash.app/dashboard' }), style: { ...css.btnPrimary, backgroundColor: BRAND.error }, children: "Upgrade to Pro" })] })) : ((0,jsx_runtime.jsxs)("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('fullPage'), style: css.btnPrimary, children: "Capture full page" }), (0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('visible'), style: css.btnSecondary, children: "Capture visible area" })] }))), !state.isAuthenticated ? ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 500, fontSize: '13px', marginBottom: 2, color: BRAND.text }, children: "Sign in for cloud sync" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Access your clips anywhere" }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: true })), style: css.btnSecondary, children: "Sign in" })] })) : ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 8 }, children: state.userEmail }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: 8 }, children: [(0,jsx_runtime.jsx)("button", { onClick: openWebApp, style: { ...css.btnPrimary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Open library" }), (0,jsx_runtime.jsx)("button", { onClick: handleSignOut, style: { ...css.btnSecondary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Sign out" })] })] }))] }), (0,jsx_runtime.jsx)("footer", { style: css.footer, children: "PageStash v2.0.0" })] }));
+                                        width: state.captureProgress.progress ? `${state.captureProgress.progress}%` : '30%' } }) })), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: state.captureProgress.status === 'error' ? BRAND.error : BRAND.textMuted }, children: state.captureProgress.message })] })), state.isAuthenticated && state.folders.length > 0 && !state.isCapturing && ((0,jsx_runtime.jsxs)("div", { style: { width: '100%' }, children: [(0,jsx_runtime.jsx)("label", { style: { display: 'block', fontSize: '11px', fontWeight: 500, color: BRAND.textMuted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }, children: "Save to" }), (0,jsx_runtime.jsx)("select", { value: state.selectedFolderId || '', onChange: e => { setState(p => ({ ...p, selectedFolderId: e.target.value })); chrome.storage.local.set({ selectedFolderId: e.target.value }); }, style: css.select, children: state.folders.map(f => (0,jsx_runtime.jsx)("option", { value: f.id, children: f.name }, f.id)) })] })), !state.isCapturing && !state.captureProgress && (state.warningLevel === 'exceeded' ? ((0,jsx_runtime.jsxs)("div", { style: { ...css.card, backgroundColor: BRAND.errorBg, borderColor: BRAND.errorBorder, textAlign: 'center' }, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 600, fontSize: '14px', color: BRAND.error, marginBottom: 4 }, children: "Monthly limit reached" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Upgrade to Pro for more clips." }), (0,jsx_runtime.jsx)("button", { onClick: () => chrome.tabs.create({ url: 'https://pagestash.app/dashboard' }), style: { ...css.btnPrimary, backgroundColor: BRAND.error }, children: "Upgrade to Pro" })] })) : ((0,jsx_runtime.jsxs)("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('fullPage'), style: css.btnPrimary, children: "Capture full page" }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: '8px' }, children: [(0,jsx_runtime.jsx)("button", { onClick: () => handleCapture('visible'), style: { ...css.btnSecondary, flex: 1 }, children: "Visible area" }), (0,jsx_runtime.jsx)("button", { onClick: () => { chrome.runtime.sendMessage({ type: 'AREA_SELECT' }); window.close(); }, style: { ...css.btnSecondary, flex: 1 }, children: "Select area" })] })] }))), !state.isAuthenticated ? ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontWeight: 500, fontSize: '13px', marginBottom: 2, color: BRAND.text }, children: "Sign in for cloud sync" }), (0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 10 }, children: "Access your clips anywhere" }), (0,jsx_runtime.jsx)("button", { onClick: () => setState(p => ({ ...p, showAuth: true })), style: css.btnSecondary, children: "Sign in" })] })) : ((0,jsx_runtime.jsxs)("div", { style: css.card, children: [(0,jsx_runtime.jsx)("div", { style: { fontSize: '12px', color: BRAND.textMuted, marginBottom: 8 }, children: state.userEmail }), (0,jsx_runtime.jsxs)("div", { style: { display: 'flex', gap: 8 }, children: [(0,jsx_runtime.jsx)("button", { onClick: openWebApp, style: { ...css.btnPrimary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Open library" }), (0,jsx_runtime.jsx)("button", { onClick: handleSignOut, style: { ...css.btnSecondary, flex: 1, padding: '8px 12px', fontSize: '12px' }, children: "Sign out" })] })] }))] }), (0,jsx_runtime.jsx)("footer", { style: css.footer, children: "PageStash v2.0.0" })] }));
 }
 const css = {
     root: {

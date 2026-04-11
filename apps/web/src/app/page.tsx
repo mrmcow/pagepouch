@@ -379,7 +379,7 @@ export default function HomePage() {
 
               {/* Body copy */}
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg mx-auto lg:mx-0 font-light">
-                PageStash captures every page as it existed — screenshot, full text — so you can find it, cite it, and prove it long after the original is gone.
+                PageStash captures every page as it existed: screenshot, full text, html. So you can find it, cite it, and prove it long after the original is gone.
               </p>
 
               {/* Trust signals */}
@@ -572,10 +572,10 @@ export default function HomePage() {
               {
                 number: '01',
                 title: 'Install the extension',
-                desc: 'Secure install for Chrome or Firefox with automatic updates and enterprise permissions baked in.',
+                desc: 'Secure install for Chrome, Firefox, or Tor Browser with automatic updates and enterprise permissions baked in.',
                 accent: 'from-blue-500 to-cyan-500',
                 icon: <ChromeIcon size={36} />,
-                chips: ['Chrome', 'Firefox'],
+                chips: ['Chrome', 'Firefox', 'Tor'],
               },
               {
                 number: '02',

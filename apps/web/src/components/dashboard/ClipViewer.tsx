@@ -29,7 +29,14 @@ import {
   Camera,
   StickyNote,
   Highlighter,
-  Check
+  Check,
+  Download,
+  Share2,
+  Link,
+  Copy,
+  Scan,
+  Clipboard,
+  Mail
 } from 'lucide-react'
 import { ScreenshotAnnotationCanvas, type Annotation } from './ScreenshotAnnotationCanvas'
 import { 
@@ -49,6 +56,86 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Clip, Folder as FolderType } from '@pagestash/shared'
+import { extractEntities, entityCount, type ExtractedEntities } from '@/utils/entityExtractor'
+
+function EntitiesView({ clip }: { clip: Clip }) {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const entities = extractEntities(
+    [clip.text_content || '', clip.title || '', clip.url || ''].join('\n'),
+    clip.url
+  )
+  const total = entityCount(entities)
+
+  const copyValue = (val: string, key: string) => {
+    navigator.clipboard.writeText(val)
+    setCopiedKey(key)
+    setTimeout(() => setCopiedKey(null), 1500)
+  }
+
+  const sections: { label: string; icon: typeof Scan; items: string[]; key: keyof ExtractedEntities }[] = [
+    { label: 'Domains', icon: Globe, items: entities.domains, key: 'domains' },
+    { label: 'Emails', icon: Mail, items: entities.emails, key: 'emails' },
+    { label: 'IP Addresses', icon: Scan, items: entities.ipAddresses, key: 'ipAddresses' },
+    { label: 'Phone Numbers', icon: Scan, items: entities.phones, key: 'phones' },
+    { label: 'Social Handles', icon: Scan, items: entities.socialHandles, key: 'socialHandles' },
+    { label: 'Names', icon: Scan, items: entities.names, key: 'names' },
+  ]
+
+  if (total === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-muted-foreground">
+        <div className="text-center">
+          <Scan className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p className="font-medium">No entities detected</p>
+          <p className="text-xs mt-1">Domains, emails, IPs, and handles will appear here when found in clip content.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-2xl mx-auto space-y-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{total} entities found</h3>
+          <button
+            onClick={() => copyValue(JSON.stringify(entities, null, 2), '__all__')}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+          >
+            <Clipboard className="h-3 w-3" />
+            {copiedKey === '__all__' ? 'Copied!' : 'Copy all as JSON'}
+          </button>
+        </div>
+
+        {sections.filter(s => s.items.length > 0).map(section => (
+          <div key={section.key}>
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">{section.label}</h4>
+            <div className="space-y-1">
+              {section.items.map((item, i) => {
+                const itemKey = `${section.key}-${i}`
+                return (
+                  <div key={itemKey} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 group hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
+                    <span className="text-sm text-slate-800 dark:text-slate-200 font-mono truncate mr-3">{item}</span>
+                    <button
+                      onClick={() => copyValue(item, itemKey)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 shrink-0 flex items-center gap-1"
+                    >
+                      {copiedKey === itemKey ? (
+                        <><Check className="h-3 w-3 text-emerald-500" /> Copied</>
+                      ) : (
+                        <><Copy className="h-3 w-3" /> Copy</>
+                      )}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 interface ClipViewerProps {
   clip: Clip | null
@@ -170,6 +257,8 @@ export function ClipViewer({
     tags: [] as string[]
   })
   const [newTag, setNewTag] = useState('')
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
+  const tagInputRef = useRef<HTMLInputElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [activeTab, setActiveTab] = useState(clip?.screenshot_url ? 'screenshot' : 'html')
@@ -756,7 +845,39 @@ export function ClipViewer({
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => {
+                  navigator.clipboard.writeText(clip.url)
+                }}>
+                  <Link className="mr-2 h-4 w-4" />
+                  Copy URL
+                </DropdownMenuItem>
+                {clip.screenshot_url && (
+                  <DropdownMenuItem onClick={() => {
+                    const a = document.createElement('a');
+                    a.href = clip.screenshot_url!;
+                    a.download = `pagestash-${clip.title?.slice(0, 40).replace(/\s+/g, '-') || clip.id}.png`;
+                    a.click();
+                  }}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Screenshot
+                  </DropdownMenuItem>
+                )}
+                {clip.text_content && (
+                  <DropdownMenuItem onClick={() => {
+                    const blob = new Blob([clip.text_content!], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pagestash-${clip.title?.slice(0, 40).replace(/\s+/g, '-') || clip.id}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Download Text
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Clip
@@ -791,6 +912,10 @@ export function ClipViewer({
                     <TabsTrigger value="text" className="flex items-center gap-1.5 px-3 text-xs">
                       <FileText className="h-3.5 w-3.5" />
                       Text
+                    </TabsTrigger>
+                    <TabsTrigger value="entities" className="flex items-center gap-1.5 px-3 text-xs">
+                      <Scan className="h-3.5 w-3.5" />
+                      Entities
                     </TabsTrigger>
                   </TabsList>
 
@@ -1283,6 +1408,11 @@ export function ClipViewer({
                     </div>
                   )}
                 </TabsContent>
+
+                {/* Entities Tab */}
+                <TabsContent value="entities" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1">
+                  <EntitiesView clip={clip} />
+                </TabsContent>
               </div>
             </Tabs>
           </div>
@@ -1441,32 +1571,60 @@ export function ClipViewer({
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-1">
                     {editForm.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
+                      <Badge key={tag} variant="secondary" className="text-xs group/tag">
                         {tag}
                         <button
                           onClick={() => handleRemoveTag(tag)}
-                          className="ml-1 hover:text-destructive"
+                          className="ml-1 opacity-50 hover:opacity-100 hover:text-destructive transition-opacity"
                         >
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
                     ))}
-                    {editForm.tags.length === 0 && (
-                      <span className="text-muted-foreground text-xs">No tags</span>
-                    )}
                   </div>
                   
-                  <div className="flex space-x-1">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Add tag"
-                      className="text-xs h-7"
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-                    />
-                    <Button size="sm" onClick={handleAddTag} className="h-7 px-2">
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                  <div className="relative">
+                    <div className="flex space-x-1">
+                      <Input
+                        ref={tagInputRef}
+                        value={newTag}
+                        onChange={(e) => { setNewTag(e.target.value); setShowTagSuggestions(true); }}
+                        onFocus={() => setShowTagSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowTagSuggestions(false), 150)}
+                        placeholder="Search or create tag..."
+                        className="text-xs h-7"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); setShowTagSuggestions(false); }
+                          if (e.key === 'Escape') setShowTagSuggestions(false);
+                        }}
+                      />
+                      <Button size="sm" onClick={() => { handleAddTag(); setShowTagSuggestions(false); }} className="h-7 px-2" disabled={!newTag.trim()}>
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {showTagSuggestions && (() => {
+                      const suggestions = availableTags
+                        .filter(t => !editForm.tags.includes(t.name))
+                        .filter(t => !newTag.trim() || t.name.toLowerCase().includes(newTag.toLowerCase()));
+                      if (suggestions.length === 0) return null;
+                      return (
+                        <div className="absolute z-50 top-full left-0 right-8 mt-1 bg-popover border rounded-md shadow-md max-h-32 overflow-y-auto">
+                          {suggestions.map(t => (
+                            <button key={t.id} className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors flex items-center gap-2"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setEditForm(prev => ({ ...prev, tags: [...prev.tags, t.name] }));
+                                setHasUnsavedChanges(true);
+                                setNewTag('');
+                                setShowTagSuggestions(false);
+                              }}>
+                              <Tag className="h-3 w-3 text-muted-foreground" />
+                              {t.name}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

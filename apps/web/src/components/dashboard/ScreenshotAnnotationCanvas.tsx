@@ -3,7 +3,9 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, Square, Circle, ArrowUpRight, Minus } from 'lucide-react'
+
+export type AnnotationShape = 'rectangle' | 'circle' | 'arrow' | 'line'
 
 export interface Annotation {
   id: string
@@ -12,6 +14,7 @@ export interface Annotation {
   width: number
   height: number
   color: string
+  shape?: AnnotationShape
   note?: string
   createdAt: string
 }
@@ -56,7 +59,8 @@ export function ScreenshotAnnotationCanvas({
   const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
-  const annotationColor = '#3b82f6' // Always blue
+  const annotationColor = '#3b82f6'
+  const [activeShape, setActiveShape] = useState<AnnotationShape>('rectangle')
   const [showAddNote, setShowAddNote] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [selectedText, setSelectedText] = useState('')
@@ -99,68 +103,76 @@ export function ScreenshotAnnotationCanvas({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Draw existing annotations
+    const drawShape = (
+      shape: AnnotationShape | undefined,
+      x: number, y: number, w: number, h: number,
+      strokeColor: string, fillColor: string, lineWidth: number,
+      dashed = false,
+    ) => {
+      ctx.strokeStyle = strokeColor
+      ctx.fillStyle = fillColor
+      ctx.lineWidth = lineWidth
+      if (dashed) ctx.setLineDash([5, 5])
+      else ctx.setLineDash([])
+
+      const s = shape || 'rectangle'
+      if (s === 'rectangle') {
+        ctx.fillRect(x, y, w, h)
+        ctx.strokeRect(x, y, w, h)
+      } else if (s === 'circle') {
+        const cx = x + w / 2, cy = y + h / 2
+        const rx = Math.abs(w) / 2, ry = Math.abs(h) / 2
+        ctx.beginPath()
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI)
+        ctx.fill()
+        ctx.stroke()
+      } else if (s === 'arrow') {
+        const sx = x, sy = y, ex = x + w, ey = y + h
+        ctx.beginPath()
+        ctx.moveTo(sx, sy)
+        ctx.lineTo(ex, ey)
+        ctx.stroke()
+        const angle = Math.atan2(ey - sy, ex - sx)
+        const headLen = Math.min(16, Math.hypot(w, h) * 0.3)
+        ctx.beginPath()
+        ctx.moveTo(ex, ey)
+        ctx.lineTo(ex - headLen * Math.cos(angle - Math.PI / 6), ey - headLen * Math.sin(angle - Math.PI / 6))
+        ctx.lineTo(ex - headLen * Math.cos(angle + Math.PI / 6), ey - headLen * Math.sin(angle + Math.PI / 6))
+        ctx.closePath()
+        ctx.fillStyle = strokeColor
+        ctx.fill()
+      } else if (s === 'line') {
+        ctx.beginPath()
+        ctx.moveTo(x, y)
+        ctx.lineTo(x + w, y + h)
+        ctx.stroke()
+      }
+      ctx.setLineDash([])
+    }
+
     annotations.forEach((annotation) => {
       const isSelected = annotation.id === selectedAnnotation
-      
-      // Check if this annotation is being highlighted from notes click
-      const isHighlighted = highlightedPosition && 
-        annotation.x === highlightedPosition.x && 
+      const isHighlighted = highlightedPosition &&
+        annotation.x === highlightedPosition.x &&
         annotation.y === highlightedPosition.y
-      
+
       if (isHighlighted) {
-        // Draw pulsing yellow highlight effect
-        ctx.strokeStyle = '#fbbf24' // yellow-400
-        ctx.lineWidth = 4
-        ctx.shadowColor = '#fbbf24'
-        ctx.shadowBlur = 15
-        ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height)
-        ctx.shadowBlur = 0
-        
-        // Fill with more visible yellow highlight
-        ctx.fillStyle = '#fef3c740'
-        ctx.fillRect(annotation.x, annotation.y, annotation.width, annotation.height)
+        drawShape(annotation.shape, annotation.x, annotation.y, annotation.width, annotation.height, '#fbbf24', '#fef3c740', 4)
       } else {
-        // Normal annotation rendering
-        ctx.strokeStyle = annotation.color
-        ctx.fillStyle = annotation.color + '20' // 20 = ~12% opacity
-        ctx.lineWidth = isSelected ? 3 : 2
-        
-        // Draw rectangle
-        ctx.fillRect(annotation.x, annotation.y, annotation.width, annotation.height)
-        ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height)
+        drawShape(annotation.shape, annotation.x, annotation.y, annotation.width, annotation.height, annotation.color, annotation.color + '20', isSelected ? 3 : 2)
       }
-      
-      // Draw selection indicator
+
       if (isSelected) {
         ctx.strokeStyle = '#ffffff'
         ctx.lineWidth = 1
-        ctx.strokeRect(
-          annotation.x - 2,
-          annotation.y - 2,
-          annotation.width + 4,
-          annotation.height + 4
-        )
+        ctx.setLineDash([])
+        ctx.strokeRect(annotation.x - 2, annotation.y - 2, annotation.width + 4, annotation.height + 4)
       }
     })
 
-    // Draw current annotation being drawn
     if (currentAnnotation) {
       const { startX, startY, currentX, currentY } = currentAnnotation
-      const x = Math.min(startX, currentX)
-      const y = Math.min(startY, currentY)
-      const width = Math.abs(currentX - startX)
-      const height = Math.abs(currentY - startY)
-
-      ctx.strokeStyle = annotationColor
-      ctx.fillStyle = annotationColor + '20'
-      ctx.lineWidth = 2
-      ctx.setLineDash([5, 5])
-      
-      ctx.fillRect(x, y, width, height)
-      ctx.strokeRect(x, y, width, height)
-      
-      ctx.setLineDash([])
+      drawShape(activeShape, startX, startY, currentX - startX, currentY - startY, annotationColor, annotationColor + '20', 2, true)
     }
   }, [annotations, selectedAnnotation, currentAnnotation, annotationColor, highlightedPosition])
 
@@ -216,21 +228,17 @@ export function ScreenshotAnnotationCanvas({
     if (!isDrawing || !currentAnnotation) return
 
     const { startX, startY, currentX, currentY } = currentAnnotation
-    const x = Math.min(startX, currentX)
-    const y = Math.min(startY, currentY)
-    const width = Math.abs(currentX - startX)
-    const height = Math.abs(currentY - startY)
+    const isLinear = activeShape === 'arrow' || activeShape === 'line'
+    const x = isLinear ? startX : Math.min(startX, currentX)
+    const y = isLinear ? startY : Math.min(startY, currentY)
+    const width = isLinear ? currentX - startX : Math.abs(currentX - startX)
+    const height = isLinear ? currentY - startY : Math.abs(currentY - startY)
+    const size = isLinear ? Math.hypot(width, height) : Math.max(Math.abs(width), Math.abs(height))
 
-    // Only show note dialog if annotation is big enough (at least 10x10 pixels)
-    if (width > 10 && height > 10) {
-      setPendingAnnotation({
-        x,
-        y,
-        width,
-        height,
-        color: annotationColor
-      })
-      setSelectedText(`Rectangle annotation (${Math.round(width)}x${Math.round(height)}px)`)
+    if (size > 10) {
+      setPendingAnnotation({ x, y, width, height, color: annotationColor })
+      const shapeLabel = activeShape.charAt(0).toUpperCase() + activeShape.slice(1)
+      setSelectedText(`${shapeLabel} annotation`)
       setShowAddNote(true)
     }
 
@@ -318,8 +326,29 @@ export function ScreenshotAnnotationCanvas({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar - No instructions needed, just clean space */}
-      <div className="border-b bg-background" style={{ height: '1px' }} />
+      {/* Shape Picker Toolbar */}
+      <div className="border-b bg-background px-3 py-1.5 flex items-center gap-1">
+        {([
+          { shape: 'rectangle' as AnnotationShape, icon: Square, label: 'Rectangle' },
+          { shape: 'circle' as AnnotationShape, icon: Circle, label: 'Circle' },
+          { shape: 'arrow' as AnnotationShape, icon: ArrowUpRight, label: 'Arrow' },
+          { shape: 'line' as AnnotationShape, icon: Minus, label: 'Line' },
+        ]).map(({ shape, icon: Icon, label }) => (
+          <button
+            key={shape}
+            onClick={() => setActiveShape(shape)}
+            title={label}
+            className={`p-1.5 rounded-md transition-colors ${
+              activeShape === shape
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+          </button>
+        ))}
+        <span className="text-xs text-muted-foreground ml-2">Draw on image to annotate</span>
+      </div>
 
       {/* Add Note Modal */}
       {showAddNote && (

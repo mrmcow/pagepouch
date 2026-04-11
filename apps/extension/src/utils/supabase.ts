@@ -13,8 +13,6 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 // Extension-specific auth helpers
 export class ExtensionAuth {
   static async signIn(email: string, password: string) {
-    console.log('🔐 ExtensionAuth.signIn called for:', email);
-    
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
@@ -27,18 +25,10 @@ export class ExtensionAuth {
       const result = await response.json()
 
       if (!response.ok) {
-        console.error('🔐 Login error:', result.error);
         return { data: null, error: { message: result.error } }
       }
 
-      console.log('🔐 Login successful:', { 
-        hasSession: !!result.session,
-        hasUser: !!result.user,
-      });
-
       if (result.session) {
-        console.log('🔐 Storing session in extension storage');
-        // Store session in extension storage
         await extensionAPI.storage.local.set({
           authToken: result.session.access_token,
           refreshToken: result.session.refresh_token,
@@ -55,7 +45,6 @@ export class ExtensionAuth {
         error: null 
       }
     } catch (err: any) {
-      console.error('🔐 Login request failed:', err);
       return { 
         data: null, 
         error: { message: err.message || 'Network error' } 
@@ -76,12 +65,10 @@ export class ExtensionAuth {
       const result = await response.json()
 
       if (!response.ok) {
-        console.error('🔐 Signup error:', result.error);
         return { data: null, error: { message: result.error } }
       }
 
       if (result.session) {
-        // Store session in extension storage
         await extensionAPI.storage.local.set({
           authToken: result.session.access_token,
           refreshToken: result.session.refresh_token,
@@ -98,7 +85,6 @@ export class ExtensionAuth {
         error: null 
       }
     } catch (err: any) {
-      console.error('🔐 Signup request failed:', err);
       return { 
         data: null, 
         error: { message: err.message || 'Network error' } 
@@ -107,15 +93,12 @@ export class ExtensionAuth {
   }
 
   static async signOut() {
-    // Just clear local storage - no need to call API for logout
     await extensionAPI.storage.local.remove([
       'authToken',
       'refreshToken',
       'userEmail',
       'userId',
     ])
-
-    console.log('🔐 Signed out and cleared local storage');
     return { error: null }
   }
 
@@ -140,19 +123,25 @@ export class ExtensionAuth {
         )
       })
 
-      // No stored session
       if (!stored.authToken) {
-        console.log('🔐 No stored session found')
         return false
       }
 
-      console.log('🔐 Session found for user:', stored.userEmail)
-      
-      // Token validation will happen when making actual API calls
-      // The API will return 401 if token is invalid, and we'll handle it there
-      return true
+      // Validate token with a lightweight API call
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/usage`, {
+          headers: { 'Authorization': `Bearer ${stored.authToken}` },
+        })
+        if (res.status === 401 && stored.refreshToken) {
+          const refreshResult = await this.refreshSession()
+          return !refreshResult.error
+        }
+        return res.ok
+      } catch {
+        // Network error — trust the stored token and let real calls handle failures
+        return true
+      }
     } catch (err) {
-      console.error('🔐 Session restoration error:', err)
       await this.signOut()
       return false
     }
@@ -276,7 +265,6 @@ export class ExtensionAPI {
     notes?: string
   }) {
     const apiUrl = `${this.getApiBaseUrl()}/api/clips`
-    console.log('Saving clip to API endpoint:', apiUrl);
 
     const response = await this.authenticatedFetch(apiUrl, {
       method: 'POST',
@@ -286,11 +274,8 @@ export class ExtensionAPI {
       body: JSON.stringify(clipData),
     })
 
-    console.log('API response status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API error response:', errorText);
       
       let error;
       try {
@@ -302,9 +287,7 @@ export class ExtensionAPI {
       throw new Error(error.error || 'Failed to save clip')
     }
 
-    const result = await response.json();
-    console.log('Clip saved successfully:', result);
-    return result;
+    return response.json();
   }
 
   static async getClips(params?: {

@@ -9,6 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 module.exports = {
   entry: {
     background: './src/background/index.ts',
+    areaSelect: './src/content/areaSelect.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist-firefox'),

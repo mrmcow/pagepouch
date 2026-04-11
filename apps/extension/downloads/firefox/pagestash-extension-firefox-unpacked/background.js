@@ -14,7 +14,6 @@ const API_BASE_URL =  true
 // Extension-specific auth helpers
 class ExtensionAuth {
     static async signIn(email, password) {
-        console.log('🔐 ExtensionAuth.signIn called for:', email);
         try {
             const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
@@ -25,16 +24,9 @@ class ExtensionAuth {
             });
             const result = await response.json();
             if (!response.ok) {
-                console.error('🔐 Login error:', result.error);
                 return { data: null, error: { message: result.error } };
             }
-            console.log('🔐 Login successful:', {
-                hasSession: !!result.session,
-                hasUser: !!result.user,
-            });
             if (result.session) {
-                console.log('🔐 Storing session in extension storage');
-                // Store session in extension storage
                 await extensionAPI.storage.local.set({
                     authToken: result.session.access_token,
                     refreshToken: result.session.refresh_token,
@@ -51,7 +43,6 @@ class ExtensionAuth {
             };
         }
         catch (err) {
-            console.error('🔐 Login request failed:', err);
             return {
                 data: null,
                 error: { message: err.message || 'Network error' }
@@ -69,11 +60,9 @@ class ExtensionAuth {
             });
             const result = await response.json();
             if (!response.ok) {
-                console.error('🔐 Signup error:', result.error);
                 return { data: null, error: { message: result.error } };
             }
             if (result.session) {
-                // Store session in extension storage
                 await extensionAPI.storage.local.set({
                     authToken: result.session.access_token,
                     refreshToken: result.session.refresh_token,
@@ -90,7 +79,6 @@ class ExtensionAuth {
             };
         }
         catch (err) {
-            console.error('🔐 Signup request failed:', err);
             return {
                 data: null,
                 error: { message: err.message || 'Network error' }
@@ -98,14 +86,12 @@ class ExtensionAuth {
         }
     }
     static async signOut() {
-        // Just clear local storage - no need to call API for logout
         await extensionAPI.storage.local.remove([
             'authToken',
             'refreshToken',
             'userEmail',
             'userId',
         ]);
-        console.log('🔐 Signed out and cleared local storage');
         return { error: null };
     }
     static async restoreSession() {
@@ -120,18 +106,26 @@ class ExtensionAuth {
                     });
                 });
             });
-            // No stored session
             if (!stored.authToken) {
-                console.log('🔐 No stored session found');
                 return false;
             }
-            console.log('🔐 Session found for user:', stored.userEmail);
-            // Token validation will happen when making actual API calls
-            // The API will return 401 if token is invalid, and we'll handle it there
-            return true;
+            // Validate token with a lightweight API call
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/usage`, {
+                    headers: { 'Authorization': `Bearer ${stored.authToken}` },
+                });
+                if (res.status === 401 && stored.refreshToken) {
+                    const refreshResult = await this.refreshSession();
+                    return !refreshResult.error;
+                }
+                return res.ok;
+            }
+            catch {
+                // Network error — trust the stored token and let real calls handle failures
+                return true;
+            }
         }
         catch (err) {
-            console.error('🔐 Session restoration error:', err);
             await this.signOut();
             return false;
         }
@@ -227,7 +221,6 @@ class ExtensionAPI {
     }
     static async saveClip(clipData) {
         const apiUrl = `${this.getApiBaseUrl()}/api/clips`;
-        console.log('Saving clip to API endpoint:', apiUrl);
         const response = await this.authenticatedFetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -235,10 +228,8 @@ class ExtensionAPI {
             },
             body: JSON.stringify(clipData),
         });
-        console.log('API response status:', response.status);
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('API error response:', errorText);
             let error;
             try {
                 error = JSON.parse(errorText);
@@ -248,9 +239,7 @@ class ExtensionAPI {
             }
             throw new Error(error.error || 'Failed to save clip');
         }
-        const result = await response.json();
-        console.log('Clip saved successfully:', result);
-        return result;
+        return response.json();
     }
     static async getClips(params) {
         const searchParams = new URLSearchParams();
@@ -1383,11 +1372,116 @@ background_extensionAPI.runtime.onMessage.addListener((message, sender, sendResp
             return true; // Keep message channel open for async response
         case 'CREATE_FOLDER':
             handleCreateFolder(message.payload, sendResponse);
-            return true; // Keep message channel open for async response
+            return true;
+        case 'AREA_SELECT':
+            handleAreaSelect();
+            break;
+        case 'AREA_SELECTED':
+            handleAreaSelected(message.payload, sender);
+            break;
         default:
             console.warn('Unknown message type:', message.type);
     }
 });
+async function handleAreaSelect() {
+    try {
+        const [tab] = await background_extensionAPI.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id)
+            return;
+        await background_extensionAPI.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['areaSelect.js'],
+        });
+    }
+    catch (err) {
+        console.error('Area select injection failed:', err);
+        background_extensionAPI.runtime.sendMessage({
+            type: 'CAPTURE_PROGRESS',
+            payload: { status: 'error', message: 'Could not open area selector on this page.' }
+        });
+    }
+}
+async function handleAreaSelected(rect, sender) {
+    try {
+        background_extensionAPI.runtime.sendMessage({
+            type: 'CAPTURE_PROGRESS',
+            payload: { status: 'capturing', message: 'Capturing selected area...' }
+        });
+        const tab = sender?.tab || (await background_extensionAPI.tabs.query({ active: true, currentWindow: true }))[0];
+        if (!tab?.id)
+            throw new Error('No active tab');
+        const fullScreenshot = await background_extensionAPI.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
+        // Crop to selected area using offscreen canvas
+        const dpr = rect.devicePixelRatio || 1;
+        const cropResult = await background_extensionAPI.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: (dataUrl, x, y, w, h, dpr) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w * dpr;
+                        canvas.height = h * dpr;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, x * dpr, y * dpr, w * dpr, h * dpr, 0, 0, w * dpr, h * dpr);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.src = dataUrl;
+                });
+            },
+            args: [fullScreenshot, rect.x, rect.y, rect.width, rect.height, dpr],
+        });
+        const croppedDataUrl = cropResult?.[0]?.result;
+        if (!croppedDataUrl)
+            throw new Error('Failed to crop screenshot');
+        // Extract page content
+        let pageContent = {};
+        try {
+            const result = await background_extensionAPI.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => {
+                    const text = document.body.innerText?.substring(0, 50000) || '';
+                    return { text_content: text, favicon_url: document.querySelector('link[rel*="icon"]')?.href || '' };
+                },
+            });
+            pageContent = result?.[0]?.result || {};
+        }
+        catch { /* ignore */ }
+        background_extensionAPI.runtime.sendMessage({
+            type: 'CAPTURE_PROGRESS',
+            payload: { status: 'saving', message: 'Saving capture...' }
+        });
+        const clipData = {
+            url: tab.url || '',
+            title: tab.title || '',
+            screenshot_data: croppedDataUrl,
+            text_content: pageContent.text_content || '',
+            favicon_url: pageContent.favicon_url || '',
+            notes: `Area capture (${rect.width}x${rect.height}px)`,
+        };
+        const isAuthenticated = await ExtensionAuth.restoreSession();
+        if (isAuthenticated) {
+            const saveResult = await ExtensionAPI.saveClip(clipData);
+            background_extensionAPI.runtime.sendMessage({
+                type: 'CAPTURE_PROGRESS',
+                payload: { status: 'complete', message: 'Area captured!', usage: saveResult.usage }
+            });
+        }
+        else {
+            background_extensionAPI.runtime.sendMessage({
+                type: 'CAPTURE_PROGRESS',
+                payload: { status: 'complete', message: 'Area saved locally (sign in to sync)' }
+            });
+        }
+    }
+    catch (error) {
+        console.error('Area capture failed:', error);
+        background_extensionAPI.runtime.sendMessage({
+            type: 'CAPTURE_PROGRESS',
+            payload: { status: 'error', message: error instanceof Error ? error.message : 'Area capture failed' }
+        });
+    }
+}
 function handleCancelCapture() {
     console.log('Cancelling current capture...');
     if (currentCaptureController) {

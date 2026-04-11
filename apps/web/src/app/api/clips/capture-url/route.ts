@@ -8,16 +8,80 @@ import {
 } from '@/lib/subscription-limits'
 
 export const runtime = 'nodejs'
-export const maxDuration = 30 // 30 seconds for HTML/text capture
+export const maxDuration = 60
 
 interface CaptureRequestBody {
   url: string
   folderId?: string
 }
 
+async function takeScreenshot(url: string): Promise<Buffer | null> {
+  let browser: any = null
+  try {
+    const puppeteer = await import('puppeteer-core')
+    const chromium = await import('@sparticuz/chromium-min')
+
+    const isLocal = process.env.NODE_ENV === 'development'
+
+    let executablePath: string
+    if (isLocal) {
+      // Use local Chrome/Chromium for development
+      const possiblePaths = [
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        '/Applications/Chromium.app/Contents/MacOS/Chromium',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+      ]
+      const fs = await import('fs')
+      executablePath = possiblePaths.find(p => fs.existsSync(p)) || ''
+      if (!executablePath) {
+        console.warn('No local Chrome found, skipping screenshot')
+        return null
+      }
+    } else {
+      executablePath = await chromium.default.executablePath(
+        'https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.tar'
+      )
+    }
+
+    browser = await puppeteer.default.launch({
+      args: isLocal
+        ? ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        : chromium.default.args,
+      executablePath,
+      headless: true,
+      defaultViewport: { width: 1280, height: 800 },
+    })
+
+    const page = await browser.newPage()
+
+    await page.setUserAgent(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    )
+
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 25000 })
+
+    // Brief settle for late-loading images/fonts
+    await new Promise(r => setTimeout(r, 1500))
+
+    const screenshot = await page.screenshot({
+      type: 'png',
+      fullPage: false,
+    })
+
+    return Buffer.from(screenshot)
+  } catch (err) {
+    console.error('Screenshot capture failed:', err)
+    return null
+  } finally {
+    if (browser) {
+      try { await browser.close() } catch { /* ignore */ }
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from header
     const authHeader = request.headers.get('authorization')
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -28,7 +92,6 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.substring(7)
     
-    // Create Supabase client with the user's auth token
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     
@@ -40,7 +103,6 @@ export async function POST(request: NextRequest) {
       },
     })
     
-    // Verify the token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
@@ -53,7 +115,6 @@ export async function POST(request: NextRequest) {
     
     console.log(`✅ Authenticated user: ${user.id}`)
 
-    // Check user's subscription tier and current usage
     const { data: userProfile } = await supabase
       .from('users')
       .select('subscription_tier')
@@ -69,7 +130,6 @@ export async function POST(request: NextRequest) {
     const subscriptionTier = userProfile?.subscription_tier || 'free'
     const clipsThisMonth = usageData?.clips_this_month || 0
 
-    // Pre-check limit (database trigger will enforce it atomically)
     if (hasReachedClipLimit(clipsThisMonth, subscriptionTier)) {
       const limits = getSubscriptionLimits(subscriptionTier)
       return NextResponse.json(
@@ -80,7 +140,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse request body
     const body: CaptureRequestBody = await request.json()
     const { url, folderId } = body
 
@@ -91,7 +150,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate URL format
     let validatedUrl: URL
     try {
       validatedUrl = new URL(url)
@@ -107,79 +165,72 @@ export async function POST(request: NextRequest) {
 
     console.log(`🌐 Capturing URL: ${url} for user: ${user.id}`)
 
-    // Fetch the webpage HTML with browser-like headers
-    let response: Response | undefined
-    let attemptCount = 0
-    const maxAttempts = 2
-    
-    while (attemptCount < maxAttempts) {
-      attemptCount++
+    // Run HTML fetch and headless screenshot in parallel
+    const htmlFetchPromise = (async () => {
+      let response: Response | undefined
+      let attemptCount = 0
+      const maxAttempts = 2
       
-      const headers: Record<string, string> = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-        'Sec-Ch-Ua-Mobile': '?0',
-        'Sec-Ch-Ua-Platform': '"macOS"',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1',
+      while (attemptCount < maxAttempts) {
+        attemptCount++
+        
+        const headers: Record<string, string> = {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+          'Sec-Ch-Ua-Mobile': '?0',
+          'Sec-Ch-Ua-Platform': '"macOS"',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Upgrade-Insecure-Requests': '1',
+        }
+        
+        if (attemptCount > 1) {
+          headers['Referer'] = validatedUrl.origin
+          console.log(`🔄 Retry attempt ${attemptCount} with Referer header`)
+        }
+        
+        response = await fetch(url, {
+          headers,
+          signal: AbortSignal.timeout(20000)
+        })
+        
+        if (response.ok || response.status !== 403) break
+        
+        if (attemptCount < maxAttempts) {
+          console.log(`⚠️ Got 403, retrying...`)
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
       }
-      
-      // On retry, add Referer header (some sites require it)
-      if (attemptCount > 1) {
-        headers['Referer'] = validatedUrl.origin
-        console.log(`🔄 Retry attempt ${attemptCount} with Referer header`)
-      }
-      
-      response = await fetch(url, {
-        headers,
-        signal: AbortSignal.timeout(20000) // 20 second timeout
-      })
-      
-      // If successful or not a 403, break out of retry loop
-      if (response.ok || response.status !== 403) {
-        break
-      }
-      
-      // If we get 403 and have more attempts, continue
-      if (attemptCount < maxAttempts) {
-        console.log(`⚠️ Got 403, retrying...`)
-        await new Promise(resolve => setTimeout(resolve, 500)) // Brief delay
-      }
-    }
 
-    if (!response) {
-      throw new Error('Failed to fetch page: No response received')
-    }
+      if (!response) throw new Error('Failed to fetch page: No response received')
+      if (!response.ok) throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`)
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`)
-    }
+      return response.text()
+    })()
 
-    const html = await response.text()
+    const screenshotPromise = takeScreenshot(url)
+
+    const [html, screenshotBuffer] = await Promise.all([htmlFetchPromise, screenshotPromise])
+
     console.log(`📄 Fetched HTML: ${html.length} bytes`)
 
-    // Parse HTML with cheerio
     const $ = cheerio.load(html)
 
-    // Extract title
     const title = $('title').text().trim() || $('meta[property="og:title"]').attr('content') || validatedUrl.hostname
 
-    // Extract text content
     $('script, style, noscript').remove()
     const text = $('body').text()
       .replace(/\s+/g, ' ')
       .replace(/\n+/g, '\n')
       .trim()
 
-    // Extract favicon
     let favicon = $('link[rel*="icon"]').attr('href') || ''
     if (favicon && !favicon.startsWith('http')) {
       favicon = new URL(favicon, url).href
@@ -190,17 +241,35 @@ export async function POST(request: NextRequest) {
 
     console.log(`📝 Extracted - Title: "${title}", Text: ${text.length} chars`)
 
-    // Note: Clip URL captures HTML and text only
-    // For screenshots, use the browser extension which captures full-page renders
-    const screenshotUrl = null
-    console.log('📝 Clip URL: HTML and text captured (use extension for screenshots)')
+    // Upload screenshot to Supabase Storage if captured
+    let screenshotUrl: string | null = null
+    if (screenshotBuffer) {
+      try {
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.png`
 
-    // If no folder specified, use or create "Inbox" folder
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('screenshots')
+          .upload(fileName, screenshotBuffer, {
+            contentType: 'image/png',
+            upsert: false,
+          })
+
+        if (uploadError) {
+          console.error('Screenshot upload error:', uploadError)
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('screenshots')
+            .getPublicUrl(uploadData.path)
+          screenshotUrl = publicUrl
+          console.log(`📸 Screenshot uploaded: ${screenshotUrl}`)
+        }
+      } catch (uploadError) {
+        console.error('Screenshot upload failed:', uploadError)
+      }
+    }
+
     let targetFolderId = folderId
     if (!targetFolderId) {
-      console.log('📁 No folder specified, checking for Inbox folder...')
-      
-      // Try to find existing Inbox folder
       const { data: existingFolder } = await supabase
         .from('folders')
         .select('id')
@@ -210,31 +279,23 @@ export async function POST(request: NextRequest) {
       
       if (existingFolder) {
         targetFolderId = existingFolder.id
-        console.log('✅ Using existing Inbox folder:', targetFolderId)
       } else {
-        // Create Inbox folder
-        console.log('📁 Creating new Inbox folder...')
         const { data: newFolder, error: folderError } = await supabase
           .from('folders')
           .insert({
             user_id: user.id,
             name: 'Inbox',
-            color: '#3b82f6' // Blue color for Inbox
+            color: '#3b82f6'
           })
           .select('id')
           .single()
         
-        if (folderError) {
-          console.error('Failed to create Inbox folder:', folderError)
-          // Continue without folder rather than failing
-        } else {
+        if (!folderError && newFolder) {
           targetFolderId = newFolder.id
-          console.log('✅ Created new Inbox folder:', targetFolderId)
         }
       }
     }
 
-    // Create clip in database
     const { data: clip, error: insertError } = await supabase
       .from('clips')
       .insert({
@@ -254,7 +315,6 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('Database insert error:', insertError)
       
-      // Check if this is a clip limit violation from the database trigger
       if (insertError.code === '23514' || insertError.message?.includes('Clip limit reached')) {
         const limits = getSubscriptionLimits(subscriptionTier)
         return NextResponse.json(
@@ -266,17 +326,18 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to save clip: ${insertError.message}`)
     }
 
-    console.log(`✅ Clip created successfully: ${clip.id}`)
+    console.log(`✅ Clip created: ${clip.id} (screenshot: ${screenshotUrl ? 'yes' : 'no'})`)
 
     return NextResponse.json({
       success: true,
       clip: clip,
-      message: 'Page captured successfully',
+      message: screenshotUrl
+        ? 'Page captured with screenshot'
+        : 'Page captured (screenshot unavailable)',
     })
   } catch (error: any) {
     console.error('❌ Capture error:', error)
     
-    // Return user-friendly error messages
     let errorMessage = 'Failed to capture webpage'
     let statusCode = 500
 

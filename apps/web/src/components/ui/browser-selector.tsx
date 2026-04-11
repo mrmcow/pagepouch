@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ChromeIcon, FirefoxIcon } from '@/components/ui/browser-icons'
+import { ChromeIcon, FirefoxIcon, TorIcon } from '@/components/ui/browser-icons'
 import { DownloadIcon, ExternalLinkIcon, CheckIcon } from 'lucide-react'
 
 interface BrowserSelectorProps {
@@ -100,6 +100,11 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
           <CheckIcon className="h-4 w-4 text-emerald-500" />
           <span>2-minute setup</span>
         </div>
+      </div>
+      {/* Tor compatibility note */}
+      <div className="flex items-center justify-center gap-2 mt-5 text-sm text-slate-500 dark:text-slate-400">
+        <TorIcon size={28} className="shrink-0 opacity-80" />
+        <span>Also works with <span className="font-semibold text-slate-700 dark:text-slate-300">Tor Browser</span></span>
       </div>
     </div>
   )

@@ -127,11 +127,119 @@ extensionAPI.runtime.onMessage.addListener((message: ExtensionMessage, sender, s
       return true; // Keep message channel open for async response
     case 'CREATE_FOLDER':
       handleCreateFolder(message.payload, sendResponse);
-      return true; // Keep message channel open for async response
+      return true;
+    case 'AREA_SELECT':
+      handleAreaSelect();
+      break;
+    case 'AREA_SELECTED':
+      handleAreaSelected(message.payload, sender);
+      break;
     default:
       console.warn('Unknown message type:', message.type);
   }
 });
+
+async function handleAreaSelect() {
+  try {
+    const [tab] = await extensionAPI.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) return;
+    await extensionAPI.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['areaSelect.js'],
+    });
+  } catch (err) {
+    console.error('Area select injection failed:', err);
+    extensionAPI.runtime.sendMessage({
+      type: 'CAPTURE_PROGRESS',
+      payload: { status: 'error', message: 'Could not open area selector on this page.' }
+    } as ExtensionMessage);
+  }
+}
+
+async function handleAreaSelected(rect: { x: number; y: number; width: number; height: number; devicePixelRatio: number }, sender: any) {
+  try {
+    extensionAPI.runtime.sendMessage({
+      type: 'CAPTURE_PROGRESS',
+      payload: { status: 'capturing', message: 'Capturing selected area...' }
+    } as ExtensionMessage);
+
+    const tab = sender?.tab || (await extensionAPI.tabs.query({ active: true, currentWindow: true }))[0];
+    if (!tab?.id) throw new Error('No active tab');
+
+    const fullScreenshot = await extensionAPI.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
+
+    // Crop to selected area using offscreen canvas
+    const dpr = rect.devicePixelRatio || 1;
+    const cropResult = await extensionAPI.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (dataUrl: string, x: number, y: number, w: number, h: number, dpr: number) => {
+        return new Promise<string>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            const ctx = canvas.getContext('2d')!;
+            ctx.drawImage(img, x * dpr, y * dpr, w * dpr, h * dpr, 0, 0, w * dpr, h * dpr);
+            resolve(canvas.toDataURL('image/png'));
+          };
+          img.src = dataUrl;
+        });
+      },
+      args: [fullScreenshot, rect.x, rect.y, rect.width, rect.height, dpr],
+    });
+
+    const croppedDataUrl = cropResult?.[0]?.result;
+    if (!croppedDataUrl) throw new Error('Failed to crop screenshot');
+
+    // Extract page content
+    let pageContent: any = {};
+    try {
+      const result = await extensionAPI.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          const text = document.body.innerText?.substring(0, 50000) || '';
+          return { text_content: text, favicon_url: (document.querySelector('link[rel*="icon"]') as HTMLLinkElement)?.href || '' };
+        },
+      });
+      pageContent = result?.[0]?.result || {};
+    } catch { /* ignore */ }
+
+    extensionAPI.runtime.sendMessage({
+      type: 'CAPTURE_PROGRESS',
+      payload: { status: 'saving', message: 'Saving capture...' }
+    } as ExtensionMessage);
+
+    const clipData = {
+      url: tab.url || '',
+      title: tab.title || '',
+      screenshot_data: croppedDataUrl,
+      text_content: pageContent.text_content || '',
+      favicon_url: pageContent.favicon_url || '',
+      notes: `Area capture (${rect.width}x${rect.height}px)`,
+    };
+
+    const isAuthenticated = await ExtensionAuth.restoreSession();
+    if (isAuthenticated) {
+      const saveResult = await ExtensionAPI.saveClip(clipData);
+      extensionAPI.runtime.sendMessage({
+        type: 'CAPTURE_PROGRESS',
+        payload: { status: 'complete', message: 'Area captured!', usage: saveResult.usage }
+      } as ExtensionMessage);
+    } else {
+      extensionAPI.runtime.sendMessage({
+        type: 'CAPTURE_PROGRESS',
+        payload: { status: 'complete', message: 'Area saved locally (sign in to sync)' }
+      } as ExtensionMessage);
+    }
+  } catch (error) {
+    console.error('Area capture failed:', error);
+    extensionAPI.runtime.sendMessage({
+      type: 'CAPTURE_PROGRESS',
+      payload: { status: 'error', message: error instanceof Error ? error.message : 'Area capture failed' }
+    } as ExtensionMessage);
+  }
+}
 
 function handleCancelCapture() {
   console.log('Cancelling current capture...');

@@ -195,7 +195,9 @@ function ResetPasswordForm() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
+                    name="new-password"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="Enter new password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -215,7 +217,9 @@ function ResetPasswordForm() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
+                    name="confirm-password"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="Confirm new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}

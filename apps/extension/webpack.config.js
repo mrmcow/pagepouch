@@ -10,6 +10,7 @@ module.exports = {
   entry: {
     background: './src/background/index.ts',
     popup: './src/popup/enhanced-popup.tsx',
+    areaSelect: './src/content/areaSelect.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

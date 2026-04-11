@@ -4,18 +4,15 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { 
-  Brain, 
-  Sparkles, 
-  Zap, 
-  Search, 
-  Network, 
-  FileText, 
-  Users, 
+import {
   ArrowRight,
-  CheckCircle,
-  X
+  Check,
+  X,
+  Network,
+  Search,
+  Sparkles,
+  Eye,
+  LayoutGrid
 } from 'lucide-react'
 
 interface KnowledgeGraphUpgradeModalProps {
@@ -34,210 +31,134 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           priceId: plan === 'monthly' ? 'price_1SBSLeDFfW8f5SmSgQooVxsd' : 'price_1SBSNpDFfW8f5SmShv3v8v8Q',
-          plan: plan
+          plan,
         }),
       })
       const { url } = await response.json()
       if (url) window.location.href = url
-    } catch (error) {
-      console.error('Upgrade error:', error)
+    } catch {
+      // Stripe errors handled by checkout page
     } finally {
       setIsUpgrading(false)
     }
   }
 
+  const capabilities = [
+    { icon: Network, title: 'Source mapping', desc: 'See which domains and topics cluster across your captures' },
+    { icon: Search, title: 'Visual exploration', desc: 'Navigate connections, zoom into clusters, click to open clips' },
+    { icon: Eye, title: 'Auto-insights', desc: 'Instant summaries like "Your most-used source: nytimes.com (8 clips)"' },
+    { icon: LayoutGrid, title: 'Multiple views', desc: 'Filter by website, topic, tag, or time period' },
+  ]
+
+  const proFeatures = [
+    'Page Graphs with connection discovery',
+    'Professional export (APA, Markdown, CSV, HTML)',
+    '1,000 clips per month',
+    '5 GB storage',
+    'Priority support',
+  ]
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute -top-2 -right-2 h-8 w-8 p-0"
-            onClick={onClose}
-          >
+      <DialogContent className="max-w-lg p-0 overflow-hidden border-slate-200 dark:border-white/10">
+        {/* Hero */}
+        <div className="relative bg-gradient-to-b from-slate-900 to-slate-800 px-8 pt-10 pb-8 text-center text-white">
+          <button onClick={onClose} className="absolute top-4 right-4 p-1 rounded-lg hover:bg-white/10 transition-colors">
             <X className="h-4 w-4" />
-          </Button>
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-100 rounded-2xl mb-4">
-              <Brain className="h-8 w-8 text-blue-600" />
-            </div>
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              Unlock Knowledge Graph
-            </DialogTitle>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Transform your research with AI-powered knowledge graphs that reveal hidden connections in your captured content.
-            </p>
+          </button>
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-white/10 backdrop-blur rounded-2xl mb-5">
+            <Network className="h-7 w-7" />
           </div>
-        </DialogHeader>
+          <DialogTitle className="text-2xl font-bold mb-2 text-white">Page Graphs</DialogTitle>
+          <p className="text-slate-300 text-sm leading-relaxed max-w-sm mx-auto">
+            See how your research connects. Discover patterns across everything you've captured.
+          </p>
 
-        <div className="space-y-8">
-          {/* Preview Section */}
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl p-8">
-            <h3 className="text-xl font-bold text-slate-800 mb-6 text-center">See Your Research Come to Life</h3>
-            
-            {/* Mock Graph Preview */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-slate-700">Trump Investigation Graph</h4>
-                <Badge className="bg-blue-100 text-blue-700">24 connections found</Badge>
-              </div>
-              
-              {/* Simple graph visualization mockup */}
-              <div className="relative h-48 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {/* Central node */}
-                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                    Trump
-                  </div>
-                  
-                  {/* Connected nodes */}
-                  <div className="absolute top-8 left-16 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
-                    NPR
-                  </div>
-                  <div className="absolute top-8 right-16 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
-                    ICE
-                  </div>
-                  <div className="absolute bottom-8 left-20 w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
-                    Policy
-                  </div>
-                  <div className="absolute bottom-8 right-20 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
-                    BBC
-                  </div>
-                  
-                  {/* Connection lines */}
-                  <svg className="absolute inset-0 w-full h-full">
-                    <line x1="50%" y1="50%" x2="25%" y2="25%" stroke="#64748b" strokeWidth="2" opacity="0.6" />
-                    <line x1="50%" y1="50%" x2="75%" y2="25%" stroke="#64748b" strokeWidth="2" opacity="0.6" />
-                    <line x1="50%" y1="50%" x2="30%" y2="75%" stroke="#64748b" strokeWidth="2" opacity="0.6" />
-                    <line x1="50%" y1="50%" x2="70%" y2="75%" stroke="#64748b" strokeWidth="2" opacity="0.6" />
-                  </svg>
+          {/* Abstract graph preview */}
+          <div className="mt-6 relative h-24 max-w-xs mx-auto">
+            <svg width="100%" height="100%" viewBox="0 0 300 96" fill="none" className="opacity-60">
+              <circle cx="150" cy="48" r="12" fill="#3b82f6" />
+              <circle cx="70" cy="24" r="8" fill="#60a5fa" />
+              <circle cx="230" cy="24" r="8" fill="#60a5fa" />
+              <circle cx="50" cy="72" r="6" fill="#93c5fd" />
+              <circle cx="250" cy="72" r="6" fill="#93c5fd" />
+              <circle cx="110" cy="76" r="7" fill="#60a5fa" />
+              <circle cx="190" cy="76" r="7" fill="#60a5fa" />
+              <line x1="150" y1="48" x2="70" y2="24" stroke="#475569" strokeWidth="1" />
+              <line x1="150" y1="48" x2="230" y2="24" stroke="#475569" strokeWidth="1" />
+              <line x1="150" y1="48" x2="110" y2="76" stroke="#475569" strokeWidth="1" />
+              <line x1="150" y1="48" x2="190" y2="76" stroke="#475569" strokeWidth="1" />
+              <line x1="70" y1="24" x2="50" y2="72" stroke="#334155" strokeWidth="1" />
+              <line x1="230" y1="24" x2="250" y2="72" stroke="#334155" strokeWidth="1" />
+              <line x1="110" y1="76" x2="50" y2="72" stroke="#334155" strokeWidth="1" />
+              <line x1="190" y1="76" x2="250" y2="72" stroke="#334155" strokeWidth="1" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="px-8 py-6 space-y-6">
+          {/* Capabilities */}
+          <div className="space-y-3">
+            {capabilities.map((c) => (
+              <div key={c.title} className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <c.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{c.title}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{c.desc}</p>
                 </div>
               </div>
-              
-              <div className="mt-4 text-center">
-                <p className="text-sm text-slate-600">Interactive graph showing connections between entities in your research</p>
+            ))}
+          </div>
+
+          {/* Pricing */}
+          <div className="border-t border-slate-100 dark:border-white/5 pt-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-lg font-bold text-slate-900 dark:text-white">PageStash Pro</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Everything in Free, plus:</p>
               </div>
-            </div>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="border-blue-100">
-              <CardContent className="p-6 text-center">
-                <Network className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h4 className="font-semibold text-slate-800 mb-2">AI-Powered Analysis</h4>
-                <p className="text-sm text-slate-600">Automatically discover relationships between people, places, and concepts in your captured content.</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-blue-100">
-              <CardContent className="p-6 text-center">
-                <Search className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h4 className="font-semibold text-slate-800 mb-2">Visual Exploration</h4>
-                <p className="text-sm text-slate-600">Navigate through your research visually, zoom into clusters, and explore connection paths.</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-green-100">
-              <CardContent className="p-6 text-center">
-                <FileText className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                <h4 className="font-semibold text-slate-800 mb-2">Professional Export</h4>
-                <p className="text-sm text-slate-600">Export beautiful graphs for presentations, reports, and sharing with your team.</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Pricing Section */}
-          <div className="bg-white rounded-2xl border-2 border-blue-200 p-8">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">Upgrade to PageStash Pro</h3>
-              <p className="text-slate-600">Get Knowledge Graph + all Pro features</p>
+              <Badge variant="secondary" className="text-xs">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Pro
+              </Badge>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              {/* Monthly Plan */}
-              <Card className="border-slate-200 hover:border-blue-300 transition-colors">
-                <CardContent className="p-6">
-                  <div className="text-center mb-4">
-                    <h4 className="font-semibold text-slate-800">Monthly</h4>
-                    <div className="text-3xl font-bold text-slate-800 mt-2">$12<span className="text-lg text-slate-500">/month</span></div>
-                  </div>
-                  <ul className="space-y-2 mb-6">
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Knowledge Graph access
-                    </li>
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      1,000 clips/month
-                    </li>
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      5GB storage
-                    </li>
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Priority support
-                    </li>
-                  </ul>
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleUpgrade('monthly')}
-                    disabled={isUpgrading}
-                  >
-                    {isUpgrading ? 'Processing...' : 'Start Monthly Plan'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Annual Plan */}
-              <Card className="border-green-300 bg-green-50/50 relative">
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-500 text-white">
-                  Save $24/year
-                </Badge>
-                <CardContent className="p-6">
-                  <div className="text-center mb-4">
-                    <h4 className="font-semibold text-slate-800">Annual</h4>
-                    <div className="text-3xl font-bold text-slate-800 mt-2">$120<span className="text-lg text-slate-500">/year</span></div>
-                    <p className="text-sm text-green-600">$10/month</p>
-                  </div>
-                  <ul className="space-y-2 mb-6">
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Knowledge Graph access
-                    </li>
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      1,000 clips/month
-                    </li>
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      5GB storage
-                    </li>
-                    <li className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                      Priority support
-                    </li>
-                  </ul>
-                  <Button 
-                    className="w-full bg-green-600 hover:bg-green-700" 
-                    onClick={() => handleUpgrade('annual')}
-                    disabled={isUpgrading}
-                  >
-                    {isUpgrading ? 'Processing...' : 'Start Annual Plan'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
+            <div className="space-y-1.5 mb-5">
+              {proFeatures.map((f) => (
+                <div key={f} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>{f}</span>
+                </div>
+              ))}
             </div>
 
-            <div className="text-center mt-6">
-              <p className="text-sm text-slate-500">
-                30-day money-back guarantee • Cancel anytime • Secure payment by Stripe
-              </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={() => handleUpgrade('monthly')}
+                disabled={isUpgrading}
+                className="h-12 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white rounded-xl font-semibold"
+              >
+                <div className="text-center">
+                  <div className="text-sm">{isUpgrading ? 'Processing...' : '$12/month'}</div>
+                </div>
+              </Button>
+              <Button
+                onClick={() => handleUpgrade('annual')}
+                disabled={isUpgrading}
+                className="h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold relative"
+              >
+                <div className="text-center">
+                  <div className="text-sm">{isUpgrading ? 'Processing...' : '$120/year'}</div>
+                  <div className="text-[10px] opacity-80 font-normal">Save $24</div>
+                </div>
+              </Button>
             </div>
+
+            <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-3">
+              30-day money-back guarantee · Cancel anytime · Stripe
+            </p>
           </div>
         </div>
       </DialogContent>

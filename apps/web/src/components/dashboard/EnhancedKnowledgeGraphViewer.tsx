@@ -19,6 +19,7 @@ import { GraphResultsList } from '@/components/graph/GraphResultsList'
 import { EvidenceDrawer } from '@/components/graph/EvidenceDrawer'
 import { NodeTooltip } from '@/components/graph/NodeTooltip'
 import { GraphFilterEngine } from '@/utils/graphFilterEngine'
+import { extractEntities } from '@/utils/entityExtractor'
 import { generateGraphPreview } from '@/utils/graphPreviewGenerator'
 import { 
   EnhancedGraphNode, 
@@ -326,10 +327,13 @@ export function EnhancedKnowledgeGraphViewer({
       generateTemporalConnections(clips, nodes, edges)
     }
     
-    // 'similar_content' is only generated when explicitly in 'content' mode
-    // Running it in 'all' mode produces too many low-quality edges
     if (viewMode === 'content') {
       generateContentConnections(clips, nodes, edges)
+    }
+
+    // Entity-based connections: shared emails, phones, social handles across clips
+    if (viewMode === 'all' || viewMode === 'entities') {
+      generateEntityConnections(clips, nodes, edges)
     }
 
     // Deduplicate nodes by label and type, keeping the one with more evidence
@@ -637,6 +641,76 @@ export function EnhancedKnowledgeGraphViewer({
     
     // Weighted combination
     return (titleSimilarity * 0.7) + (textSimilarity * 0.3)
+  }
+
+  const generateEntityConnections = (clips: any[], nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[]) => {
+    type EntityKind = 'email' | 'phone' | 'handle'
+    const entityToClips = new Map<string, { clipIds: string[]; kind: EntityKind }>()
+
+    clips.forEach(clip => {
+      const ent = extractEntities(
+        [clip.text_content || '', clip.title || '', clip.url || ''].join('\n'),
+        clip.url,
+      )
+      const pairs: [string[], EntityKind][] = [
+        [ent.emails, 'email'],
+        [ent.phones, 'phone'],
+        [ent.socialHandles, 'handle'],
+      ]
+      for (const [items, kind] of pairs) {
+        for (const val of items) {
+          const key = `${kind}:${val.toLowerCase()}`
+          if (!entityToClips.has(key)) entityToClips.set(key, { clipIds: [], kind })
+          entityToClips.get(key)!.clipIds.push(clip.id)
+        }
+      }
+    })
+
+    entityToClips.forEach(({ clipIds, kind }, key) => {
+      if (clipIds.length < 2) return
+      const entityValue = key.split(':').slice(1).join(':')
+      const nodeId = `entity-${key}`
+      const kindLabel = kind === 'email' ? 'Email' : kind === 'phone' ? 'Phone' : 'Handle'
+
+      nodes.push({
+        id: nodeId,
+        label: entityValue,
+        type: 'entity' as any,
+        size: Math.min(10 + clipIds.length * 3, 24),
+        color: kind === 'email' ? '#8b5cf6' : kind === 'phone' ? '#f59e0b' : '#06b6d4',
+        evidence: clipIds.map(id => {
+          const c = clips.find((cl: any) => cl.id === id)
+          return {
+            clipId: id, clipTitle: c?.title || '', snippet: `${kindLabel}: ${entityValue}`,
+            url: c?.url || '', timestamp: c?.created_at || '', folderName: '', folderId: '',
+            context: `Shared ${kindLabel.toLowerCase()} entity`, confidence: 0.85, sentiment: 'neutral' as const,
+            tags: ['entity'], sourceType: 'derived' as const,
+            provenance: { hasQuote: false, hasUrl: false, hasScreenshot: false, captureMethod: 'automatic' as const },
+          }
+        }),
+        aliases: [], entityType: kindLabel.toLowerCase(), confidence: 0.85, verified: false,
+        topics: ['entity', kind], sentiment: 0, importance: clipIds.length / clips.length,
+        firstMention: '', lastMention: '', mentionFrequency: clipIds.length,
+      })
+
+      clipIds.forEach(clipId => {
+        edges.push({
+          id: `edge-entity-${key}-${clipId}`,
+          source: nodeId, target: clipId, type: 'entity_link' as any,
+          weight: 0.75, color: kind === 'email' ? '#8b5cf6' : kind === 'phone' ? '#f59e0b' : '#06b6d4',
+          evidence: [{
+            clipId, clipTitle: '', snippet: `Shared ${kindLabel.toLowerCase()}: ${entityValue}`,
+            url: '', timestamp: '', folderName: '', folderId: '',
+            context: `Entity connection`, confidence: 0.85, sentiment: 'neutral',
+            tags: ['entity'], sourceType: 'derived',
+            provenance: { hasQuote: false, hasUrl: false, hasScreenshot: false, captureMethod: 'automatic' },
+          }],
+          strength: 0.75, sourceCount: 1, confidence: 0.85,
+          firstConnection: '', lastConnection: '', frequency: 1,
+          connectionReason: `Both mention ${entityValue}`, topics: ['entity', kind], sentiment: 0,
+        })
+      })
+    })
   }
 
   // Apply filters to graph data
