@@ -12,6 +12,7 @@ import {
   ensureUsageRow,
   incrementUsage
 } from '@/lib/subscription-limits'
+import { extractEntitiesServer } from '@/lib/entities/extractEntitiesServer'
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,6 +35,8 @@ export async function GET(request: NextRequest) {
 
     // Light select — never send html_content or text_content in list responses.
     // Full content is fetched on demand via GET /api/clips/[id] when a clip is opened.
+    // Note: omit `entities` here so list loads even if the DB migration has not been applied yet.
+    // Full clip detail (GET /api/clips/[id]) includes entities when the column exists.
     const listSelect = `
       id,
       url,
@@ -252,6 +255,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Extract entities from content
+    const entityText = [text_content || '', title || '', url || ''].join('\n')
+    const entities = await extractEntitiesServer(entityText, url, html_content || undefined)
+
     // Insert clip into database
     const { data, error } = await supabase
       .from('clips')
@@ -265,6 +272,7 @@ export async function POST(request: NextRequest) {
         favicon_url,
         folder_id,
         notes,
+        entities,
       })
       .select()
       .single()

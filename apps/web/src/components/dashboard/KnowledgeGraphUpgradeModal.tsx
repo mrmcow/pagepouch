@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -70,6 +70,9 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
             <Network className="h-7 w-7" />
           </div>
           <DialogTitle className="text-2xl font-bold mb-2 text-white">Page Graphs</DialogTitle>
+          <DialogDescription className="sr-only">
+            Upgrade to Pro to visualize connections between your saved pages, sources, and tags.
+          </DialogDescription>
           <p className="text-slate-300 text-sm leading-relaxed max-w-sm mx-auto">
             See how your research connects. Discover patterns across everything you've captured.
           </p>

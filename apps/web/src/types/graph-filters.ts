@@ -33,7 +33,7 @@ export interface Evidence {
 export interface EnhancedGraphNode {
   id: string
   label: string
-  type: 'person' | 'organization' | 'domain' | 'email' | 'tag' | 'clip' | 'place' | 'event'
+  type: 'person' | 'organization' | 'domain' | 'email' | 'tag' | 'clip' | 'place' | 'event' | 'entity'
   size: number
   color: string
   x?: number
@@ -62,7 +62,7 @@ export interface EnhancedGraphEdge {
   id: string
   source: string
   target: string
-  type: 'co_mention' | 'citation' | 'user_link' | 'semantic_similarity' | 'temporal_proximity' | 'source_authority' | 'topic_bridge' | 'same_topic' | 'tag_match' | 'same_session' | 'similar_content'
+  type: 'co_mention' | 'citation' | 'user_link' | 'semantic_similarity' | 'temporal_proximity' | 'source_authority' | 'topic_bridge' | 'same_topic' | 'tag_match' | 'same_session' | 'similar_content' | 'entity_link'
   weight: number
   color: string
   evidence: Evidence[]

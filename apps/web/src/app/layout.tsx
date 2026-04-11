@@ -106,6 +106,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover' as const,
 }
 
 export default function RootLayout({
@@ -114,8 +115,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('pagestash-theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark')}catch(e){}})()` }} />
+        <link rel="dns-prefetch" href="https://gwvsltgmjreructvbpzg.supabase.co" />
         {/* Google Analytics 4 */}
         {GA_MEASUREMENT_ID && (
           <>
@@ -142,9 +145,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <GlobalProviders>
-          <div className="min-h-screen bg-background">
-            {children}
-          </div>
+          {children}
         </GlobalProviders>
       </body>
     </html>

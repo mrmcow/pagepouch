@@ -643,52 +643,92 @@ export function EnhancedKnowledgeGraphViewer({
     return (titleSimilarity * 0.7) + (textSimilarity * 0.3)
   }
 
+  const ENTITY_KIND_CONFIG: Record<string, { label: string; color: string; weight: number }> = {
+    person:        { label: 'Person',          color: '#8b5cf6', weight: 0.9  },
+    organization:  { label: 'Organization',    color: '#6366f1', weight: 0.9  },
+    place:         { label: 'Place',           color: '#0d9488', weight: 0.85 },
+    email:         { label: 'Email',           color: '#3b82f6', weight: 0.85 },
+    phone:         { label: 'Phone',           color: '#f59e0b', weight: 0.8  },
+    handle:        { label: 'Social Handle',   color: '#06b6d4', weight: 0.8  },
+    crypto:        { label: 'Crypto Address',  color: '#10b981', weight: 0.95 },
+    ip:            { label: 'IP Address',      color: '#ef4444', weight: 0.85 },
+    onion:         { label: 'Onion Address',   color: '#7c3aed', weight: 0.95 },
+    doi:           { label: 'DOI',             color: '#d97706', weight: 0.9  },
+    isbn:          { label: 'ISBN',            color: '#ca8a04', weight: 0.9  },
+    cve:           { label: 'CVE',             color: '#dc2626', weight: 0.95 },
+    hash:          { label: 'File Hash',       color: '#be185d', weight: 0.9  },
+    hashtag:       { label: 'Hashtag',         color: '#0ea5e9', weight: 0.7  },
+    monetary:      { label: 'Amount',          color: '#059669', weight: 0.65 },
+    date:          { label: 'Date',            color: '#64748b', weight: 0.5  },
+    coordinate:    { label: 'Coordinates',     color: '#16a34a', weight: 0.85 },
+  }
+
   const generateEntityConnections = (clips: any[], nodes: EnhancedGraphNode[], edges: EnhancedGraphEdge[]) => {
-    type EntityKind = 'email' | 'phone' | 'handle'
-    const entityToClips = new Map<string, { clipIds: string[]; kind: EntityKind }>()
+    const entityToClips = new Map<string, { clipIds: Set<string>; kind: string }>()
 
     clips.forEach(clip => {
-      const ent = extractEntities(
-        [clip.text_content || '', clip.title || '', clip.url || ''].join('\n'),
-        clip.url,
-      )
-      const pairs: [string[], EntityKind][] = [
-        [ent.emails, 'email'],
-        [ent.phones, 'phone'],
-        [ent.socialHandles, 'handle'],
+      // Prefer stored entities; fall back to live extraction
+      const ent = clip.entities && Object.keys(clip.entities).length > 0
+        ? clip.entities
+        : extractEntities(
+            [clip.text_content || '', clip.title || '', clip.url || ''].join('\n'),
+            clip.url,
+          )
+
+      const pairs: [string[], string][] = [
+        [ent.persons || [],          'person'],
+        [ent.organizations || [],    'organization'],
+        [ent.locations || [],        'place'],
+        [ent.emails || [],           'email'],
+        [ent.phones || [],           'phone'],
+        [ent.socialHandles || [],    'handle'],
+        [ent.cryptoAddresses || [],  'crypto'],
+        [ent.ipAddresses || [],      'ip'],
+        [ent.ipv6Addresses || [],    'ip'],
+        [ent.onionAddresses || [],   'onion'],
+        [ent.dois || [],             'doi'],
+        [ent.isbns || [],            'isbn'],
+        [ent.cveIds || [],           'cve'],
+        [ent.fileHashes || [],       'hash'],
+        [ent.hashtags || [],         'hashtag'],
+        [ent.monetaryAmounts || [],  'monetary'],
+        [ent.coordinates || [],      'coordinate'],
       ]
+
       for (const [items, kind] of pairs) {
         for (const val of items) {
-          const key = `${kind}:${val.toLowerCase()}`
-          if (!entityToClips.has(key)) entityToClips.set(key, { clipIds: [], kind })
-          entityToClips.get(key)!.clipIds.push(clip.id)
+          const key = `${kind}:${val.toLowerCase().trim()}`
+          if (!entityToClips.has(key)) entityToClips.set(key, { clipIds: new Set(), kind })
+          entityToClips.get(key)!.clipIds.add(clip.id)
         }
       }
     })
 
-    entityToClips.forEach(({ clipIds, kind }, key) => {
-      if (clipIds.length < 2) return
+    entityToClips.forEach(({ clipIds: clipIdSet, kind }, key) => {
+      if (clipIdSet.size < 2) return
+      const clipIds = [...clipIdSet]
       const entityValue = key.split(':').slice(1).join(':')
       const nodeId = `entity-${key}`
-      const kindLabel = kind === 'email' ? 'Email' : kind === 'phone' ? 'Phone' : 'Handle'
+      const config = ENTITY_KIND_CONFIG[kind] || { label: kind, color: '#94a3b8', weight: 0.7 }
 
       nodes.push({
         id: nodeId,
         label: entityValue,
-        type: 'entity' as any,
-        size: Math.min(10 + clipIds.length * 3, 24),
-        color: kind === 'email' ? '#8b5cf6' : kind === 'phone' ? '#f59e0b' : '#06b6d4',
+        type: 'entity',
+        size: Math.min(10 + clipIds.length * 3, 28),
+        color: config.color,
         evidence: clipIds.map(id => {
           const c = clips.find((cl: any) => cl.id === id)
           return {
-            clipId: id, clipTitle: c?.title || '', snippet: `${kindLabel}: ${entityValue}`,
+            clipId: id, clipTitle: c?.title || '', snippet: `${config.label}: ${entityValue}`,
             url: c?.url || '', timestamp: c?.created_at || '', folderName: '', folderId: '',
-            context: `Shared ${kindLabel.toLowerCase()} entity`, confidence: 0.85, sentiment: 'neutral' as const,
-            tags: ['entity'], sourceType: 'derived' as const,
+            context: `Shared ${config.label.toLowerCase()} across ${clipIds.length} clips`,
+            confidence: config.weight, sentiment: 'neutral' as const,
+            tags: ['entity', kind], sourceType: 'derived' as const,
             provenance: { hasQuote: false, hasUrl: false, hasScreenshot: false, captureMethod: 'automatic' as const },
           }
         }),
-        aliases: [], entityType: kindLabel.toLowerCase(), confidence: 0.85, verified: false,
+        aliases: [], entityType: kind, confidence: config.weight, verified: false,
         topics: ['entity', kind], sentiment: 0, importance: clipIds.length / clips.length,
         firstMention: '', lastMention: '', mentionFrequency: clipIds.length,
       })
@@ -696,18 +736,19 @@ export function EnhancedKnowledgeGraphViewer({
       clipIds.forEach(clipId => {
         edges.push({
           id: `edge-entity-${key}-${clipId}`,
-          source: nodeId, target: clipId, type: 'entity_link' as any,
-          weight: 0.75, color: kind === 'email' ? '#8b5cf6' : kind === 'phone' ? '#f59e0b' : '#06b6d4',
+          source: nodeId, target: clipId, type: 'entity_link',
+          weight: config.weight, color: config.color,
           evidence: [{
-            clipId, clipTitle: '', snippet: `Shared ${kindLabel.toLowerCase()}: ${entityValue}`,
+            clipId, clipTitle: '', snippet: `Shared ${config.label.toLowerCase()}: ${entityValue}`,
             url: '', timestamp: '', folderName: '', folderId: '',
-            context: `Entity connection`, confidence: 0.85, sentiment: 'neutral',
-            tags: ['entity'], sourceType: 'derived',
+            context: `Entity connection`, confidence: config.weight, sentiment: 'neutral',
+            tags: ['entity', kind], sourceType: 'derived',
             provenance: { hasQuote: false, hasUrl: false, hasScreenshot: false, captureMethod: 'automatic' },
           }],
-          strength: 0.75, sourceCount: 1, confidence: 0.85,
+          strength: config.weight, sourceCount: clipIds.length, confidence: config.weight,
           firstConnection: '', lastConnection: '', frequency: 1,
-          connectionReason: `Both mention ${entityValue}`, topics: ['entity', kind], sentiment: 0,
+          connectionReason: `${clipIds.length} clips mention ${config.label.toLowerCase()} "${entityValue}"`,
+          topics: ['entity', kind], sentiment: 0,
         })
       })
     })

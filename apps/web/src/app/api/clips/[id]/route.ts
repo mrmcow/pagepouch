@@ -71,7 +71,8 @@ export async function GET(
         notes,
         created_at,
         updated_at,
-        folder_id
+        folder_id,
+        entities
       `)
       .eq('id', params.id)
       .eq('user_id', user.id)

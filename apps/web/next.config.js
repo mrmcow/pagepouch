@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Tree-shake lucide to icons actually used (smaller client bundles — especially mobile)
+  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min'],
   experimental: {
-    serverComponentsExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min'],
     optimizePackageImports: ['lucide-react'],
   },
   // Remove console logs in production

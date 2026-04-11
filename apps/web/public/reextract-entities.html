@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Re-extract entities</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; }
+    button { padding: 0.5rem 1rem; cursor: pointer; }
+    pre { background: #f4f4f5; padding: 1rem; overflow: auto; font-size: 0.85rem; }
+    .err { color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <h1>Re-extract entities</h1>
+  <p>Run while logged into Pagestash on this same origin. Uses the server pipeline (regex + compromise).</p>
+  <p>
+    <button type="button" id="go">Re-extract all clips</button>
+  </p>
+  <pre id="log"></pre>
+  <script>
+    const logEl = document.getElementById('log')
+    function log(msg, isErr) {
+      const line = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2)
+      logEl.textContent += (isErr ? '[error] ' : '') + line + '\n'
+    }
+    document.getElementById('go').onclick = async () => {
+      logEl.textContent = ''
+      let offset = 0
+      let batches = 0
+      try {
+        while (true) {
+          const url = '/api/clips/backfill-entities?force=1&offset=' + offset
+          const res = await fetch(url, { method: 'POST', credentials: 'include' })
+          const body = await res.json().catch(() => ({}))
+          if (!res.ok) {
+            log(body.error || res.statusText, true)
+            break
+          }
+          batches++
+          log(body)
+          if (body.nextOffset == null) break
+          offset = body.nextOffset
+        }
+        log('Done. Batches: ' + batches)
+      } catch (e) {
+        log(String(e), true)
+      }
+    }
+  </script>
+</body>
+</html>

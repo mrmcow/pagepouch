@@ -11,6 +11,7 @@ import {
   ensureUsageRow,
   incrementUsage
 } from '@/lib/subscription-limits'
+import { extractEntitiesServer } from '@/lib/entities/extractEntitiesServer'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -30,7 +31,6 @@ async function takeScreenshot(url: string): Promise<Buffer | null> {
 
     let executablePath: string
     if (isLocal) {
-      // Use local Chrome/Chromium for development
       const possiblePaths = [
         '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         '/Applications/Chromium.app/Contents/MacOS/Chromium',
@@ -45,7 +45,7 @@ async function takeScreenshot(url: string): Promise<Buffer | null> {
       }
     } else {
       executablePath = await chromium.default.executablePath(
-        'https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.tar'
+        'https://github.com/Sparticuz/chromium/releases/download/v147.0.0/chromium-v147.0.0-pack.x64.tar'
       )
     }
 
@@ -55,7 +55,7 @@ async function takeScreenshot(url: string): Promise<Buffer | null> {
         : chromium.default.args,
       executablePath,
       headless: true,
-      defaultViewport: { width: 1280, height: 800 },
+      defaultViewport: { width: 1280, height: 960 },
     })
 
     const page = await browser.newPage()
@@ -66,15 +66,25 @@ async function takeScreenshot(url: string): Promise<Buffer | null> {
 
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 25000 })
 
-    // Brief settle for late-loading images/fonts
-    await new Promise(r => setTimeout(r, 1500))
+    await new Promise(r => setTimeout(r, 2000))
+
+    const bodyHeight = await page.evaluate(() => document.body.scrollHeight)
+    const maxHeight = 12000
+    const useFullPage = bodyHeight <= maxHeight
+
+    if (!useFullPage) {
+      await page.setViewport({ width: 1280, height: 960 })
+    }
 
     const screenshot = await page.screenshot({
       type: 'png',
-      fullPage: false,
+      fullPage: useFullPage,
+      captureBeyondViewport: useFullPage,
     })
 
-    return Buffer.from(screenshot)
+    const buf = Buffer.from(screenshot)
+    console.log(`📸 Screenshot captured: ${buf.length} bytes, fullPage=${useFullPage}, bodyHeight=${bodyHeight}px`)
+    return buf
   } catch (err) {
     console.error('Screenshot capture failed:', err)
     return null
@@ -301,6 +311,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Extract entities from captured content
+    const entityText = [text || '', title || validatedUrl.hostname, url].join('\n')
+    const entities = await extractEntitiesServer(entityText, url, html || undefined)
+
     const { data: clip, error: insertError } = await supabase
       .from('clips')
       .insert({
@@ -313,6 +327,7 @@ export async function POST(request: NextRequest) {
         favicon_url: favicon,
         folder_id: targetFolderId || null,
         is_favorite: false,
+        entities,
       })
       .select()
       .single()

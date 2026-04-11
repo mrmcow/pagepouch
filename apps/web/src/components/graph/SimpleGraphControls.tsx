@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Search, X, Globe, Folder, Tag, Clock, Layers, RotateCcw } from 'lucide-react'
+import { Search, X, Globe, Folder, Tag, Clock, Layers, RotateCcw, Scan } from 'lucide-react'
 
 interface SimpleGraphControlsProps {
   searchQuery: string
@@ -18,10 +18,11 @@ interface SimpleGraphControlsProps {
 }
 
 const CONNECTION_TYPES = [
-  { id: 'citation',    label: 'Same Website', icon: <Globe className="h-3 w-3" />,  color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-700' },
-  { id: 'same_topic',  label: 'Same Topic',   icon: <Folder className="h-3 w-3" />, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700' },
-  { id: 'same_session',label: 'Same Session', icon: <Clock className="h-3 w-3" />,  color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-700' },
-  { id: 'tag_match',   label: 'Shared Tags',  icon: <Tag className="h-3 w-3" />,    color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-700' },
+  { id: 'citation',     label: 'Same Website',    icon: <Globe className="h-3 w-3" />,  color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-700' },
+  { id: 'same_topic',   label: 'Same Topic',      icon: <Folder className="h-3 w-3" />, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700' },
+  { id: 'same_session', label: 'Same Session',     icon: <Clock className="h-3 w-3" />,  color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-700' },
+  { id: 'tag_match',    label: 'Shared Tags',      icon: <Tag className="h-3 w-3" />,    color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-700' },
+  { id: 'entity_link',  label: 'Shared Entities',  icon: <Scan className="h-3 w-3" />,   color: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200 dark:border-violet-700' },
 ]
 
 export function SimpleGraphControls({

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -64,6 +64,9 @@ export function CreateFolderModal({ isOpen, onClose, onCreateFolder }: CreateFol
             <FolderPlus className="h-5 w-5" />
             Create New Folder
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Name your folder and pick a color to organize clips in your library.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -73,6 +73,7 @@ import { DownloadModal } from '@/components/ui/download-modal'
 import { ExportModal } from '@/components/dashboard/ExportModal'
 import { ExportUpgradeModal } from '@/components/dashboard/ExportUpgradeModal'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { getClipFaviconSrc } from '@/lib/clip-favicon'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { useToast } from '@/components/ui/toast'
 import { OnboardingOverlay } from '@/components/dashboard/OnboardingOverlay'
@@ -95,7 +96,7 @@ interface DashboardState {
   isLoading: boolean
   searchQuery: string
   selectedFolder: string | null
-  selectedTag: string | null
+  selectedTags: string[]
   viewMode: 'grid' | 'list'
   viewFilter: 'library' | 'favorites' | 'recent' | 'knowledge-graphs'
   sortBy: 'created_at' | 'updated_at' | 'title'
@@ -134,150 +135,291 @@ interface DashboardState {
 
 function TagFilterDropdown({
   tags,
-  selectedTagId,
-  onSelect,
+  selectedTagIds,
+  onToggle,
+  onClear,
 }: {
   tags: Array<{ id: string; name: string; color?: string }>
-  selectedTagId: string | null
-  onSelect: (tagId: string | null) => void
+  selectedTagIds: string[]
+  onToggle: (tagId: string) => void
+  onClear: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) { setSearch(''); return }
-    const t = setTimeout(() => inputRef.current?.focus(), 50)
-    return () => clearTimeout(t)
-  }, [open])
+    if (tags.length > 8) {
+      const t = setTimeout(() => searchRef.current?.focus(), 60)
+      return () => clearTimeout(t)
+    }
+  }, [open, tags.length])
 
   useEffect(() => {
     if (!open) return
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
     }
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('mousedown', handleClick)
     document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('mousedown', handleClick)
-      document.removeEventListener('keydown', handleKey)
-    }
+    return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKey) }
   }, [open])
 
-  const filtered = tags.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const selectedTag = tags.find(t => t.id === selectedTagId)
   const DEFAULT_COLORS = ['#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#ec4899', '#6366f1', '#14b8a6']
-  const tagColor = (tag: { color?: string }, i: number) => tag.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length]
+  const tagColor = (tag: { color?: string }, idx: number) => tag.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length]
+  const hasSelection = selectedTagIds.length > 0
+
+  const filtered = search
+    ? tags.filter(t => t.name.toLowerCase().includes(search.toLowerCase()))
+    : tags
+
+  // Sort: selected first, then alphabetical
+  const sorted = [...filtered].sort((a, b) => {
+    const aSelected = selectedTagIds.includes(a.id) ? 0 : 1
+    const bSelected = selectedTagIds.includes(b.id) ? 0 : 1
+    if (aSelected !== bSelected) return aSelected - bSelected
+    return a.name.localeCompare(b.name)
+  })
+
+  const triggerLabel = hasSelection
+    ? selectedTagIds.length === 1
+      ? (tags.find(t => t.id === selectedTagIds[0])?.name || 'Tag')
+      : `${selectedTagIds.length} tags`
+    : 'Tags'
 
   return (
     <div ref={containerRef} className="relative flex-shrink-0">
+      {/* Trigger button */}
       <button
         onClick={() => setOpen(o => !o)}
-        className={`h-9 flex items-center gap-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-150 border ${
-          selectedTagId
+        className={`h-9 flex items-center gap-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-150 border cursor-pointer select-none ${
+          hasSelection
             ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/40 text-blue-700 dark:text-blue-300'
             : 'bg-slate-100 dark:bg-slate-800 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
         }`}
       >
-        <Tag className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
-        <span className="max-w-[120px] truncate">
-          {selectedTag ? selectedTag.name : 'All Tags'}
-        </span>
-        {selectedTagId ? (
+        <Tag className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
+        <span className="max-w-[140px] truncate">{triggerLabel}</span>
+        {hasSelection ? (
           <span
             role="button"
-            onClick={(e) => { e.stopPropagation(); onSelect(null); setOpen(false) }}
+            onClick={(e) => { e.stopPropagation(); onClear() }}
             className="ml-0.5 rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors"
           >
             <X className="h-3 w-3" />
           </span>
         ) : (
-          <ChevronDown className={`h-3.5 w-3.5 opacity-50 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-3.5 w-3.5 opacity-40 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
         )}
       </button>
 
+      {/* Panel */}
       {open && (
-        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 rounded-xl shadow-xl shadow-slate-200/40 dark:shadow-black/30 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
-          {/* Search */}
-          <div className="p-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-              <input
-                ref={inputRef}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search tags..."
-                className="w-full h-8 pl-8 pr-3 text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-300 dark:focus:border-blue-600 transition-all"
-              />
+        <div className="absolute left-0 top-full mt-1.5 z-[100] w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden">
+
+          {/* Empty state — no tags at all */}
+          {tags.length === 0 ? (
+            <div className="px-4 py-8 text-center">
+              <Tag className="h-6 w-6 text-slate-300 dark:text-slate-600 mx-auto mb-2.5" />
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">No tags yet</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[180px] mx-auto">
+                Open a clip and add tags — they&apos;ll show up here for filtering
+              </p>
             </div>
-          </div>
-
-          {/* Options */}
-          <div className="max-h-56 overflow-y-auto overscroll-contain py-1">
-            {/* All Tags option */}
-            <button
-              onClick={() => { onSelect(null); setOpen(false) }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                !selectedTagId
-                  ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-              }`}
-            >
-              <div className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-                <Tag className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+          ) : (
+            <>
+              {/* Header */}
+              <div className="px-3 pt-3 pb-2 flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  {tags.length} tag{tags.length !== 1 ? 's' : ''}
+                </span>
+                {hasSelection && (
+                  <button
+                    onClick={() => { onClear() }}
+                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold uppercase tracking-wider"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
-              <span className="font-medium">All Tags</span>
-              {!selectedTagId && <Check className="h-3.5 w-3.5 ml-auto text-blue-600 dark:text-blue-400" />}
-            </button>
 
-            {filtered.length > 0 && (
-              <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2 my-1" />
-            )}
+              {/* Search — only when there are enough tags to warrant it */}
+              {tags.length > 8 && (
+                <div className="px-2.5 pb-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      ref={searchRef}
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Search..."
+                      className="w-full h-8 pl-8 pr-8 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 transition-all"
+                    />
+                    {search && (
+                      <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700">
+                        <X className="h-3 w-3 text-slate-400" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
-            {filtered.map((tag, i) => {
-              const isSelected = tag.id === selectedTagId
-              const color = tagColor(tag, i)
-              return (
-                <button
-                  key={tag.id}
-                  onClick={() => { onSelect(tag.id); setOpen(false) }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                    isSelected
-                      ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                  }`}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-slate-900"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="truncate">{tag.name}</span>
-                  {isSelected && <Check className="h-3.5 w-3.5 ml-auto text-blue-600 dark:text-blue-400 flex-shrink-0" />}
-                </button>
-              )
-            })}
+              {/* Tag list — all visible, selected pinned to top */}
+              <div className="max-h-72 overflow-y-auto overscroll-contain border-t border-slate-100 dark:border-slate-800">
+                {sorted.map((tag) => {
+                  const isSelected = selectedTagIds.includes(tag.id)
+                  const color = tagColor(tag, tags.indexOf(tag))
+                  return (
+                    <button
+                      key={tag.id}
+                      onClick={() => onToggle(tag.id)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-[9px] text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60 ${
+                        isSelected ? 'bg-blue-50/50 dark:bg-blue-950/15' : ''
+                      }`}
+                    >
+                      <div className={`w-[18px] h-[18px] rounded-[5px] border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all ${
+                        isSelected
+                          ? 'bg-blue-600 border-blue-600 dark:bg-blue-500 dark:border-blue-500'
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+                      }`}>
+                        {isSelected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                      </div>
+                      <span
+                        className="w-[10px] h-[10px] rounded-full flex-shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className={`truncate ${isSelected ? 'font-medium text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+                        {tag.name}
+                      </span>
+                    </button>
+                  )
+                })}
 
-            {filtered.length === 0 && search && (
-              <div className="px-3 py-6 text-center">
-                <p className="text-sm text-slate-400 dark:text-slate-500">No tags matching &ldquo;{search}&rdquo;</p>
+                {/* Search with no results */}
+                {filtered.length === 0 && search && (
+                  <div className="px-4 py-6 text-center">
+                    <p className="text-sm text-slate-400 dark:text-slate-500">No tags matching &ldquo;{search}&rdquo;</p>
+                  </div>
+                )}
               </div>
-            )}
 
-            {tags.length === 0 && (
-              <div className="px-3 py-6 text-center">
-                <Tag className="h-5 w-5 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                <p className="text-sm text-slate-400 dark:text-slate-500">No tags yet</p>
-                <p className="text-xs text-slate-400/70 dark:text-slate-500/70 mt-0.5">Add tags to clips to filter here</p>
-              </div>
-            )}
-          </div>
+              {/* Footer */}
+              {hasSelection && (
+                <div className="px-3 py-2 border-t border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-950/10">
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedTagIds.map(id => {
+                      const tag = tags.find(t => t.id === id)
+                      if (!tag) return null
+                      const color = tagColor(tag, tags.indexOf(tag))
+                      return (
+                        <span
+                          key={id}
+                          onClick={() => onToggle(id)}
+                          className="inline-flex items-center gap-1 pl-1.5 pr-1.5 py-[3px] rounded-md text-[11px] font-medium cursor-pointer bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                        >
+                          <span className="w-[6px] h-[6px] rounded-full" style={{ backgroundColor: color }} />
+                          {tag.name}
+                          <X className="h-2.5 w-2.5 ml-0.5 opacity-60" />
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const SORT_OPTIONS: Array<{ value: 'created_at' | 'updated_at' | 'title'; label: string; icon: typeof Calendar }> = [
+  { value: 'created_at', label: 'Date created', icon: Calendar },
+  { value: 'updated_at', label: 'Last modified', icon: Clock },
+  { value: 'title', label: 'Title', icon: FileText },
+]
+
+function SortDropdown({
+  sortBy,
+  sortOrder,
+  onSortByChange,
+  onSortOrderToggle,
+}: {
+  sortBy: 'created_at' | 'updated_at' | 'title'
+  sortOrder: 'asc' | 'desc'
+  onSortByChange: (v: 'created_at' | 'updated_at' | 'title') => void
+  onSortOrderToggle: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const current = SORT_OPTIONS.find(o => o.value === sortBy)!
+
+  return (
+    <div ref={containerRef} className="relative flex-shrink-0 flex items-center gap-1.5">
+      {/* Sort field trigger */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="h-9 flex items-center gap-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-150 border border-transparent cursor-pointer select-none bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+      >
+        <current.icon className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
+        <span>{current.label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 opacity-40 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* Order toggle */}
+      <button
+        onClick={onSortOrderToggle}
+        className="h-9 flex items-center gap-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border border-transparent transition-all duration-150 cursor-pointer select-none"
+        title={sortBy === 'title'
+          ? (sortOrder === 'asc' ? 'A–Z — click for Z–A' : 'Z–A — click for A–Z')
+          : (sortOrder === 'asc' ? 'Oldest first — click for newest' : 'Newest first — click for oldest')}
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={`transition-transform duration-200 ${sortOrder === 'asc' ? 'rotate-180' : ''}`}>
+          <path d="M7 2.5v9M3.5 8L7 11.5 10.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          {sortBy === 'title'
+            ? (sortOrder === 'asc' ? 'A–Z' : 'Z–A')
+            : (sortOrder === 'desc' ? 'Newest' : 'Oldest')}
+        </span>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute left-0 top-full mt-1.5 z-[100] w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden py-1">
+          {SORT_OPTIONS.map(opt => {
+            const isActive = opt.value === sortBy
+            const Icon = opt.icon
+            return (
+              <button
+                key={opt.value}
+                onClick={() => { onSortByChange(opt.value); setOpen(false) }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
+                  isActive
+                    ? 'bg-blue-50/60 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <span className={isActive ? 'font-medium' : ''}>{opt.label}</span>
+                {isActive && <Check className="h-4 w-4 ml-auto text-blue-600 dark:text-blue-400" />}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
@@ -300,7 +442,7 @@ function DashboardContent() {
     isLoading: false, // Start with false to show UI immediately
     searchQuery: '',
     selectedFolder: null,
-    selectedTag: null,
+    selectedTags: [],
     viewMode: 'grid',
     viewFilter: 'library',
     sortBy: 'created_at',
@@ -598,10 +740,11 @@ function DashboardContent() {
       const limit = 50
 
       // Fire ALL requests simultaneously — don't let subscription block clip rendering
-      const [clipsResponse, foldersResponse, tagsResponse, subscriptionResponse, usageResponse] = await Promise.all([
+      const [clipsResponse, foldersResponse, tagsResponse, clipTagsResponse, subscriptionResponse, usageResponse] = await Promise.all([
         fetch(`/api/clips?limit=${limit}&offset=${offset}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
         fetch('/api/folders', { cache: 'force-cache', headers: { 'Cache-Control': 'max-age=300' } }),
         fetch('/api/tags', { cache: 'force-cache', headers: { 'Cache-Control': 'max-age=300' } }),
+        fetch('/api/clip-tags', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
         fetch('/api/subscription', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
         fetch('/api/usage', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }),
       ])
@@ -615,6 +758,8 @@ function DashboardContent() {
         foldersResponse.json(),
         tagsResponse.json(),
       ])
+
+      const clipTagsData: Record<string, string[]> = clipTagsResponse.ok ? await clipTagsResponse.json() : {}
 
       const newClips = clipsData.clips || []
       const allClips = reset ? newClips : [...state.clips, ...newClips]
@@ -637,7 +782,7 @@ function DashboardContent() {
         clips: allClips,
         folders: foldersData.folders || [],
         availableTags: tagsData || [],
-        clipTags: {},
+        clipTags: clipTagsData,
         totalClips: clipsData.total || 0,
         hasMoreClips: clipsData.hasMore || false,
         currentOffset: offset + limit,
@@ -763,53 +908,20 @@ function DashboardContent() {
     setState(prev => ({ ...prev, isExportModalOpen: true }))
   }
 
-  const loadClipTagsForFilter = async (tagId: string) => {
-    try {
-      // Only load if we don't have the data yet
-      if (Object.keys(state.clipTags).length === 0) {
-        const clipTagsMap: Record<string, string[]> = {}
-        
-        // Load tags for all clips efficiently
-        await Promise.all(
-          state.clips.map(async (clip: Clip) => {
-            try {
-              const tagsResponse = await fetch(`/api/clips/${clip.id}/tags`)
-              if (tagsResponse.ok) {
-                const clipTags = await tagsResponse.json()
-                clipTagsMap[clip.id] = clipTags.map((tag: any) => tag.id)
-              } else {
-                clipTagsMap[clip.id] = []
-              }
-            } catch (error) {
-              console.error(`Failed to load tags for clip ${clip.id}:`, error)
-              clipTagsMap[clip.id] = []
-            }
-          })
-        )
-
-        setState(prev => ({
-          ...prev,
-          clipTags: clipTagsMap
-        }))
+  const handleTagToggle = (tagId: string) => {
+    setState(prev => {
+      const has = prev.selectedTags.includes(tagId)
+      return {
+        ...prev,
+        selectedTags: has
+          ? prev.selectedTags.filter(id => id !== tagId)
+          : [...prev.selectedTags, tagId],
       }
-    } catch (error) {
-      console.error('Failed to load clip tags:', error)
-    }
+    })
   }
 
-  const handleTagFilterChange = async (value: string) => {
-    const selectedTag = value === 'all-tags' ? null : value
-    
-    // Load clip tags BEFORE updating state if a tag is selected
-    if (selectedTag) {
-      await loadClipTagsForFilter(selectedTag)
-    }
-    
-    // Now update the selected tag state AFTER tags are loaded
-    setState(prev => ({ 
-      ...prev, 
-      selectedTag 
-    }))
+  const handleTagsClear = () => {
+    setState(prev => ({ ...prev, selectedTags: [] }))
   }
 
 
@@ -1026,7 +1138,9 @@ function DashboardContent() {
 
     return base.filter(clip => {
       const matchesFolder = !state.selectedFolder || clip.folder_id === state.selectedFolder
-      const matchesTag = !state.selectedTag || (state.clipTags[clip.id] && state.clipTags[clip.id].includes(state.selectedTag))
+      const matchesTag = state.selectedTags.length === 0 || (
+        state.clipTags[clip.id] && state.selectedTags.some(tid => state.clipTags[clip.id].includes(tid))
+      )
 
       let matchesViewFilter = true
       if (state.viewFilter === 'favorites') {
@@ -1039,12 +1153,15 @@ function DashboardContent() {
 
       return matchesFolder && matchesTag && matchesViewFilter
     })
-  }, [state.clips, state.searchResults, state.searchQuery, state.selectedFolder, state.selectedTag, state.viewFilter, state.clipTags])
+  }, [state.clips, state.searchResults, state.searchQuery, state.selectedFolder, state.selectedTags, state.viewFilter, state.clipTags])
 
   const sortedClips = useMemo(() => [...filteredClips].sort((a, b) => {
-    const aValue = a[state.sortBy]
-    const bValue = b[state.sortBy]
-    return state.sortOrder === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1)
+    const aValue = a[state.sortBy] || ''
+    const bValue = b[state.sortBy] || ''
+    const cmp = state.sortBy === 'title'
+      ? String(aValue).localeCompare(String(bValue), undefined, { numeric: true, sensitivity: 'base' })
+      : (aValue > bValue ? 1 : aValue < bValue ? -1 : 0)
+    return state.sortOrder === 'asc' ? cmp : -cmp
   }), [filteredClips, state.sortBy, state.sortOrder])
 
   // Don't hide the entire UI while loading - show skeleton instead
@@ -1072,7 +1189,7 @@ function DashboardContent() {
                     viewFilter: 'library',
                     searchQuery: '',
                     selectedFolder: null,
-                    selectedTag: null
+                    selectedTags: []
                   }))
                 }}
                 className="hover:opacity-80 transition-opacity"
@@ -1496,34 +1613,21 @@ function DashboardContent() {
                 )}
               </div>
 
-              {/* Secondary row: filters + sort + view — scrollable on mobile */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+              {/* Secondary row: filters + sort + view */}
+              <div className="flex items-center gap-2 pb-0.5">
                 <TagFilterDropdown
                   tags={state.availableTags}
-                  selectedTagId={state.selectedTag}
-                  onSelect={(tagId) => handleTagFilterChange(tagId || 'all-tags')}
+                  selectedTagIds={state.selectedTags}
+                  onToggle={handleTagToggle}
+                  onClear={handleTagsClear}
                 />
 
-                <select
-                  value={state.sortBy}
-                  onChange={(e) => setState(prev => ({ ...prev, sortBy: e.target.value as any }))}
-                  className="h-9 px-2 bg-slate-100 dark:bg-slate-800 border border-transparent hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-0 transition-all duration-200 rounded-lg text-sm flex-shrink-0"
-                >
-                  <option value="created_at">Date</option>
-                  <option value="updated_at">Modified</option>
-                  <option value="title">Title</option>
-                </select>
-
-                <button
-                  onClick={() => setState(prev => ({ 
-                    ...prev, 
-                    sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
-                  }))}
-                  className="h-9 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-transparent focus:outline-none transition-all duration-200 rounded-lg text-sm flex-shrink-0"
-                  title={`Sort ${state.sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
-                >
-                  {state.sortOrder === 'asc' ? '↑' : '↓'}
-                </button>
+                <SortDropdown
+                  sortBy={state.sortBy}
+                  sortOrder={state.sortOrder}
+                  onSortByChange={(v) => setState(prev => ({ ...prev, sortBy: v }))}
+                  onSortOrderToggle={() => setState(prev => ({ ...prev, sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' }))}
+                />
 
                 <div className="flex items-center p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg flex-shrink-0 ml-auto gap-0.5">
                   <button
@@ -1615,8 +1719,8 @@ function DashboardContent() {
                     ...prev,
                     viewFilter: 'library',
                     selectedFolder: folderId,
-                    searchQuery: '', // Clear search when navigating
-                    selectedTag: null // Clear tag filter when navigating
+                    searchQuery: '',
+                    selectedTags: []
                   }))
                 }}
               />
@@ -1969,7 +2073,9 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onRequ
             </div>
             <div className="flex items-center space-x-2 text-xs text-muted-foreground/80">
               <Globe className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">{new URL(clip.url).hostname}</span>
+              <span className="truncate">
+                {(() => { try { return new URL(clip.url).hostname } catch { return clip.url } })()}
+              </span>
               <span className="text-muted-foreground/50">•</span>
               <div className="flex items-center gap-1 flex-wrap">
                 <span>
@@ -2046,7 +2152,7 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onRequ
   }
 
   const hostname = (() => { try { return new URL(clip.url).hostname.replace('www.', '') } catch { return clip.url } })()
-  const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`
+  const faviconSrc = getClipFaviconSrc(clip)
 
   return (
     <div
@@ -2117,8 +2223,12 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onRequ
         <div className="flex items-center justify-between gap-2">
           {/* Source */}
           <div className="flex items-center gap-1.5 min-w-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={faviconUrl} alt="" width={12} height={12} className="w-3 h-3 rounded-sm flex-shrink-0 opacity-60" />
+            {faviconSrc ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={faviconSrc} alt="" width={12} height={12} className="w-3 h-3 rounded-sm flex-shrink-0 opacity-60" />
+            ) : (
+              <Globe className="w-3 h-3 flex-shrink-0 text-slate-400 dark:text-slate-500 opacity-60" aria-hidden />
+            )}
             <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{hostname}</span>
             {folder && (
               <>

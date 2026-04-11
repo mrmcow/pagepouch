@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -106,6 +106,9 @@ export function EditFolderModal({
             <Edit3 className="h-5 w-5" />
             Edit Folder
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Rename this folder, change its color, or delete it and optionally remove its clips.
+          </DialogDescription>
         </DialogHeader>
 
         {!showDeleteConfirm ? (

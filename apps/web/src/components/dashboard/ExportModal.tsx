@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { X, Download, FileText, Table, Code, FileCode, Book, CheckCircle2 } from 'lucide-react'
+import { X, Download, FileText, Table, Code, FileCode, Book, CheckCircle2, Scan, FileSearch } from 'lucide-react'
 import { Clip, Folder } from '@pagestash/shared'
 import { exportClips, downloadFile, type ExportFormat, type ExportOptions } from '@/lib/export'
 
@@ -82,6 +82,8 @@ export function ExportModal({ clips, folders, isOpen, onClose }: ExportModalProp
   const [includeScreenshots, setIncludeScreenshots] = useState(true)
   const [includeNotes, setIncludeNotes] = useState(true)
   const [includeMetadata, setIncludeMetadata] = useState(true)
+  const [includeEntities, setIncludeEntities] = useState(true)
+  const [includeFullContent, setIncludeFullContent] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'alphabetical'>('date')
   
   if (!isOpen) return null
@@ -95,11 +97,32 @@ export function ExportModal({ clips, folders, isOpen, onClose }: ExportModalProp
         includeScreenshots,
         includeNotes,
         includeMetadata,
+        includeEntities,
+        includeFullContent,
         sortBy,
+      }
+
+      let exportableClips = clips
+
+      // Fetch full clip data when full content is requested
+      if (includeFullContent) {
+        const fullClips = await Promise.all(
+          clips.map(async (clip) => {
+            try {
+              const res = await fetch(`/api/clips/${clip.id}`)
+              if (res.ok) {
+                const { clip: fullClip } = await res.json()
+                return { ...clip, ...fullClip }
+              }
+            } catch { /* fall through */ }
+            return clip
+          })
+        )
+        exportableClips = fullClips
       }
       
       const { content, filename, mimeType } = await exportClips(
-        clips,
+        exportableClips,
         selectedFormat,
         folders,
         options
@@ -108,7 +131,6 @@ export function ExportModal({ clips, folders, isOpen, onClose }: ExportModalProp
       downloadFile(content, filename, mimeType)
       setExportSuccess(true)
       
-      // Auto-close after success
       setTimeout(() => {
         onClose()
         setExportSuccess(false)
@@ -297,64 +319,96 @@ export function ExportModal({ clips, folders, isOpen, onClose }: ExportModalProp
           </div>
           
           {/* Export Options */}
-          {(selectedFormat === 'markdown' || selectedFormat === 'html') && (
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Options
-              </h3>
-              
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={includeScreenshots}
-                  onChange={(e) => setIncludeScreenshots(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              Options
+            </h3>
+            
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeScreenshots}
+                onChange={(e) => setIncludeScreenshots(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-slate-700 dark:text-slate-300">
+                Include screenshots
+              </span>
+            </label>
+            
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeNotes}
+                onChange={(e) => setIncludeNotes(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-slate-700 dark:text-slate-300">
+                Include my notes
+              </span>
+            </label>
+            
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeMetadata}
+                onChange={(e) => setIncludeMetadata(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-slate-700 dark:text-slate-300">
+                Include metadata (dates, folders)
+              </span>
+            </label>
+
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeEntities}
+                onChange={(e) => setIncludeEntities(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <div>
                 <span className="text-sm text-slate-700 dark:text-slate-300">
-                  Include screenshots
+                  Include extracted entities
                 </span>
-              </label>
-              
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={includeNotes}
-                  onChange={(e) => setIncludeNotes(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  Include my notes
-                </span>
-              </label>
-              
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={includeMetadata}
-                  onChange={(e) => setIncludeMetadata(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  Include metadata (dates, folders)
-                </span>
-              </label>
-              
-              <div className="pt-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Sort by
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="date">Capture date</option>
-                  <option value="title">Title (A-Z)</option>
-                  <option value="alphabetical">Alphabetical</option>
-                </select>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  People, orgs, emails, IPs, crypto, DOIs, and more
+                </p>
               </div>
+            </label>
+
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeFullContent}
+                onChange={(e) => setIncludeFullContent(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <div>
+                <span className="text-sm text-slate-700 dark:text-slate-300">
+                  Include full text content
+                </span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Complete page text instead of preview
+                </p>
+              </div>
+            </label>
+            
+            <div className="pt-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Sort by
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="date">Capture date</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="alphabetical">Alphabetical</option>
+              </select>
             </div>
-          )}
+          </div>
           
         </div>
         

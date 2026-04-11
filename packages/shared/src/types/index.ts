@@ -27,6 +27,7 @@ export const ClipSchema = z.object({
   folder_id: z.string().uuid().optional(),
   notes: z.string().optional(),
   is_favorite: z.boolean().default(false),
+  entities: z.record(z.any()).optional().nullable(),
 });
 
 export type Clip = z.infer<typeof ClipSchema>;

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -70,6 +70,9 @@ export function ExportUpgradeModal({ isOpen, onClose }: ExportUpgradeModalProps)
             <FileDown className="h-7 w-7" />
           </div>
           <DialogTitle className="text-2xl font-bold mb-2 text-white">Professional Export</DialogTitle>
+          <DialogDescription className="sr-only">
+            Upgrade to Pro to export clips as citations, Markdown, CSV, HTML, and JSON with screenshots and notes.
+          </DialogDescription>
           <p className="text-blue-100 text-sm leading-relaxed max-w-sm mx-auto">
             Export your research in any format — citations, spreadsheets, reports — with one click.
           </p>

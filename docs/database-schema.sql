@@ -50,6 +50,7 @@ CREATE TABLE public.clips (
   favicon_url TEXT,
   folder_id UUID REFERENCES public.folders(id) ON DELETE SET NULL,
   notes TEXT CHECK (length(notes) <= 10000),
+  entities JSONB DEFAULT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   -- Full-text search vector

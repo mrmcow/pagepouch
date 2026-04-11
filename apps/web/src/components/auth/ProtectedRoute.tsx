@@ -23,12 +23,12 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   if (loading) {
     return (
       fallback || (
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center transition-colors">
           <div className="text-center space-y-4">
             <div className="flex justify-center">
               <LogoIcon size={64} />
             </div>
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Loading...</p>
           </div>
         </div>
       )

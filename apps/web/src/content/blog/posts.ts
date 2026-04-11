@@ -130,8 +130,48 @@ import { researchStorageOrganization } from './research-storage-solutions'
 import { bestWebResearchTools2026 } from './best-web-research-tools-2026'
 import { bestClipperBusinessResearch2025 } from './best-clipper-business-research-2025'
 import { competitorAnalysisUXDesign } from './competitor-analysis-ux-design'
+import { uxInspirationLibrarySearchable } from './ux-inspiration-library-searchable'
+import { obsidianWebClippingWorkflow } from './obsidian-web-clipping-workflow'
+import { archiveSocialMediaPostsEvidence } from './archive-social-media-posts-evidence'
+import { zettelkastenWebResearchCapture } from './zettelkasten-web-research-capture'
+import { proveWebpageChangedJournalism } from './prove-webpage-changed-journalism'
+import { waybackMachineVsPersonalWebArchive } from './wayback-machine-vs-personal-web-archive'
+import { citeArchivedWebPagesAcademic } from './cite-archived-web-pages-academic'
+import { uxCompetitiveAuditCaptureCompare } from './ux-competitive-audit-capture-compare'
+import { trackCompetitorMessagingChangesFounders } from './track-competitor-messaging-changes-founders'
+import { saveWebpageAsPdfVsWebArchive } from './save-webpage-as-pdf-vs-web-archive'
+import { torHiddenServiceMonitoringOsintWorkflow } from './tor-hidden-service-monitoring-osint-workflow'
+import { darkWebMarketplaceResearchArchivalGuide } from './dark-web-marketplace-research-archival-guide'
+import { torBrowserFirefoxExtensionInvestigatorSetup } from './tor-browser-firefox-extension-investigator-setup'
+import { onionSiteChangeDetectionAnalystWorkflow } from './onion-site-change-detection-analyst-workflow'
+import { darkWebEntityExtractionCryptoWalletsEmails } from './dark-web-entity-extraction-crypto-wallets-emails'
+import { osintResearchAgentWorkflowAiPagestash } from './osint-research-agent-workflow-ai-pagestash'
+import { openSourceIntelligenceDatabaseWebCaptures } from './open-source-intelligence-database-web-captures'
+import { socialMediaOsintCapturePreserveEvidence } from './social-media-osint-capture-preserve-evidence'
+import { osintDataPipelinePagestashToMaltego } from './osint-data-pipeline-pagestash-to-maltego'
+import { telegramOsintChannelMonitoringArchival } from './telegram-osint-channel-monitoring-archival'
 
 export const allPosts: BlogPost[] = [
+  osintResearchAgentWorkflowAiPagestash,
+  openSourceIntelligenceDatabaseWebCaptures,
+  socialMediaOsintCapturePreserveEvidence,
+  osintDataPipelinePagestashToMaltego,
+  telegramOsintChannelMonitoringArchival,
+  torHiddenServiceMonitoringOsintWorkflow,
+  darkWebMarketplaceResearchArchivalGuide,
+  torBrowserFirefoxExtensionInvestigatorSetup,
+  onionSiteChangeDetectionAnalystWorkflow,
+  darkWebEntityExtractionCryptoWalletsEmails,
+  saveWebpageAsPdfVsWebArchive,
+  trackCompetitorMessagingChangesFounders,
+  uxCompetitiveAuditCaptureCompare,
+  citeArchivedWebPagesAcademic,
+  waybackMachineVsPersonalWebArchive,
+  proveWebpageChangedJournalism,
+  zettelkastenWebResearchCapture,
+  archiveSocialMediaPostsEvidence,
+  obsidianWebClippingWorkflow,
+  uxInspirationLibrarySearchable,
   pagestashTorBrowserResearchOsint,
   saveCompetitorPricingPagesResearch,
   captureEvidenceBeforeSiteUpdates,

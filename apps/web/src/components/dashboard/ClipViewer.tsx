@@ -57,14 +57,75 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Clip, Folder as FolderType } from '@pagestash/shared'
-import { extractEntities, entityCount, type ExtractedEntities } from '@/utils/entityExtractor'
+import { extractEntities, entityCount, ENTITY_SECTIONS, type ExtractedEntities, type EntityCategory } from '@/utils/entityExtractor'
+import {
+  User,
+  Building2,
+  Server,
+  Cpu,
+  Phone,
+  AtSign,
+  Bitcoin,
+  DollarSign,
+  BookOpen,
+  Bookmark,
+  Shield,
+  Fingerprint,
+  AlertTriangle,
+  Hash,
+  MapPin,
+  Landmark,
+  RefreshCw,
+} from 'lucide-react'
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  'user': User,
+  'building': Building2,
+  'mail': Mail,
+  'globe': Globe,
+  'link': Link,
+  'server': Server,
+  'cpu': Cpu,
+  'phone': Phone,
+  'at-sign': AtSign,
+  'bitcoin': Bitcoin,
+  'dollar-sign': DollarSign,
+  'book-open': BookOpen,
+  'bookmark': Bookmark,
+  'shield': Shield,
+  'fingerprint': Fingerprint,
+  'alert-triangle': AlertTriangle,
+  'hash': Hash,
+  'map-pin': MapPin,
+  'landmark': Landmark,
+  'calendar': Calendar,
+  'scan': Scan,
+}
+
+const CATEGORY_COLORS: Record<EntityCategory, { bg: string; border: string; text: string; badge: string }> = {
+  identity:  { bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800/40', text: 'text-violet-700 dark:text-violet-300', badge: 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300' },
+  digital:   { bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800/40', text: 'text-blue-700 dark:text-blue-300', badge: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' },
+  financial: { bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800/40', text: 'text-emerald-700 dark:text-emerald-300', badge: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' },
+  academic:  { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800/40', text: 'text-amber-700 dark:text-amber-300', badge: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
+  osint:     { bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-800/40', text: 'text-red-700 dark:text-red-300', badge: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' },
+  general:   { bg: 'bg-slate-50 dark:bg-slate-800/50', border: 'border-slate-200 dark:border-slate-700', text: 'text-slate-700 dark:text-slate-300', badge: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' },
+  metadata:  { bg: 'bg-sky-50 dark:bg-sky-950/30', border: 'border-sky-200 dark:border-sky-800/40', text: 'text-sky-700 dark:text-sky-300', badge: 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300' },
+}
 
 function EntitiesView({ clip }: { clip: Clip }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
-  const entities = extractEntities(
-    [clip.text_content || '', clip.title || '', clip.url || ''].join('\n'),
-    clip.url
-  )
+  const [isReExtracting, setIsReExtracting] = useState(false)
+
+  const storedEntities = (clip as any).entities as ExtractedEntities | null
+
+  const entities = storedEntities && entityCount(storedEntities) > 0
+    ? storedEntities
+    : extractEntities(
+        [clip.text_content || '', clip.title || '', clip.url || ''].join('\n'),
+        clip.url,
+        (clip as any).html_content || undefined
+      )
+
   const total = entityCount(entities)
 
   const copyValue = (val: string, key: string) => {
@@ -73,66 +134,179 @@ function EntitiesView({ clip }: { clip: Clip }) {
     setTimeout(() => setCopiedKey(null), 1500)
   }
 
-  const sections: { label: string; icon: typeof Scan; items: string[]; key: keyof ExtractedEntities }[] = [
-    { label: 'Domains', icon: Globe, items: entities.domains, key: 'domains' },
-    { label: 'Emails', icon: Mail, items: entities.emails, key: 'emails' },
-    { label: 'IP Addresses', icon: Scan, items: entities.ipAddresses, key: 'ipAddresses' },
-    { label: 'Phone Numbers', icon: Scan, items: entities.phones, key: 'phones' },
-    { label: 'Social Handles', icon: Scan, items: entities.socialHandles, key: 'socialHandles' },
-    { label: 'Names', icon: Scan, items: entities.names, key: 'names' },
-  ]
+  const handleReExtract = async () => {
+    setIsReExtracting(true)
+    try {
+      await fetch(`/api/clips/${clip.id}/entities`, { method: 'POST' })
+      window.location.reload()
+    } catch {
+      setIsReExtracting(false)
+    }
+  }
 
-  if (total === 0) {
+  // Group sections by category
+  const categories = new Map<string, typeof ENTITY_SECTIONS>()
+  for (const section of ENTITY_SECTIONS) {
+    const items = entities[section.key as keyof ExtractedEntities]
+    if (!Array.isArray(items) || items.length === 0) continue
+    if (!categories.has(section.category)) categories.set(section.category, [])
+    categories.get(section.category)!.push(section)
+  }
+
+  // Page metadata
+  const meta = entities.metadata || {}
+  const hasMetadata = Object.keys(meta).filter(k => {
+    const v = meta[k as keyof typeof meta]
+    return v !== undefined && v !== null && v !== ''
+  }).length > 0
+
+  if (total === 0 && !hasMetadata) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
         <div className="text-center">
           <Scan className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p className="font-medium">No entities detected</p>
-          <p className="text-xs mt-1">Domains, emails, IPs, and handles will appear here when found in clip content.</p>
+          <p className="text-xs mt-1 max-w-xs mx-auto">
+            People, organizations, emails, IPs, crypto addresses, and more will appear here when found in clip content.
+          </p>
+          <button
+            onClick={handleReExtract}
+            disabled={isReExtracting}
+            className="mt-4 text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5 mx-auto"
+          >
+            <RefreshCw className={`h-3 w-3 ${isReExtracting ? 'animate-spin' : ''}`} />
+            {isReExtracting ? 'Extracting...' : 'Re-extract entities'}
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-2xl mx-auto space-y-5">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+      <div className="max-w-2xl mx-auto space-y-4">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{total} entities found</h3>
-          <button
-            onClick={() => copyValue(JSON.stringify(entities, null, 2), '__all__')}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-          >
-            <Clipboard className="h-3 w-3" />
-            {copiedKey === '__all__' ? 'Copied!' : 'Copy all as JSON'}
-          </button>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{total} entities found</h3>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+              {categories.size} categories
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleReExtract}
+              disabled={isReExtracting}
+              className="text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1 transition-colors"
+              title="Re-extract entities from content"
+            >
+              <RefreshCw className={`h-3 w-3 ${isReExtracting ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => copyValue(JSON.stringify(entities, null, 2), '__all__')}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+            >
+              <Clipboard className="h-3 w-3" />
+              {copiedKey === '__all__' ? 'Copied!' : 'Copy all as JSON'}
+            </button>
+          </div>
         </div>
 
-        {sections.filter(s => s.items.length > 0).map(section => (
-          <div key={section.key}>
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">{section.label}</h4>
-            <div className="space-y-1">
-              {section.items.map((item, i) => {
-                const itemKey = `${section.key}-${i}`
-                return (
-                  <div key={itemKey} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 group hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
-                    <span className="text-sm text-slate-800 dark:text-slate-200 font-mono truncate mr-3">{item}</span>
-                    <button
-                      onClick={() => copyValue(item, itemKey)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 shrink-0 flex items-center gap-1"
-                    >
-                      {copiedKey === itemKey ? (
-                        <><Check className="h-3 w-3 text-emerald-500" /> Copied</>
-                      ) : (
-                        <><Copy className="h-3 w-3" /> Copy</>
-                      )}
-                    </button>
-                  </div>
-                )
-              })}
+        {/* Page Metadata */}
+        {hasMetadata && (
+          <div className={`rounded-xl border p-4 ${CATEGORY_COLORS.metadata.bg} ${CATEGORY_COLORS.metadata.border}`}>
+            <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${CATEGORY_COLORS.metadata.text}`}>
+              Page Metadata
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {meta.author && (
+                <div className="text-sm"><span className="text-slate-500 dark:text-slate-400">Author:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{meta.author}</span></div>
+              )}
+              {meta.siteName && (
+                <div className="text-sm"><span className="text-slate-500 dark:text-slate-400">Site:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{meta.siteName}</span></div>
+              )}
+              {meta.publishedDate && (
+                <div className="text-sm"><span className="text-slate-500 dark:text-slate-400">Published:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{meta.publishedDate}</span></div>
+              )}
+              {meta.language && (
+                <div className="text-sm"><span className="text-slate-500 dark:text-slate-400">Language:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{meta.language}</span></div>
+              )}
+              {meta.description && (
+                <div className="text-sm col-span-full"><span className="text-slate-500 dark:text-slate-400">Description:</span> <span className="text-slate-700 dark:text-slate-300">{meta.description}</span></div>
+              )}
+              {meta.keywords && meta.keywords.length > 0 && (
+                <div className="col-span-full flex flex-wrap gap-1.5 mt-1">
+                  {meta.keywords.map((kw, i) => (
+                    <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 font-medium">{kw}</span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        ))}
+        )}
+
+        {/* Entity Categories */}
+        {[...categories.entries()].map(([category, sections]) => {
+          const colors = CATEGORY_COLORS[category as EntityCategory] || CATEGORY_COLORS.general
+          const categoryLabel = sections[0].categoryLabel
+          const categoryTotal = sections.reduce((sum, s) => {
+            const items = entities[s.key as keyof ExtractedEntities]
+            return sum + (Array.isArray(items) ? items.length : 0)
+          }, 0)
+
+          return (
+            <div key={category} className={`rounded-xl border ${colors.border} overflow-hidden`}>
+              <div className={`px-4 py-2.5 ${colors.bg} flex items-center justify-between`}>
+                <h4 className={`text-xs font-semibold uppercase tracking-wider ${colors.text}`}>
+                  {categoryLabel}
+                </h4>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${colors.badge}`}>
+                  {categoryTotal}
+                </span>
+              </div>
+
+              <div className="divide-y divide-slate-100 dark:divide-white/5">
+                {sections.map(section => {
+                  const items = entities[section.key as keyof ExtractedEntities] as string[]
+                  const Icon = ICON_MAP[section.icon] || Scan
+
+                  return (
+                    <div key={section.key} className="px-4 py-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{section.label}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{items.length}</span>
+                      </div>
+                      <div className="space-y-1">
+                        {items.map((item, i) => {
+                          const itemKey = `${section.key}-${i}`
+                          return (
+                            <div
+                              key={itemKey}
+                              className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 group hover:border-blue-200 dark:hover:border-blue-800 transition-colors"
+                            >
+                              <span className="text-sm text-slate-800 dark:text-slate-200 font-mono truncate mr-3 select-all">{item}</span>
+                              <button
+                                onClick={() => copyValue(item, itemKey)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 shrink-0 flex items-center gap-1"
+                              >
+                                {copiedKey === itemKey ? (
+                                  <><Check className="h-3 w-3 text-emerald-500" /> Copied</>
+                                ) : (
+                                  <><Copy className="h-3 w-3" /> Copy</>
+                                )}
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
