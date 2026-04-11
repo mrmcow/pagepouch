@@ -152,22 +152,26 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       
-      <div className="flex flex-col min-h-screen bg-white">
+      <div className="flex flex-col min-h-screen bg-white dark:bg-slate-950">
         {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-b border-slate-200 dark:border-white/10">
         <div className="pagestash-container">
           <div className="px-4 py-4 flex items-center justify-between">
             <Link href="/">
-              <LogoWithText size={40} clickable={false} />
+              <LogoWithText
+                size={40}
+                clickable={false}
+                textClassName="!text-slate-900 dark:!text-white"
+              />
             </Link>
             <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" className="text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white" asChild>
                 <Link href="/blog">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Blog
                 </Link>
               </Button>
-              <Button size="sm" className="font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" asChild>
+              <Button size="sm" className="font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white" asChild>
                 <Link href="/auth/signup">Start Free</Link>
               </Button>
             </div>
@@ -178,13 +182,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       {/* Article Content */}
       <main className="flex-1">
         {/* Article Header */}
-        <section className="py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50">
+        <section className="py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border-b border-transparent dark:border-white/5">
           <div className="max-w-4xl mx-auto px-4">
             <Breadcrumbs items={breadcrumbItems} />
             
             <div className="mb-6">
               <Link href="/blog">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   All Articles
                 </Button>
@@ -193,21 +197,21 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             
             <Badge className="mb-4">{getCategoryLabel(post.category)}</Badge>
             
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
               {post.title}
             </h1>
             
-            <p className="text-xl text-slate-600 mb-8">
+            <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
               {post.description}
             </p>
             
-            <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600">
+            <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
               <div className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
                   {post.author.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-medium text-slate-900">{post.author}</div>
+                  <div className="font-medium text-slate-900 dark:text-white">{post.author}</div>
                 </div>
               </div>
               
@@ -226,7 +230,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </section>
 
         {/* Article Body */}
-        <article className="py-12 bg-white">
+        <article className="py-12 bg-white dark:bg-slate-950">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Professional Article Styling */}
             <div className="prose prose-lg max-w-none
@@ -235,6 +239,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_h1]:text-4xl
               [&_h1]:font-bold
               [&_h1]:text-slate-900
+              dark:[&_h1]:text-slate-50
               [&_h1]:mb-6
               [&_h1]:mt-12
               [&_h1]:leading-[1.2]
@@ -243,16 +248,19 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_h2]:text-3xl
               [&_h2]:font-bold
               [&_h2]:text-slate-900
+              dark:[&_h2]:text-slate-50
               [&_h2]:mt-16
               [&_h2]:mb-6
               [&_h2]:leading-[1.3]
               [&_h2]:pb-3
               [&_h2]:border-b
               [&_h2]:border-slate-200
+              dark:[&_h2]:border-slate-700
               
               [&_h3]:text-2xl
               [&_h3]:font-semibold
               [&_h3]:text-slate-900
+              dark:[&_h3]:text-slate-100
               [&_h3]:mt-10
               [&_h3]:mb-4
               [&_h3]:leading-[1.4]
@@ -260,21 +268,26 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_h4]:text-xl
               [&_h4]:font-semibold
               [&_h4]:text-slate-800
+              dark:[&_h4]:text-slate-200
               [&_h4]:mt-8
               [&_h4]:mb-3
               
               [&_p]:text-slate-700
+              dark:[&_p]:text-slate-300
               [&_p]:text-lg
               [&_p]:leading-relaxed
               [&_p]:mb-5
               
               [&_p_strong]:text-slate-900
+              dark:[&_p_strong]:text-white
               [&_p_strong]:font-semibold
               
               [&_a]:text-blue-600
+              dark:[&_a]:text-blue-400
               [&_a]:font-medium
               [&_a]:no-underline
               [&_a:hover]:text-blue-700
+              dark:[&_a:hover]:text-blue-300
               [&_a:hover]:underline
               
               [&_ul]:my-6
@@ -286,6 +299,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_ol]:pl-0
               
               [&_li]:text-slate-700
+              dark:[&_li]:text-slate-300
               [&_li]:text-lg
               [&_li]:leading-relaxed
               [&_li]:ml-6
@@ -294,11 +308,14 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_ol_li]:list-decimal
               
               [&_li::marker]:text-blue-500
+              dark:[&_li::marker]:text-blue-400
               
               [&_code]:text-sm
               [&_code]:font-mono
               [&_code]:bg-slate-100
+              dark:[&_code]:bg-slate-800
               [&_code]:text-slate-800
+              dark:[&_code]:text-slate-100
               [&_code]:px-1.5
               [&_code]:py-0.5
               [&_code]:rounded
@@ -314,7 +331,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               
               [&_blockquote]:border-l-4
               [&_blockquote]:border-blue-500
+              dark:[&_blockquote]:border-blue-400
               [&_blockquote]:bg-blue-50
+              dark:[&_blockquote]:bg-slate-800/60
               [&_blockquote]:pl-4
               [&_blockquote]:pr-4
               [&_blockquote]:py-3
@@ -322,9 +341,11 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_blockquote]:rounded-r
               [&_blockquote]:italic
               [&_blockquote]:text-slate-700
+              dark:[&_blockquote]:text-slate-300
               
               [&_hr]:border-t
               [&_hr]:border-slate-300
+              dark:[&_hr]:border-slate-600
               [&_hr]:my-12
               
               [&_img]:rounded-lg
@@ -336,11 +357,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_table]:my-8
               [&_table]:border-collapse
               [&_table]:bg-white
+              dark:[&_table]:bg-slate-900
               [&_table]:shadow-lg
               [&_table]:rounded-xl
               [&_table]:overflow-hidden
               [&_table]:border
               [&_table]:border-slate-200
+              dark:[&_table]:border-slate-700
               
               [&_thead]:bg-blue-600
               
@@ -360,15 +383,19 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_td]:text-center
               [&_td]:text-base
               [&_td]:text-slate-700
+              dark:[&_td]:text-slate-200
               [&_td]:border-b
               [&_td]:border-slate-100
+              dark:[&_td]:border-slate-700
               [&_td:first-child]:text-left
               [&_td:first-child]:pl-6
               [&_td:first-child]:font-semibold
               [&_td:first-child]:text-slate-900
+              dark:[&_td:first-child]:text-slate-100
               
               [&_tbody_tr:last-child_td]:border-b-0
               [&_tbody_tr:hover]:bg-blue-50
+              dark:[&_tbody_tr:hover]:bg-slate-800/80
               [&_tbody_tr]:transition-all
               [&_tbody_tr]:duration-200
               
@@ -382,9 +409,11 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               [&_th_img]:shadow-none
               [&_th_img]:my-0
               [&_th_img]:bg-white
+              dark:[&_th_img]:bg-slate-800
               [&_th_img]:p-1.5
               [&_th_img]:border
               [&_th_img]:border-blue-200
+              dark:[&_th_img]:border-slate-600
               
               [&_td_img]:inline-block
               [&_td_img]:w-6
@@ -426,9 +455,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </article>
 
         {/* Tags */}
-        <section className="py-8 border-t border-slate-200">
+        <section className="py-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <div className="max-w-4xl mx-auto px-4">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">TOPICS</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">TOPICS</h3>
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className="text-sm">
@@ -441,7 +470,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </section>
 
         {/* CTA Section */}
-        <section className="py-12 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <section className="py-12 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-950">
           <div className="max-w-3xl mx-auto px-4">
             <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0">
               <CardContent className="p-8 md:p-12 text-center text-white">
@@ -470,14 +499,14 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
         {/* Related Articles */}
         {relatedPosts.length > 0 && (
-          <section className="py-12">
+          <section className="py-12 bg-white dark:bg-slate-950">
             <div className="max-w-6xl mx-auto px-4">
-              <h2 className="text-2xl font-bold text-slate-900 mb-8">Related Articles</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-8">Related Articles</h2>
               <div className="grid md:grid-cols-3 gap-6">
                 {relatedPosts.map((relatedPost) => (
                   <Link key={relatedPost.slug} href={`/blog/${relatedPost.slug}`} className="block">
-                    <Card className="hover:shadow-lg transition-all group cursor-pointer h-full">
-                      <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden">
+                    <Card className="hover:shadow-lg transition-all group cursor-pointer h-full dark:border-slate-800">
+                      <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 relative overflow-hidden">
                         <img 
                           src={relatedPost.featuredImage || "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=600&h=400&fit=crop&auto=format"}
                           alt={relatedPost.title}
@@ -488,13 +517,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                       <Badge variant="secondary" className="mb-3 text-xs">
                         {getCategoryLabel(relatedPost.category)}
                       </Badge>
-                      <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-slate-50 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {relatedPost.title}
                       </h3>
-                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">
+                      <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
                         {relatedPost.description}
                       </p>
-                      <div className="text-blue-600 font-medium group-hover:text-blue-700 flex items-center text-sm">
+                      <div className="text-blue-600 dark:text-blue-400 font-medium group-hover:text-blue-700 dark:group-hover:text-blue-300 flex items-center text-sm">
                         Read More
                         <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </div>
@@ -509,9 +538,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white">
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="pagestash-container py-12 px-4">
-          <div className="text-center text-sm text-slate-500">
+          <div className="text-center text-sm text-slate-500 dark:text-slate-400">
             &copy; 2026 PageStash. All rights reserved.
           </div>
         </div>

@@ -17,7 +17,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         {items.map((item, index) => (
           <li key={item.url} className="flex items-center gap-2">
             {index > 0 && (
-              <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+              <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
             )}
             {index === items.length - 1 ? (
               <span className="font-medium text-slate-900 dark:text-white" aria-current="page">
