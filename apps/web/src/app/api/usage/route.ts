@@ -59,6 +59,12 @@ export async function GET(request: NextRequest) {
     } else {
       // Web app authentication with cookies
       supabase = createClient()
+      if (!supabase) {
+        return NextResponse.json(
+          { error: 'Server configuration error' },
+          { status: 503 }
+        )
+      }
       const { data: { user: cookieUser }, error: authError } = await supabase.auth.getUser()
       
       if (authError || !cookieUser) {
@@ -71,12 +77,12 @@ export async function GET(request: NextRequest) {
       user = cookieUser
     }
 
-    // Get user profile with subscription tier
+    // Profile row may be missing (auth user without public.users) — default to free
     const { data: userProfile, error: userError } = await supabase
       .from('users')
       .select('subscription_tier')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (userError) {
       console.error('Error fetching user profile:', userError)
@@ -86,7 +92,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const subscriptionTier = userProfile.subscription_tier || 'free'
+    const subscriptionTier = userProfile?.subscription_tier || 'free'
     const clipsThisMonth = await ensureUsageRow(supabase, user.id)
     const limits = getSubscriptionLimits(subscriptionTier)
 

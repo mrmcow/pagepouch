@@ -9,8 +9,8 @@ export function useDarkMode(): [boolean, () => void] {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const initial = stored ? stored === 'dark' : prefersDark
+    // Default light for marketing + first visit; only dark if user explicitly chose it
+    const initial = stored === 'dark'
     setIsDark(initial)
     if (initial) {
       document.documentElement.classList.add('dark')

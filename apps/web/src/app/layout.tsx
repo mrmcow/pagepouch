@@ -117,7 +117,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('pagestash-theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark')}catch(e){}})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('pagestash-theme');var d=t==='dark';if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){}})()` }} />
         <link rel="dns-prefetch" href="https://gwvsltgmjreructvbpzg.supabase.co" />
         {/* Google Analytics 4 */}
         {GA_MEASUREMENT_ID && (

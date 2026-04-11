@@ -75,6 +75,7 @@ import {
   Hash,
   MapPin,
   Landmark,
+  Sparkles,
   RefreshCw,
 } from 'lucide-react'
 
@@ -98,6 +99,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   'hash': Hash,
   'map-pin': MapPin,
   'landmark': Landmark,
+  'sparkles': Sparkles,
   'calendar': Calendar,
   'scan': Scan,
 }

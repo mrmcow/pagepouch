@@ -12,6 +12,7 @@ import {
   incrementUsage
 } from '@/lib/subscription-limits'
 import { extractEntitiesServer } from '@/lib/entities/extractEntitiesServer'
+import { sanitizeClipTitle } from '@/lib/entities/repairFusedText'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
       .from('users')
       .select('subscription_tier')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     const subscriptionTier = userProfile?.subscription_tier || 'free'
     const clipsThisMonth = await ensureUsageRow(supabase, user.id)
@@ -238,7 +239,9 @@ export async function POST(request: NextRequest) {
 
     const $ = cheerio.load(html)
 
-    const title = $('title').text().trim() || $('meta[property="og:title"]').attr('content') || validatedUrl.hostname
+    const rawTitle =
+      $('title').text().trim() || $('meta[property="og:title"]').attr('content') || validatedUrl.hostname
+    const title = sanitizeClipTitle(rawTitle) || validatedUrl.hostname
 
     $('script, style, noscript').remove()
     const text = $('body').text()

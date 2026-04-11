@@ -40,6 +40,8 @@ export interface ExtractedEntities {
   hashtags: string[]
   coordinates: string[]
   dates: string[]
+  /** Statistical key phrases (server-filled; empty on client-only extract). */
+  keyPhrases: string[]
 
   // Page Metadata (extracted from HTML)
   metadata: PageMetadata
@@ -62,7 +64,7 @@ const EMPTY: ExtractedEntities = {
   cryptoAddresses: [], monetaryAmounts: [],
   dois: [], isbns: [],
   onionAddresses: [], fileHashes: [], cveIds: [],
-  hashtags: [], coordinates: [], dates: [],
+  hashtags: [], coordinates: [], dates: [], keyPhrases: [],
   metadata: {},
 }
 
@@ -96,6 +98,7 @@ export function extractEntities(text: string, url?: string, html?: string): Extr
     hashtags:         extractHashtags(src),
     coordinates:      extractCoordinates(src),
     dates:            extractDates(src),
+    keyPhrases:       [],
     metadata:         html ? extractHTMLMetadata(html) : {},
   }
 
@@ -196,20 +199,50 @@ function dedupeDomainsCoveredByUrls(entities: ExtractedEntities): void {
   })
 }
 
-function isWeakNlpSpan(s: string, minLen: number): boolean {
+/** Concatenated nav titles / DOM dumps (e.g. BBC homepage captures). */
+function isGarbageIdentityLabel(s: string): boolean {
+  const t = s.trim()
+  if (t.length > 88) return true
+  const spaces = (t.match(/\s/g) || []).length
+  if (t.length > 42 && spaces < 2) return true
+  if (/(.{14,})\1/i.test(t)) return true
+  const parts = t.toLowerCase().split(/\s+/).filter((w) => w.length > 5)
+  const seen = new Set<string>()
+  for (const w of parts) {
+    if (seen.has(w)) return true
+    seen.add(w)
+  }
+  return false
+}
+
+/** Drop org A if a shorter org B is fully contained and A is much longer (junk superset). */
+function dedupeSupersetOrgStrings(orgs: string[]): string[] {
+  const sorted = [...orgs].sort((a, b) => b.length - a.length)
+  return sorted.filter((o) => {
+    for (const k of sorted) {
+      if (k.length >= o.length) continue
+      if (o.toLowerCase().includes(k.toLowerCase()) && o.length >= k.length + 12) return false
+    }
+    return true
+  })
+}
+
+function isWeakNlpSpan(s: string, minLen: number, maxLen: number): boolean {
   const t = s.trim().replace(/[.,;:!?)]+$/, '').trim()
-  if (t.length < minLen || t.length > 120) return true
+  if (t.length < minLen || t.length > maxLen) return true
   const low = t.toLowerCase()
   if (STOP_WORDS_LOWER.has(low)) return true
   if (/^\d+$/.test(t)) return true
   if (/^[^a-zA-Z]+$/.test(t)) return true
+  if (isGarbageIdentityLabel(t)) return true
   return false
 }
 
 function filterNamedEntityNoise(entities: ExtractedEntities): void {
-  entities.persons = entities.persons.filter((p) => !isWeakNlpSpan(p, 4))
-  entities.organizations = entities.organizations.filter((o) => !isWeakNlpSpan(o, 2))
-  entities.locations = entities.locations.filter((l) => !isWeakNlpSpan(l, 2))
+  entities.persons = entities.persons.filter((p) => !isWeakNlpSpan(p, 4, 72))
+  entities.organizations = entities.organizations.filter((o) => !isWeakNlpSpan(o, 2, 64))
+  entities.locations = entities.locations.filter((l) => !isWeakNlpSpan(l, 2, 48))
+  entities.organizations = dedupLower(dedupeSupersetOrgStrings(entities.organizations))
 }
 
 function promoteSiteNameToOrganizations(entities: ExtractedEntities): void {
@@ -785,6 +818,7 @@ export const ENTITY_SECTIONS: EntitySection[] = [
 
   // General
   { key: 'hashtags',       label: 'Hashtags',            icon: 'hash',         category: 'general',   categoryLabel: 'General' },
+  { key: 'keyPhrases',     label: 'Key phrases',         icon: 'sparkles',     category: 'general',   categoryLabel: 'General' },
   { key: 'coordinates',    label: 'Coordinates',         icon: 'map-pin',      category: 'general',   categoryLabel: 'General' },
   { key: 'dates',          label: 'Dates',               icon: 'calendar',     category: 'general',   categoryLabel: 'General' },
 ]

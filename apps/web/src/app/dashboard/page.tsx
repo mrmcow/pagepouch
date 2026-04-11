@@ -481,6 +481,9 @@ function DashboardContent() {
   
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  /** After repeated API failures, skip polling until this timestamp (ms). */
+  const subscriptionCooldownUntilRef = useRef(0)
+  const subscriptionFailStreakRef = useRef(0)
 
   const router = useRouter()
   const supabase = createClient()
@@ -499,36 +502,62 @@ function DashboardContent() {
     loadData(true)
   }
 
-  const refreshSubscriptionData = useCallback(async () => {
+  const refreshSubscriptionData = useCallback(async (force = false) => {
+    const now = Date.now()
+    if (!force && now < subscriptionCooldownUntilRef.current) {
+      return
+    }
     try {
       const [subscriptionResponse, usageResponse] = await Promise.all([
         fetch('/api/subscription', {
           cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: { 'Cache-Control': 'no-cache' },
         }),
         fetch('/api/usage', {
           cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        })
+          headers: { 'Cache-Control': 'no-cache' },
+        }),
       ])
-      
+
       if (subscriptionResponse.ok && usageResponse.ok) {
+        subscriptionFailStreakRef.current = 0
+        subscriptionCooldownUntilRef.current = 0
         const [subData, usageData] = await Promise.all([
           subscriptionResponse.json(),
-          usageResponse.json()
+          usageResponse.json(),
         ])
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           subscriptionTier: subData.subscription_tier || usageData.subscription_tier || 'free',
           subscriptionStatus: subData.subscription_status || 'inactive',
           clipsThisMonth: usageData.clips_this_month || 0,
-          clipsLimit: usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 10),
+          clipsLimit:
+            usageData.clips_limit || (subData.subscription_tier === 'pro' ? 1000 : 10),
         }))
       } else {
+        subscriptionFailStreakRef.current += 1
+        if (subscriptionFailStreakRef.current >= 3) {
+          subscriptionCooldownUntilRef.current = now + 120_000
+        }
+        if (subscriptionFailStreakRef.current <= 2) {
+          console.warn(
+            '[PageStash] subscription/usage refresh failed',
+            subscriptionResponse.status,
+            usageResponse.status
+          )
+        }
+        setState((prev) => ({ ...prev, isSubscriptionLoading: false }))
       }
     } catch (error) {
-      console.error('Failed to refresh subscription data:', error)
+      subscriptionFailStreakRef.current += 1
+      if (subscriptionFailStreakRef.current >= 3) {
+        subscriptionCooldownUntilRef.current = Date.now() + 120_000
+      }
+      if (subscriptionFailStreakRef.current <= 1) {
+        console.error('Failed to refresh subscription data:', error)
+      }
+      setState((prev) => ({ ...prev, isSubscriptionLoading: false }))
     }
   }, [])
 
@@ -1446,7 +1475,7 @@ function DashboardContent() {
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
-                      onClick={refreshSubscriptionData}
+                      onClick={() => void refreshSubscriptionData(true)}
                       title="Refresh usage data"
                     >
                       <RefreshCw className="h-3 w-3" />
@@ -1866,7 +1895,7 @@ function DashboardContent() {
               clipsLimit: usage.clips_limit,
             }))
           } else {
-            refreshSubscriptionData()
+            void refreshSubscriptionData(true)
           }
         }}
       />

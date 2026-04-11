@@ -4,7 +4,13 @@ import { createClient } from '@/lib/supabase-server'
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 503 }
+      )
+    }
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -15,7 +21,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user's subscription info
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select(`
@@ -27,7 +32,7 @@ export async function GET(request: NextRequest) {
         stripe_customer_id
       `)
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (userError) {
       console.error('Error fetching user subscription:', userError)
@@ -35,6 +40,17 @@ export async function GET(request: NextRequest) {
         { error: 'Failed to fetch subscription' },
         { status: 500 }
       )
+    }
+
+    if (!userData) {
+      return NextResponse.json({
+        subscription_tier: 'free',
+        subscription_status: 'inactive',
+        subscription_period_start: null,
+        subscription_period_end: null,
+        subscription_cancel_at_period_end: false,
+        has_stripe_customer: false,
+      })
     }
 
     return NextResponse.json({

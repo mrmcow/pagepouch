@@ -13,11 +13,15 @@ import {
   incrementUsage
 } from '@/lib/subscription-limits'
 import { extractEntitiesServer } from '@/lib/entities/extractEntitiesServer'
+import { sanitizeClipTitle } from '@/lib/entities/repairFusedText'
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+    if (!supabase) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 503 })
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -157,9 +161,11 @@ export async function POST(request: NextRequest) {
       
       user = userData.user
     } else {
-      // Web app authentication with cookies
       supabase = createClient()
-      
+      if (!supabase) {
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 503 })
+      }
+
       const { data: userData, error: authError } = await supabase.auth.getUser()
       
       if (authError || !userData.user) {
@@ -173,12 +179,11 @@ export async function POST(request: NextRequest) {
       user = userData.user
     }
 
-    // Get user's subscription tier and current usage for response
     const { data: userProfile, error: userError } = await supabase
       .from('users')
       .select('subscription_tier')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (userError) {
       console.error('Error fetching user profile:', userError)
@@ -188,7 +193,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const subscriptionTier = userProfile.subscription_tier || 'free'
+    const subscriptionTier = userProfile?.subscription_tier || 'free'
     const clipsThisMonth = await ensureUsageRow(supabase, user.id)
 
     // Pre-check limit (for better UX), but database trigger will enforce it atomically
@@ -221,6 +226,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { url, title, screenshot_data, html_content, text_content, favicon_url, folder_id, notes } = validationResult.data
+    const safeTitle = sanitizeClipTitle(title)
 
     let screenshot_url = null
 
@@ -256,7 +262,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract entities from content
-    const entityText = [text_content || '', title || '', url || ''].join('\n')
+    const entityText = [text_content || '', safeTitle || '', url || ''].join('\n')
     const entities = await extractEntitiesServer(entityText, url, html_content || undefined)
 
     // Insert clip into database
@@ -265,7 +271,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         url,
-        title,
+        title: safeTitle,
         screenshot_url,
         html_content,
         text_content,
