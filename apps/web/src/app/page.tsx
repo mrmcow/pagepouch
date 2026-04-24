@@ -487,10 +487,13 @@ export default function HomePage() {
               
               <div className="relative text-left mb-5 sm:mb-8">
                 <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 text-white dark:text-slate-900">Pro</h3>
-                <div className="flex items-baseline gap-2 mb-2 sm:mb-4">
-                  <span className="text-4xl sm:text-5xl font-bold text-white dark:text-slate-900 tracking-tight">$12</span>
+                <div className="flex items-baseline gap-2 mb-1 sm:mb-2">
+                  <span className="text-4xl sm:text-5xl font-bold text-white dark:text-slate-900 tracking-tight">$10</span>
                   <span className="text-base sm:text-lg text-slate-400 dark:text-slate-500">/month</span>
                 </div>
+                <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-2 sm:mb-3">
+                  Billed annually · <span className="text-blue-400 dark:text-blue-600 font-semibold">Save 17%</span>
+                </p>
                 <p className="text-slate-400 dark:text-slate-500">For serious researchers</p>
               </div>
               
@@ -600,6 +603,153 @@ export default function HomePage() {
             </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Export Formats — Portability & No Lock-In */}
+      <section
+        data-section="exports"
+        className="relative py-14 sm:py-28 px-4 overflow-hidden bg-[#020617] text-white border-t border-white/5"
+      >
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(34,211,238,0.14),transparent_60%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.04)_1px,transparent_1px)] bg-[size:32px_32px]" />
+        </div>
+
+        <div className="pagestash-container relative z-10">
+          <div className="text-center mb-10 sm:mb-16 max-w-3xl mx-auto">
+            <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.4em] text-cyan-200 mb-4 sm:mb-6">
+              Portability
+            </p>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
+              Your archive, in any format.
+            </h2>
+            <p className="text-base sm:text-xl text-slate-300 font-light">
+              No lock-in. Every clip exports as the file your tools actually speak — docs, spreadsheets, raw data, or auto-formatted citations.
+            </p>
+          </div>
+
+          {/* File-format grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 max-w-5xl mx-auto">
+            {[
+              {
+                ext: '.md',
+                name: 'Markdown',
+                desc: 'Obsidian, Notion, plain-text writing.',
+                accent: 'from-blue-500 to-cyan-400',
+              },
+              {
+                ext: '.html',
+                name: 'HTML',
+                desc: 'Self-contained reports with screenshots inline.',
+                accent: 'from-cyan-500 to-blue-400',
+              },
+              {
+                ext: '.csv',
+                name: 'CSV',
+                desc: 'Excel, Google Sheets, data analysis.',
+                accent: 'from-emerald-400 to-teal-500',
+              },
+              {
+                ext: '.json',
+                name: 'JSON',
+                desc: 'Pipelines, integrations, LLM ingest.',
+                accent: 'from-violet-400 to-indigo-500',
+              },
+            ].map((fmt) => (
+              <div
+                key={fmt.ext}
+                className="group relative rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6 backdrop-blur-xl shadow-[0_30px_70px_-50px_rgba(2,6,23,1)] hover:bg-white/8 hover:border-white/20 hover:shadow-[0_40px_90px_-50px_rgba(59,130,246,0.4)] hover:-translate-y-1 transition-all duration-500"
+              >
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-md font-mono text-xs sm:text-sm font-bold text-white bg-gradient-to-br ${fmt.accent} shadow-lg`}
+                  >
+                    {fmt.ext}
+                  </span>
+                  <DownloadIcon className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-1">
+                  {fmt.name}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  {fmt.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Citations spotlight — wider, distinct treatment */}
+          <div className="max-w-5xl mx-auto mt-4 sm:mt-5">
+            <div className="group relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-transparent backdrop-blur-xl p-5 sm:p-7 hover:border-white/20 transition-all duration-500 overflow-hidden">
+              <div className="absolute -top-16 -right-16 w-56 h-56 bg-gradient-to-br from-amber-400/15 via-orange-500/10 to-transparent blur-3xl pointer-events-none" />
+              <div className="relative flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
+                <div className="flex items-center gap-3 md:gap-4 shrink-0">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md font-mono text-xs sm:text-sm font-bold text-white bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
+                    cite
+                  </span>
+                  <h3 className="text-base sm:text-lg font-semibold text-white">
+                    Academic citations
+                  </h3>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed flex-1">
+                  Auto-formatted bibliographies with full metadata — source URL, author, capture date, and access date — ready to paste into your paper.
+                </p>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  {['APA', 'MLA', 'Chicago'].map((style) => (
+                    <span
+                      key={style}
+                      className="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] border border-white/15 bg-white/5 text-slate-200"
+                    >
+                      {style}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Trust strip + CTA */}
+          <div className="mt-10 sm:mt-14 flex flex-col items-center gap-5 sm:gap-6">
+            <div className="inline-flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-7 gap-y-2 px-5 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+              <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
+                <CheckIcon className="h-4 w-4 text-emerald-400" />
+                Bulk export
+              </span>
+              <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
+                <CheckIcon className="h-4 w-4 text-emerald-400" />
+                Notes &amp; metadata included
+              </span>
+              <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
+                <CheckIcon className="h-4 w-4 text-emerald-400" />
+                One-click download
+              </span>
+            </div>
+
+            <Button
+              size="lg"
+              className="group text-sm sm:text-base font-bold bg-white text-slate-950 hover:bg-slate-100 px-6 sm:px-8 py-3 sm:py-4 h-auto rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.15)] hover:shadow-[0_0_45px_rgba(34,211,238,0.3)] transition-all"
+              asChild
+              onClick={() => {
+                trackButtonClick(
+                  'exports_section_start_archiving',
+                  'Start archiving free',
+                  'exports_section',
+                  '/auth/signup'
+                )
+                incrementCTAInteractions()
+              }}
+            >
+              <Link href="/auth/signup" className="flex items-center gap-2">
+                Start archiving — free
+                <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </Button>
+
+            <p className="text-[11px] sm:text-xs text-slate-500 text-center max-w-md">
+              Bulk export is included with every Pro plan. Cancel anytime, take your data with you.
+            </p>
           </div>
         </div>
       </section>

@@ -11,15 +11,33 @@ const nextConfig = {
     } : false,
   },
   images: {
-    domains: [
-      'gwvsltgmjreructvbpzg.supabase.co', // Your Supabase storage domain
-      'localhost',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'gwvsltgmjreructvbpzg.supabase.co',
+        pathname: '/**',
+      },
+      {
+        // Unsplash CDN — used for all blog post featured images and in-content photos
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        // Unsplash source/direct links that some posts may reference
+        protocol: 'https',
+        hostname: 'unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
     ],
-    // Enable aggressive caching for better performance
     minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Image optimization settings
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

@@ -66,6 +66,7 @@ import { EditFolderModal } from '@/components/dashboard/EditFolderModal'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { ProfileModal } from '@/components/dashboard/ProfileModal'
 import { BillingModal } from '@/components/dashboard/BillingModal'
+import { UpgradeCard } from '@/components/dashboard/UpgradeCard'
 import { KnowledgeGraphUpgradeModal } from '@/components/dashboard/KnowledgeGraphUpgradeModal'
 import { KnowledgeGraphsView } from '@/components/dashboard/KnowledgeGraphsView'
 import { CachedImage, useImageCache } from '@/components/ui/cached-image'
@@ -1206,10 +1207,10 @@ function DashboardContent() {
 
       {/* Header */}
       <header className="border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl shadow-sm relative z-20">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between">
             {/* Logo and Navigation */}
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-5">
               <button 
                 onClick={() => {
                   // Reset to all clips view
@@ -1223,21 +1224,21 @@ function DashboardContent() {
                 }}
                 className="hover:opacity-80 transition-opacity"
               >
-                <LogoWithText size={40} clickable={false} />
+                <LogoWithText size={36} clickable={false} />
               </button>
               
-              <nav className="hidden md:flex items-center space-x-1">
+              <nav className="hidden md:flex items-center gap-0.5">
                 {([
-                  { filter: 'library',   icon: <Grid className="h-4 w-4" />,  label: 'Library'   },
-                  { filter: 'favorites', icon: <Star className="h-4 w-4" />,  label: 'Favorites' },
-                  { filter: 'recent',    icon: <Clock className="h-4 w-4" />, label: 'Recent'    },
+                  { filter: 'library',   icon: <Grid className="h-3.5 w-3.5" />,  label: 'Library'   },
+                  { filter: 'favorites', icon: <Star className="h-3.5 w-3.5" />,  label: 'Favorites' },
+                  { filter: 'recent',    icon: <Clock className="h-3.5 w-3.5" />, label: 'Recent'    },
                 ] as const).map(({ filter, icon, label }) => {
                   const active = state.viewFilter === filter
                   return (
                     <button
                       key={filter}
                       onClick={() => setState(prev => ({ ...prev, viewFilter: filter }))}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[13px] font-medium transition-all duration-150 ${
                         active
                           ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
@@ -1252,10 +1253,10 @@ function DashboardContent() {
             </div>
 
             {/* User Profile */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={toggleDark}
-                className="h-9 w-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-all"
+                className="h-8 w-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-all"
                 title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -1276,33 +1277,33 @@ function DashboardContent() {
       </header>
 
       {/* Dashboard Container */}
-      <div className="container mx-auto px-4 py-6 h-auto lg:h-[calc(100vh-80px)] relative z-10">
-        <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-full">
+      <div className="container mx-auto px-4 py-5 h-auto lg:h-[calc(100vh-64px)] relative z-10">
+        <div className="flex flex-col lg:flex-row gap-5 h-auto lg:h-full">
           {/* Sidebar */}
-          <aside className="w-full lg:w-64 space-y-6">
+          <aside className="w-full lg:w-60 space-y-3 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:pb-4">
 
             {/* Quick Actions */}
             <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Quick Actions</CardTitle>
+              <CardHeader className="px-4 py-3">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-1 px-3 pb-3 pt-0">
                 <Button 
                   variant="outline"
                   size="sm" 
-                  className="w-full justify-start"
+                  className="w-full justify-start h-8 text-[13px] font-normal"
                   onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="mr-2 h-3.5 w-3.5" />
                   Install Extension
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full justify-start"
+                  className="w-full justify-start h-8 text-[13px] font-normal"
                   onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
                 >
-                  <Globe className="mr-2 h-4 w-4" />
+                  <Globe className="mr-2 h-3.5 w-3.5" />
                   Clip URL
                 </Button>
                 
@@ -1310,7 +1311,7 @@ function DashboardContent() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full justify-start relative"
+                  className="w-full justify-start h-8 text-[13px] font-normal relative"
                   onClick={() => {
                     if (state.subscriptionTier === 'pro') {
                       // If in Page Graphs, switch back to Library view first
@@ -1335,7 +1336,7 @@ function DashboardContent() {
                     }
                   }}
                 >
-                  <FileDown className="mr-2 h-4 w-4" />
+                  <FileDown className="mr-2 h-3.5 w-3.5" />
                   Export Clips
                   {state.subscriptionTier !== 'pro' && (
                     <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
@@ -1345,10 +1346,10 @@ function DashboardContent() {
                 </Button>
                 
                 {/* Page Graphs - Pro Feature */}
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                  className="w-full justify-start relative"
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start h-8 text-[13px] font-normal relative"
                   onClick={() => {
                     if (state.subscriptionTier === 'pro') {
                       // Exit selection mode when switching to Page Graphs
@@ -1363,28 +1364,33 @@ function DashboardContent() {
                       setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: true }))
                     }
                   }}
-                  >
-                    <Brain className="mr-2 h-4 w-4" />
+                >
+                  <Brain className="mr-2 h-3.5 w-3.5" />
                   Page Graphs
                   {state.subscriptionTier !== 'pro' && (
                     <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
                       PRO
                     </Badge>
-                )}
+                  )}
                 </Button>
               </CardContent>
             </Card>
 
+            {/* Upgrade to Pro — promoted above Folders for free users so it is visible without scrolling */}
+            {!state.isSubscriptionLoading && state.subscriptionTier === 'free' && (
+              <UpgradeCard source="dashboard-sidebar" />
+            )}
+
             {/* Folders */}
             <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Folders</CardTitle>
+              <CardHeader className="px-4 py-3">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Folders</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-1">
+              <CardContent className="space-y-0.5 px-3 pb-3 pt-0">
                 <Button
                   variant={!state.selectedFolder ? "secondary" : "ghost"}
                   size="sm"
-                  className="w-full justify-start"
+                  className="w-full justify-start h-8 text-[13px] font-normal"
                   onClick={() => {
                     setState(prev => ({ 
                       ...prev, 
@@ -1398,7 +1404,7 @@ function DashboardContent() {
                     }, 100)
                   }}
                 >
-                  <Grid className="mr-2 h-4 w-4" />
+                  <Grid className="mr-2 h-3.5 w-3.5" />
                   All Clips ({state.totalClips})
                 </Button>
                 
@@ -1409,7 +1415,7 @@ function DashboardContent() {
                       key={folder.id}
                       variant={state.selectedFolder === folder.id ? "secondary" : "ghost"}
                       size="sm"
-                      className="w-full justify-start group relative"
+                      className="w-full justify-start h-8 text-[13px] font-normal group relative"
                       onClick={() => {
                         setState(prev => ({ 
                           ...prev, 
@@ -1425,14 +1431,14 @@ function DashboardContent() {
                       }}
                     >
                       <div 
-                        className="mr-2 h-3 w-3 rounded-sm" 
+                        className="mr-2 h-2.5 w-2.5 rounded-sm shrink-0" 
                         style={{ backgroundColor: folder.color || '#6B7280' }}
                       />
-                      <span className="flex-1 text-left">
+                      <span className="flex-1 text-left truncate">
                         {folder.name} ({folderClipCount})
                       </span>
                       <div
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6 rounded hover:bg-accent cursor-pointer flex items-center justify-center"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-5 w-5 rounded hover:bg-accent cursor-pointer flex items-center justify-center"
                         onClick={(e) => {
                           e.stopPropagation()
                           setState(prev => ({ 
@@ -1452,10 +1458,10 @@ function DashboardContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start border-dashed border-2 border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-400 transition-all mt-2"
+                  className="w-full justify-start h-8 text-[13px] font-normal border-dashed border border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-400 transition-all mt-1.5"
                   onClick={() => setState(prev => ({ ...prev, isCreateFolderModalOpen: true }))}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 h-3.5 w-3.5" />
                   New Folder
                 </Button>
               </CardContent>
@@ -1468,13 +1474,13 @@ function DashboardContent() {
                   ? 'border-red-200 dark:border-red-800/30 bg-red-50/50 dark:bg-red-950/10'
                   : 'border-slate-200/70 dark:border-white/10 bg-white dark:bg-slate-900'
               }`}>
-                <CardHeader className="pb-3">
+                <CardHeader className="px-4 py-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">Usage</CardTitle>
+                    <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Usage</CardTitle>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                      className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
                       onClick={() => void refreshSubscriptionData(true)}
                       title="Refresh usage data"
                     >
@@ -1482,9 +1488,9 @@ function DashboardContent() {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 pb-4 pt-0">
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-[13px]">
                       <span className="text-slate-600 dark:text-slate-400">Clips this month</span>
                       <span className={`font-semibold ${
                         state.clipsThisMonth >= state.clipsLimit 
@@ -1505,11 +1511,11 @@ function DashboardContent() {
                       />
                     </div>
                     {state.clipsThisMonth >= state.clipsLimit ? (
-                      <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                      <p className="text-[11px] font-medium text-red-600 dark:text-red-400">
                         Monthly limit reached — resets next month
                       </p>
                     ) : (
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         {state.clipsLimit - state.clipsThisMonth} clips remaining this month
                       </p>
                     )}
@@ -1521,12 +1527,12 @@ function DashboardContent() {
             {/* Subscription Loading State */}
             {state.isSubscriptionLoading && (
               <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-slate-400 dark:text-slate-600">Usage</CardTitle>
+                <CardHeader className="px-4 py-3">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-600">Usage</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 pb-4 pt-0">
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-[13px]">
                       <span className="text-slate-400">Clips this month</span>
                       <div className="h-4 w-12 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
                     </div>
@@ -1535,62 +1541,6 @@ function DashboardContent() {
                     </div>
                     <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Upgrade Section - Only show for free users when subscription data is loaded */}
-            {!state.isSubscriptionLoading && state.subscriptionTier === 'free' && (
-              <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
-                <CardContent className="pt-4 space-y-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white mb-0.5">Upgrade to Pro</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">1,000 clips/month · 5GB storage</p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/stripe/checkout', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || 'price_1SBSLeDFfW8f5SmSgQooVxsd',
-                            plan: 'monthly'
-                          }),
-                        });
-                        const { url } = await response.json();
-                        if (url) window.location.href = url;
-                      } catch (error) {
-                        console.error('Upgrade error:', error);
-                        toast({ message: 'Upgrade failed. Please try again.', type: 'error' })
-                      }
-                    }}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                  >
-                    Monthly — $12/mo
-                  </button>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/stripe/checkout', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL || 'price_1SBSNpDFfW8f5SmShv3v8v8Q',
-                            plan: 'annual'
-                          }),
-                        });
-                        const { url } = await response.json();
-                        if (url) window.location.href = url;
-                      } catch (error) {
-                        console.error('Upgrade error:', error);
-                        toast({ message: 'Upgrade failed. Please try again.', type: 'error' })
-                      }
-                    }}
-                    className="w-full border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                  >
-                    Annual — $120/yr <span className="text-green-600 dark:text-green-400 font-semibold">Save 17%</span>
-                  </button>
                 </CardContent>
               </Card>
             )}

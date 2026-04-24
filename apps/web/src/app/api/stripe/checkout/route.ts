@@ -52,9 +52,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Stripe checkout error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
-    )
+
+    // Surface the real Stripe message in non-production so misconfigurations
+    // (wrong/archived/one-time price IDs, missing customer, etc.) are obvious
+    // without having to dig through server logs.
+    const isProd = process.env.NODE_ENV === 'production'
+    const message =
+      !isProd && error instanceof Error
+        ? error.message
+        : 'Failed to create checkout session'
+
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

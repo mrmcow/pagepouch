@@ -36,10 +36,9 @@ export const STRIPE_CONFIG = {
 
 // Helper function to create or retrieve Stripe customer
 export async function getOrCreateStripeCustomer(userId: string, email: string) {
-  // First check if customer already exists in our database
   const { createClient } = await import('@/lib/supabase-server')
   const supabase = createClient()
-  
+
   const { data: user } = await supabase
     .from('users')
     .select('stripe_customer_id')
@@ -47,19 +46,28 @@ export async function getOrCreateStripeCustomer(userId: string, email: string) {
     .single()
 
   if (user?.stripe_customer_id) {
-    // Return existing customer
-    return await stripe.customers.retrieve(user.stripe_customer_id) as Stripe.Customer
+    try {
+      const existing = await stripe.customers.retrieve(user.stripe_customer_id)
+      // A deleted customer comes back as { id, deleted: true } — fall through
+      // to (re)create rather than reuse a tombstone.
+      if (!('deleted' in existing) || !existing.deleted) {
+        return existing as Stripe.Customer
+      }
+    } catch (err) {
+      // Most common case: stored customer was created in a different Stripe
+      // mode (test vs live) or has been deleted. Log and recreate.
+      console.warn(
+        `[stripe] stored stripe_customer_id ${user.stripe_customer_id} not retrievable, creating a new customer:`,
+        err instanceof Error ? err.message : err
+      )
+    }
   }
 
-  // Create new Stripe customer
   const customer = await stripe.customers.create({
     email,
-    metadata: {
-      userId,
-    },
+    metadata: { userId },
   })
 
-  // Save customer ID to database
   await supabase
     .from('users')
     .update({ stripe_customer_id: customer.id })

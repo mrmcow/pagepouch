@@ -150,8 +150,50 @@ import { openSourceIntelligenceDatabaseWebCaptures } from './open-source-intelli
 import { socialMediaOsintCapturePreserveEvidence } from './social-media-osint-capture-preserve-evidence'
 import { osintDataPipelinePagestashToMaltego } from './osint-data-pipeline-pagestash-to-maltego'
 import { telegramOsintChannelMonitoringArchival } from './telegram-osint-channel-monitoring-archival'
+import { bestWebResearchTools2026ReferenceGuide } from './best-web-research-tools-2026-reference-guide'
+import { whatIsPersonalKnowledgeManagement } from './what-is-personal-knowledge-management'
+import { howToCreatePkmSystem } from './how-to-create-pkm-system'
+import { bestClippingToolOrganizingResearch } from './best-clipping-tool-organizing-research'
+import { archiveCandidateProfilesRecruiting } from './archive-candidate-profiles-recruiting'
+import { managingRecruitmentArchives } from './managing-recruitment-archives'
+import { bestWorkspaceResearchSources2026 } from './best-workspace-research-sources-2026'
+import { howToPreserveWebPages } from './how-to-preserve-web-pages'
+import { bestToolsOrganizingResearchPublications } from './best-tools-organizing-research-publications'
+import { howToClipFromWebPage } from './how-to-clip-from-web-page'
+import { bestToolFastOrganizedWebResearch } from './best-tool-fast-organized-web-research'
+import { researchOrganizationTools2026 } from './research-organization-tools-2026'
+import { pkmSystemsCompared } from './pkm-systems-compared'
+import { bestWebResearchToolsStudents2026 } from './best-web-research-tools-students-2026'
+import { knowledgeOrganizationToolsResearchers } from './knowledge-organization-tools-researchers'
+import { savedPagesWebResearch } from './saved-pages-web-research'
+import { pocketWebClipperAlternative } from './pocket-web-clipper-alternative'
+import { competitiveIntelligenceToolsUXDesign } from './competitive-intelligence-tools-ux-design'
+import { buildPkmSystemFromScratch } from './build-pkm-system-from-scratch'
+import { internetArchivePersonalWebStash } from './internet-archive-personal-web-stash'
+import { researchOrganizationToolsGuide } from './research-organization-tools-guide'
 
 export const allPosts: BlogPost[] = [
+  bestWebResearchTools2026ReferenceGuide,
+  whatIsPersonalKnowledgeManagement,
+  howToCreatePkmSystem,
+  bestClippingToolOrganizingResearch,
+  archiveCandidateProfilesRecruiting,
+  managingRecruitmentArchives,
+  bestWorkspaceResearchSources2026,
+  howToPreserveWebPages,
+  bestToolsOrganizingResearchPublications,
+  howToClipFromWebPage,
+  bestToolFastOrganizedWebResearch,
+  researchOrganizationTools2026,
+  pkmSystemsCompared,
+  bestWebResearchToolsStudents2026,
+  knowledgeOrganizationToolsResearchers,
+  savedPagesWebResearch,
+  pocketWebClipperAlternative,
+  competitiveIntelligenceToolsUXDesign,
+  buildPkmSystemFromScratch,
+  internetArchivePersonalWebStash,
+  researchOrganizationToolsGuide,
   osintResearchAgentWorkflowAiPagestash,
   openSourceIntelligenceDatabaseWebCaptures,
   socialMediaOsintCapturePreserveEvidence,

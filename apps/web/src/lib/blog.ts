@@ -67,7 +67,8 @@ export function getAllCategories(): BlogCategory[] {
     'productivity',
     'use-cases',
     'comparisons',
-    'guides'
+    'guides',
+    'how-to',
   ]
 }
 

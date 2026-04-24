@@ -11,8 +11,12 @@ const inter = Inter({ subsets: ['latin'] })
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
+// Single source of truth for the canonical domain — mirrors sitemap.ts and robots.ts.
+// In production NEXT_PUBLIC_APP_URL must be set in Vercel env vars.
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.app').replace(/\/$/, '')
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.pagestash.app'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'PageStash - Web Clipping & Archive Tool | Save Pages Permanently',
     template: '%s | PageStash'
@@ -40,7 +44,7 @@ export const metadata: Metadata = {
     'chrome extension',
     'firefox extension'
   ],
-  authors: [{ name: 'PageStash Team', url: 'https://www.pagestash.app' }],
+  authors: [{ name: 'PageStash Team', url: SITE_URL }],
   creator: 'PageStash',
   publisher: 'PageStash',
   formatDetection: {
@@ -51,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://www.pagestash.app',
+    url: SITE_URL,
     title: 'PageStash - Web Archival Tool for Researchers & Analysts',
     description: 'Capture, organize, and search web content like a pro. Built for researchers who demand instant capture, intelligent search, and beautiful organization.',
     siteName: 'PageStash',
@@ -89,7 +93,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://www.pagestash.app',
+    canonical: SITE_URL,
   },
   icons: {
     icon: [
@@ -120,6 +124,47 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var p=location.pathname||'';if(p==='/'||p===''){document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light';return;}var t=localStorage.getItem('pagestash-theme');if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='';}catch(e){}})()` }} />
         <link rel="dns-prefetch" href="https://gwvsltgmjreructvbpzg.supabase.co" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        {/* WebSite + Organization schema — establishes entity authority for Google Knowledge Panel
+            and GEO (Perplexity / ChatGPT citations). SearchAction enables Sitelinks Search Box. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'WebSite',
+                '@id': `${SITE_URL}/#website`,
+                url: SITE_URL,
+                name: 'PageStash',
+                description: 'Web clipping and archival tool for researchers, analysts, and knowledge workers.',
+                publisher: { '@id': `${SITE_URL}/#organization` },
+                potentialAction: {
+                  '@type': 'SearchAction',
+                  target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/blog?q={search_term_string}` },
+                  'query-input': 'required name=search_term_string',
+                },
+              },
+              {
+                '@type': 'Organization',
+                '@id': `${SITE_URL}/#organization`,
+                name: 'PageStash',
+                url: SITE_URL,
+                logo: {
+                  '@type': 'ImageObject',
+                  url: `${SITE_URL}/icons/icon-128.png`,
+                  width: 128,
+                  height: 128,
+                },
+                sameAs: [
+                  'https://twitter.com/pagestash',
+                  'https://github.com/pagestash',
+                ],
+              },
+            ],
+          })}}
+        />
         {/* Google Analytics 4 */}
         {GA_MEASUREMENT_ID && (
           <>
