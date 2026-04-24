@@ -632,7 +632,7 @@ From `BACKLINK_ACTION_PLAN.md`, `TARGETED_BACKLINK_STRATEGY.md`, and `BACKLINK_O
 - GSC + Bing Webmaster Tools verified
 
 ### Outstanding (P0)
-- [ ] **`og-image.png` (1200×630)** — still flagged missing in `SEO_IMPROVEMENT_STRATEGY`, `SEO_DO_THIS_TODAY`, `IMMEDIATE_SEO_CHANGES_SUMMARY`. Critical for social sharing
+- [ ] **`og-image.png` (1200×630)** — still flagged missing in legacy SEO notes (archived: `docs/archive/IMMEDIATE_SEO_CHANGES_SUMMARY.md`). Critical for social sharing
 - [ ] Lighthouse / Core Web Vitals pass on homepage and `/blog`
 - [ ] Domain canonicalisation — pick `pagestash.app` or `www.pagestash.app` and 301 the other (PRD §13)
 - [ ] Robots.txt: explicitly allow GEO crawlers (§11)
@@ -754,4 +754,4 @@ Track these monthly. Add to your GA4 / GSC dashboard.
 ---
 
 *Last updated: April 2026*
-*This document supersedes: `SEO_STRATEGY.md`, `SEO_IMPROVEMENT_STRATEGY.md`, `SEO_IMPLEMENTATION_COMPLETE.md`, `SEO_IMMEDIATE_ACTIONS.md`, `SEO_DO_THIS_TODAY.md`, `SEO_CHANGES_COMPLETED.md`, `IMMEDIATE_SEO_CHANGES_SUMMARY.md`, `CRITICAL_ITEM_COMPLETED.md`, `CONTENT_STRATEGY_SEO_PLAN.md`, `EXPORT_STRATEGY_RESEARCH_NICHE.md`, `EXPORT_FEATURE_USE_CASES_MARKETING.md`, `BACKLINK_ACTION_PLAN.md`, `BACKLINK_QUICK_START_CHECKLIST.md`, `TARGETED_BACKLINK_STRATEGY.md`, `BACKLINK_OUTREACH_TEMPLATES.md`, `REDDIT_*` (×5), `HACKER_NEWS_LAUNCH_STRATEGY.md`, `HN_FEEDBACK_COMPETITOR_ANALYSIS.md`, `COMPETITOR_ANALYSIS.md`, `COMPETITOR_ANALYSIS_HUNCHLY.md`, `BLOG_POSTS_CREATED.md`, `BLOG_IMPLEMENTATION_STATUS.md`, `NEW_BLOG_POSTS_SUMMARY.md`, `PRODUCTIVITY_POSTS_SUMMARY.md`, `GOOGLE_SEARCH_CONSOLE_SUBMISSION.md`, and the two `docs/assessments/obsidian-web-clipper-reviews-*.md` files.*
+*This document supersedes: `SEO_STRATEGY.md`, `SEO_IMPROVEMENT_STRATEGY.md`, `SEO_IMPLEMENTATION_COMPLETE.md`, `SEO_IMMEDIATE_ACTIONS.md`, `SEO_DO_THIS_TODAY.md`, `SEO_CHANGES_COMPLETED.md`, `docs/archive/IMMEDIATE_SEO_CHANGES_SUMMARY.md`, `CRITICAL_ITEM_COMPLETED.md`, `CONTENT_STRATEGY_SEO_PLAN.md`, `EXPORT_STRATEGY_RESEARCH_NICHE.md`, `EXPORT_FEATURE_USE_CASES_MARKETING.md`, `BACKLINK_ACTION_PLAN.md`, `BACKLINK_QUICK_START_CHECKLIST.md`, `TARGETED_BACKLINK_STRATEGY.md`, `BACKLINK_OUTREACH_TEMPLATES.md`, `REDDIT_*` (×5), `HACKER_NEWS_LAUNCH_STRATEGY.md`, `HN_FEEDBACK_COMPETITOR_ANALYSIS.md`, `COMPETITOR_ANALYSIS.md`, `COMPETITOR_ANALYSIS_HUNCHLY.md`, `docs/archive/BLOG_POSTS_CREATED.md`, `BLOG_IMPLEMENTATION_STATUS.md`, `NEW_BLOG_POSTS_SUMMARY.md`, `PRODUCTIVITY_POSTS_SUMMARY.md`, `GOOGLE_SEARCH_CONSOLE_SUBMISSION.md`, and the two `docs/assessments/obsidian-web-clipper-reviews-*.md` files.*

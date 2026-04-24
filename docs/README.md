@@ -1,6 +1,6 @@
 # PageStash — Documentation Index
 
-Four canonical documents at the root, organized tech docs in subfolders. Everything else has been deleted or consolidated.
+Canonical product and SEO docs live in **`docs/`**; the repo root keeps only `README.md`. Tech detail lives in subfolders below. One-off historical snapshots sit in [`archive/`](./archive/).
 
 ---
 
@@ -28,6 +28,7 @@ Four canonical documents at the root, organized tech docs in subfolders. Everyth
 | [`legal/`](./legal/) | Privacy policy, Chrome Store listing copy, public product description |
 | [`analytics/`](./analytics/) | GA4 setup, conversion tracking taxonomy, Search Console submission, analytics strategy |
 | [`research/`](./research/) | Raw competitor research (Obsidian Web Clipper assessments) — synthesized into PRD/SEO_DRIVERS but kept for reference |
+| [`archive/`](./archive/) | Read-only Nov 2025 implementation logs moved from repo root (superseded by BLUEPRINT + live docs) |
 | [`email-templates/`](./email-templates/) | The actual HTML files used for Supabase auth emails |
 | [`migrations/`](./migrations/) | SQL migration files referenced by `operations/STRIPE.md` |
 
@@ -99,6 +100,12 @@ If you're new, read these in order:
 - **GA4 dashboard setup** → [`analytics/GA4_DASHBOARD_SETUP.md`](./analytics/GA4_DASHBOARD_SETUP.md)
 - **Search Console** → [`analytics/SEARCH_CONSOLE.md`](./analytics/SEARCH_CONSOLE.md)
 
+## Archive (historical, read-only)
+
+- [`archive/CONVERSION_TRACKING_COMPLETE.md`](./archive/CONVERSION_TRACKING_COMPLETE.md) — Nov 2025 GA4 / homepage tracking rollout log
+- [`archive/BLOG_POSTS_CREATED.md`](./archive/BLOG_POSTS_CREATED.md) — Nov 2025 blog batch notes
+- [`archive/IMMEDIATE_SEO_CHANGES_SUMMARY.md`](./archive/IMMEDIATE_SEO_CHANGES_SUMMARY.md) — Nov 2025 on-page SEO snapshot (current playbook is [`SEO_DRIVERS.md`](./SEO_DRIVERS.md))
+
 ## Research (raw, kept for reference)
 
 - **Obsidian Web Clipper — product assessment** → [`research/obsidian-web-clipper-product-assessment.md`](./research/obsidian-web-clipper-product-assessment.md) (synthesized into [PRD](./PRD.md) backlog and Obsidian-bridge feature)
@@ -112,7 +119,7 @@ If you're new, read these in order:
 - **`BLUEPRINT.md` is the changelog.** When a PR ships, move the item from "in-flight" to "shipped" with a date.
 - **`SEO_DRIVERS.md` is the editorial calendar.** When an article ships, check it off the Top-20 queue and add the URL.
 - **One canonical doc per topic.** If you find yourself writing a second Stripe doc, edit `operations/STRIPE.md` instead.
-- **Old `*_COMPLETE.md` / `*_SUMMARY.md` / `*_QUICK_START.md` patterns are banned.** Notes on what was just shipped go in `BLUEPRINT.md` "Shipped recently"; reference docs go in the relevant subfolder.
+- **Old `*_COMPLETE.md` / `*_SUMMARY.md` at repo root are banned.** Ship notes go in `BLUEPRINT.md` "Shipped recently"; living reference docs go in the relevant subfolder. Legacy one-offs may remain only under [`archive/`](./archive/).
 
 ---
 
