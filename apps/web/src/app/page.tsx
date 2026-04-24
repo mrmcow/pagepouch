@@ -334,8 +334,8 @@ export default function HomePage() {
         {/* overflow-hidden scoped to orb container only — avoids paint-layer edge on section boundary */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
-          <div className="absolute -top-32 -right-32 w-[520px] h-[520px] bg-gradient-to-br from-blue-500/30 via-cyan-500/20 to-transparent blur-[160px]" />
-          <div className="absolute bottom-[-200px] -left-24 w-[480px] h-[480px] bg-gradient-to-tr from-indigo-500/20 via-blue-500/10 to-transparent blur-[150px]" />
+          <div className="absolute -top-32 -right-32 w-[520px] h-[520px] bg-gradient-to-br from-blue-500/30 via-cyan-500/20 to-transparent blur-[160px] hidden sm:block" />
+          <div className="absolute bottom-[-200px] -left-24 w-[480px] h-[480px] bg-gradient-to-tr from-indigo-500/20 via-blue-500/10 to-transparent blur-[150px] hidden sm:block" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent dark:from-slate-950" />
         </div>
 
@@ -388,7 +388,7 @@ export default function HomePage() {
 
             {/* Right Side - CTA Box - Frosted Glass Enterprise */}
             <div className="w-full max-w-lg mx-auto lg:max-w-xl lg:mx-0">
-              <div className="relative rounded-2xl sm:rounded-[30px] bg-white dark:bg-slate-950/85 backdrop-blur-xl p-6 sm:p-10 lg:p-12 shadow-[0_45px_140px_-60px_rgba(15,23,42,0.9)]">
+              <div className="relative rounded-2xl sm:rounded-[30px] bg-white dark:bg-slate-950/85 sm:backdrop-blur-xl p-6 sm:p-10 lg:p-12 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.25)] sm:shadow-[0_45px_140px_-60px_rgba(15,23,42,0.9)]">
                 <div className="absolute -top-12 -right-6 w-32 h-32 bg-gradient-to-b from-blue-500/40 to-transparent blur-3xl opacity-70 pointer-events-none hidden sm:block" />
                 <div className="absolute -bottom-14 -left-8 w-40 h-40 bg-gradient-to-tr from-cyan-400/20 to-transparent blur-[90px] opacity-70 pointer-events-none hidden sm:block" />
                 <div className="relative text-center mb-6 sm:mb-10">
@@ -584,7 +584,7 @@ export default function HomePage() {
                 chips: ['Folders', 'Graph'],
               }
             ].map((card) => (
-              <div key={card.number} className="group relative rounded-2xl sm:rounded-[32px] bg-white/5 border border-white/10 p-5 sm:p-8 backdrop-blur-xl shadow-[0_40px_90px_-50px_rgba(2,6,23,1)] hover:bg-white/8 hover:border-white/20 hover:shadow-[0_50px_110px_-50px_rgba(59,130,246,0.4)] hover:-translate-y-2 transition-all duration-500">
+              <div key={card.number} className="group relative rounded-2xl sm:rounded-[32px] bg-white/5 border border-white/10 p-5 sm:p-8 sm:backdrop-blur-xl shadow-none sm:shadow-[0_40px_90px_-50px_rgba(2,6,23,1)] hover:bg-white/8 hover:border-white/20 sm:hover:shadow-[0_50px_110px_-50px_rgba(59,130,246,0.4)] hover:-translate-y-2 transition-all duration-500">
                 <div className="flex items-center justify-between mb-5 sm:mb-8">
                   <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${card.accent} flex items-center justify-center text-base sm:text-xl font-semibold`}>
                     {card.number}
@@ -661,7 +661,7 @@ export default function HomePage() {
             ].map((fmt) => (
               <div
                 key={fmt.ext}
-                className="group relative rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6 backdrop-blur-xl shadow-[0_30px_70px_-50px_rgba(2,6,23,1)] hover:bg-white/8 hover:border-white/20 hover:shadow-[0_40px_90px_-50px_rgba(59,130,246,0.4)] hover:-translate-y-1 transition-all duration-500"
+                className="group relative rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6 sm:backdrop-blur-xl shadow-none sm:shadow-[0_30px_70px_-50px_rgba(2,6,23,1)] sm:hover:shadow-[0_40px_90px_-50px_rgba(59,130,246,0.4)] hover:-translate-y-1 transition-all duration-500"
               >
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <span
@@ -683,7 +683,7 @@ export default function HomePage() {
 
           {/* Citations spotlight — wider, distinct treatment */}
           <div className="max-w-5xl mx-auto mt-4 sm:mt-5">
-            <div className="group relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-transparent backdrop-blur-xl p-5 sm:p-7 hover:border-white/20 transition-all duration-500 overflow-hidden">
+            <div className="group relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-transparent sm:backdrop-blur-xl p-5 sm:p-7 hover:border-white/20 transition-all duration-500 overflow-hidden">
               <div className="absolute -top-16 -right-16 w-56 h-56 bg-gradient-to-br from-amber-400/15 via-orange-500/10 to-transparent blur-3xl pointer-events-none" />
               <div className="relative flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
                 <div className="flex items-center gap-3 md:gap-4 shrink-0">
@@ -713,7 +713,7 @@ export default function HomePage() {
 
           {/* Trust strip + CTA */}
           <div className="mt-10 sm:mt-14 flex flex-col items-center gap-5 sm:gap-6">
-            <div className="inline-flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-7 gap-y-2 px-5 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+            <div className="inline-flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-7 gap-y-2 px-5 py-3 rounded-full bg-white/5 border border-white/10 sm:backdrop-blur-md">
               <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
                 <CheckIcon className="h-4 w-4 text-emerald-400" />
                 Bulk export
