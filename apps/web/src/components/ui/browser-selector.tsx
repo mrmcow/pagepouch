@@ -108,7 +108,7 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       {/* Tor compatibility note */}
       <div className="flex items-center justify-center gap-2 mt-5 text-sm text-slate-500 dark:text-slate-400">
         <TorIcon size={28} className="shrink-0 opacity-80" />
-        <span>Also works with <span className="font-semibold text-slate-700 dark:text-slate-300">Tor Browser</span></span>
+        <span>Works with <span className="font-semibold text-slate-700 dark:text-slate-300">Tor Browser</span></span>
       </div>
     </div>
   )
