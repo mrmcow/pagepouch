@@ -369,60 +369,269 @@ function SortDropdown({
 
   const current = SORT_OPTIONS.find(o => o.value === sortBy)!
 
+  const orderLabel = sortBy === 'title'
+    ? (sortOrder === 'asc' ? 'A–Z' : 'Z–A')
+    : (sortOrder === 'desc' ? 'Newest' : 'Oldest')
+
   return (
-    <div ref={containerRef} className="relative flex-shrink-0 flex items-center gap-1.5">
-      {/* Sort field trigger */}
+    <div ref={containerRef} className="relative flex-shrink-0">
+      {/* Single combined trigger */}
       <button
         onClick={() => setOpen(o => !o)}
         className="h-9 flex items-center gap-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-150 border border-transparent cursor-pointer select-none bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
       >
-        <current.icon className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
-        <span>{current.label}</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0 opacity-50">
+          <path d="M3 4.5h8M3 7h6M3 9.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        <span>{orderLabel}</span>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">· {current.label}</span>
         <ChevronDown className={`h-3.5 w-3.5 opacity-40 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Order toggle */}
-      <button
-        onClick={onSortOrderToggle}
-        className="h-9 flex items-center gap-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border border-transparent transition-all duration-150 cursor-pointer select-none"
-        title={sortBy === 'title'
-          ? (sortOrder === 'asc' ? 'A–Z — click for Z–A' : 'Z–A — click for A–Z')
-          : (sortOrder === 'asc' ? 'Oldest first — click for newest' : 'Newest first — click for oldest')}
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={`transition-transform duration-200 ${sortOrder === 'asc' ? 'rotate-180' : ''}`}>
-          <path d="M7 2.5v9M3.5 8L7 11.5 10.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-          {sortBy === 'title'
-            ? (sortOrder === 'asc' ? 'A–Z' : 'Z–A')
-            : (sortOrder === 'desc' ? 'Newest' : 'Oldest')}
-        </span>
-      </button>
-
-      {/* Dropdown */}
+      {/* Combined panel: field selector + order toggle */}
       {open && (
-        <div className="absolute left-0 top-full mt-1.5 z-[100] w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden py-1">
-          {SORT_OPTIONS.map(opt => {
-            const isActive = opt.value === sortBy
-            const Icon = opt.icon
-            return (
+        <div className="absolute left-0 top-full mt-1.5 z-[100] w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden">
+          <div className="px-3 pt-3 pb-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Sort by</span>
+          </div>
+          <div className="pb-1">
+            {SORT_OPTIONS.map(opt => {
+              const isActive = opt.value === sortBy
+              const Icon = opt.icon
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => { onSortByChange(opt.value) }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
+                    isActive
+                      ? 'bg-blue-50/60 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`}
+                >
+                  <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                  <span className={isActive ? 'font-medium' : ''}>{opt.label}</span>
+                  {isActive && <Check className="h-4 w-4 ml-auto text-blue-600 dark:text-blue-400" />}
+                </button>
+              )
+            })}
+          </div>
+          <div className="border-t border-slate-100 dark:border-slate-800 px-2 py-2">
+            <div className="px-1 pb-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Order</span>
+            </div>
+            <div className="flex gap-1">
               <button
-                key={opt.value}
-                onClick={() => { onSortByChange(opt.value); setOpen(false) }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
-                  isActive
-                    ? 'bg-blue-50/60 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                onClick={() => { if (sortOrder !== 'desc') onSortOrderToggle() }}
+                className={`flex-1 h-8 flex items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
+                  sortOrder === 'desc'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
-                <span className={isActive ? 'font-medium' : ''}>{opt.label}</span>
-                {isActive && <Check className="h-4 w-4 ml-auto text-blue-600 dark:text-blue-400" />}
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2.5v9M3.5 8L7 11.5 10.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {sortBy === 'title' ? 'Z–A' : 'Newest'}
               </button>
-            )
-          })}
+              <button
+                onClick={() => { if (sortOrder !== 'asc') onSortOrderToggle() }}
+                className={`flex-1 h-8 flex items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
+                  sortOrder === 'asc'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="rotate-180">
+                  <path d="M7 2.5v9M3.5 8L7 11.5 10.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {sortBy === 'title' ? 'A–Z' : 'Oldest'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function NewClipMenu({
+  onClipUrl,
+  onInstall,
+}: {
+  onClipUrl: () => void
+  onInstall: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; minWidth: number } | null>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const updatePosition = useCallback(() => {
+    if (!btnRef.current) return
+    const rect = btnRef.current.getBoundingClientRect()
+    const menuWidth = 288
+    const viewportPad = 16
+    // Anchor to button's left, but keep inside viewport on the right edge.
+    const left = Math.min(rect.left, window.innerWidth - menuWidth - viewportPad)
+    setMenuPos({ top: rect.bottom + 6, left: Math.max(viewportPad, left), minWidth: rect.width })
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    updatePosition()
+
+    const handleClick = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (menuRef.current?.contains(t)) return
+      if (btnRef.current?.contains(t)) return
+      setOpen(false)
+    }
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    window.addEventListener('resize', updatePosition)
+    // Capture-phase scroll listener catches scrolls on any ancestor (sidebar, page).
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open, updatePosition])
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="group relative w-full h-10 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white text-[13px] font-semibold shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 active:scale-[0.98] transition-all duration-150 overflow-hidden"
+      >
+        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+        <Plus className="h-4 w-4 relative" strokeWidth={2.5} />
+        <span className="relative">New Clip</span>
+        <kbd className="hidden xl:inline-flex ml-1 text-[10px] font-mono opacity-80 bg-white/15 rounded px-1.5 py-0.5 relative">N</kbd>
+      </button>
+
+      {open && menuPos && (
+        <div
+          ref={menuRef}
+          role="menu"
+          style={{
+            position: 'fixed',
+            top: menuPos.top,
+            left: menuPos.left,
+            width: 288,
+            minWidth: menuPos.minWidth,
+            maxWidth: 'calc(100vw - 2rem)',
+          }}
+          className="z-[100] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl shadow-slate-900/20 dark:shadow-black/70 overflow-hidden"
+        >
+          <button
+            role="menuitem"
+            onClick={() => { onClipUrl(); setOpen(false) }}
+            className="w-full px-3 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-left transition-colors"
+          >
+            <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] font-semibold text-slate-900 dark:text-white leading-tight">Clip a URL</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">Paste a link to archive</div>
+            </div>
+            <kbd className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 flex-shrink-0">N</kbd>
+          </button>
+
+          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+          <button
+            role="menuitem"
+            onClick={() => { onInstall(); setOpen(false) }}
+            className="w-full px-3 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-left transition-colors"
+          >
+            <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+              <Download className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] font-semibold text-slate-900 dark:text-white leading-tight">Install extension</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">Chrome, Firefox & Edge</div>
+            </div>
+          </button>
+        </div>
+      )}
+    </>
+  )
+}
+
+const EMPTY_STATE_CSS = `
+@keyframes pageStashClipFloat {
+  0%, 100% { transform: translate(0, 0) rotate(-8deg); opacity: 1; }
+  45% { transform: translate(32px, 28px) rotate(0deg); opacity: 1; }
+  55% { transform: translate(34px, 30px) rotate(1deg); opacity: 0.3; }
+  60% { transform: translate(0, 0) rotate(-8deg); opacity: 0; }
+  70% { transform: translate(0, 0) rotate(-8deg); opacity: 1; }
+}
+@keyframes pageStashFolderPulse {
+  0%, 45%, 100% { transform: scale(1); }
+  55% { transform: scale(1.06); }
+  65% { transform: scale(1); }
+}
+@keyframes pageStashGlowHalo {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  55% { opacity: 0.5; transform: scale(1.15); }
+}
+.ps-es-clip { animation: pageStashClipFloat 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; transform-origin: center; }
+.ps-es-folder { animation: pageStashFolderPulse 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; transform-origin: center bottom; }
+.ps-es-halo { animation: pageStashGlowHalo 3.2s ease-in-out infinite; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .ps-es-clip, .ps-es-folder, .ps-es-halo { animation: none !important; }
+}
+`
+
+function EmptyStateIllustration() {
+  return (
+    <div className="relative w-40 h-32 mx-auto mb-8" aria-hidden>
+      <style dangerouslySetInnerHTML={{ __html: EMPTY_STATE_CSS }} />
+
+      {/* Halo */}
+      <div className="ps-es-halo absolute inset-0 flex items-center justify-center">
+        <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-500/30 via-blue-400/20 to-sky-300/10 blur-2xl" />
+      </div>
+
+      {/* Folder (target) */}
+      <div className="ps-es-folder absolute bottom-2 right-4">
+        <svg width="72" height="60" viewBox="0 0 72 60" fill="none">
+          <defs>
+            <linearGradient id="folderFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+            <linearGradient id="folderBack" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+          </defs>
+          <path d="M4 12a4 4 0 0 1 4-4h18l6 6h32a4 4 0 0 1 4 4v36a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V12Z" fill="url(#folderBack)"/>
+          <path d="M4 22h64v30a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V22Z" fill="url(#folderFill)"/>
+          <path d="M4 22h64" stroke="white" strokeOpacity="0.15" strokeWidth="1"/>
+        </svg>
+      </div>
+
+      {/* Clip (page being archived) */}
+      <div className="ps-es-clip absolute top-0 left-2">
+        <svg width="52" height="64" viewBox="0 0 52 64" fill="none" style={{ filter: 'drop-shadow(0 8px 16px rgba(15, 23, 42, 0.15))' }}>
+          <rect x="2" y="2" width="48" height="60" rx="6" fill="white" stroke="#e2e8f0" strokeWidth="1.5" className="dark:fill-slate-800 dark:stroke-slate-700" />
+          <rect x="8" y="10" width="36" height="4" rx="2" fill="#3b82f6" />
+          <rect x="8" y="20" width="28" height="2.5" rx="1.25" fill="#cbd5e1" className="dark:fill-slate-600" />
+          <rect x="8" y="26" width="34" height="2.5" rx="1.25" fill="#cbd5e1" className="dark:fill-slate-600" />
+          <rect x="8" y="32" width="22" height="2.5" rx="1.25" fill="#cbd5e1" className="dark:fill-slate-600" />
+          <rect x="8" y="42" width="36" height="14" rx="3" fill="#eff6ff" stroke="#dbeafe" strokeWidth="1" className="dark:fill-blue-500/10 dark:stroke-blue-500/20" />
+        </svg>
+      </div>
     </div>
   )
 }
@@ -737,7 +946,11 @@ function DashboardContent() {
     viewerOpen: state.isClipViewerOpen,
     focusSearch: () => searchInputRef.current?.focus(),
     escape: () => {
-      if (state.isClipViewerOpen) handleClipViewerClose()
+      if (state.isClipViewerOpen) {
+        handleClipViewerClose()
+      } else if (state.isSelectionMode) {
+        handleCancelSelectionMode()
+      }
     },
     prev: () => handleClipNavigate('prev'),
     next: () => handleClipNavigate('next'),
@@ -747,6 +960,45 @@ function DashboardContent() {
       }
     },
   })
+
+  // Global "N" shortcut: open Clip URL modal from anywhere on the dashboard.
+  // Only fires when no input is focused and no modal is already open.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
+      if (e.key !== 'n' && e.key !== 'N') return
+      const target = e.target as HTMLElement | null
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return
+      if (target?.isContentEditable) return
+      if (
+        state.isClipViewerOpen ||
+        state.isClipUrlModalOpen ||
+        state.isCreateFolderModalOpen ||
+        state.isEditFolderModalOpen ||
+        state.isProfileModalOpen ||
+        state.isBillingModalOpen ||
+        state.isExportModalOpen ||
+        state.isExportUpgradeModalOpen ||
+        state.isKnowledgeGraphUpgradeModalOpen ||
+        state.isDownloadModalOpen
+      ) return
+      e.preventDefault()
+      setState(prev => ({ ...prev, isClipUrlModalOpen: true }))
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [
+    state.isClipViewerOpen,
+    state.isClipUrlModalOpen,
+    state.isCreateFolderModalOpen,
+    state.isEditFolderModalOpen,
+    state.isProfileModalOpen,
+    state.isBillingModalOpen,
+    state.isExportModalOpen,
+    state.isExportUpgradeModalOpen,
+    state.isKnowledgeGraphUpgradeModalOpen,
+    state.isDownloadModalOpen,
+  ])
 
   const checkAuth = async () => {
     try {
@@ -1208,9 +1460,9 @@ function DashboardContent() {
       {/* Header */}
       <header className="border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl shadow-sm relative z-20">
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-2.5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             {/* Logo and Navigation */}
-            <div className="flex items-center space-x-5">
+            <div className="flex items-center gap-3 md:gap-5 min-w-0">
               <button 
                 onClick={() => {
                   // Reset to all clips view
@@ -1227,7 +1479,7 @@ function DashboardContent() {
                 <LogoWithText size={36} clickable={false} />
               </button>
               
-              <nav className="hidden md:flex items-center gap-0.5">
+              <nav className="flex items-center gap-0.5" aria-label="Dashboard views">
                 {([
                   { filter: 'library',   icon: <Grid className="h-3.5 w-3.5" />,  label: 'Library'   },
                   { filter: 'favorites', icon: <Star className="h-3.5 w-3.5" />,  label: 'Favorites' },
@@ -1238,14 +1490,16 @@ function DashboardContent() {
                     <button
                       key={filter}
                       onClick={() => setState(prev => ({ ...prev, viewFilter: filter }))}
-                      className={`flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[13px] font-medium transition-all duration-150 ${
+                      aria-label={label}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center gap-1.5 h-8 px-2 md:px-2.5 rounded-md text-[13px] font-medium transition-all duration-150 ${
                         active
                           ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
                       }`}
                     >
                       {icon}
-                      {label}
+                      <span className="hidden md:inline">{label}</span>
                     </button>
                   )
                 })}
@@ -1282,99 +1536,11 @@ function DashboardContent() {
           {/* Sidebar */}
           <aside className="w-full lg:w-60 xl:w-64 2xl:w-72 lg:flex-shrink-0 space-y-3 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:pb-4">
 
-            {/* Quick Actions */}
-            <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
-              <CardHeader className="px-4 py-3">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 px-3 pb-3 pt-0">
-                <Button 
-                  variant="outline"
-                  size="sm" 
-                  className="w-full justify-start h-8 text-[13px] font-normal"
-                  onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}
-                >
-                  <Download className="mr-2 h-3.5 w-3.5" />
-                  Install Extension
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start h-8 text-[13px] font-normal"
-                  onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
-                >
-                  <Globe className="mr-2 h-3.5 w-3.5" />
-                  Clip URL
-                </Button>
-                
-                {/* Export Clips - Pro Feature */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start h-8 text-[13px] font-normal relative"
-                  onClick={() => {
-                    if (state.subscriptionTier === 'pro') {
-                      // If in Page Graphs, switch back to Library view first
-                      if (state.viewFilter === 'knowledge-graphs') {
-                        setState(prev => ({ 
-                          ...prev, 
-                          viewFilter: 'library',
-                          isSelectionMode: true,
-                          selectedClipIds: new Set()
-                        }))
-                      } else {
-                        // Just enable selection mode if already in clips view
-                        setState(prev => ({ 
-                          ...prev, 
-                          isSelectionMode: true,
-                          selectedClipIds: new Set()
-                        }))
-                      }
-                    } else {
-                      // Show upgrade modal for free users
-                      setState(prev => ({ ...prev, isExportUpgradeModalOpen: true }))
-                    }
-                  }}
-                >
-                  <FileDown className="mr-2 h-3.5 w-3.5" />
-                  Export Clips
-                  {state.subscriptionTier !== 'pro' && (
-                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
-                      PRO
-                    </Badge>
-                  )}
-                </Button>
-                
-                {/* Page Graphs - Pro Feature */}
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start h-8 text-[13px] font-normal relative"
-                  onClick={() => {
-                    if (state.subscriptionTier === 'pro') {
-                      // Exit selection mode when switching to Page Graphs
-                      setState(prev => ({ 
-                        ...prev, 
-                        viewFilter: 'knowledge-graphs',
-                        isSelectionMode: false,
-                        selectedClipIds: new Set()
-                      }))
-                    } else {
-                      // Show upgrade modal for free users
-                      setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: true }))
-                    }
-                  }}
-                >
-                  <Brain className="mr-2 h-3.5 w-3.5" />
-                  Page Graphs
-                  {state.subscriptionTier !== 'pro' && (
-                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
-                      PRO
-                    </Badge>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Primary CTA — always at the top of the sidebar */}
+            <NewClipMenu
+              onClipUrl={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
+              onInstall={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}
+            />
 
             {/* Upgrade to Pro — promoted above Folders for free users so it is visible without scrolling */}
             {!state.isSubscriptionLoading && state.subscriptionTier === 'free' && (
@@ -1467,6 +1633,74 @@ function DashboardContent() {
               </CardContent>
             </Card>
 
+            {/* Tools */}
+            <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
+              <CardHeader className="px-4 py-3">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tools</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 px-3 pb-3 pt-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-8 text-[13px] font-normal relative hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                  onClick={() => {
+                    if (state.subscriptionTier === 'pro') {
+                      if (state.viewFilter === 'knowledge-graphs') {
+                        setState(prev => ({
+                          ...prev,
+                          viewFilter: 'library',
+                          isSelectionMode: true,
+                          selectedClipIds: new Set(),
+                        }))
+                      } else {
+                        setState(prev => ({
+                          ...prev,
+                          isSelectionMode: true,
+                          selectedClipIds: new Set(),
+                        }))
+                      }
+                    } else {
+                      setState(prev => ({ ...prev, isExportUpgradeModalOpen: true }))
+                    }
+                  }}
+                >
+                  <FileDown className="mr-2 h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                  Export Clips
+                  {state.subscriptionTier !== 'pro' && (
+                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
+                      PRO
+                    </Badge>
+                  )}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-8 text-[13px] font-normal relative hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                  onClick={() => {
+                    if (state.subscriptionTier === 'pro') {
+                      setState(prev => ({
+                        ...prev,
+                        viewFilter: 'knowledge-graphs',
+                        isSelectionMode: false,
+                        selectedClipIds: new Set(),
+                      }))
+                    } else {
+                      setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: true }))
+                    }
+                  }}
+                >
+                  <Brain className="mr-2 h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                  Page Graphs
+                  {state.subscriptionTier !== 'pro' && (
+                    <Badge className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
+                      PRO
+                    </Badge>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Usage Stats - Only show when subscription data is loaded */}
             {!state.isSubscriptionLoading && (
               <Card className={`border shadow-sm ${
@@ -1489,27 +1723,35 @@ function DashboardContent() {
                   </div>
                 </CardHeader>
                 <CardContent className="px-4 pb-4 pt-0">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-slate-600 dark:text-slate-400">Clips this month</span>
-                      <span className={`font-semibold ${
-                        state.clipsThisMonth >= state.clipsLimit 
-                          ? 'text-red-600 dark:text-red-400' 
+                  <div className="space-y-2.5">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[13px] text-slate-600 dark:text-slate-400">Clips this month</span>
+                      <span className={`text-[13px] font-semibold tabular-nums ${
+                        state.clipsThisMonth >= state.clipsLimit
+                          ? 'text-red-600 dark:text-red-400'
                           : 'text-slate-900 dark:text-white'
-                      }`}>{state.clipsThisMonth}/{state.clipsLimit}</span>
+                      }`}>
+                        <span className="text-[15px]">{state.clipsThisMonth}</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-normal"> / {state.clipsLimit}</span>
+                      </span>
                     </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-                      <div 
-                        className={`h-1.5 rounded-full transition-all ${
-                          (state.clipsThisMonth / state.clipsLimit) >= 0.9
-                            ? 'bg-red-500'
-                            : (state.clipsThisMonth / state.clipsLimit) >= 0.7
-                            ? 'bg-yellow-500'
-                            : 'bg-blue-500'
-                        }`}
-                        style={{ width: `${Math.min((state.clipsThisMonth / state.clipsLimit) * 100, 100)}%` }}
-                      />
-                    </div>
+                    {(() => {
+                      const pct = Math.min((state.clipsThisMonth / state.clipsLimit) * 100, 100)
+                      const barClasses = pct >= 90
+                        ? 'bg-gradient-to-r from-red-500 to-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.45)]'
+                        : pct >= 70
+                        ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.35)]'
+                        : 'bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 shadow-[0_0_10px_rgba(59,130,246,0.35)]'
+                      return (
+                        <div className="relative w-full h-2 bg-slate-100 dark:bg-slate-800/70 rounded-full overflow-hidden">
+                          <div
+                            className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out ${barClasses}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                          <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/0 dark:ring-white/5 pointer-events-none" />
+                        </div>
+                      )
+                    })()}
                     {state.clipsThisMonth >= state.clipsLimit ? (
                       <p className="text-[11px] font-medium text-red-600 dark:text-red-400">
                         Monthly limit reached — resets next month
@@ -1536,8 +1778,8 @@ function DashboardContent() {
                       <span className="text-slate-400">Clips this month</span>
                       <div className="h-4 w-12 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
                     </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-                      <div className="bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full animate-pulse w-1/3"></div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+                      <div className="bg-slate-200 dark:bg-slate-700 h-2 rounded-full animate-pulse w-1/3"></div>
                     </div>
                     <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
                   </div>
@@ -1569,9 +1811,9 @@ function DashboardContent() {
                     placeholder="Search titles, content, URLs..."
                     value={state.searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className={`pl-10 h-11 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus:border-blue-500 dark:focus:border-blue-400 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl ${state.searchQuery ? 'pr-10' : 'pr-3'}`}
+                    className={`pl-10 h-11 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 focus:border-blue-500 dark:focus:border-blue-400 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 transition-all duration-200 rounded-xl ${state.searchQuery ? 'pr-10' : 'pr-16 sm:pr-20'}`}
                   />
-                  {state.searchQuery && (
+                  {state.searchQuery ? (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                       {state.isSearching && (
                         <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -1583,6 +1825,13 @@ function DashboardContent() {
                         <X className="h-4 w-4" />
                       </button>
                     </div>
+                  ) : (
+                    <kbd
+                      className="hidden sm:inline-flex absolute right-3 top-1/2 -translate-y-1/2 items-center gap-0.5 text-[11px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-md px-1.5 py-0.5 pointer-events-none select-none"
+                      aria-hidden
+                    >
+                      ⌘K
+                    </kbd>
                   )}
                 </div>
                 {state.searchQuery && !state.isSearching && filteredClips.length > 0 && (
@@ -1634,56 +1883,86 @@ function DashboardContent() {
             </div>
             )}
 
-            {/* Selection Mode Floating Action Bar */}
+            {/* Export Mode — contextual toolbar that sits above the clip grid */}
             {state.isSelectionMode && (
-              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-blue-500 px-6 py-4 flex items-center space-x-4">
-                  <div className="flex items-center space-x-2 text-sm font-medium">
-                    <CheckSquare className="h-5 w-5 text-blue-600" />
-                    <span className="text-slate-900 dark:text-white">
-                      {state.selectedClipIds.size} selected
-                    </span>
+              <div className="flex-shrink-0 rounded-2xl border-2 border-blue-500/70 dark:border-blue-400/50 bg-gradient-to-r from-blue-50 via-blue-50/70 to-white dark:from-blue-950/30 dark:via-blue-950/15 dark:to-slate-900 shadow-lg shadow-blue-500/10 dark:shadow-blue-400/5 px-4 sm:px-5 py-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  {/* Title + count */}
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shadow-md shadow-blue-600/30 flex-shrink-0">
+                      <FileDown className="h-[18px] w-[18px] text-white" strokeWidth={2.5} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Export mode</h3>
+                        <span className="inline-flex items-center gap-1 text-[12px] font-medium text-blue-700 dark:text-blue-300 bg-blue-100/80 dark:bg-blue-500/15 border border-blue-200/60 dark:border-blue-400/20 rounded-full px-2 py-0.5">
+                          <Check className="h-3 w-3" strokeWidth={3} />
+                          {state.selectedClipIds.size} of {sortedClips.length} selected
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-slate-600 dark:text-slate-400 mt-0.5 hidden sm:block">
+                        {state.selectedClipIds.size === 0
+                          ? 'Tap any clip to select it, or use Select All to grab them all.'
+                          : `Ready to export ${state.selectedClipIds.size} clip${state.selectedClipIds.size === 1 ? '' : 's'} as Markdown, JSON, CSV, or PDF.`}
+                      </p>
+                    </div>
                   </div>
-                  
-                  {state.selectedClipIds.size < sortedClips.length && (
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
+                    {state.selectedClipIds.size < sortedClips.length ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSelectAll}
+                        className="h-9 border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800"
+                      >
+                        Select all ({sortedClips.length})
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearSelection}
+                        className="h-9 border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800"
+                      >
+                        Deselect all
+                      </Button>
+                    )}
+
+                    {state.selectedClipIds.size > 0 && state.selectedClipIds.size < sortedClips.length && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearSelection}
+                        className="h-9 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        Clear
+                      </Button>
+                    )}
+
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={handleSelectAll}
+                      onClick={handleCancelSelectionMode}
+                      className="h-9 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      title="Cancel (Esc)"
                     >
-                      Select All ({sortedClips.length})
+                      Cancel
                     </Button>
-                  )}
-                  
-                  {state.selectedClipIds.size > 0 && (
+
                     <Button
-                      variant="outline"
                       size="sm"
-                      onClick={handleClearSelection}
+                      onClick={handleOpenExportModal}
+                      disabled={state.selectedClipIds.size === 0}
+                      className="h-9 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold shadow-md shadow-blue-600/25 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-colors"
                     >
-                      Clear
+                      <FileDown className="h-4 w-4 mr-1.5" />
+                      Export{state.selectedClipIds.size > 0 ? ` (${state.selectedClipIds.size})` : ''}
                     </Button>
-                  )}
-                  
-                  <Button
-                    size="sm"
-                    onClick={handleOpenExportModal}
-                    disabled={state.selectedClipIds.size === 0}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                  >
-                    <FileDown className="h-4 w-4 mr-2" />
-                    Export {state.selectedClipIds.size > 0 ? `(${state.selectedClipIds.size})` : ''}
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCancelSelectionMode}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  </div>
+                </div>
               </div>
-            </div>
             )}
 
             {/* Content Area - Clips or Page Graphs */}
@@ -1719,14 +1998,18 @@ function DashboardContent() {
                   ))}
                 </div>
               ) : sortedClips.length === 0 ? (
-                <div className="flex items-center justify-center py-16 lg:py-24">
+                <div className="flex items-center justify-center py-16 lg:py-20">
                   <div className="w-full max-w-md text-center">
-                    <div className="relative mx-auto mb-6 w-20 h-20">
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/20 via-indigo-500/15 to-purple-500/10 blur-xl" />
-                      <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-100 dark:border-white/10 flex items-center justify-center">
-                        <LogoIcon size={40} />
+                    {(!state.searchQuery && (state.viewFilter === 'library' || state.viewFilter === 'favorites' || state.viewFilter === 'recent')) ? (
+                      <EmptyStateIllustration />
+                    ) : (
+                      <div className="relative mx-auto mb-6 w-20 h-20">
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/25 via-blue-400/15 to-sky-300/10 blur-xl" />
+                        <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-500/10 dark:to-blue-400/10 border border-blue-100 dark:border-white/10 flex items-center justify-center">
+                          <LogoIcon size={40} />
+                        </div>
                       </div>
-                    </div>
+                    )}
                     <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
                       {state.searchQuery ? 'No results found' :
                        state.viewFilter === 'favorites' ? 'No favorites yet' :
@@ -2034,28 +2317,33 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onRequ
 
   if (viewMode === 'list') {
     return (
-      <Card className={`p-3 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/30 transition-all duration-300 cursor-pointer ${
-        isSelectionMode && isSelected 
-          ? 'border-2 border-blue-500 bg-blue-50/60 dark:bg-blue-900/20' 
-          : clip.is_favorite 
-          ? 'border-l-4 border-l-yellow-400 bg-yellow-50/40 dark:bg-yellow-900/10 border-t border-r border-b border-slate-200/60 dark:border-white/10' 
-          : 'border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900'
+      <Card className={`p-3 transition-all duration-200 cursor-pointer ${
+        isSelectionMode && isSelected
+          ? 'border-2 border-blue-500 bg-blue-50/60 dark:bg-blue-900/20 shadow-lg shadow-blue-500/10'
+          : isSelectionMode
+          ? 'border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-500/40'
+          : clip.is_favorite
+          ? 'border-l-4 border-l-yellow-400 bg-yellow-50/40 dark:bg-yellow-900/10 border-t border-r border-b border-slate-200/60 dark:border-white/10 hover:shadow-lg hover:shadow-black/5'
+          : 'border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-900 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/30'
       }`} onClick={onClick}>
         <div className="flex items-center space-x-3">
           {isSelectionMode && (
-            <div 
-              className="flex-shrink-0"
+            <button
+              type="button"
+              aria-pressed={isSelected}
+              aria-label={isSelected ? 'Deselect clip' : 'Select clip'}
+              className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                isSelected
+                  ? 'bg-blue-600 shadow-md shadow-blue-600/30'
+                  : 'bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40'
+              }`}
               onClick={(e) => {
                 e.stopPropagation()
                 onToggleSelection?.()
               }}
             >
-              {isSelected ? (
-                <CheckSquare className="h-5 w-5 text-blue-600" />
-              ) : (
-                <Square className="h-5 w-5 text-slate-400" />
-              )}
-            </div>
+              {isSelected && <Check className="h-4 w-4 text-white" strokeWidth={3.5} />}
+            </button>
           )}
           {clip.screenshot_url && (
             <div className="relative overflow-hidden rounded-md">
@@ -2160,13 +2448,20 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onRequ
 
   return (
     <div
-      className={`group cursor-pointer rounded-2xl overflow-hidden bg-white dark:bg-slate-900 transition-all duration-200 ${
+      className={`group relative cursor-pointer rounded-2xl overflow-hidden bg-white dark:bg-slate-900 transition-all duration-200 ${
         isSelectionMode && isSelected
-          ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-950 border border-blue-500'
+          ? 'border-2 border-blue-500 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/10'
+          : isSelectionMode
+          ? 'border-2 border-slate-200 dark:border-white/[0.08] hover:border-blue-300 dark:hover:border-blue-500/40'
           : 'border border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20 hover:shadow-lg hover:shadow-slate-900/8 dark:hover:shadow-black/30'
       }`}
       onClick={onClick}
     >
+      {/* Selected tint overlay — covers entire card, pointer-events-none so clicks pass through */}
+      {isSelectionMode && isSelected && (
+        <div className="absolute inset-0 bg-blue-500/[0.06] dark:bg-blue-400/[0.08] pointer-events-none z-10" aria-hidden />
+      )}
+
       {/* Screenshot */}
       <div className="aspect-[16/10] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
         {clip.screenshot_url ? (
@@ -2204,17 +2499,25 @@ function ClipCard({ clip, viewMode, folders, onClick, onUpdate, onDelete, onRequ
           }`} />
         </button>
 
-        {/* Selection */}
+        {/* Selection checkbox — prominent, always visible in selection mode */}
         {isSelectionMode && (
-          <div
-            className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center shadow"
+          <button
+            type="button"
+            aria-pressed={isSelected}
+            aria-label={isSelected ? 'Deselect clip' : 'Select clip'}
+            className={`absolute top-2.5 left-2.5 z-20 w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-all duration-150 ${
+              isSelected
+                ? 'bg-blue-600 ring-2 ring-white dark:ring-slate-950 scale-105'
+                : 'bg-white/95 dark:bg-slate-900/95 ring-2 ring-white dark:ring-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 backdrop-blur-sm'
+            }`}
             onClick={(e) => { e.stopPropagation(); onToggleSelection?.() }}
           >
-            {isSelected
-              ? <CheckSquare className="h-4 w-4 text-blue-600" />
-              : <Square className="h-4 w-4 text-slate-400" />
-            }
-          </div>
+            {isSelected ? (
+              <Check className="h-4 w-4 text-white" strokeWidth={3.5} />
+            ) : (
+              <div className="w-4 h-4 rounded-full border-2 border-slate-400 dark:border-slate-500" />
+            )}
+          </button>
         )}
       </div>
 

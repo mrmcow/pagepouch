@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,6 +58,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Clip, Folder as FolderType } from '@pagestash/shared'
 import { extractEntities, entityCount, ENTITY_SECTIONS, type ExtractedEntities, type EntityCategory } from '@/utils/entityExtractor'
+import { exportMarkdown } from '@/lib/export'
 import {
   User,
   Building2,
@@ -453,6 +454,31 @@ export function ClipViewer({
   // Full clip data (html_content / text_content not sent in list responses — fetched on open)
   const [fullClip, setFullClip] = useState<Clip | null>(null)
   const [isLoadingContent, setIsLoadingContent] = useState(false)
+  // Transient "Copied!" confirmation for the header copy button
+  const [copiedFlash, setCopiedFlash] = useState(false)
+  // Floating copy-with-source affordance on the Markdown tab
+  const [mdSelection, setMdSelection] = useState<{ x: number; y: number; text: string } | null>(null)
+  const [mdSelectionCopied, setMdSelectionCopied] = useState(false)
+  const markdownContainerRef = useRef<HTMLDivElement>(null)
+
+  // Clear any floating markdown selection affordance when switching tabs or clips.
+  useEffect(() => {
+    setMdSelection(null)
+    setMdSelectionCopied(false)
+  }, [activeTab, clip?.id])
+
+  // Markdown representation of the current clip — derived on demand for the .md tab + copy action.
+  const markdownContent = useMemo(() => {
+    const source = fullClip ?? clip
+    if (!source) return ''
+    return exportMarkdown([source], folders, {
+      includeFullContent: true,
+      includeScreenshots: true,
+      includeNotes: true,
+      includeMetadata: true,
+      includeEntities: true,
+    })
+  }, [fullClip, clip, folders])
 
   // Lazy-load full clip content when viewer opens or clip changes
   useEffect(() => {
@@ -602,6 +628,14 @@ export function ClipViewer({
           event.preventDefault()
           setActiveTab('text')
           break
+        case '4':
+          event.preventDefault()
+          setActiveTab('markdown')
+          break
+        case '5':
+          event.preventDefault()
+          setActiveTab('entities')
+          break
       }
     }
 
@@ -679,6 +713,46 @@ export function ClipViewer({
     const processedValue = field === 'folder_id' && value === 'no-folder' ? '' : value
     setEditForm(prev => ({ ...prev, [field]: processedValue }))
     setHasUnsavedChanges(true)
+  }
+
+  // Copy the content of whatever tab is currently active. Returns a human label for toast copy.
+  const handleCopyActiveTab = () => {
+    if (!clip) return
+    let payload = ''
+    switch (activeTab) {
+      case 'screenshot':
+        payload = clip.screenshot_url ?? ''
+        break
+      case 'html':
+        payload = fullClip?.html_content ?? ''
+        break
+      case 'text':
+        payload = fullClip?.text_content ?? ''
+        break
+      case 'markdown':
+        payload = markdownContent
+        break
+      case 'entities': {
+        const storedEntities = (clip as any).entities as ExtractedEntities | null
+        const entities = storedEntities && entityCount(storedEntities) > 0
+          ? storedEntities
+          : extractEntities(`${clip.title ?? ''} ${clip.url ?? ''} ${fullClip?.text_content ?? ''}`)
+        payload = ENTITY_SECTIONS
+          .map(s => {
+            const items = entities[s.key as keyof ExtractedEntities] as string[]
+            if (!items || items.length === 0) return ''
+            return `${s.label}:\n  ${items.join('\n  ')}`
+          })
+          .filter(Boolean)
+          .join('\n\n')
+        break
+      }
+    }
+    if (!payload) return
+    navigator.clipboard.writeText(payload).then(() => {
+      setCopiedFlash(true)
+      window.setTimeout(() => setCopiedFlash(false), 1400)
+    })
   }
 
   // Update match count when search query or active tab changes
@@ -983,6 +1057,41 @@ export function ClipViewer({
     }
   }
 
+  // Markdown tab: capture selection, place a floating copy button at the anchor, and
+  // feed the "Add note" flow the same way the Reader (Text) tab does.
+  const handleMarkdownMouseUp = (event: React.MouseEvent<HTMLElement>) => {
+    handleTextSelection(event)
+
+    const selection = window.getSelection()
+    const selected = selection?.toString().trim()
+    if (!selected) {
+      setMdSelection(null)
+      return
+    }
+    const range = selection?.getRangeAt(0)
+    if (!range || !markdownContainerRef.current) return
+    const rect = range.getBoundingClientRect()
+    const containerRect = markdownContainerRef.current.getBoundingClientRect()
+    setMdSelection({
+      x: rect.left - containerRect.left + rect.width / 2,
+      y: rect.top - containerRect.top - 8,
+      text: selected,
+    })
+    setMdSelectionCopied(false)
+  }
+
+  const handleCopyMarkdownSelection = () => {
+    if (!mdSelection || !clip) return
+    const textToCopy = `${mdSelection.text}\n\nSource: ${clip.url}`
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setMdSelectionCopied(true)
+      window.setTimeout(() => {
+        setMdSelection(null)
+        setMdSelectionCopied(false)
+      }, 1200)
+    })
+  }
+
   const folder = folders.find(f => f.id === clip.folder_id)
 
   return (
@@ -1028,6 +1137,26 @@ export function ClipViewer({
               </span>
             )}
             
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyActiveTab}
+              title={`Copy ${activeTab === 'markdown' ? 'Markdown' : activeTab === 'html' ? 'HTML' : activeTab === 'text' ? 'text' : activeTab === 'entities' ? 'entities' : 'screenshot URL'}`}
+              className={copiedFlash ? 'text-emerald-600 dark:text-emerald-400' : ''}
+            >
+              {copiedFlash ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" strokeWidth={3} />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </>
+              )}
+            </Button>
+
             <Button
               variant="ghost"
               size="sm"
@@ -1110,6 +1239,10 @@ export function ClipViewer({
                     <TabsTrigger value="text" className="flex items-center gap-1.5 px-3 text-xs">
                       <FileText className="h-3.5 w-3.5" />
                       Text
+                    </TabsTrigger>
+                    <TabsTrigger value="markdown" className="flex items-center gap-1.5 px-3 text-xs" title="Markdown">
+                      <Download className="h-3.5 w-3.5" />
+                      .md
                     </TabsTrigger>
                     <TabsTrigger value="entities" className="flex items-center gap-1.5 px-3 text-xs">
                       <Scan className="h-3.5 w-3.5" />
@@ -1607,6 +1740,72 @@ export function ClipViewer({
                   )}
                 </TabsContent>
 
+                {/* Markdown Tab */}
+                <TabsContent value="markdown" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1 min-h-0">
+                  {isLoadingContent ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3 text-slate-400">
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm">Loading content…</span>
+                      </div>
+                    </div>
+                  ) : markdownContent ? (
+                    <div
+                      ref={markdownContainerRef}
+                      className="flex-1 min-h-0 bg-slate-50 dark:bg-slate-950/50 overflow-auto relative"
+                    >
+                      <div className="max-w-3xl mx-auto px-6 py-6">
+                        <div className="flex items-center gap-2 mb-3 text-[11px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            <Download className="h-3 w-3" />
+                            markdown
+                          </span>
+                          <span>·</span>
+                          <span>{(markdownContent.length / 1024).toFixed(1)} KB</span>
+                          <span>·</span>
+                          <span>{markdownContent.split(/\s+/).filter(Boolean).length.toLocaleString()} words</span>
+                          <span className="ml-auto normal-case tracking-normal text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
+                            Select text to copy or annotate
+                          </span>
+                        </div>
+                        <pre
+                          onMouseUp={handleMarkdownMouseUp}
+                          className="text-[13px] leading-6 font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap break-words bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm selection:bg-blue-200/70 dark:selection:bg-blue-500/30 selection:text-slate-900 dark:selection:text-white cursor-text"
+                        >{markdownContent}</pre>
+                      </div>
+
+                      {/* Floating "Copy with source" button — shown while a selection exists */}
+                      {mdSelection && (
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={handleCopyMarkdownSelection}
+                          className="absolute z-10 -translate-x-1/2 -translate-y-full px-3 py-1.5 text-xs font-semibold bg-slate-900 text-white rounded-lg shadow-xl hover:bg-slate-700 transition-colors whitespace-nowrap inline-flex items-center gap-1.5"
+                          style={{ left: mdSelection.x, top: mdSelection.y }}
+                        >
+                          {mdSelectionCopied ? (
+                            <>
+                              <Check className="h-3 w-3" strokeWidth={3} />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3" />
+                              Copy with source
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <Download className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No content to render as Markdown</p>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+
                 {/* Entities Tab */}
                 <TabsContent value="entities" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1 min-h-0">
                   <EntitiesView clip={clip} />
@@ -1905,7 +2104,7 @@ export function ClipViewer({
                     <span>Navigate</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">1-3</kbd>
+                    <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">1–5</kbd>
                     <span>Tabs</span>
                   </div>
                   <div className="flex items-center gap-1">
