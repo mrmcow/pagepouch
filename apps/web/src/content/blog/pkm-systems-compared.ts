@@ -6,7 +6,7 @@ export const pkmSystemsCompared: BlogPost = {
   description: 'Comparing the most popular PKM systems in 2026 — PARA, Zettelkasten, Johnny Decimal, and hybrid approaches. Plus the tools that make each work.',
   excerpt: 'Comparing the most popular PKM systems: PARA, Zettelkasten, Johnny Decimal, and hybrid approaches — which one fits how you actually think?',
   author: 'PageStash Team',
-  publishedAt: '2026-04-03',
+  publishedAt: '2026-04-22',
   readingTime: 8,
   category: 'guides',
   tags: ['pkm', 'pkm-systems', 'zettelkasten', 'para-method', 'personal-knowledge-management'],

@@ -6,7 +6,7 @@ export const pocketWebClipperAlternative: BlogPost = {
   description: 'Looking for a Pocket alternative that\'s better for research? Here\'s why Pocket falls short for serious web clipping and what researchers use instead.',
   excerpt: 'Pocket is great for reading queues, but it\'s not a research-grade web clipper. Here\'s what researchers use instead — and why the distinction matters.',
   author: 'PageStash Team',
-  publishedAt: '2026-03-30',
+  publishedAt: '2026-04-17',
   readingTime: 6,
   category: 'comparisons',
   tags: ['pocket-alternative', 'web-clipper', 'research', 'comparisons', 'read-it-later'],

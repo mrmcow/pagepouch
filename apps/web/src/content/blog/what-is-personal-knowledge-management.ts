@@ -6,7 +6,7 @@ export const whatIsPersonalKnowledgeManagement: BlogPost = {
   description: 'Personal knowledge management is the practice of deliberately capturing, organizing, and connecting information so you can retrieve and use it when it matters. Here\'s how to start.',
   excerpt: 'Personal knowledge management is the practice of deliberately capturing, organizing, and connecting information so you can retrieve and use it when it matters.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-14',
+  publishedAt: '2026-04-23',
   readingTime: 8,
   category: 'guides',
   tags: ['pkm', 'personal-knowledge-management', 'knowledge-management', 'productivity', 'second-brain'],

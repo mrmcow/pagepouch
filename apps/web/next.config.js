@@ -90,6 +90,26 @@ const nextConfig = {
       },
     ]
   },
+  // Enforce canonical host at the edge: apex (pagestash.app) and the Vercel
+  // preview URL (pagepouch-web.vercel.app) both 301 to https://www.pagestash.app.
+  // This prevents Google from indexing duplicate origins — the root cause of
+  // the "Alternative page with proper canonical tag" errors in Search Console.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'pagestash.app' }],
+        destination: 'https://www.pagestash.app/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'pagepouch-web.vercel.app' }],
+        destination: 'https://www.pagestash.app/:path*',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

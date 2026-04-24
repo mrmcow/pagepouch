@@ -6,7 +6,7 @@ export const competitiveIntelligenceToolsUXDesign: BlogPost = {
   description: 'The best tools for UX researchers and designers doing competitor analysis — how to capture, organize, and compare competitor interfaces and patterns systematically.',
   excerpt: 'How UX researchers do competitor analysis properly — capturing interfaces, organizing patterns, and building a referenceable design research library.',
   author: 'PageStash Team',
-  publishedAt: '2026-03-28',
+  publishedAt: '2026-04-17',
   readingTime: 8,
   category: 'use-cases',
   tags: ['ux-research', 'competitor-analysis', 'ux-design', 'tools', 'research-organization'],

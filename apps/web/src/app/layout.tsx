@@ -4,16 +4,11 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { GlobalProviders } from '@/components/GlobalProviders'
 import { MarketingHomeTheme } from '@/components/MarketingHomeTheme'
-
-// Trigger rebuild with environment variables configured
+import { SITE_URL } from '@/lib/site-url'
 
 const inter = Inter({ subsets: ['latin'] })
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
-
-// Single source of truth for the canonical domain — mirrors sitemap.ts and robots.ts.
-// In production NEXT_PUBLIC_APP_URL must be set in Vercel env vars.
-const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.app').replace(/\/$/, '')
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -6,7 +6,7 @@ export const knowledgeOrganizationToolsResearchers: BlogPost = {
   description: 'The best knowledge organization tools for researchers in 2026 — for capturing, connecting, and retrieving information across web sources, papers, and notes.',
   excerpt: 'The best knowledge organization tools for researchers — for capturing, connecting, and retrieving information when you actually need it.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-01',
+  publishedAt: '2026-04-21',
   readingTime: 7,
   category: 'comparisons',
   tags: ['knowledge-organization', 'research-tools', 'pkm', 'tools-comparison', '2026'],

@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { LogoWithText } from '@/components/ui/logo'
 import { Calendar, Clock, ArrowLeft, Tag, ArrowRight } from 'lucide-react'
 import { getPostBySlug, getRelatedPosts, formatDate, getCategoryLabel, getAllPosts } from '@/lib/blog'
+import { SITE_URL } from '@/lib/site-url'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -25,9 +26,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     }
   }
 
-  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.app').replace(/\/$/, '')
-  const postUrl = `${siteUrl}/blog/${post.slug}`
-  const imageUrl = post.featuredImage || `${siteUrl}/icons/icon-128.png`
+  const postUrl = `${SITE_URL}/blog/${post.slug}`
+  const imageUrl = post.featuredImage || `${SITE_URL}/icons/icon-128.png`
 
   return {
     title: `${post.title} | PageStash Blog`,
@@ -82,7 +82,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const relatedPosts = getRelatedPosts(params.slug, 3)
 
   // JSON-LD structured data for SEO
-  const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.app').replace(/\/$/, '')
+  const siteUrl = SITE_URL
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',

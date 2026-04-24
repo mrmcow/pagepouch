@@ -6,7 +6,7 @@ export const howToCreatePkmSystem: BlogPost = {
   description: 'Build a personal knowledge management system that actually works. This step-by-step guide covers tools, workflows, and the capture habits that separate organized researchers from digital hoarders.',
   excerpt: 'Build a personal knowledge management system that actually works — tools, workflows, and the daily capture habits that matter.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-13',
+  publishedAt: '2026-04-22',
   readingTime: 10,
   category: 'how-to',
   tags: ['pkm', 'personal-knowledge-management', 'productivity', 'how-to', 'second-brain'],

@@ -6,7 +6,7 @@ export const managingRecruitmentArchives: BlogPost = {
   description: 'How to manage recruitment archives and candidate files so your talent team can resurface great people, track sourcing history, and stay organized across multiple roles.',
   excerpt: 'How to manage recruitment archives so you can resurface great candidates, track sourcing history, and stay organized across multiple roles.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-10',
+  publishedAt: '2026-04-18',
   readingTime: 7,
   category: 'use-cases',
   tags: ['recruiting', 'recruitment-archives', 'file-management', 'talent-acquisition', 'hr'],

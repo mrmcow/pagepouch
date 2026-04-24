@@ -6,7 +6,7 @@ export const internetArchivePersonalWebStash: BlogPost = {
   description: 'Internet Archive (Wayback Machine), browser cache, and personal web stashes — what each does, when to use which, and how to choose for your research workflow.',
   excerpt: 'Internet Archive, browser cache, and private web archives — what each does, when to use which, and how to choose for your research.',
   author: 'PageStash Team',
-  publishedAt: '2026-03-26',
+  publishedAt: '2026-04-18',
   readingTime: 7,
   category: 'guides',
   tags: ['internet-archive', 'web-archiving', 'wayback-machine', 'cached-pages', 'research'],

@@ -6,7 +6,7 @@ export const archiveCandidateProfilesRecruiting: BlogPost = {
   description: 'The practical recruiter\'s guide to archiving candidate profiles so you can resurface great people when the right role opens. Tools, folder structure, and privacy considerations.',
   excerpt: 'Practical guide to archiving candidate profiles — tools, folder structure, and how to surface great people when the right role opens.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-11',
+  publishedAt: '2026-04-18',
   readingTime: 8,
   category: 'use-cases',
   tags: ['recruiting', 'talent-management', 'candidate-profiles', 'hr', 'research-organization'],

@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
+import { SITE_URL } from '@/lib/site-url'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.app').replace(/\/$/, '')
 const BLOG_URL = `${SITE_URL}/blog`
 
 export const metadata: Metadata = {

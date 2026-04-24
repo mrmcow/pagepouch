@@ -6,7 +6,7 @@ export const bestWorkspaceResearchSources2026: BlogPost = {
   description: 'The best workspaces for capturing, organizing, and citing research sources in 2026 — compared honestly. Covers solo researchers, academics, journalists, and analysts.',
   excerpt: 'The best workspaces for capturing, organizing, and citing research sources in 2026 — compared honestly for researchers, journalists, and analysts.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-09',
+  publishedAt: '2026-04-22',
   readingTime: 9,
   category: 'comparisons',
   tags: ['research-workspace', 'research-organization', 'capturing-sources', 'tools-comparison', '2026'],

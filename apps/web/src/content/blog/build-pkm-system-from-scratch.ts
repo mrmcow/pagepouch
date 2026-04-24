@@ -6,7 +6,7 @@ export const buildPkmSystemFromScratch: BlogPost = {
   description: 'A practical, step-by-step guide to building a personal knowledge management system — tool selection, folder structure, and the daily habits that make it work.',
   excerpt: 'Build a PKM system from scratch: tool selection, structure, and the daily habits that make it actually work long-term.',
   author: 'PageStash Team',
-  publishedAt: '2026-03-27',
+  publishedAt: '2026-04-19',
   readingTime: 9,
   category: 'how-to',
   tags: ['pkm', 'knowledge-management', 'how-to', 'productivity', 'second-brain'],

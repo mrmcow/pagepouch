@@ -6,7 +6,7 @@ export const researchOrganizationToolsGuide: BlogPost = {
   description: 'An honest guide to research organization tools in 2026 — when to use web clippers, reference managers, note-taking apps, and how to combine them without creating chaos.',
   excerpt: 'An honest guide to research organization tools — when to use web clippers, reference managers, notes apps, and how to combine them without chaos.',
   author: 'PageStash Team',
-  publishedAt: '2026-03-25',
+  publishedAt: '2026-04-19',
   readingTime: 7,
   category: 'guides',
   tags: ['research-organization', 'tools', 'web-clipping', 'reference-management', 'productivity'],

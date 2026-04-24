@@ -1,9 +1,6 @@
 import { MetadataRoute } from 'next'
 import { getAllPosts } from '@/lib/blog'
-
-// Canonical domain — no www, consistent with NEXT_PUBLIC_APP_URL in Vercel env.
-// If the env var is set (production), use it; otherwise fall back to the canonical apex domain.
-const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://pagestash.app').replace(/\/$/, '')
+import { SITE_URL } from '@/lib/site-url'
 
 // Slugs for pillar articles that have elevated priority — these are the highest-value
 // SEO targets based on GSC impression data and cluster analysis in docs/SEO_DRIVERS.md.

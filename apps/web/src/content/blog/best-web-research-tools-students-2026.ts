@@ -6,7 +6,7 @@ export const bestWebResearchToolsStudents2026: BlogPost = {
   description: 'The best free and paid web research tools for students in 2026 — find, capture, organize, and cite sources without spending a lot or losing your mind.',
   excerpt: 'The best web research tools for students in 2026 — free options that actually work for source capture, organization, and citation.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-02',
+  publishedAt: '2026-04-21',
   readingTime: 8,
   category: 'guides',
   tags: ['students', 'web-research-tools', 'academic-research', 'free-tools', '2026'],

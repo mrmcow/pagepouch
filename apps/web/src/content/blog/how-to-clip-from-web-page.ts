@@ -6,7 +6,7 @@ export const howToClipFromWebPage: BlogPost = {
   description: 'Learn how to clip content from a web page — browser extensions, screenshot tools, and web clippers compared. Which method preserves the most content for research.',
   excerpt: 'Learn how to clip content from a web page — browser extensions, screenshot tools, and web clippers compared for research and reference.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-06',
+  publishedAt: '2026-04-20',
   readingTime: 6,
   category: 'how-to',
   tags: ['web-clipping', 'how-to', 'browser-extension', 'research', 'capture'],

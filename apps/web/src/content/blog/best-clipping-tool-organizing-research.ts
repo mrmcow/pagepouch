@@ -6,7 +6,7 @@ export const bestClippingToolOrganizingResearch: BlogPost = {
   description: 'Comparing the best e-clipping tools for organizing research in 2026. What to look for, what to avoid, and which tools researchers actually use to stay organized.',
   excerpt: 'Comparing the best e-clipping tools for organizing research: what to look for, what to avoid, and which actually keeps your research organized.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-12',
+  publishedAt: '2026-04-23',
   readingTime: 9,
   category: 'comparisons',
   tags: ['web-clipping', 'research-organization', 'e-clipping', 'tools-comparison', 'productivity'],

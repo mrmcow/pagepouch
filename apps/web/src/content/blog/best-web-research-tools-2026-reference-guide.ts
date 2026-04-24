@@ -6,7 +6,7 @@ export const bestWebResearchTools2026ReferenceGuide: BlogPost = {
   description: 'A curated, organized reference guide to the best web research tools in 2026 — capture, organize, search, and export your research without losing a single source.',
   excerpt: 'A curated, organized reference guide to the best web research tools in 2026 — capture, organize, search, and export your research without losing a single source.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-15',
+  publishedAt: '2026-04-23',
   readingTime: 12,
   category: 'comparisons',
   tags: ['web-research-tools', 'research-organization', 'web-clipping', 'productivity', '2026'],

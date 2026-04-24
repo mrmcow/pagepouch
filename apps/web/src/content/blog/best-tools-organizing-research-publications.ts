@@ -6,7 +6,7 @@ export const bestToolsOrganizingResearchPublications: BlogPost = {
   description: 'Compare the best tools for organizing, tracking, and citing research publications in 2026 — PDFs, web sources, academic papers, and preprints.',
   excerpt: 'The best tools for organizing and tracking research publications in 2026 — PDFs, web sources, academic papers, and preprints compared.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-07',
+  publishedAt: '2026-04-20',
   readingTime: 8,
   category: 'comparisons',
   tags: ['research-publications', 'academic-research', 'zotero', 'reference-management', 'tools-2026'],

@@ -6,7 +6,7 @@ export const savedPagesWebResearch: BlogPost = {
   description: 'You save pages and websites thinking you\'ll find them later. You won\'t — unless you use the right tool. Here\'s why bookmarks fail and what to use instead.',
   excerpt: 'You save pages and websites thinking you\'ll find them later. You won\'t — unless you use the right tool. Here\'s why bookmarks fail and what works instead.',
   author: 'PageStash Team',
-  publishedAt: '2026-03-31',
+  publishedAt: '2026-04-17',
   readingTime: 6,
   category: 'guides',
   tags: ['saved-pages', 'bookmarks', 'web-archiving', 'saved-websites', 'research'],

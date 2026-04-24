@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { trackExtensionDownloadClicked } from '@/lib/analytics'
+import { SITE_URL } from '@/lib/site-url'
 import { LogoWithText, LogoIcon } from '@/components/ui/logo'
 import { ChromeIcon } from '@/components/ui/browser-icons'
 import { BrowserSelector } from '@/components/ui/browser-selector'
@@ -163,8 +164,8 @@ export default function HomePage() {
               bestRating: '5',
             },
             description: 'PageStash archives every web page exactly as you saw it — full screenshot, full text — and lets you search what\'s inside weeks later. The web clipper for researchers who actually need to find what they saved.',
-            url: 'https://www.pagestash.app',
-            image: 'https://www.pagestash.app/og-image.png',
+            url: SITE_URL,
+            image: `${SITE_URL}/og-image.png`,
             author: {
               '@type': 'Organization',
               name: 'PageStash',
@@ -172,7 +173,7 @@ export default function HomePage() {
             provider: {
               '@type': 'Organization',
               name: 'PageStash',
-              url: 'https://www.pagestash.app',
+              url: SITE_URL,
             },
           }),
         }}

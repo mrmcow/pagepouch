@@ -6,7 +6,7 @@ export const researchOrganizationTools2026: BlogPost = {
   description: 'A complete guide to research organization tools in 2026 — web clippers, reference managers, note-taking apps, and knowledge graphs, organized by what you actually need.',
   excerpt: 'A complete guide to research organization tools in 2026 — what each category does, what the best options are, and how to build a stack that works.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-04',
+  publishedAt: '2026-04-21',
   readingTime: 11,
   category: 'guides',
   tags: ['research-organization', 'tools', 'productivity', 'knowledge-management', '2026'],

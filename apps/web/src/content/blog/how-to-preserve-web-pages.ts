@@ -6,7 +6,7 @@ export const howToPreserveWebPages: BlogPost = {
   description: 'Web pages disappear, change, and get paywalled. Here are 5 methods to preserve web pages for research, evidence, or archiving — compared honestly with their strengths and limits.',
   excerpt: 'Web pages disappear, change, and get paywalled. Here are 5 methods to preserve web pages — compared honestly with strengths and limits.',
   author: 'PageStash Team',
-  publishedAt: '2026-04-08',
+  publishedAt: '2026-04-20',
   readingTime: 8,
   category: 'how-to',
   tags: ['preserve-web-pages', 'web-archiving', 'internet-archive', 'web-clipping', 'research'],
