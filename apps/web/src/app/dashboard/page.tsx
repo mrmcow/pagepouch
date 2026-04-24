@@ -74,6 +74,7 @@ import { DownloadModal } from '@/components/ui/download-modal'
 import { ExportModal } from '@/components/dashboard/ExportModal'
 import { ExportUpgradeModal } from '@/components/dashboard/ExportUpgradeModal'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { trackUpgradeModalViewed, trackSearchPerformed, trackUsageLimitReached } from '@/lib/analytics'
 import { getClipFaviconSrc } from '@/lib/clip-favicon'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { useToast } from '@/components/ui/toast'
@@ -1131,9 +1132,15 @@ function DashboardContent() {
         const res = await fetch(url, { cache: 'no-store' })
         if (res.ok) {
           const data = await res.json()
+          const results: unknown[] = data.clips || []
+          trackSearchPerformed({
+            query_length: q.length,
+            results_count: results.length,
+            search_type: 'full_text',
+          })
           setState(prev => ({
             ...prev,
-            searchResults: data.clips || [],
+            searchResults: results as typeof prev.searchResults,
             isSearching: false,
           }))
         } else {
@@ -1145,6 +1152,20 @@ function DashboardContent() {
     }, 300)
     return () => clearTimeout(timer)
   }, [state.searchQuery, state.selectedFolder])
+
+  // Fire usage_limit_reached once per session when the user hits their clip cap
+  const limitReachedFiredRef = useRef(false)
+  useEffect(() => {
+    if (
+      !state.isSubscriptionLoading &&
+      state.clipsThisMonth > 0 &&
+      state.clipsThisMonth >= state.clipsLimit &&
+      !limitReachedFiredRef.current
+    ) {
+      limitReachedFiredRef.current = true
+      trackUsageLimitReached('clips')
+    }
+  }, [state.clipsThisMonth, state.clipsLimit, state.isSubscriptionLoading])
 
   // Export & Selection handlers
   const handleToggleClipSelection = (clipId: string) => {
@@ -1660,6 +1681,7 @@ function DashboardContent() {
                         }))
                       }
                     } else {
+                      trackUpgradeModalViewed('feature_locked')
                       setState(prev => ({ ...prev, isExportUpgradeModalOpen: true }))
                     }
                   }}
@@ -1686,6 +1708,7 @@ function DashboardContent() {
                         selectedClipIds: new Set(),
                       }))
                     } else {
+                      trackUpgradeModalViewed('feature_locked')
                       setState(prev => ({ ...prev, isKnowledgeGraphUpgradeModalOpen: true }))
                     }
                   }}

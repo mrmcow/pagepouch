@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, Mail, Lock, User, ArrowLeft, Check, Eye, EyeOff, Copy } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { LogoIcon } from '@/components/ui/logo'
+import { trackSignupStarted, trackSignupCompleted, trackSignupFailed, getStoredUtmParams } from '@/lib/analytics'
 
 function humanizeAuthError(message: string): string {
   if (message.includes('already registered') || message.includes('already been registered')) return 'An account with this email already exists. Try signing in instead.'
@@ -79,6 +80,8 @@ export default function SignUpPage() {
       return
     }
 
+    trackSignupStarted('email')
+
     try {
       const supabase = getSupabase()
       
@@ -94,11 +97,13 @@ export default function SignUpPage() {
       })
 
       if (error) {
+        trackSignupFailed(error.message)
         setError(humanizeAuthError(error.message))
         return
       }
 
       if (data.user) {
+        trackSignupCompleted({ method: 'email', ...getStoredUtmParams() })
         if (data.user.email_confirmed_at) {
           router.push('/dashboard')
         } else {
@@ -106,6 +111,8 @@ export default function SignUpPage() {
         }
       }
     } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unexpected_error'
+      trackSignupFailed(msg)
       setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)

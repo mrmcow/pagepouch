@@ -437,6 +437,31 @@ export const trackFormAbandoned = (params: {
   })
 }
 
+// ============================================================================
+// UTM HELPERS
+// ============================================================================
+
+/**
+ * Returns UTM parameters captured by AnalyticsProvider on the landing page.
+ * Safe to call server-side (returns empty object) or before sessionStorage is
+ * populated (returns empty object).
+ */
+export const getStoredUtmParams = (): {
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  utm_term?: string
+  utm_content?: string
+} => {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = sessionStorage.getItem('pagestash_utms')
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
 // Button Click with Context (Generic CTA Tracker)
 export const trackButtonClick = (params: {
   button_id: string

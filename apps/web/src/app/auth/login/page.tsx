@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { LogoIcon } from '@/components/ui/logo'
+import { trackLoginCompleted, trackLoginFailed } from '@/lib/analytics'
 
 function humanizeAuthError(message: string): string {
   if (message.includes('Invalid login credentials') || message.includes('invalid_credentials')) return 'Your email or password is incorrect. Please try again.'
@@ -49,16 +50,19 @@ export default function LoginPage() {
       })
 
       if (error) {
+        trackLoginFailed(error.message)
         setError(humanizeAuthError(error.message))
         return
       }
 
       if (data.user) {
+        trackLoginCompleted('email')
         router.push('/dashboard')
         router.refresh()
       }
     } catch (err) {
       console.error('Login error:', err)
+      trackLoginFailed(err instanceof Error ? err.message : 'unexpected_error')
       setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
