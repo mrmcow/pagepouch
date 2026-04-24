@@ -21,6 +21,13 @@ const STORE_URLS = {
 
 export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModalProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
+
+  // Always show the primary CTA at the top when the modal opens
+  React.useEffect(() => {
+    if (isOpen && scrollRef.current) {
+      scrollRef.current.scrollTop = 0
+    }
+  }, [isOpen, selectedBrowser])
   
   const browserData = {
     chrome: {
@@ -83,7 +90,9 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[92vh] border-none bg-transparent p-0 gap-0 overflow-hidden">
+      {/* On mobile: pin to top-4 so the header + CTA are immediately visible and the × is in top-right.
+          On sm+: revert to the default vertical-centre position. */}
+      <DialogContent className="max-w-3xl max-h-[92vh] border-none bg-transparent p-0 gap-0 overflow-hidden translate-y-0 top-4 sm:top-[50%] sm:-translate-y-[50%]">
         <div ref={scrollRef} className="relative rounded-[28px] sm:rounded-[40px] border border-slate-200/50 bg-white shadow-[0_50px_140px_-70px_rgba(15,23,42,0.5)] dark:bg-slate-950 dark:border-white/10 overflow-y-auto max-h-[92vh]">
           <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-blue-50/40 to-transparent dark:from-blue-950/20 pointer-events-none" />
           
@@ -123,7 +132,7 @@ export function DownloadModal({ isOpen, onClose, selectedBrowser }: DownloadModa
 
                 <Button 
                   size="lg"
-                  className="w-full sm:w-auto h-13 sm:h-14 px-6 sm:px-8 text-[15px] sm:text-base font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 shadow-lg hover:shadow-xl transition-all group"
+                  className="w-full sm:w-auto h-[56px] sm:h-[60px] px-8 sm:px-10 text-[15px] sm:text-base font-semibold rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 shadow-lg hover:shadow-xl transition-all group"
                   asChild
                 >
                   <a href={browser.storeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ChromeIcon, FirefoxIcon, TorIcon } from '@/components/ui/browser-icons'
-import { DownloadIcon, ExternalLinkIcon, CheckIcon } from 'lucide-react'
+import { CheckIcon } from 'lucide-react'
 
 interface BrowserSelectorProps {
   onDownloadClick?: (browser: 'chrome' | 'firefox') => void
@@ -82,11 +82,15 @@ export function BrowserSelector({ onDownloadClick, className = '' }: BrowserSele
       {/* Primary Action Button - Enterprise Style */}
       <Button 
         size="lg" 
-        className="w-full sm:h-16 text-lg font-bold bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 rounded-xl"
+        className="w-full h-14 sm:h-16 text-base sm:text-lg font-bold bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 rounded-xl"
         disabled={selectedBrowserData.status === 'coming-soon'}
         onClick={() => onDownloadClick?.(selectedBrowser)}
       >
-        <DownloadIcon className="mr-3 h-6 w-6" />
+        {/* Use browser-specific icon so colour always matches button text */}
+        {selectedBrowser === 'firefox'
+          ? <FirefoxIcon size={22} className="mr-2.5 flex-shrink-0" />
+          : <ChromeIcon  size={22} className="mr-2.5 flex-shrink-0" />
+        }
         Add to {selectedBrowserData.name} — It's Free
       </Button>
 
