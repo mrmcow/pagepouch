@@ -1207,7 +1207,7 @@ function DashboardContent() {
 
       {/* Header */}
       <header className="border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl shadow-sm relative z-20">
-        <div className="container mx-auto px-4 py-2.5">
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-2.5">
           <div className="flex items-center justify-between">
             {/* Logo and Navigation */}
             <div className="flex items-center space-x-5">
@@ -1277,10 +1277,10 @@ function DashboardContent() {
       </header>
 
       {/* Dashboard Container */}
-      <div className="container mx-auto px-4 py-5 h-auto lg:h-[calc(100vh-64px)] relative z-10">
-        <div className="flex flex-col lg:flex-row gap-5 h-auto lg:h-full">
+      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 h-auto lg:h-[calc(100vh-64px)] relative z-10">
+        <div className="flex flex-col lg:flex-row gap-5 xl:gap-6 h-auto lg:h-full">
           {/* Sidebar */}
-          <aside className="w-full lg:w-60 space-y-3 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:pb-4">
+          <aside className="w-full lg:w-60 xl:w-64 2xl:w-72 lg:flex-shrink-0 space-y-3 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:pb-4">
 
             {/* Quick Actions */}
             <Card className="border border-slate-200/70 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
@@ -1707,8 +1707,8 @@ function DashboardContent() {
               <div className="flex-1 overflow-visible lg:overflow-hidden">
               {isInitialLoading ? (
                 /* Loading Skeleton */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {[...Array(8)].map((_, i) => (
+                <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]">
+                  {[...Array(12)].map((_, i) => (
                     <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden animate-pulse border border-slate-200/70 dark:border-white/[0.08]">
                       <div className="aspect-[16/10] bg-slate-100 dark:bg-slate-800"></div>
                       <div className="px-3 pt-2.5 pb-3 space-y-2">
@@ -1719,48 +1719,73 @@ function DashboardContent() {
                   ))}
                 </div>
               ) : sortedClips.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center mb-6">
-                    <LogoIcon size={40} />
+                <div className="flex items-center justify-center py-16 lg:py-24">
+                  <div className="w-full max-w-md text-center">
+                    <div className="relative mx-auto mb-6 w-20 h-20">
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/20 via-indigo-500/15 to-purple-500/10 blur-xl" />
+                      <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-100 dark:border-white/10 flex items-center justify-center">
+                        <LogoIcon size={40} />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                      {state.searchQuery ? 'No results found' :
+                       state.viewFilter === 'favorites' ? 'No favorites yet' :
+                       state.viewFilter === 'recent' ? 'No recent clips' :
+                       state.selectedFolder ? 'This folder is empty' :
+                       'Your stash is empty'}
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
+                      {state.searchQuery ? `No clips match "${state.searchQuery}". Try different keywords.` :
+                       state.viewFilter === 'favorites' ? 'Star any clip to pin it to Favorites for instant recall.' :
+                       state.viewFilter === 'recent' ? 'Clips captured in the last 7 days will appear here.' :
+                       state.selectedFolder ? 'Capture a page with the extension and move it into this folder.' :
+                       'Install the extension and capture your first page — it takes one click. You can also clip any URL manually.'}
+                    </p>
+                    {(state.viewFilter === 'library' && !state.searchQuery && !state.selectedFolder) && (
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                        <Button
+                          onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}
+                          className="h-11 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-medium"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Install Extension
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
+                          className="h-11 px-6 rounded-xl font-medium"
+                        >
+                          <Globe className="mr-2 h-4 w-4" />
+                          Clip a URL
+                        </Button>
+                      </div>
+                    )}
+                    {state.selectedFolder && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setState(prev => ({ ...prev, isClipUrlModalOpen: true }))}
+                        className="h-11 px-6 rounded-xl font-medium"
+                      >
+                        <Globe className="mr-2 h-4 w-4" />
+                        Clip a URL into this folder
+                      </Button>
+                    )}
+                    {state.searchQuery && (
+                      <button
+                        onClick={() => handleSearch('')}
+                        className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                      >
+                        Clear search
+                      </button>
+                    )}
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                    {state.searchQuery ? 'No results found' :
-                     state.viewFilter === 'favorites' ? 'No favorites yet' :
-                     state.viewFilter === 'recent' ? 'No recent clips' :
-                     state.selectedFolder ? 'This folder is empty' :
-                     'Your stash is empty'}
-                  </h3>
-                  <p className="text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed mb-8">
-                    {state.searchQuery ? `No clips match "${state.searchQuery}". Try different keywords.` :
-                     state.viewFilter === 'favorites' ? 'Star a clip to add it to your favorites.' :
-                     state.viewFilter === 'recent' ? 'Clips from the last 7 days will appear here.' :
-                     state.selectedFolder ? 'Capture a page with the extension and move it here.' :
-                     'Install the extension and capture your first page — it takes one click.'}
-                  </p>
-                  {(state.viewFilter === 'library' && !state.searchQuery) && (
-                    <Button
-                      onClick={() => setState(prev => ({ ...prev, isDownloadModalOpen: true }))}
-                      className="h-11 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Install Extension
-                    </Button>
-                  )}
-                  {state.searchQuery && (
-                    <button
-                      onClick={() => handleSearch('')}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      Clear search
-                    </button>
-                  )}
                 </div>
               ) : (
                 <div className="h-auto lg:h-full overflow-visible lg:overflow-y-auto pr-2 -mr-2">
                   <div className={
                     state.viewMode === 'grid' 
-                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3 pb-6"
-                      : "space-y-2 pb-6"
+                      ? "grid gap-3 pb-6 [grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]"
+                      : "space-y-2 pb-6 max-w-5xl"
                   }>
                     {sortedClips.map((clip, index) => (
                       <ClipCard 
