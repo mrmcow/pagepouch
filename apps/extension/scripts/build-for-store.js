@@ -23,13 +23,16 @@ try {
 console.log('📦 Building extension...');
 execSync('npm run build', { stdio: 'inherit' });
 
-// Verify required files exist
+// Verify required files exist.
+// Note: the on-demand area-selection content script ships as `areaSelect.js`
+// (injected via chrome.scripting on demand, not a permanent content_script),
+// not `content.js`. Don't add it here — its absence used to fail the build.
 const requiredFiles = [
   'dist/manifest.json',
   'dist/background.js',
-  'dist/content.js',
   'dist/popup.html',
   'dist/popup.js',
+  'dist/areaSelect.js',
 ];
 
 console.log('✅ Verifying build files...');

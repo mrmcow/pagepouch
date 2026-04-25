@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "PageStash",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Capture any webpage with one click. Perfect for researchers, analysts, and anyone who needs to archive web content reliably.",
   "author": "PageStash Team",
   "homepage_url": "https://www.pagestash.app",
@@ -20,6 +20,7 @@
     "storage",
     "scripting",
     "tabs",
+    "alarms",
     "https://*/*",
     "http://*/*"
   ],

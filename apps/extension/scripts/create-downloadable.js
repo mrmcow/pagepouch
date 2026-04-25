@@ -112,7 +112,7 @@ const versionInfo = {
   requirements: {
     chrome: '88+',
     firefox: '102+',
-    permissions: ['activeTab', 'storage', 'scripting']
+    permissions: ['activeTab', 'storage', 'scripting', 'alarms']
   }
 };
 

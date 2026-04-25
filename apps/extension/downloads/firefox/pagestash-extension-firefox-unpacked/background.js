@@ -1344,7 +1344,7 @@ async function showPageToast(tabId, message, type = 'success') {
 }
 // Session monitor state
 let sessionRefreshInterval = null;
-// Handle extension installation
+// Handle extension installation / update
 background_extensionAPI.runtime.onInstalled.addListener((details) => {
     log('Extension installed:', details.reason);
     if (details.reason === 'install') {
@@ -1354,17 +1354,46 @@ background_extensionAPI.runtime.onInstalled.addListener((details) => {
             captureCount: 0,
         });
     }
-    // Restore session on installation
+    // Restore session on installation, then attempt to flush any backlog of
+    // locally-saved clips. This is critical for users coming from <= v3.1.0
+    // who accumulated unsynced clips during the Apr 11 – Apr 24 server-side
+    // outage of POST /api/clips. Triggers on both 'install' AND 'update' so
+    // every existing user automatically recovers their backlog the moment
+    // v3.1.1+ reaches them — no sign-out / sign-in dance required.
     ExtensionAuth.restoreSession().then(() => {
         startSessionMonitor();
+        if (details.reason === 'install' || details.reason === 'update') {
+            // Small delay so the auth session and any service-worker boot work has
+            // a chance to settle before we hammer the network.
+            setTimeout(() => { void syncLocalClips(); }, 2000);
+        }
     });
 });
-// Restore session on browser startup
+// Restore session on browser startup, then opportunistically flush backlog.
+// Important for users who keep their browser running for days — the install/
+// update hook may have fired weeks ago, so we re-check on every cold start.
 if (background_extensionAPI.runtime.onStartup) {
     background_extensionAPI.runtime.onStartup.addListener(async () => {
         log('Restoring session');
         await ExtensionAuth.restoreSession();
         startSessionMonitor();
+        setTimeout(() => { void syncLocalClips(); }, 2000);
+    });
+}
+// Defense-in-depth: a periodic alarm that retries the backlog every 30 min.
+// Guarantees recovery even if onStartup never fires (e.g. service worker
+// kept alive across browser sessions) or if the network was offline at the
+// install/update hook moment. No-op when localClips is empty.
+if (background_extensionAPI.alarms) {
+    const ALARM_NAME = 'pagestash-backlog-sync';
+    background_extensionAPI.alarms.create(ALARM_NAME, {
+        delayInMinutes: 5,
+        periodInMinutes: 30,
+    });
+    background_extensionAPI.alarms.onAlarm.addListener((alarm) => {
+        if (alarm.name === ALARM_NAME) {
+            void syncLocalClips();
+        }
     });
 }
 // Session monitor - checks if session exists
@@ -1956,42 +1985,81 @@ background_extensionAPI.storage.onChanged.addListener((changes, namespace) => {
         syncLocalClips();
     }
 });
+// Single-flight guard so overlapping triggers (onStartup + onInstalled +
+// alarm + auth-token-change all racing on extension boot) don't double-upload.
+let syncInFlight = null;
 async function syncLocalClips() {
-    try {
-        const result = await new Promise((resolve) => {
-            background_extensionAPI.storage.local.get(['localClips'], (result) => {
-                resolve({ localClips: result.localClips || [] });
-            });
-        });
-        const unsyncedClips = result.localClips.filter(clip => !clip.synced);
-        if (unsyncedClips.length === 0) {
-            return;
-        }
-        log(`Syncing ${unsyncedClips.length} local clips`);
-        for (const clip of unsyncedClips) {
-            try {
-                await ExtensionAPI.saveClip({
-                    url: clip.url,
-                    title: clip.title,
-                    screenshot_data: clip.screenshot_data,
-                    html_content: clip.html_content,
-                    text_content: clip.text_content,
-                    favicon_url: clip.favicon_url,
+    if (syncInFlight) {
+        log('Sync already in flight; skipping');
+        return syncInFlight;
+    }
+    syncInFlight = (async () => {
+        try {
+            // Bail early if there's no auth — nothing we can sync without a token.
+            const { token } = await ExtensionAuth.getSession();
+            if (!token) {
+                return;
+            }
+            const result = await new Promise((resolve) => {
+                background_extensionAPI.storage.local.get(['localClips'], (r) => {
+                    resolve({ localClips: r.localClips || [] });
                 });
-                // Mark as synced
-                clip.synced = true;
+            });
+            const all = result.localClips || [];
+            const pending = all.filter((c) => !c.synced);
+            if (pending.length === 0) {
+                return;
             }
-            catch (error) {
-                console.error('Failed to sync clip:', error);
+            log(`[sync] flushing ${pending.length} backlog clip(s)`);
+            let successCount = 0;
+            let limitReached = false;
+            for (const clip of pending) {
+                try {
+                    await ExtensionAPI.saveClip({
+                        url: clip.url,
+                        title: clip.title,
+                        screenshot_data: clip.screenshot_data,
+                        html_content: clip.html_content,
+                        text_content: clip.text_content,
+                        favicon_url: clip.favicon_url,
+                        // folder_id intentionally omitted — folders may have been deleted
+                        // server-side since the local save; let the clip land at the root.
+                    });
+                    clip.synced = true;
+                    successCount++;
+                }
+                catch (error) {
+                    // If we hit the monthly clip limit, stop attempting the rest of the
+                    // backlog — they'll get retried on the next alarm tick after the
+                    // user upgrades or the monthly counter resets.
+                    if (error?.isLimitReached) {
+                        log('[sync] clip limit reached — pausing backlog flush');
+                        limitReached = true;
+                        break;
+                    }
+                    // Network or 5xx error: leave clip pending, try again on next tick.
+                    console.error('[sync] failed to upload clip; will retry later', error);
+                }
+                // Throttle: 1 upload per ~750ms to avoid hammering the API and to
+                // give the serverless function room between cold-starts. Backlog of
+                // 100 clips => ~75s wall time, perfectly acceptable for a recovery
+                // operation that runs in the background.
+                await new Promise((r) => setTimeout(r, 750));
             }
+            // Drop fully-synced clips so storage doesn't grow unbounded and we
+            // don't re-evaluate them on every future tick. Keep any clips still
+            // marked unsynced (failed uploads, limit-reached) for the next retry.
+            const remaining = all.filter((c) => !c.synced);
+            background_extensionAPI.storage.local.set({ localClips: remaining });
+            log(`[sync] backlog flush complete — uploaded ${successCount}, remaining ${remaining.length}${limitReached ? ' (paused: limit reached)' : ''}`);
         }
-        // Update local storage with synced status
-        background_extensionAPI.storage.local.set({ localClips: result.localClips });
-        log('Local clips sync completed');
-    }
-    catch (error) {
-        console.error('Failed to sync local clips:', error);
-    }
+        catch (error) {
+            console.error('[sync] failed to sync local clips:', error);
+        }
+    })().finally(() => {
+        syncInFlight = null;
+    });
+    return syncInFlight;
 }
 
 /******/ })()

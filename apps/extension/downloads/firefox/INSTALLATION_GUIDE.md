@@ -44,4 +44,4 @@ The easiest way to install PageStash with automatic updates:
 
 ---
 
-**PageStash v3.1.0** — Capture · Organize · Retrieve
+**PageStash v3.1.1** — Capture · Organize · Retrieve

@@ -1,6 +1,6 @@
 {
   "name": "@pagestash/extension",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "private": true,
   "description": "PageStash - Capture and organize web content",
   "scripts": {
