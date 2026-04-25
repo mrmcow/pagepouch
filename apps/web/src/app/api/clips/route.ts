@@ -236,12 +236,22 @@ export async function POST(request: NextRequest) {
 
     const { url, title, screenshot_data, html_content, text_content, favicon_url, folder_id, notes } = validationResult.data
 
-    // Dynamic imports — keep jsdom + readability + compromise out of the GET cold path
-    const [{ sanitizeClipTitle }, { extractEntitiesServer }] = await Promise.all([
-      import('@/lib/entities/repairFusedText'),
-      import('@/lib/entities/extractEntitiesServer'),
-    ])
-    const safeTitle = sanitizeClipTitle(title)
+    // Dynamic imports — keep jsdom + readability + compromise out of the GET cold path.
+    // Title sanitization is small and deterministic; if the import itself fails we still
+    // want to save the raw title rather than crashing the entire save.
+    type ExtractEntitiesFn = (text: string, url?: string, html?: string) => Promise<unknown>
+    let safeTitle = title
+    let extractEntitiesServerFn: ExtractEntitiesFn | null = null
+    try {
+      const [{ sanitizeClipTitle }, entityModule] = await Promise.all([
+        import('@/lib/entities/repairFusedText'),
+        import('@/lib/entities/extractEntitiesServer'),
+      ])
+      safeTitle = sanitizeClipTitle(title)
+      extractEntitiesServerFn = entityModule.extractEntitiesServer as unknown as ExtractEntitiesFn
+    } catch (importError) {
+      console.error('[clips POST] entity stack import failed; saving without enrichment', importError)
+    }
 
     let screenshot_url = null
 
@@ -276,31 +286,78 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Extract entities from content
-    const entityText = [text_content || '', safeTitle || '', url || ''].join('\n')
-    const entities = await extractEntitiesServer(entityText, url, html_content || undefined)
+    // Extract entities from content. Entity extraction is an enrichment, NOT a
+    // requirement — it must never block a save. jsdom/readability/compromise can
+    // throw on weird HTML, run out of memory, or simply not be installed.
+    let entities: unknown = null
+    if (extractEntitiesServerFn) {
+      try {
+        const entityText = [text_content || '', safeTitle || '', url || ''].join('\n')
+        entities = await extractEntitiesServerFn(entityText, url, html_content || undefined)
+      } catch (entityError) {
+        console.error('[clips POST] entity extraction failed; saving without entities', entityError)
+        entities = null
+      }
+    }
 
-    // Insert clip into database
-    const { data, error } = await supabase
-      .from('clips')
-      .insert({
-        user_id: user.id,
-        url,
-        title: safeTitle,
-        screenshot_url,
-        html_content,
-        text_content,
-        favicon_url,
-        folder_id,
-        notes,
-        entities,
-      })
-      .select()
-      .single()
+    // Build the insert payload. We try with `entities` first and fall back
+    // automatically if the column doesn't exist in the deployed schema (PGRST204).
+    // This makes the route resilient to environments where the
+    // docs/migrations/add_entities_column.sql migration has not yet been applied.
+    const baseInsert = {
+      user_id: user.id,
+      url,
+      title: safeTitle,
+      screenshot_url,
+      html_content,
+      text_content,
+      favicon_url,
+      folder_id,
+      notes,
+    }
+
+    let data: any = null
+    let error: any = null
+
+    {
+      const first = await supabase
+        .from('clips')
+        .insert({ ...baseInsert, entities })
+        .select()
+        .single()
+      data = first.data
+      error = first.error
+    }
+
+    // PostgREST returns code 'PGRST204' when a referenced column doesn't exist
+    // in the schema cache. If `entities` is the offender, retry without it so
+    // the save still succeeds while we surface a clear server log.
+    if (
+      error &&
+      (error.code === 'PGRST204' || /entities/i.test(error.message || '')) &&
+      /entities/i.test((error.message || '') + ' ' + (error.details || ''))
+    ) {
+      console.warn(
+        '[clips POST] `entities` column missing in production database — retrying insert without it. ' +
+        'Apply docs/migrations/add_entities_column.sql in the Supabase SQL editor to enable entity extraction.'
+      )
+      const retry = await supabase
+        .from('clips')
+        .insert(baseInsert)
+        .select()
+        .single()
+      data = retry.data
+      error = retry.error
+    }
 
     if (error) {
-      console.error('Database insert error:', error)
-      
+      console.error('[clips POST] database insert error', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
+
       // Check if this is a clip limit violation from the database trigger
       // Error code 23514 is check_violation, and message will contain "Clip limit reached"
       if (error.code === '23514' || error.message?.includes('Clip limit reached')) {
@@ -318,9 +375,16 @@ export async function POST(request: NextRequest) {
           { status: 429 }
         )
       }
-      
+
+      // Surface the underlying database error code so the client (extension toast,
+      // browser devtools) can show something more useful than "Failed to save clip".
+      // This is safe to expose: it's a schema-level error code, not user data.
       return NextResponse.json(
-        { error: 'Failed to save clip' },
+        {
+          error: 'Failed to save clip',
+          db_error_code: error.code || null,
+          db_error_message: error.message || null,
+        },
         { status: 500 }
       )
     }
