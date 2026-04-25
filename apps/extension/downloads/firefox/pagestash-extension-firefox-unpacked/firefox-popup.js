@@ -370,8 +370,8 @@ function bindEvents() {
     });
     on('show-auth', 'click', () => { appState.showAuth = true; render(); });
     on('sign-out', 'click', signOut);
-    on('open-webapp', 'click', () => extensionAPI.tabs.create({ url: 'https://pagestash.app/dashboard' }));
-    on('upgrade-pro', 'click', () => extensionAPI.tabs.create({ url: 'https://pagestash.app/dashboard?upgrade=true' }));
+    on('open-webapp', 'click', () => extensionAPI.tabs.create({ url: 'https://www.pagestash.app/dashboard' }));
+    on('upgrade-pro', 'click', () => extensionAPI.tabs.create({ url: 'https://www.pagestash.app/dashboard?upgrade=true' }));
     on('contact-support', 'click', () => extensionAPI.tabs.create({ url: 'mailto:support@pagestash.app?subject=Pro%20Plan%20-%20Clip%20Limit%20Inquiry' }));
     on('dismiss-limit', 'click', () => { appState.limitInfo = null; render(); });
     on('folder-select', 'change', e => {

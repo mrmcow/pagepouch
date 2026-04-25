@@ -1,10 +1,10 @@
 {
   "manifest_version": 2,
   "name": "PageStash",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Capture any webpage with one click. Perfect for researchers, analysts, and anyone who needs to archive web content reliably.",
   "author": "PageStash Team",
-  "homepage_url": "https://pagestash.app",
+  "homepage_url": "https://www.pagestash.app",
   "browser_specific_settings": {
     "gecko": {
       "id": "pagestash@pagestash.app",

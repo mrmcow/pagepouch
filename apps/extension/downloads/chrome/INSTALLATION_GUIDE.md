@@ -39,9 +39,9 @@ The easiest way to install PageStash with automatic updates:
 ## Need Help?
 
 - **Support:** support@pagestash.app
-- **Web app:** https://pagestash.app/dashboard
-- **Docs:** https://pagestash.app/docs
+- **Web app:** https://www.pagestash.app/dashboard
+- **Docs:** https://www.pagestash.app/docs
 
 ---
 
-**PageStash v3.0.0** — Capture · Organize · Retrieve
+**PageStash v3.1.0** — Capture · Organize · Retrieve

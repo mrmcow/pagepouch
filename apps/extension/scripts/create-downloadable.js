@@ -33,6 +33,11 @@ if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
 
+// Read version from package.json so we don't have to update strings in two places
+const packageJsonVersion = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
+).version;
+
 // Create installation guide
 const installationGuide = `# PageStash Extension — Installation Guide
 
@@ -75,19 +80,18 @@ The easiest way to install PageStash with automatic updates:
 ## Need Help?
 
 - **Support:** support@pagestash.app
-- **Web app:** https://pagestash.app/dashboard
-- **Docs:** https://pagestash.app/docs
+- **Web app:** https://www.pagestash.app/dashboard
+- **Docs:** https://www.pagestash.app/docs
 
 ---
 
-**PageStash v3.0.0** — Capture · Organize · Retrieve
+**PageStash v${packageJsonVersion}** — Capture · Organize · Retrieve
 `;
 
 // Write installation guide
 fs.writeFileSync(path.join(downloadsDir, 'INSTALLATION_GUIDE.md'), installationGuide);
 
 // Create version info
-const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'dist', 'manifest.json'), 'utf8'));
 
 const versionInfo = {
@@ -209,7 +213,7 @@ const downloadPageHtml = `<!DOCTYPE html>
         <a href="INSTALLATION_GUIDE.md" class="btn" target="_blank">Installation Guide</a>
         <p style="margin-top:12px;font-size:12px;color:#94a3b8"><strong>Build:</strong> \${new Date(versionInfo.buildDate).toLocaleDateString()}</p>
     </div>
-    <div class="footer"><p>PageStash &mdash; Making web content capture effortless</p><p><a href="https://pagestash.app" style="color:#2563eb;text-decoration:none">pagestash.app</a></p></div>
+    <div class="footer"><p>PageStash &mdash; Making web content capture effortless</p><p><a href="https://www.pagestash.app" style="color:#2563eb;text-decoration:none">pagestash.app</a></p></div>
 </body>
 </html>`;
 
