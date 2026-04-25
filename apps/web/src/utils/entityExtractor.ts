@@ -206,11 +206,55 @@ function isGarbageIdentityLabel(s: string): boolean {
   const spaces = (t.match(/\s/g) || []).length
   if (t.length > 42 && spaces < 2) return true
   if (/(.{14,})\1/i.test(t)) return true
+  // Trailing dangling punctuation (e.g. "Page Stash -", "BBC -", "Page Stash:")
+  // is almost always a sliced headline fragment, not a real proper noun.
+  if (/[\-:;,/]\s*$/.test(t) || /^\s*[\-:;,/]/.test(t)) return true
+  // Lowercase-then-Capital fusion that survived repair (e.g. "oppositionBritish")
+  if (/[a-z][A-Z]/.test(t)) return true
   const parts = t.toLowerCase().split(/\s+/).filter((w) => w.length > 5)
   const seen = new Set<string>()
   for (const w of parts) {
     if (seen.has(w)) return true
     seen.add(w)
+  }
+  return false
+}
+
+/**
+ * Compromise tags many capitalised noun phrases as persons. Constrain person
+ * candidates to plausible "First Last" / "First Middle Last" shapes so product
+ * names ("Page Stash", "Page Stash - Web", "Page Graphs") and trailing
+ * sub-reddit handles ("r/PhD") don't pollute the bucket.
+ */
+function isLikelyPersonName(s: string): boolean {
+  const t = s.trim()
+  if (t.length < 4 || t.length > 64) return false
+  if (/[\d/@#:]/.test(t)) return false
+  if (/[\-]/.test(t)) return false
+  const tokens = t.split(/\s+/)
+  if (tokens.length < 2 || tokens.length > 4) return false
+  // Every token must look like a proper noun (Capital + 1+ lowercase, or McSomething,
+  // O'Brien, etc.). Pure ALL-CAPS acronyms or single-letter tokens are out.
+  return tokens.every((tok) => /^(?:[A-Z][a-z]+|[A-Z][a-z]+['’][A-Z]?[a-z]+|Mc[A-Z][a-z]+|O['’][A-Z][a-z]+)$/.test(tok))
+}
+
+/** Strip persons that are actually the page's site name or author byline. */
+function isProductOrSiteFragment(s: string, entities: ExtractedEntities): boolean {
+  const t = s.trim().toLowerCase()
+  if (!t) return true
+  const meta = entities.metadata || {}
+  const siteName = meta.siteName?.toLowerCase().trim()
+  const author = meta.author?.toLowerCase().trim()
+  if (siteName) {
+    if (t === siteName) return true
+    // "Page Stash - Web" / "Page Stash" derived from "PageStash" siteName
+    const compactSite = siteName.replace(/\s+/g, '')
+    const compactT = t.replace(/\s+/g, '')
+    if (compactSite && compactT.startsWith(compactSite) && compactT.length <= compactSite.length + 8) return true
+    if (compactSite.startsWith(compactT) && compactT.length >= 6) return true
+  }
+  if (author && (t === author || author.includes(t) || t.includes(author))) {
+    return true
   }
   return false
 }
@@ -239,9 +283,16 @@ function isWeakNlpSpan(s: string, minLen: number, maxLen: number): boolean {
 }
 
 function filterNamedEntityNoise(entities: ExtractedEntities): void {
-  entities.persons = entities.persons.filter((p) => !isWeakNlpSpan(p, 4, 72))
+  entities.persons = entities.persons
+    .filter((p) => !isWeakNlpSpan(p, 4, 64))
+    .filter((p) => isLikelyPersonName(p))
+    .filter((p) => !isProductOrSiteFragment(p, entities))
   entities.organizations = entities.organizations.filter((o) => !isWeakNlpSpan(o, 2, 64))
-  entities.locations = entities.locations.filter((l) => !isWeakNlpSpan(l, 2, 48))
+  entities.locations = entities.locations
+    .filter((l) => !isWeakNlpSpan(l, 2, 48))
+    // Locations must not contain colons or trailing punctuation — those come from
+    // sliced headlines like "Chagos Islands: UK shelves Diego Garcia deal".
+    .filter((l) => !/[:;]/.test(l) && !/['’]s?$/.test(l))
   entities.organizations = dedupLower(dedupeSupersetOrgStrings(entities.organizations))
 }
 

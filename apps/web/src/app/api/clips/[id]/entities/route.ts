@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
-import { extractEntitiesServer } from '@/lib/entities/extractEntitiesServer'
+
+// Force Node.js runtime + dynamic execution; entity extraction depends on
+// jsdom / readability / compromise which are too heavy and not Edge-safe.
+// See `app/api/clips/route.ts` for the same configuration and rationale.
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 export async function GET(
   request: NextRequest,
@@ -29,6 +35,7 @@ export async function GET(
     }
 
     const text = [clip.text_content || '', clip.title || '', clip.url || ''].join('\n')
+    const { extractEntitiesServer } = await import('@/lib/entities/extractEntitiesServer')
     const entities = await extractEntitiesServer(text, clip.url, clip.html_content || undefined)
 
     const { error: updateError } = await supabase
@@ -70,6 +77,7 @@ export async function POST(
     }
 
     const text = [clip.text_content || '', clip.title || '', clip.url || ''].join('\n')
+    const { extractEntitiesServer } = await import('@/lib/entities/extractEntitiesServer')
     const entities = await extractEntitiesServer(text, clip.url, clip.html_content || undefined)
 
     const { error: updateError } = await supabase

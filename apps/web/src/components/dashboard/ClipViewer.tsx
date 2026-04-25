@@ -1808,7 +1808,14 @@ export function ClipViewer({
 
                 {/* Entities Tab */}
                 <TabsContent value="entities" className="h-full m-0 data-[state=active]:flex data-[state=active]:flex-col flex-1 min-h-0">
-                  <EntitiesView clip={clip} />
+                  {/*
+                    Pass `fullClip` when it's loaded — the list endpoint strips
+                    `entities`, `text_content`, and `html_content` for payload
+                    size, so using the bare `clip` prop here makes
+                    `storedEntities` look null and forces a client-side fallback
+                    that only sees `title + url` (yielding ~1 entity).
+                  */}
+                  <EntitiesView clip={(fullClip ?? clip) as Clip} />
                 </TabsContent>
               </div>
             </Tabs>
