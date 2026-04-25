@@ -12,8 +12,17 @@ import {
   ensureUsageRow,
   incrementUsage
 } from '@/lib/subscription-limits'
-import { extractEntitiesServer } from '@/lib/entities/extractEntitiesServer'
-import { sanitizeClipTitle } from '@/lib/entities/repairFusedText'
+
+// NOTE: Entity-extraction helpers are imported dynamically inside POST() only.
+// They pull in jsdom (~10MB) + @mozilla/readability — loading those at module
+// init forced every cold start (including GET list calls) to hydrate the heavy
+// deps, which could crash the serverless function on memory limits and bring
+// the entire /api/clips endpoint down.
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+// POST may run entity extraction (jsdom + readability + compromise). Give it room.
+export const maxDuration = 60
 
 export async function GET(request: NextRequest) {
   try {
@@ -226,6 +235,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { url, title, screenshot_data, html_content, text_content, favicon_url, folder_id, notes } = validationResult.data
+
+    // Dynamic imports — keep jsdom + readability + compromise out of the GET cold path
+    const [{ sanitizeClipTitle }, { extractEntitiesServer }] = await Promise.all([
+      import('@/lib/entities/repairFusedText'),
+      import('@/lib/entities/extractEntitiesServer'),
+    ])
     const safeTitle = sanitizeClipTitle(title)
 
     let screenshot_url = null
