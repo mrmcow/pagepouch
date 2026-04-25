@@ -7,9 +7,14 @@
 // All authentication and data operations go through the web app's API
 // Firefox compatibility layer
 const extensionAPI = typeof browser !== 'undefined' ? browser : chrome;
-// Get the API base URL based on environment
+// Get the API base URL based on environment.
+// IMPORTANT: must match the canonical host configured in apps/web/next.config.js
+// (currently `www.pagestash.app`). The apex domain `pagestash.app` 301-redirects
+// to `www`, and POSTs with Authorization headers do not safely survive a 301 —
+// the body and auth header get stripped, the request silently fails, and the
+// extension falls back to local-only saves.
 const API_BASE_URL =  true
-    ? 'https://pagestash.app'
+    ? 'https://www.pagestash.app'
     : 0;
 // Extension-specific auth helpers
 class ExtensionAuth {

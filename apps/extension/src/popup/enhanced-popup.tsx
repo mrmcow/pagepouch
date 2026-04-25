@@ -284,7 +284,7 @@ function EnhancedPopupApp() {
   };
 
   const openWebApp = () => {
-    const url = process.env.NODE_ENV === 'production' ? 'https://pagestash.app/dashboard' : 'http://localhost:3000/dashboard';
+    const url = process.env.NODE_ENV === 'production' ? 'https://www.pagestash.app/dashboard' : 'http://localhost:3000/dashboard';
     chrome.tabs.create({ url });
   };
 
@@ -452,7 +452,7 @@ function EnhancedPopupApp() {
                     Contact Support
                   </button>
                 ) : (
-                  <button onClick={() => chrome.tabs.create({ url: 'https://pagestash.app/dashboard?upgrade=true' })} style={{ ...css.btnPrimary, background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}>
+                  <button onClick={() => chrome.tabs.create({ url: 'https://www.pagestash.app/dashboard?upgrade=true' })} style={{ ...css.btnPrimary, background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}>
                     Upgrade to Pro — 1,000 clips/mo
                   </button>
                 )}
