@@ -895,7 +895,7 @@ Supporting sources: [Links to 3 archived sources]
 
 | Tool | Best For | Graph View | Obsidian Integration | Cost |
 |------|----------|------------|---------------------|------|
-| **PageStash** | Modern PKM | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐☆ | \$12/mo |
+| **PageStash** | Modern PKM | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐☆ | \$11/mo |
 | **DEVONthink** | Apple ecosystem | ⭐⭐⭐☆☆ | ⭐⭐☆☆☆ | \$99-199 |
 | **Zotero** | Academic focus | ⭐☆☆☆☆ | ⭐⭐⭐☆☆ | Free |
 | **Raindrop** | Visual bookmarks | ⭐⭐☆☆☆ | ⭐☆☆☆☆ | Free/\$3/mo |

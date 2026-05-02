@@ -17,7 +17,7 @@ export const SUBSCRIPTION_TIERS = {
   },
   PRO: {
     name: 'Pro',
-    price_monthly: 6,
+    price_monthly: 11,
     clips_per_month: -1, // unlimited
     storage_limit_mb: 10000, // 10GB
     features: [

@@ -20,7 +20,7 @@ export const STRIPE_CONFIG = {
   },
   prices: {
     proMonthly: {
-      amount: 1200, // $12.00 in cents
+      amount: 1100, // $11.00 in cents
       currency: 'usd',
       interval: 'month',
       nickname: 'Pro Monthly',

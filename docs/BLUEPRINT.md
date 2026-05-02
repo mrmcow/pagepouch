@@ -41,7 +41,7 @@ These were the most recent improvements before this blueprint was written.
 - "Upgrade to Pro" CTA promoted **above** Folders for free users so it lands above the fold
 - `ExportUpgradeModal` and `KnowledgeGraphUpgradeModal` redesigned: single Radix close button, mobile-responsive (`max-h-[92vh]` + scrolling body), professional hero treatment, single-CTA pricing focus
 - Pricing voice unified across surfaces — annual `$10/mo` only, no "or pay monthly" noise
-- Homepage hero pricing copy: `$10/month · Billed annually · Save 17%`
+- Homepage hero pricing copy: `$10/month · Billed annually · Save $12/yr`
 - New homepage **"Portability"** section (`#exports`) showcasing `.md` / `.html` / `.csv` / `.json` + academic citations + "Start archiving — free" CTA
 - Blog post detail page and listing fully dark-mode compliant (`dark:` variants across `prose`, tags, CTA, related articles, breadcrumbs)
 

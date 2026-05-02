@@ -39,7 +39,7 @@ Figures are **approximate** and change. Confirm before you buy.
 
 | Tool | Common paid tier (ballpark) | What you are paying for | OSINT-style fit |
 |------|-----------------------------|-------------------------|-----------------|
-| **PageStash** | **Pro around \$12/mo** (annual discounts may apply) | **Full-page archive**, **full-text search**, folders/tags, **Page Graphs** | Strong when pages are **evidence** |
+| **PageStash** | **Pro around \$11/mo** (annual discounts may apply) | **Full-page archive**, **full-text search**, folders/tags, **Page Graphs** | Strong when pages are **evidence** |
 | **Pocket** | Premium around **\$5/mo** | Pleasant **read-later** experience | Light saves; not a deep archive |
 | **Evernote** | Personal plans often **\$15–18/mo** range | Broad notes, OCR, collaboration | Good generalist; web archive is one feature among many |
 | **Notion** | **\$0** individual free tier; Plus around **\$10/mo** | Flexible workspace, databases | Great **case notes**; pair with a capture tool for volatile pages |

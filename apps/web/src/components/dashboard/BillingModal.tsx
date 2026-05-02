@@ -62,8 +62,8 @@ export function BillingModal({ isOpen, onClose, user, subscriptionData }: Billin
     setIsLoading(true)
     try {
       const priceId = plan === 'monthly' 
-        ? 'price_1SBSLeDFfW8f5SmSgQooVxsd' // Monthly price ID
-        : 'price_1SBSNpDFfW8f5SmShv3v8v8Q' // Annual price ID
+        ? 'price_1SSZuXDcPpYgdenAkvpuouLv' // Monthly price ID
+        : 'price_1SSZv1DcPpYgdenAi0meVjvE' // Annual price ID
 
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -218,7 +218,7 @@ export function BillingModal({ isOpen, onClose, user, subscriptionData }: Billin
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base">Monthly</CardTitle>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold">$12</span>
+                        <span className="text-2xl font-bold">$11</span>
                         <span className="text-sm text-muted-foreground">/month</span>
                       </div>
                     </CardHeader>
@@ -237,7 +237,7 @@ export function BillingModal({ isOpen, onClose, user, subscriptionData }: Billin
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         Annual
-                        <Badge variant="secondary" className="text-xs">Save 17%</Badge>
+                        <Badge variant="secondary" className="text-xs">Save $12/yr</Badge>
                       </CardTitle>
                       <div className="flex items-baseline gap-1">
                         <span className="text-2xl font-bold">$120</span>

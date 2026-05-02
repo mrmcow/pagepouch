@@ -166,7 +166,7 @@ Track who accessed what research and when (important for IP-sensitive projects).
 - SOC-2 compliant security
 - Team collaboration features
 
-**Business pricing:** $12/month per user
+**Business pricing:** $11/month per user
 **Best for:** Competitive intelligence, market research, strategic analysis
 
 ### Notion: Best for Project Integration

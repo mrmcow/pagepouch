@@ -47,7 +47,7 @@ export function UpgradeCard({
           className="w-full rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-70 text-white py-2 px-3 text-[13px] font-semibold transition-all flex flex-col items-center leading-tight"
         >
           <span>{isLoading ? 'Redirecting…' : 'Go Pro — $10/mo'}</span>
-          <span className="text-[10px] font-medium opacity-80">billed annually · save 17%</span>
+          <span className="text-[10px] font-medium opacity-80">billed annually · save $12/yr</span>
         </button>
       </CardContent>
     </Card>

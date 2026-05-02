@@ -124,7 +124,7 @@ Evernote pioneered web clipping. But in 2025, is it still the best choice for re
 - 100MB storage
 - Full features
 
-**Pro** ($12/month or $120/year):
+**Pro** ($11/month or $120/year):
 - 1,000 clips per month
 - 5GB storage
 - Full-text search

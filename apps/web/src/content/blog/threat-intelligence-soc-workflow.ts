@@ -117,7 +117,7 @@ When investigating a potential APT campaign, you might need to capture:
 
 | Tool | **Capture Quality** | **Search & IOC** | **Analysis** | **Team Features** | **Price** | **Best For** |
 |------|:------------------:|:---------------:|:------------:|:----------------:|:---------:|-------------|
-| ![PageStash](/icons/icon-48.png)<br/>**PageStash Pro** | ⭐⭐⭐⭐⭐<br/>Complete | ⭐⭐⭐⭐⭐<br/>Excellent | ⭐⭐⭐⭐⭐<br/>Graphs | ⭐⭐⭐⭐☆<br/>Good | **$12/mo** | **SOC analysts, threat hunters** |
+| ![PageStash](/icons/icon-48.png)<br/>**PageStash Pro** | ⭐⭐⭐⭐⭐<br/>Complete | ⭐⭐⭐⭐⭐<br/>Excellent | ⭐⭐⭐⭐⭐<br/>Graphs | ⭐⭐⭐⭐☆<br/>Good | **$11/mo** | **SOC analysts, threat hunters** |
 | **Hunchly** | ⭐⭐⭐⭐⭐<br/>Complete | ⭐⭐⭐⭐☆<br/>Very Good | ⭐⭐⭐☆☆<br/>Basic | ⭐⭐☆☆☆<br/>Limited | $130/yr | Law enforcement investigations |
 | **WebRecorder** | ⭐⭐⭐⭐☆<br/>Good (WARC) | ⭐⭐☆☆☆<br/>Manual only | ⭐⭐☆☆☆<br/>None | ⭐☆☆☆☆<br/>None | Free | Technical users, archivists |
 | **Archive.org** | ⭐⭐⭐☆☆<br/>Basic | ⭐⭐☆☆☆<br/>Limited | ⭐☆☆☆☆<br/>None | ⭐☆☆☆☆<br/>None | Free | Public reference only |
@@ -172,7 +172,7 @@ This is where PageStash excels for threat intelligence:
 
 **Pricing for SOC Teams:**
 - Free tier: 10 captures/month (test workflows)
-- Pro: $12/analyst/month (1,000 captures, 5GB storage)
+- Pro: $11/analyst/month (1,000 captures, 5GB storage)
 - Enterprise: Custom pricing (SSO, advanced integrations)
 
 **Limitations (be aware):**
@@ -824,7 +824,7 @@ Sharing threat intelligence with ISACs, law enforcement, or partner organization
 - Defense attorneys will challenge everything
 
 **PageStash vs. Hunchly decision:**
-- Stakes < $1M: PageStash ($12/mo)
+- Stakes < $1M: PageStash ($11/mo)
 - Stakes > $1M or criminal case: Hunchly ($130/yr)
 - Most SOC teams: Use both (PageStash for daily work, Hunchly for critical cases)
 
@@ -1231,7 +1231,7 @@ Takes 30 seconds. Saves hours later.
 **For 10-person SOC:**
 
 **Software:**
-- 10 analysts × $12/month = $120/month = $1,440/year
+- 10 analysts × $11/month = $110/month = $1,320/year
 
 **Implementation:**
 - Training: 20 hours × $75/hour = $1,500 (one-time)
@@ -1292,7 +1292,7 @@ Takes 30 seconds. Saves hours later.
 ## Tool Recommendations by SOC Size
 
 ### Small SOC (1-3 analysts):
-→ **PageStash Pro** ($12/analyst/month)
+→ **PageStash Pro** ($11/analyst/month)
 - Covers all essential needs
 - Knowledge graphs provide force multiplier
 - Affordable for small budget
@@ -1374,7 +1374,7 @@ A: Always export critical evidence (JSON format with full HTML). Don't rely sole
 **Q: Is this better than Hunchly?**
 
 A: Different use cases:
-- PageStash: Better for daily SOC work, knowledge graphs, team collaboration ($12/mo)
+- PageStash: Better for daily SOC work, knowledge graphs, team collaboration ($11/mo)
 - Hunchly: Better for law enforcement, established in court, automatic capture ($130/yr)
 - Many teams use both
 

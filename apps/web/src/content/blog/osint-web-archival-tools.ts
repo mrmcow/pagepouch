@@ -74,7 +74,7 @@ This guide covers the best web archival tools for OSINT work, with real-world te
 
 | Tool | Best For | Evidence Quality | Organization | Cost |
 |------|----------|------------------|--------------|------|
-| **PageStash** | Professional OSINT | ⭐⭐⭐⭐⭐ | Folders + graphs | \$12/mo |
+| **PageStash** | Professional OSINT | ⭐⭐⭐⭐⭐ | Folders + graphs | \$11/mo |
 | **Archive.org** | Public archival | ⭐⭐⭐☆☆ | None | Free |
 | **Hunchly** | Law enforcement | ⭐⭐⭐⭐⭐ | Timeline-based | \$130/year |
 | **WebRecorder** | Technical users | ⭐⭐⭐⭐☆ | Limited | Free |
@@ -119,7 +119,7 @@ This guide covers the best web archival tools for OSINT work, with real-world te
 - Background checks (preserve web evidence)
 - Court cases (exportable, timestamped evidence)
 
-**Pricing:** Free (10 clips/month), Pro \$12/month (1,000 clips, 5GB storage)
+**Pricing:** Free (10 clips/month), Pro \$11/month (1,000 clips, 5GB storage)
 
 **Limitations:**
 - No automatic archival scheduling (yet)
@@ -411,7 +411,7 @@ This guide covers the best web archival tools for OSINT work, with real-world te
 ## Tool Recommendations by Use Case
 
 ### **For Freelance Investigators:**
-→ **PageStash Pro** (\$12/mo)
+→ **PageStash Pro** (\$11/mo)
 - Best bang for buck
 - Covers 95% of needs
 - Graph view for connections
@@ -424,19 +424,19 @@ This guide covers the best web archival tools for OSINT work, with real-world te
 - Established in courts
 
 ### **For Technical Researchers:**
-→ **WebRecorder** (Free) + **PageStash** (\$12/mo)
+→ **WebRecorder** (Free) + **PageStash** (\$11/mo)
 - WebRecorder for complex captures
 - PageStash for organization/search
 
 ### **For Journalists:**
-→ **PageStash Pro** (\$12/mo)
+→ **PageStash Pro** (\$11/mo)
 - Fast capture while investigating
 - Organize by story
 - Search across all sources
 - Export for articles
 
 ### **For Security Researchers:**
-→ **PageStash Pro** (\$12/mo) + **Hunchly** (if budget allows)
+→ **PageStash Pro** (\$11/mo) + **Hunchly** (if budget allows)
 - PageStash for daily work
 - Hunchly for critical investigations
 
@@ -575,13 +575,13 @@ The right tool means:
 **Most investigators land on one of these setups:**
 
 **Best for 80% of OSINT work:**
-→ **PageStash Pro** (\$12/mo) - captures, organizes, searches, visualizes
+→ **PageStash Pro** (\$11/mo) - captures, organizes, searches, visualizes
 
 **Best for law enforcement:**
 → **Hunchly** (\$130/yr) - forensically sound, case management
 
 **Best for technical users:**
-→ **WebRecorder** (free) + **PageStash** (\$12/mo) - power + organization
+→ **WebRecorder** (free) + **PageStash** (\$11/mo) - power + organization
 
 ---
 
@@ -606,7 +606,7 @@ The right tool means:
 
 **Q: Can I use free tools for professional OSINT?**
 
-A: For light work, yes. For investigations with 50+ sources, the time lost searching/organizing costs more than a \$12/month tool.
+A: For light work, yes. For investigations with 50+ sources, the time lost searching/organizing costs more than a \$11/month tool.
 
 **Q: Is PageStash evidence admissible in court?**
 

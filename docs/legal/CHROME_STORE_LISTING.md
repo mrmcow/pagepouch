@@ -42,7 +42,7 @@ Your data is encrypted and secure. Perfect for sensitive research and threat int
 3. Your content is captured and organized automatically
 
 **Free tier**: 10 clips/month
-**Pro tier**: 1,000 clips/month, advanced features ($12/month or $120/year)
+**Pro tier**: 1,000 clips/month, advanced features ($11/month or $120/year)
 
 Start capturing the web today with PageStash!
 

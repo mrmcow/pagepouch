@@ -201,7 +201,7 @@ Visualize connections between your research with AI-powered knowledge graphs tha
 
 💎 PRICING
 • Free: 10 clips per month - Perfect for trying PageStash
-• Pro: 1,000 clips per month + 5GB storage - $12/month or $120/year
+• Pro: 1,000 clips per month + 5GB storage - $11/month or $120/year
 
 🚀 GETTING STARTED
 1. Install the extension

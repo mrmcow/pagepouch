@@ -111,7 +111,7 @@ The product is built and marketed around four pillars. Every shipped feature sho
 | Tier | Price | Limit | Features |
 |---|---|---|---|
 | **Free** | $0 | 10 clips/month | Capture, folders, tags, full-text search, dashboard, dark mode |
-| **Pro** | **$10/mo billed annually** ($120/yr) **or** $12/mo billed monthly | Unlimited clips | Everything in Free **plus** Knowledge Graph, all exports (`.md`/`.html`/`.csv`/`.json`/citations), bulk operations, priority support |
+| **Pro** | **$10/mo billed annually** ($120/yr) **or** $11/mo billed monthly | Unlimited clips | Everything in Free **plus** Knowledge Graph, all exports (`.md`/`.html`/`.csv`/`.json`/citations), bulk operations, priority support |
 
 ### Why these numbers
 

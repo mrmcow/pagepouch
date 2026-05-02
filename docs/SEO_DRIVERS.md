@@ -651,7 +651,7 @@ Drift across legacy docs. Use the values in this row, not the legacy ones.
 
 | Topic | Use this | Don't use |
 |---|---|---|
-| **Pricing** | $10/mo annual, $12/mo monthly | $4/mo, $40/yr (old MONETIZATION_PLAN) |
+| **Pricing** | $10/mo annual, $11/mo monthly | $4/mo, $40/yr (old MONETIZATION_PLAN) |
 | **Free tier limit** | 10 clips/month | 50, 100 (legacy REQUIREMENTS, MONETIZATION_PLAN) |
 | **Pro clip limit** | Unlimited | "1,000 clips" (old MONETIZATION_PLAN) |
 | **Trust claims** | Honest, verifiable copy | "10,000+ professionals", "2M+ pages archived", "SOC-2 Compliant" — until verified or removed (PRD P0) |

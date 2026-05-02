@@ -34,7 +34,7 @@ This comprehensive guide compares **12 of the best page clippers available in 20
 - Migration guides if you're switching tools
 
 **Bottom line up front:**
-- **Best overall:** PageStash Pro ($12/mo) for serious researchers
+- **Best overall:** PageStash Pro ($11/mo) for serious researchers
 - **Best free:** Raindrop.io (unlimited bookmarks, beautiful UI)
 - **Best for note-takers:** Evernote Web Clipper (if already in Evernote)
 - **Best for Notion users:** Notion Web Clipper (native integration)
@@ -133,7 +133,7 @@ We tested 12 page clippers over 60 days with real research workflows:
 
 ### 1. PageStash ⭐ Editor's Choice (92/100)
 
-**Price:** Free (10 clips/month), Pro $12/month (1,000 clips, 5GB storage)
+**Price:** Free (10 clips/month), Pro $11/month (1,000 clips, 5GB storage)
 
 ![PageStash Interface](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=600&fit=crop&auto=format)
 
@@ -187,7 +187,7 @@ We tested 12 page clippers over 60 days with real research workflows:
 
 **Pricing & Value:**
 - ✅ Free tier: 10 clips/month (good for testing)
-- ⚠️ Pro required for serious use: $12/month
+- ⚠️ Pro required for serious use: $11/month
 - ✅ Reasonable pricing vs. competitors
 - ⚠️ No lifetime deal available
 - ✅ Enterprise pricing for teams
@@ -224,7 +224,7 @@ We tested 12 page clippers over 60 days with real research workflows:
 **Real-World Test:**
 Captured 300+ web pages (articles, docs, competitor sites) over 30 days. Search found any quote in < 2 seconds. Knowledge graph revealed unexpected patterns in competitive analysis. Export to Markdown for blog post research was seamless.
 
-**Verdict:** Best overall page clipper if you need serious research organization and can budget $12/month. Knowledge graphs alone justify the cost for professional researchers.
+**Verdict:** Best overall page clipper if you need serious research organization and can budget $11/month. Knowledge graphs alone justify the cost for professional researchers.
 
 [Try PageStash Free - 10 Clips, No Card Required] →
 
@@ -655,7 +655,7 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 
 ### Top Picks by Use Case
 
-**🥇 Best Overall: PageStash** ($144/year)
+**🥇 Best Overall: PageStash** ($120/year billed annually)
 - **Why:** Only tool with full capture + knowledge graphs + excellent search
 - **Perfect for:** Researchers, OSINT investigators, anyone doing serious web research
 - **Downside:** Free tier too limited (10 clips/month)
@@ -800,7 +800,7 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 | **Raindrop.io Pro** | $28/year | Permanent archives, full-text search, unlimited collections, broken link check | **$28/year** | ⭐⭐⭐⭐⭐ **Best budget pick** |
 | **Instapaper Premium** | $3/month | Notes, highlights, full-text search, send to Kindle | **$36/year** | ⭐⭐⭐⭐⭐ **Great for readers** |
 | **Pocket Premium** | $5/month | Ad-free, permanent library, advanced search, suggested tags | **$60/year** | ⭐⭐⭐⭐☆ Good if you're already using it |
-| **PageStash Pro** | $12/month | 1,000 clips/mo, unlimited storage, **knowledge graphs**, team sharing, API access | **$144/year** | ⭐⭐⭐⭐☆ **Best for researchers/OSINT** |
+| **PageStash Pro** | $11/month | 1,000 clips/mo, unlimited storage, **knowledge graphs**, team sharing, API access | **$120/year** | ⭐⭐⭐⭐☆ **Best for researchers/OSINT** |
 | **Evernote Personal** | $15/month | 10 GB upload, offline access, PDF search | **$180/year** | ⭐⭐⭐☆☆ Expensive for what you get |
 | **Notion Plus** | $10/month | Unlimited file uploads, version history, guests | **$120/year** | ⭐⭐⭐⭐☆ Great if you use Notion for everything |
 
@@ -811,10 +811,10 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 ### Value Recommendation by Use Case
 
 **📚 Casual reading/research:** Raindrop.io Pro ($28/yr)  
-**🔍 OSINT/Investigation:** PageStash Pro ($144/yr) - Knowledge graphs essential  
+**🔍 OSINT/Investigation:** PageStash Pro ($120/yr) - Knowledge graphs essential  
 **👥 Team projects:** Notion Plus ($10/user/mo)  
 **📰 Article reading:** Instapaper ($36/yr) or Pocket Premium ($60/yr)  
-**💼 Business research:** PageStash Pro ($144/yr) or Evernote Business (if already invested)
+**💼 Business research:** PageStash Pro ($120/yr) or Evernote Business (if already invested)
 
 ---
 
@@ -828,12 +828,12 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 | **Monthly lookups** | 100 sources | 100 sources | - |
 | **Monthly time wasted** | **5 hours** | 15 minutes | **4.75 hours saved** |
 | **Value of saved time** ($50/hr) | $0 | **$237.50** | **$237.50/month** |
-| **Tool cost** | $0 | $12 | $12/month |
+| **Tool cost** | $0 | $11 | $11/month |
 | **Net benefit** | -$250 (lost time) | +$225.50 | **20x ROI** |
 
 **Break-even point:** If the tool saves you just **15 minutes per month**, it pays for itself.
 
-**Reality check:** Most researchers save 5+ hours/month. That's a **$250 value** for $12.
+**Reality check:** Most researchers save 5+ hours/month. That's a **$250 value** for $11.
 
 ---
 
@@ -848,7 +848,7 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 **Why this combo:**
 - Zotero: Perfect for PDF papers, bibliographies, citations
 - PageStash: Web articles, documentation, blog posts, tutorials
-- Total cost: $12/month (Zotero free, PageStash Pro)
+- Total cost: $11/month (Zotero free, PageStash Pro)
 
 **Don't do:**
 - Using Zotero for web content (clunky)
@@ -866,7 +866,7 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 
 **Total cost:** $0
 
-**Upgrade to PageStash Pro ($12/mo) when:**
+**Upgrade to PageStash Pro ($11/mo) when:**
 - Thesis/dissertation research ramps up
 - Need more than 10 web captures/month
 - Need knowledge graphs for lit review
@@ -876,7 +876,7 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 ### For Journalists
 
 **Best Choice:**
-→ **PageStash Pro** ($12/month)
+→ **PageStash Pro** ($11/month)
 
 **Why:**
 - Need complete evidence capture (sources get deleted)
@@ -913,7 +913,7 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 ### For OSINT Investigators
 
 **Best Choice:**
-→ **PageStash Pro** ($12/month)  
+→ **PageStash Pro** ($11/month)  
 → **OR Hunchly** ($130/year) for law enforcement
 
 **Why PageStash:**
@@ -1226,9 +1226,9 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 ## Final Recommendations (TL;DR)
 
 ### Best Overall Page Clipper
-**🏆 PageStash Pro** ($12/month)
+**🏆 PageStash Pro** ($11/month)
 
-**Why:** Best capture quality, unique knowledge graphs, powerful search, professional features. Worth $12/mo if you're serious about research.
+**Why:** Best capture quality, unique knowledge graphs, powerful search, professional features. Worth $11/mo if you're serious about research.
 
 [Try PageStash Free →]
 
@@ -1258,7 +1258,7 @@ Zotero is NOT designed for web clipping. It's a reference manager for academic p
 ---
 
 ### Best for Power Users
-**🏆 PageStash Pro** ($12/month)
+**🏆 PageStash Pro** ($11/month)
 
 **Why:** Knowledge graphs, advanced search, complete HTML capture, unlimited folders/tags. Built for serious researchers.
 

@@ -1080,7 +1080,7 @@ If executive suspects investigation:
 | Tool | **Evidence Quality** | **Legal Features** | **Price** | **Best For** |
 |------|:-------------------:|:------------------:|:---------:|-------------|
 | **Hunchly** | ⭐⭐⭐⭐⭐<br/>Forensic-grade | ⭐⭐⭐⭐⭐<br/>Court-tested | **$130/year** | **Law enforcement, criminal prosecution** |
-| ![PageStash](/icons/icon-48.png)<br/>**PageStash Pro** | ⭐⭐⭐⭐⭐<br/>Complete capture | ⭐⭐⭐⭐☆<br/>Strong metadata | **$12/month** | **Corporate investigators, civil cases** |
+| ![PageStash](/icons/icon-48.png)<br/>**PageStash Pro** | ⭐⭐⭐⭐⭐<br/>Complete capture | ⭐⭐⭐⭐☆<br/>Strong metadata | **$11/month** | **Corporate investigators, civil cases** |
 | **Archive.org Wayback** | ⭐⭐⭐⭐☆<br/>Third-party verified | ⭐⭐⭐⭐☆<br/>Independent source | **Free** | Corroboration, public records |
 | **WebRecorder** | ⭐⭐⭐⭐☆<br/>WARC standard | ⭐⭐⭐☆☆<br/>Technical only | **Free** | Technical users, WARC format required |
 | ![Evernote](https://cdn.simpleicons.org/evernote/00A82D)<br/>**Evernote** | ⭐⭐⭐☆☆<br/>Basic | ⭐⭐☆☆☆<br/>Not legal-focused | $15/month | ❌ Not recommended for legal work |
@@ -1143,11 +1143,11 @@ Example: Fraud case involves 15 shell companies, 8 individuals, 40+ websites.
 **Pricing for Corporate Legal:**
 
 **Small legal team (1-3 investigators):**
-- PageStash Pro: $12/investigator/month
-- Total: $36 - $144/month
+- PageStash Pro: $11/investigator/month
+- Total: $33 - $132/month
 
 **Medium legal/compliance team (4-10 people):**
-- PageStash Pro: $12/person/month
+- PageStash Pro: $11/person/month
 - Total: $500 - $1,500/month
 
 **Enterprise (10+ attorneys, investigators, compliance officers):**
@@ -1158,7 +1158,7 @@ Example: Fraud case involves 15 shell companies, 8 individuals, 40+ websites.
 
 **ROI Calculation:**
 
-**Cost of PageStash:** $144/investigator/year
+**Cost of PageStash:** $120/investigator/year (billed annually)
 
 **Cost of one excluded evidence issue:**
 - Weakened case position
@@ -1985,18 +1985,18 @@ Nice-to-have features:
 
 | Tool | **Meets All Requirements?** | **Annual Cost** (3 users) | **Recommendation** |
 |------|:-------------------------:|:-------------------------:|-------------------|
-| ![PageStash](/icons/icon-48.png)<br/>**PageStash Pro** | ✅<br/>**YES** - All must-haves + knowledge graphs | **$432/year** | **🏆 RECOMMENDED** - Best value for corporate teams |
+| ![PageStash](/icons/icon-48.png)<br/>**PageStash Pro** | ✅<br/>**YES** - All must-haves + knowledge graphs | **$360/year** | **🏆 RECOMMENDED** - Best value for corporate teams |
 | **Hunchly** | ✅<br/>YES - Law enforcement focused | **$390/year** | **Good alternative** - Choose if criminal cases likely |
 | **WebRecorder** | ⚠️<br/>Partial - Technical only, poor UX | **Free** | ❌ Not recommended - Too complex, no organization |
 | ![Evernote](https://cdn.simpleicons.org/evernote/00A82D)<br/>**Evernote Business** | ⚠️<br/>Partial - Weak evidence capture | **$540/year** | ❌ Not recommended - Not designed for legal work |
 
 **💡 Final Recommendation: PageStash Pro**
 - **Why:** Best balance of features, usability, and cost for corporate investigations
-- **Cost:** $144/user/year (vs $180/year Evernote, $130/year Hunchly)
+- **Cost:** $120/user/year billed annually (vs $180/year Evernote, $130/year Hunchly)
 - **ROI:** Knowledge graphs alone save 10+ hours/investigation
 - **Upgrade path:** Start with 2-3 licenses, expand as value proven
 
-**Decision:** PageStash Pro for corporate legal team (3 investigators + 2 attorneys = 5 licenses = $60/month)
+**Decision:** PageStash Pro for corporate legal team (3 investigators + 2 attorneys = 5 licenses ≈ $50/month on annual billing)
 
 **Budget approval:** Present to management with ROI analysis (see earlier section)
 
@@ -2279,8 +2279,8 @@ Example issues and solutions:
 **Investment Required:**
 
 **Software (PageStash Pro):**
-- 5 users × $12/month = $60/month
-- Annual cost: $720
+- 5 users × $11/month = $55/month (month-to-month)
+- Annual cost (monthly rate): $660/year; on annual billing: $600/year ($50/month effective)
 
 **Implementation:**
 - Policy development: 8 hours × $150/hour = $1,200 (one-time)
@@ -2292,8 +2292,8 @@ Example issues and solutions:
 **Ongoing:**
 - Annual refresher training: $500/year
 - Evidence storage: $100/year (backup drives)
-- Tool subscription: $720/year
-- Total Ongoing Annual: $1,320/year
+- Tool subscription: $600/year
+- Total Ongoing Annual: $1,200/year
 
 **Total 5-Year Cost: ~$9,000**
 
@@ -2455,7 +2455,7 @@ Ten years ago, judges might accept a screenshot with little questioning. Today, 
 
 **For corporate investigators and legal teams:**
 
-**First Choice: PageStash Pro** ($12/month per investigator)
+**First Choice: PageStash Pro** ($11/month per investigator)
 - Evidence-grade capture quality
 - Automatic timestamping and metadata
 - Powerful organization and search
@@ -2484,7 +2484,7 @@ Ten years ago, judges might accept a screenshot with little questioning. Today, 
 **Week 3:** Pilot program (active investigations)  
 **Week 4:** Refinement and full deployment
 
-**Total investment:** ~30 hours + $720/year software  
+**Total investment:** ~30 hours + $600/year software  
 **Expected return:** $200K+ annually in time savings, risk mitigation, better outcomes
 
 **Payback: First month**
@@ -2556,7 +2556,7 @@ A: Consider Hunchly if:
 - Budget allows ($130/year per user)
 
 PageStash is better for most corporate investigations because:
-- More affordable ($12/month vs $130/year... wait, Hunchly is cheaper annually!)
+- More affordable ($11/month vs $130/year... wait, Hunchly is cheaper annually!)
 - Better search and knowledge graphs
 - Team collaboration features
 - More regular updates
@@ -2585,7 +2585,7 @@ A: Free tier (10 clips/month) is not suitable for active investigations. You'll 
 - Very light occasional use
 - Personal research
 
-For any corporate legal work, Pro tier is required ($12/month per investigator).
+For any corporate legal work, Pro tier is required ($11/month per investigator).
 
 ---
 

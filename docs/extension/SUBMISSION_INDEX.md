@@ -252,7 +252,7 @@ This guide will walk you through everything in order, with copy-paste ready cont
 
 All documents reflect current pricing:
 - Free: 10 clips/month
-- Pro: $12/month or $120/year
+- Pro: $11/month or $120/year
 
 ---
 

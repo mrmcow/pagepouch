@@ -493,7 +493,7 @@ export default function HomePage() {
                   <span className="text-base sm:text-lg text-slate-400 dark:text-slate-500">/month</span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 mb-2 sm:mb-3">
-                  Billed annually · <span className="text-blue-400 dark:text-blue-600 font-semibold">Save 17%</span>
+                  Billed annually · <span className="text-blue-400 dark:text-blue-600 font-semibold">Save $12/yr</span>
                 </p>
                 <p className="text-slate-400 dark:text-slate-500">For serious researchers</p>
               </div>

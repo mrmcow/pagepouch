@@ -33,7 +33,7 @@ This comprehensive comparison will help you choose the right tool for your needs
 | **Team Sharing** | ❌ No | ✅ Pro plan |
 | **Page Graphs** | ❌ No | ✅ Visualize connections |
 | **Free Plan** | Limited | 10 clips |
-| **Starting Price** | $4.99/mo | $12/mo |
+| **Starting Price** | $4.99/mo | $11/mo |
 | **Best For** | Casual reading | Professional research |
 
 ## Detailed Feature Comparison
@@ -193,7 +193,7 @@ This comprehensive comparison will help you choose the right tool for your needs
 - Full features
 - No credit card required
 
-**Pro ($12/mo or $120/yr)**:
+**Pro ($11/mo or $120/yr)**:
 - 1,000 clips per month
 - 5GB storage
 - All features including:

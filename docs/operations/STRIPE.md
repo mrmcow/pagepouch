@@ -11,7 +11,7 @@
 | Tier | Price | Limit |
 |---|---|---|
 | Free | $0 | **10 clips / month** (hard cap, enforced at DB layer) |
-| Pro Monthly | **$12.00 USD / month** | **Unlimited** |
+| Pro Monthly | **$11.00 USD / month** | **Unlimited** |
 | Pro Annual | **$120.00 USD / year** ($10/mo equivalent — primary marketing CTA) | **Unlimited** |
 
 > Older docs may quote `$4 / $40 / 50 clips / 1000 clips`. **Those numbers are obsolete.**
@@ -56,6 +56,8 @@
 ## Required environment variables
 
 Set in `apps/web/.env.local` for local dev and on Vercel for staging/production. Next.js does **not** read the root `.env.local`.
+
+> When you change the public monthly list price (e.g. $11/mo), create a **new recurring price** in Stripe Dashboard for that amount and update `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` on Vercel. Existing subscribers stay on their original price until they change plans.
 
 ```bash
 STRIPE_SECRET_KEY=sk_live_...                 # or sk_test_... in test mode
@@ -114,7 +116,7 @@ Add **two recurring prices** on this product:
 
 | Label | Amount | Interval |
 |---|---|---|
-| Monthly | $12.00 USD | Month |
+| Monthly | $11.00 USD | Month |
 | Annual | $120.00 USD | Year |
 
 Copy both price IDs (start with `price_`) into the env vars above.
@@ -160,7 +162,7 @@ For migrating from test mode to live mode, or onboarding a fresh production envi
 
 ### Steps
 1. **Switch Stripe Dashboard to Live mode** (toggle top-left). Live mode has no data from test mode — start fresh.
-2. **Create the live product + 2 recurring prices** as in [Setting up from scratch](#setting-up-from-scratch). **Use the production amounts: $12/mo, $120/yr.**
+2. **Create the live product + 2 recurring prices** as in [Setting up from scratch](#setting-up-from-scratch). **Use the production amounts: $11/mo, $120/yr.**
 3. **Get live API keys** from Developers → API Keys (`pk_live_...`, `sk_live_...`).
 4. **Activate the live customer portal** (Settings → Billing → Customer portal in Live mode).
 5. **Create the live webhook** pointing at `https://pagestash.app/api/stripe/webhook`. Copy the live `whsec_...`.

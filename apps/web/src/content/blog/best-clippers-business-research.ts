@@ -46,7 +46,7 @@ PageStash is built from the ground up for professional research. It doesn't just
 *   **Full-Text Search:** Search across the *content* of every page you've ever saved, not just the titles.
 *   **Metadata Capture:** Automatically records timestamp, source URL, and author—essential for citing sources in reports.
 
-**Price:** $12/month per user.
+**Price:** $11/month per user.
 **Verdict:** The ROI is immediate if you save even one hour of research time per month.
 
 ### 2. Evernote Teams: The Legacy Option

@@ -23,7 +23,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 | Tool | Best For | Price | Key Feature |
 |------|----------|-------|-------------|
-| **PageStash** | Serious students | Free / $12/mo | Organization + search |
+| **PageStash** | Serious students | Free / $11/mo | Organization + search |
 | **Pocket** | Light reading | Free / $4.99/mo | Reading list |
 | **Notion** | All-in-one | Free / $10/mo | Notes + wiki |
 | **Evernote** | Note-takers | Free / $14.99/mo | Rich notes |
@@ -51,7 +51,7 @@ The right web clipping tool can be the difference between staying organized and 
 - Literature reviews
 - Multi-class organization
 
-**Student Pricing**: Free for 10 clips per month, then $12/month ($120/year)
+**Student Pricing**: Free for 10 clips per month, then $11/month ($120/year)
 
 ---
 
@@ -213,7 +213,7 @@ The right web clipping tool can be the difference between staying organized and 
 
 **Best Free Option**: Notion (unlimited for students) or PageStash (10 clips per month)
 
-**Best Value**: PageStash ($12/mo, 1,000 clips per month with Pro features)
+**Best Value**: PageStash ($11/mo, 1,000 clips per month with Pro features)
 
 **Premium Option**: Evernote ($14.99/mo)
 

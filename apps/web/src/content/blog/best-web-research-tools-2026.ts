@@ -48,7 +48,7 @@ PageStash doesn't just save a link—it creates a **forensic-grade archive**:
 **Why PageStash wins for speed and reliability:**
 Unlike bookmark managers that fail when links break, PageStash creates permanent snapshots. If a competitor removes their pricing page, you still have the complete archive with screenshots as proof.
 
-**Pricing:** Free tier (10 captures/month), Pro $12/month
+**Pricing:** Free tier (10 captures/month), Pro $11/month
 **Best for:** Professional research where source integrity matters
 
 [Try PageStash Free →](/auth/signup)

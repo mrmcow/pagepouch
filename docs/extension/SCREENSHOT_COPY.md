@@ -328,7 +328,7 @@ across 6 months of research I would have never found."
 — Research Analyst
 
 Pro Badge:
-👑 PRO FEATURE - $12/month
+👑 PRO FEATURE - $11/month
 ```
 
 **Canva Layout Option C:**
@@ -402,7 +402,7 @@ Features (16px, Bold, #2563EB):
 ✓ Advanced features
 
 Price (20px, Bold):
-$12/month or $120/year
+$11/month or $120/year
 ```
 
 **Canva Layout:**

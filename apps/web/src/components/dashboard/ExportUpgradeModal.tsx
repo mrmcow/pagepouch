@@ -129,7 +129,7 @@ function UpgradeFooter({ subtitle, startCheckout, isLoading }: UpgradeFooterProp
       >
         <span>{isLoading ? 'Redirecting…' : 'Go Pro — $10/mo'}</span>
         <span className="text-[10px] font-medium opacity-85 mt-0.5">
-          billed annually · save 17%
+          billed annually · save $12/yr
         </span>
       </button>
 

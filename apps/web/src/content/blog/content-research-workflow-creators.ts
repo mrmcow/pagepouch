@@ -916,7 +916,7 @@ Project: "Content Research System" (published)
 
 | Tool | Best For | Cost |
 |------|----------|------|
-| **PageStash** | Full research archival | Free / \$12/mo |
+| **PageStash** | Full research archival | Free / \$11/mo |
 | **Notion** | Content planning | Free / \$10/mo |
 | **Airtable** | Content calendar | Free / \$20/mo |
 | **Obsidian** | Note-taking | Free |
