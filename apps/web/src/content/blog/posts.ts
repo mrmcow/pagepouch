@@ -1,4 +1,7 @@
 import { BlogPost } from '@/types/blog'
+import { seoIntentCluster2026Part1 } from './seo-intent-cluster-2026-part1'
+import { seoIntentCluster2026Part2 } from './seo-intent-cluster-2026-part2'
+import { seoIntentCluster2026Part3 } from './seo-intent-cluster-2026-part3'
 import { seoExpansionTrafficMay2026Part1 } from './seo-expansion-traffic-may-2026-part1'
 import { seoExpansionTrafficMay2026Part2 } from './seo-expansion-traffic-may-2026-part2'
 import { pagestashTorBrowserResearchOsint } from './pagestash-tor-browser-research-osint'
@@ -175,6 +178,9 @@ import { internetArchivePersonalWebStash } from './internet-archive-personal-web
 import { researchOrganizationToolsGuide } from './research-organization-tools-guide'
 
 export const allPosts: BlogPost[] = [
+  ...seoIntentCluster2026Part3,
+  ...seoIntentCluster2026Part2,
+  ...seoIntentCluster2026Part1,
   ...seoExpansionTrafficMay2026Part1,
   ...seoExpansionTrafficMay2026Part2,
   bestWebResearchTools2026ReferenceGuide,
