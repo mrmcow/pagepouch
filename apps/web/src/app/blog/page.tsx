@@ -262,7 +262,12 @@ export default function BlogPage() {
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-2xl">
                     All titles below link to the full post. The card grid above highlights the newest; this index
-                    lists every matching article in one place—including older guides and deep cuts.
+                    lists every matching article in one place—including older guides and deep cuts. For a compact
+                    alphabetical list, see{' '}
+                    <Link href="/blog/all-posts" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                      All articles (A–Z)
+                    </Link>
+                    .
                   </p>
                   <ul className="columns-1 sm:columns-2 lg:columns-3 gap-x-8 gap-y-2 text-sm [column-fill:balance]">
                     {filteredPosts.map((post) => (

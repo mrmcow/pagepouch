@@ -1377,6 +1377,12 @@ export default function HomePage() {
               <Link href="/blog" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 Blog
               </Link>
+              <Link
+                href="/blog/all-posts"
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              >
+                All articles
+              </Link>
               <Link href="/dashboard" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 Dashboard
               </Link>
