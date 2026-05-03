@@ -1,4 +1,6 @@
 import { BlogPost } from '@/types/blog'
+import { seoExpansionTrafficMay2026Part1 } from './seo-expansion-traffic-may-2026-part1'
+import { seoExpansionTrafficMay2026Part2 } from './seo-expansion-traffic-may-2026-part2'
 import { pagestashTorBrowserResearchOsint } from './pagestash-tor-browser-research-osint'
 import { saveCompetitorPricingPagesResearch } from './save-competitor-pricing-pages-research'
 import { captureEvidenceBeforeSiteUpdates } from './capture-evidence-before-site-updates'
@@ -173,6 +175,8 @@ import { internetArchivePersonalWebStash } from './internet-archive-personal-web
 import { researchOrganizationToolsGuide } from './research-organization-tools-guide'
 
 export const allPosts: BlogPost[] = [
+  ...seoExpansionTrafficMay2026Part1,
+  ...seoExpansionTrafficMay2026Part2,
   bestWebResearchTools2026ReferenceGuide,
   whatIsPersonalKnowledgeManagement,
   howToCreatePkmSystem,
