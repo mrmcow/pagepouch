@@ -88,9 +88,6 @@ export const metadata: Metadata = {
       'msvalidate.01': '36BB3EACD2254D72426D4F213F483787',
     },
   },
-  alternates: {
-    canonical: SITE_URL,
-  },
   icons: {
     icon: [
       { url: '/icons/icon-16.png', sizes: '16x16', type: 'image/png' },
