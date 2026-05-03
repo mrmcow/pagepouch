@@ -34,6 +34,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     description: post.description,
     authors: [{ name: post.author }],
     keywords: post.tags.join(', '),
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' },
+    },
     openGraph: {
       title: post.title,
       description: post.description,

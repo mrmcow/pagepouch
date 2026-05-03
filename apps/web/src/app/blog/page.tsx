@@ -31,7 +31,10 @@ export default function BlogPage() {
     return matchesSearch && matchesCategory
   })
   
-  const visiblePosts = filteredPosts.slice(0, visiblePostsCount)
+  const visiblePosts = filteredPosts.slice(
+    0,
+    Math.min(visiblePostsCount, filteredPosts.length),
+  )
   const hasMorePosts = filteredPosts.length > visiblePostsCount
   
   const handleLoadMore = () => {
@@ -248,6 +251,32 @@ export default function BlogPage() {
                     </button>
                   </div>
                 )}
+
+                {/* Full article index: every matching post has a real <a href> in the DOM (not only behind “Load more”). */}
+                <nav
+                  aria-label="All matching blog articles"
+                  className="mt-14 pt-10 border-t border-slate-200 dark:border-white/10"
+                >
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                    Browse every article
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-2xl">
+                    All titles below link to the full post. The card grid above highlights the newest; this index
+                    lists every matching article in one place—including older guides and deep cuts.
+                  </p>
+                  <ul className="columns-1 sm:columns-2 lg:columns-3 gap-x-8 gap-y-2 text-sm [column-fill:balance]">
+                    {filteredPosts.map((post) => (
+                      <li key={post.slug} className="break-inside-avoid py-1">
+                        <Link
+                          href={`/blog/${post.slug}`}
+                          className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 underline-offset-2 hover:underline"
+                        >
+                          {post.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
               </>
             )}
           </div>
