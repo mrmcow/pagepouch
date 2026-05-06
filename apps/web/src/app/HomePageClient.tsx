@@ -22,7 +22,6 @@ import { useExitIntentTracking, useButtonClickTracking } from '@/hooks/useCTATra
 import { 
   ZapIcon,
   SearchIcon, 
-  FolderIcon, 
   ShieldCheckIcon,
   DownloadIcon,
   ArrowRightIcon,
@@ -38,6 +37,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  MarketingConnectionGraphMockup,
+  MarketingDashboardMockup,
+  MarketingExportSectionBody,
+  MarketingFeatureHighlightsRow,
+  MarketingRichPreviewMockup,
+} from '@/components/marketing/HomepageMarketingVisuals'
 
 // Enhanced browser detection with download URLs
 const getBrowserInfo = () => {
@@ -631,127 +637,17 @@ export default function HomePageClient() {
             </p>
           </div>
 
-          {/* File-format grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 max-w-5xl mx-auto">
-            {[
-              {
-                ext: '.md',
-                name: 'Markdown',
-                desc: 'Obsidian, Notion, plain-text writing.',
-                accent: 'from-blue-500 to-cyan-400',
-              },
-              {
-                ext: '.html',
-                name: 'HTML',
-                desc: 'Self-contained reports with screenshots inline.',
-                accent: 'from-cyan-500 to-blue-400',
-              },
-              {
-                ext: '.csv',
-                name: 'CSV',
-                desc: 'Excel, Google Sheets, data analysis.',
-                accent: 'from-emerald-400 to-teal-500',
-              },
-              {
-                ext: '.json',
-                name: 'JSON',
-                desc: 'Pipelines, integrations, LLM ingest.',
-                accent: 'from-violet-400 to-indigo-500',
-              },
-            ].map((fmt) => (
-              <div
-                key={fmt.ext}
-                className="group relative rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6 sm:backdrop-blur-xl shadow-none sm:shadow-[0_30px_70px_-50px_rgba(2,6,23,1)] sm:hover:shadow-[0_40px_90px_-50px_rgba(59,130,246,0.4)] hover:-translate-y-1 transition-all duration-500"
-              >
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-md font-mono text-xs sm:text-sm font-bold text-white bg-gradient-to-br ${fmt.accent} shadow-lg`}
-                  >
-                    {fmt.ext}
-                  </span>
-                  <DownloadIcon className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-1">
-                  {fmt.name}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  {fmt.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Citations spotlight — wider, distinct treatment */}
-          <div className="max-w-5xl mx-auto mt-4 sm:mt-5">
-            <div className="group relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-transparent sm:backdrop-blur-xl p-5 sm:p-7 hover:border-white/20 transition-all duration-500 overflow-hidden">
-              <div className="absolute -top-16 -right-16 w-56 h-56 bg-gradient-to-br from-amber-400/15 via-orange-500/10 to-transparent blur-3xl pointer-events-none" />
-              <div className="relative flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
-                <div className="flex items-center gap-3 md:gap-4 shrink-0">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md font-mono text-xs sm:text-sm font-bold text-white bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
-                    cite
-                  </span>
-                  <h3 className="text-base sm:text-lg font-semibold text-white">
-                    Academic citations
-                  </h3>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed flex-1">
-                  Auto-formatted bibliographies with full metadata — source URL, author, capture date, and access date — ready to paste into your paper.
-                </p>
-                <div className="flex flex-wrap gap-2 shrink-0">
-                  {['APA', 'MLA', 'Chicago'].map((style) => (
-                    <span
-                      key={style}
-                      className="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] border border-white/15 bg-white/5 text-slate-200"
-                    >
-                      {style}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Trust strip + CTA */}
-          <div className="mt-10 sm:mt-14 flex flex-col items-center gap-5 sm:gap-6">
-            <div className="inline-flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-7 gap-y-2 px-5 py-3 rounded-full bg-white/5 border border-white/10 sm:backdrop-blur-md">
-              <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
-                <CheckIcon className="h-4 w-4 text-emerald-400" />
-                Bulk export
-              </span>
-              <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
-                <CheckIcon className="h-4 w-4 text-emerald-400" />
-                Notes &amp; metadata included
-              </span>
-              <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
-                <CheckIcon className="h-4 w-4 text-emerald-400" />
-                One-click download
-              </span>
-            </div>
-
-            <Button
-              size="lg"
-              className="group text-sm sm:text-base font-bold bg-white text-slate-950 hover:bg-slate-100 px-6 sm:px-8 py-3 sm:py-4 h-auto rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.15)] hover:shadow-[0_0_45px_rgba(34,211,238,0.3)] transition-all"
-              asChild
-              onClick={() => {
-                trackButtonClick(
-                  'exports_section_start_archiving',
-                  'Start archiving free',
-                  'exports_section',
-                  '/auth/signup'
-                )
-                incrementCTAInteractions()
-              }}
-            >
-              <Link href="/auth/signup" className="flex items-center gap-2">
-                Start archiving — free
-                <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </Button>
-
-            <p className="text-[11px] sm:text-xs text-slate-500 text-center max-w-md">
-              Bulk export is included with every Pro plan. Cancel anytime, take your data with you.
-            </p>
-          </div>
+          <MarketingExportSectionBody
+            onStartArchivingClick={() => {
+              trackButtonClick(
+                'exports_section_start_archiving',
+                'Start archiving free',
+                'exports_section',
+                '/auth/signup',
+              )
+              incrementCTAInteractions()
+            }}
+          />
         </div>
       </section>
 
@@ -771,198 +667,8 @@ export default function HomePageClient() {
             </p>
           </div>
 
-          {/* Dashboard Mockup - High Fidelity */}
-          <div className="max-w-6xl mx-auto mb-14 sm:mb-24">
-            <div className="relative group">
-              <div className="absolute -inset-6 bg-gradient-to-r from-blue-500/15 via-cyan-400/10 to-transparent blur-3xl opacity-40 group-hover:opacity-70 transition-all duration-500 hidden sm:block" />
-              <div className="relative rounded-2xl sm:rounded-[40px] border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 shadow-[0_50px_120px_-50px_rgba(15,23,42,0.8)]">
-                <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-100 dark:border-white/5">
-                  <div className="flex gap-2">
-                    <span className="w-3 h-3 rounded-full bg-[#FF5F57]" />
-                    <span className="w-3 h-3 rounded-full bg-[#FEBC2E]" />
-                    <span className="w-3 h-3 rounded-full bg-[#28C840]" />
-                  </div>
-                  <div className="flex-1 text-center">
-                    <div className="inline-flex items-center px-4 py-1 rounded-full bg-slate-100 text-xs text-slate-600 font-medium dark:bg-slate-900 dark:text-slate-300">
-                      pagestash.app/dashboard
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col lg:flex-row">
-                  {/* Sidebar — hidden on small mobile to save space */}
-                  <div className="hidden sm:block lg:w-64 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-slate-950/40 sm:rounded-bl-none lg:rounded-bl-[40px]">
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-4">Folders</p>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between px-3 py-2 rounded-2xl bg-white shadow-sm border border-slate-100">
-                        <span className="text-sm font-semibold text-slate-900">All Clips</span>
-                        <span className="text-xs text-slate-400">247</span>
-                      </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-white/70 transition">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span className="text-sm text-slate-600 dark:text-slate-300">Research Projects</span>
-                      </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-white/70 transition">
-                        <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                        <span className="text-sm text-slate-600 dark:text-slate-300">Market Analysis</span>
-                      </div>
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-white/70 transition">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span className="text-sm text-slate-600 dark:text-slate-300">Design Inspiration</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Main Content */}
-                  <div className="flex-1 p-4 sm:p-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">All Clips</h3>
-                      <div className="relative flex-1">
-                        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input 
-                          type="text" 
-                          className="w-full bg-slate-100 dark:bg-slate-900 rounded-full py-3 pl-12 pr-4 text-sm text-slate-600 dark:text-slate-300 border border-transparent focus:border-blue-500/40 focus:ring-0"
-                          placeholder="Search content..."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                      {[
-                        { 
-                          tag: 'BBC', 
-                          category: 'News • Technology',
-                          title: 'AI Breakthrough: New Model Achieves Human-Level Reasoning', 
-                          excerpt: 'Researchers at leading tech labs have announced a significant advancement in artificial intelligence, with their latest model demonstrating unprecedented...', 
-                          accent: 'text-orange-600',
-                          meta: 'bbc.com/technology • 2 days ago'
-                        },
-                        { 
-                          tag: 'BLOOMBERG', 
-                          category: 'Markets',
-                          title: 'Tech Stocks Rally on Strong Earnings Reports', 
-                          excerpt: 'Major technology companies exceeded analyst expectations in Q4, driving a surge in market valuations across the sector...', 
-                          accent: 'text-blue-600',
-                          meta: 'bloomberg.com • 1 week ago'
-                        },
-                        { 
-                          tag: 'M', 
-                          category: 'Design • UX Research',
-                          title: 'The Evolution of Design Systems in 2025', 
-                          excerpt: 'Modern design systems have transformed how teams build products. Here\'s what we learned from implementing design systems at scale...', 
-                          accent: 'text-emerald-600',
-                          meta: 'Sarah Chen • 8 min read'
-                        },
-                      ].map((card, index) => (
-                        <div key={card.title} className="group rounded-3xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-lg hover:border-slate-200 dark:hover:border-slate-700 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-                          <div className="flex items-start justify-between gap-2 mb-3">
-                            <div className={`text-xs font-bold tracking-wide ${card.accent} flex items-center gap-2`}>
-                              <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-white font-bold text-xs ${card.accent === 'text-orange-600' ? 'bg-orange-600' : card.accent === 'text-blue-600' ? 'bg-blue-600' : 'bg-emerald-600'}`}>
-                                {card.tag}
-                            </div>
-                              <span className="text-slate-500 dark:text-slate-400 font-normal">{card.category}</span>
-                          </div>
-                        </div>
-                          <p className="font-semibold text-slate-900 dark:text-white leading-snug mb-2 text-sm">
-                            {card.title}
-                          </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed mb-3">
-                            {card.excerpt}
-                          </p>
-                          <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                            <p className="text-xs text-slate-400 dark:text-slate-500">{card.meta}</p>
-                        </div>
-                      </div>
-                      ))}
-                            </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 lg:gap-16 max-w-5xl mx-auto mt-10 sm:mt-16">
-            {/* Extension Popup Mockup */}
-            <div className="text-center group">
-              <div className="mb-8">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-md max-w-sm mx-auto group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-4">
-                    <LogoIcon size={24} />
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">PageStash</span>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Folder</div>
-                      <div className="text-sm text-slate-700 dark:text-slate-300">Research</div>
-                    </div>
-                    <Button size="sm" className="w-full">
-                      📸 Capture Page
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">One-Click Capture</h3>
-              <p className="text-slate-600 dark:text-slate-300">Simple extension popup for instant page capture</p>
-            </div>
-
-            {/* Search Results Mockup */}
-            <div className="text-center group">
-              <div className="mb-8">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-md max-w-sm mx-auto group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
-                  <div className="mb-4">
-                    <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-lg p-2">
-                      <SearchIcon className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-600 dark:text-slate-400">machine learning</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-l-2 border-blue-500">
-                      <div className="text-xs font-medium text-slate-700 dark:text-slate-300">AI Research Paper</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">...machine learning algorithms...</div>
-                    </div>
-                    <div className="text-left p-2 bg-green-50 dark:bg-green-900/20 rounded border-l-2 border-green-500">
-                      <div className="text-xs font-medium text-slate-700 dark:text-slate-300">ML Tutorial</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">...introduction to machine learning...</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Instant Search</h3>
-              <p className="text-slate-600 dark:text-slate-300">Find any content across all your captures</p>
-            </div>
-
-            {/* Organization Mockup */}
-            <div className="text-center group">
-              <div className="mb-8">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-md max-w-sm mx-auto group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                      <FolderIcon className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Research (89)</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded">
-                      <FolderIcon className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Articles (156)</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
-                      <FolderIcon className="h-4 w-4 text-orange-500" />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">References (23)</span>
-                    </div>
-                    <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                      <div className="flex flex-wrap gap-1">
-                        <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">AI</span>
-                        <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">ML</span>
-                        <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Research</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Smart Organization</h3>
-              <p className="text-slate-600 dark:text-slate-300">Folders, tags, and notes keep everything organized</p>
-            </div>
-          </div>
+          <MarketingDashboardMockup className="mb-14 sm:mb-24" />
+          <MarketingFeatureHighlightsRow className="mt-10 sm:mt-16" />
 
           {/* Knowledge Graph Feature Section */}
           <div className="mt-16 sm:mt-32 max-w-5xl mx-auto">
@@ -997,53 +703,7 @@ export default function HomePageClient() {
                 </div>
               </div>
 
-              {/* Right: visual graph mockup */}
-              <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-blue-500/10 blur-2xl rounded-3xl" />
-                <div className="relative rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-xl overflow-hidden">
-                  <div className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-6">Connection Map — Research folder</div>
-                  {/* SVG graph mockup */}
-                  <svg viewBox="0 0 380 280" className="w-full" xmlns="http://www.w3.org/2000/svg">
-                    {/* Edges */}
-                    <line x1="190" y1="140" x2="100" y2="80" stroke="#e2e8f0" strokeWidth="1.5"/>
-                    <line x1="190" y1="140" x2="290" y2="80" stroke="#e2e8f0" strokeWidth="1.5"/>
-                    <line x1="190" y1="140" x2="80" y2="200" stroke="#e2e8f0" strokeWidth="1.5"/>
-                    <line x1="190" y1="140" x2="310" y2="200" stroke="#e2e8f0" strokeWidth="1.5"/>
-                    <line x1="190" y1="140" x2="190" y2="240" stroke="#e2e8f0" strokeWidth="1.5"/>
-                    <line x1="100" y1="80" x2="290" y2="80" stroke="#e2e8f0" strokeWidth="1"/>
-                    <line x1="80" y1="200" x2="190" y2="240" stroke="#e2e8f0" strokeWidth="1"/>
-                    <line x1="310" y1="200" x2="190" y2="240" stroke="#e2e8f0" strokeWidth="1"/>
-                    {/* Central node */}
-                    <circle cx="190" cy="140" r="22" fill="#7c3aed" opacity="0.9"/>
-                    <text x="190" y="144" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">AI</text>
-                    {/* Satellite nodes */}
-                    <circle cx="100" cy="80" r="16" fill="#3b82f6" opacity="0.8"/>
-                    <text x="100" y="84" textAnchor="middle" fill="white" fontSize="9">ML</text>
-                    <circle cx="290" cy="80" r="16" fill="#3b82f6" opacity="0.8"/>
-                    <text x="290" y="84" textAnchor="middle" fill="white" fontSize="9">LLM</text>
-                    <circle cx="80" cy="200" r="14" fill="#8b5cf6" opacity="0.7"/>
-                    <text x="80" y="204" textAnchor="middle" fill="white" fontSize="9">NLP</text>
-                    <circle cx="310" cy="200" r="14" fill="#8b5cf6" opacity="0.7"/>
-                    <text x="310" y="204" textAnchor="middle" fill="white" fontSize="9">RAG</text>
-                    <circle cx="190" cy="240" r="13" fill="#a78bfa" opacity="0.7"/>
-                    <text x="190" y="244" textAnchor="middle" fill="white" fontSize="9">GPT</text>
-                    {/* Outer ring nodes */}
-                    <circle cx="50" cy="120" r="10" fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1"/>
-                    <circle cx="340" cy="140" r="10" fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1"/>
-                    <circle cx="150" cy="40" r="10" fill="#ddd6fe" stroke="#3b82f6" strokeWidth="1"/>
-                    <circle cx="240" cy="40" r="10" fill="#ddd6fe" stroke="#3b82f6" strokeWidth="1"/>
-                    <line x1="100" y1="80" x2="50" y2="120" stroke="#e9d5ff" strokeWidth="1" strokeDasharray="3,2"/>
-                    <line x1="290" y1="80" x2="340" y2="140" stroke="#e9d5ff" strokeWidth="1" strokeDasharray="3,2"/>
-                    <line x1="100" y1="80" x2="150" y2="40" stroke="#dbeafe" strokeWidth="1" strokeDasharray="3,2"/>
-                    <line x1="290" y1="80" x2="240" y2="40" stroke="#dbeafe" strokeWidth="1" strokeDasharray="3,2"/>
-                  </svg>
-                  <div className="flex items-center gap-4 mt-4 text-xs text-slate-500">
-                    <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-600 inline-block"/><span>Primary topic</span></div>
-                    <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block"/><span>Related</span></div>
-                    <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-200 border border-blue-400 inline-block"/><span>Connected</span></div>
-                  </div>
-                </div>
-              </div>
+              <MarketingConnectionGraphMockup />
             </div>
           </div>
 
@@ -1060,134 +720,7 @@ export default function HomePageClient() {
               </p>
             </div>
             
-            {/* Reader Mockup */}
-            <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden ring-1 ring-slate-900/5">
-              {/* Toolbar */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
-                 <div className="flex items-center gap-4">
-                   <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">6 of 10</div>
-                   <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
-                   <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
-                     <FolderIcon className="w-4 h-4" />
-                    Research
-          </div>
-                </div>
-                 <div className="flex items-center gap-3">
-                   <Button size="sm" variant="ghost" className="text-sm">Open Original →</Button>
-                   <div className="flex gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                     <button className="px-3 py-1 text-xs font-medium rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">Screenshot</button>
-                     <button className="px-3 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">HTML</button>
-                     <button className="px-3 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Text</button>
-                </div>
-                   <div className="flex gap-1">
-                     <button className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
-                       <span className="text-xs">←</span>
-                </button>
-                     <button className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
-                       <span className="text-xs">→</span>
-                </button>
-                   </div>
-            </div>
-            </div>
-
-              <div className="grid lg:grid-cols-12 min-h-0 sm:min-h-[600px]">
-                {/* Article Content */}
-                <div className="lg:col-span-8 p-5 sm:p-8 lg:p-12 overflow-y-auto bg-white dark:bg-slate-950">
-                  <article className="prose prose-slate dark:prose-invert max-w-none prose-lg">
-                    <div className="flex items-center gap-3 mb-6 not-prose">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-white font-bold text-lg">
-                          TC
-                </div>
-                        <div>
-                        <div className="font-semibold text-slate-900 dark:text-white">TechCrunch • Technology</div>
-                </div>
-              </div>
-                    
-                    <h1 className="text-3xl sm:text-4xl font-bold mb-4 text-slate-900 dark:text-white leading-tight">
-                        The Future of AI Research: Breaking New Ground
-                      </h1>
-                    
-                    <div className="flex items-center gap-4 mb-8 not-prose text-sm text-slate-500 dark:text-slate-400">
-                      <span>By Sarah Johnson</span>
-                      <span>•</span>
-                      <span>October 30, 2025</span>
-                      <span>•</span>
-                      <span>8 min read</span>
-            </div>
-
-                    <div className="flex flex-wrap gap-2 mb-8 not-prose">
-                      <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">AI and Technology</span>
-                </div>
-
-                    <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
-                      Artificial intelligence research has reached an inflection point. Recent breakthroughs in machine learning are transforming how we approach complex problems across industries.
-                    </p>
-                    
-                    <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
-                      Leading researchers at top institutions have demonstrated remarkable progress in natural language understanding, computer vision, and reinforcement learning. These advances promise to reshape technology as we know it.
-                    </p>
-
-                    <h2 className="text-2xl font-bold mt-8 mb-4 text-slate-900 dark:text-white">Key Developments</h2>
-                    
-                    <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
-                      The integration of large language models with reasoning capabilities has opened new possibilities for AI applications. From scientific discovery to creative endeavors, these tools are becoming indispensable partners in human innovation.
-                    </p>
-
-                    <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
-                      Industry leaders emphasize the importance of responsible AI development, ensuring these powerful technologies benefit society while minimizing potential risks.
-                    </p>
-
-                    <div className="my-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-2xl not-prose border-l-4 border-blue-500">
-                      <p className="text-xl font-medium text-slate-900 dark:text-white italic">
-                          "We're witnessing a transformation that will define the next decade of technology."
-                        </p>
-                </div>
-
-                    <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
-                      As we look ahead, the convergence of AI capabilities with domain expertise continues to unlock unprecedented opportunities for innovation and discovery.
-                    </p>
-                  </article>
-          </div>
-
-                {/* Sidebar Metadata — hidden on small mobile */}
-                <div className="hidden sm:block lg:col-span-4 border-t sm:border-t-0 lg:border-l border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-5 sm:p-6 space-y-6 sm:space-y-8">
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Metadata</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1">Source URL</div>
-                        <div className="text-sm text-blue-600 dark:text-blue-400 truncate">techcrunch.com/2025/10/...</div>
-                    </div>
-                      <div>
-                         <div className="text-xs text-slate-500 mb-1">Captured</div>
-                         <div className="text-sm text-slate-700 dark:text-slate-300">Oct 30, 2025 2:34 PM</div>
-            </div>
-              </div>
-              </div>
-
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Organization</h4>
-                    <div className="space-y-4">
-                       <div>
-                         <div className="text-xs text-slate-500 mb-2">Folder</div>
-                         <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-700">
-                           <FolderIcon className="w-4 h-4 text-blue-500" />
-                           Research
-              </div>
-              </div>
-                  <div>
-                         <div className="text-xs text-slate-500 mb-2">Tags</div>
-                         <div className="flex flex-wrap gap-2">
-                           <span className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-medium text-slate-600 dark:text-slate-400">AI</span>
-                           <span className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-medium text-slate-600 dark:text-slate-400">Tech</span>
-                           <button className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs text-slate-500 hover:text-slate-700">+</button>
-                </div>
-                </div>
-                </div>
-                </div>
-              </div>
-              </div>
-            </div>
+            <MarketingRichPreviewMockup />
           </div>
         </div>
       </section>

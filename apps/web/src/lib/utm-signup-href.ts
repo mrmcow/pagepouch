@@ -11,8 +11,9 @@ const LP_DEFAULT_UTM: Record<string, string> = {
 
 export function buildSignupSearchParams(
   incoming: Record<string, string | string[] | undefined>,
+  defaultOverrides?: Record<string, string>,
 ): string {
-  const merged: Record<string, string> = { ...LP_DEFAULT_UTM }
+  const merged: Record<string, string> = { ...LP_DEFAULT_UTM, ...defaultOverrides }
   for (const [key, value] of Object.entries(incoming)) {
     if (!key.startsWith('utm_')) continue
     if (value === undefined) continue
