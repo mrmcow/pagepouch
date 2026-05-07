@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { SITE_URL } from '@/lib/site-url'
+import { PUBLIC_OG_IMAGE } from '@/lib/og-image'
 
 const BLOG_URL = `${SITE_URL}/blog`
 
@@ -28,14 +29,21 @@ export const metadata: Metadata = {
     type: 'website',
     url: BLOG_URL,
     siteName: 'PageStash',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'PageStash Blog' }],
+    images: [
+      {
+        url: PUBLIC_OG_IMAGE.url,
+        width: PUBLIC_OG_IMAGE.width,
+        height: PUBLIC_OG_IMAGE.height,
+        alt: 'PageStash research and productivity blog',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Research & Productivity Blog | PageStash',
     description: 'Guides, comparisons, and workflows for researchers, analysts, and knowledge workers.',
     creator: '@pagestash',
-    images: ['/og-image.png'],
+    images: [PUBLIC_OG_IMAGE.url],
   },
   robots: {
     index: true,

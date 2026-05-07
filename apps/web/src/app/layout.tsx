@@ -6,6 +6,7 @@ import { GlobalProviders } from '@/components/GlobalProviders'
 import { MarketingHomeTheme } from '@/components/MarketingHomeTheme'
 import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import { SITE_URL } from '@/lib/site-url'
+import { PUBLIC_OG_IMAGE } from '@/lib/og-image'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -57,10 +58,10 @@ export const metadata: Metadata = {
     siteName: 'PageStash',
     images: [
       {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'PageStash - Web Archival Tool',
+        url: PUBLIC_OG_IMAGE.url,
+        width: PUBLIC_OG_IMAGE.width,
+        height: PUBLIC_OG_IMAGE.height,
+        alt: PUBLIC_OG_IMAGE.alt,
       },
     ],
   },
@@ -68,7 +69,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'PageStash - Web Archival Tool for Researchers & Analysts',
     description: 'Capture, organize, and search web content like a pro. Free trial with 10 clips/month.',
-    images: ['/og-image.png'],
+    images: [PUBLIC_OG_IMAGE.url],
     creator: '@pagestash',
   },
   robots: {
