@@ -162,7 +162,12 @@ export default function ForgotPasswordPage() {
               </Alert>
             )}
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form
+              onSubmit={handleResetPassword}
+              method="post"
+              action="/auth/forgot-password"
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
                   Email
@@ -173,7 +178,11 @@ export default function ForgotPasswordPage() {
                     id="email"
                     name="email"
                     type="email"
-                    autoComplete="email"
+                    inputMode="email"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

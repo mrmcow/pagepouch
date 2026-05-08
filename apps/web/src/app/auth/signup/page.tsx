@@ -230,7 +230,12 @@ export default function SignUpPage() {
               </Alert>
             )}
 
-            <form onSubmit={handleSignUp} className="space-y-4">
+            <form
+              onSubmit={handleSignUp}
+              method="post"
+              action="/auth/signup"
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <label htmlFor="fullName" className="text-sm font-medium">
                   Full Name
@@ -242,6 +247,7 @@ export default function SignUpPage() {
                     name="name"
                     type="text"
                     autoComplete="name"
+                    autoCapitalize="words"
                     placeholder="Enter your full name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -262,7 +268,11 @@ export default function SignUpPage() {
                     id="email"
                     name="email"
                     type="email"
+                    inputMode="email"
                     autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -281,9 +291,12 @@ export default function SignUpPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    name="new-password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Create a strong password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -345,9 +358,12 @@ export default function SignUpPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
-                    name="confirm-password"
+                    name="password_confirmation"
                     type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}

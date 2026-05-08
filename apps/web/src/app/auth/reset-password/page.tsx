@@ -186,7 +186,12 @@ function ResetPasswordForm() {
               </Alert>
             )}
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form
+              onSubmit={handleResetPassword}
+              method="post"
+              action="/auth/reset-password"
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium">
                   New Password
@@ -195,9 +200,12 @@ function ResetPasswordForm() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    name="new-password"
+                    name="password"
                     type="password"
                     autoComplete="new-password"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Enter new password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -217,9 +225,12 @@ function ResetPasswordForm() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
-                    name="confirm-password"
+                    name="password_confirmation"
                     type="password"
                     autoComplete="new-password"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Confirm new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
