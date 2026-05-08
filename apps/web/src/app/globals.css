@@ -153,3 +153,18 @@
     display: none;
   }
 }
+
+/* Sign-up password: WebKit fires a short animation when autofill applies — we listen in React to mirror confirm. */
+@keyframes pagestash-signup-password-autofill-start {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pagestash-signup-password:-webkit-autofill {
+  animation-name: pagestash-signup-password-autofill-start;
+  animation-duration: 0.01s;
+}

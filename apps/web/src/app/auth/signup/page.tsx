@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,15 @@ import { Loader2, Mail, Lock, User, ArrowLeft, Check, Eye, EyeOff, Copy } from '
 import { createClient } from '@/lib/supabase'
 import { LogoIcon } from '@/components/ui/logo'
 import { trackSignupStarted, trackSignupCompleted, trackSignupFailed, getStoredUtmParams } from '@/lib/analytics'
+
+function passwordMeetsSignupRules(value: string): boolean {
+  return (
+    value.length >= 8 &&
+    /[A-Z]/.test(value) &&
+    /[a-z]/.test(value) &&
+    /[0-9]/.test(value)
+  )
+}
 
 function humanizeAuthError(message: string): string {
   if (message.includes('already registered') || message.includes('already been registered')) return 'An account with this email already exists. Try signing in instead.'
@@ -35,7 +44,8 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [copied, setCopied] = useState(false)
   const router = useRouter()
-  
+  const passwordInputRef = useRef<HTMLInputElement>(null)
+
   // Lazy initialization to avoid build-time issues
   const getSupabase = () => createClient()
 
@@ -50,10 +60,44 @@ export default function SignUpPage() {
   const allRequirementsMet = passwordRequirements.every(req => req.met)
   const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
 
-  const handleCopyPassword = () => {
-    setConfirmPassword(password)
+  const handleCopyPassword = async () => {
+    const value = passwordInputRef.current?.value ?? password
+    if (!value) return
+    setConfirmPassword(value)
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      /* clipboard may be denied; confirm field still updated */
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value
+    setPassword(v)
+    const n = e.nativeEvent
+    if (n && 'inputType' in n) {
+      const it = (n as InputEvent).inputType
+      if ((it === 'insertReplacementText' || it === 'insertFromPaste') && v) {
+        setConfirmPassword(v)
+      }
+    }
+  }
+
+  const handlePasswordAutofillAnimation = (e: React.AnimationEvent<HTMLInputElement>) => {
+    if (e.animationName !== 'pagestash-signup-password-autofill-start') return
+    const v = e.currentTarget.value
+    if (v) setConfirmPassword(v)
+  }
+
+  const handlePasswordBlur = () => {
+    const v = passwordInputRef.current?.value ?? ''
+    if (!v) return
+    setConfirmPassword((c) => {
+      if (c !== '') return c
+      return passwordMeetsSignupRules(v) ? v : c
+    })
   }
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -246,7 +290,7 @@ export default function SignUpPage() {
                     id="fullName"
                     name="name"
                     type="text"
-                    autoComplete="name"
+                    autoComplete="section-signup name"
                     autoCapitalize="words"
                     placeholder="Enter your full name"
                     value={fullName}
@@ -269,7 +313,7 @@ export default function SignUpPage() {
                     name="email"
                     type="email"
                     inputMode="email"
-                    autoComplete="email"
+                    autoComplete="section-signup email"
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
@@ -290,35 +334,39 @@ export default function SignUpPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
+                    ref={passwordInputRef}
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
+                    autoComplete="section-signup new-password"
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
                     placeholder="Create a strong password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-20"
+                    onChange={handlePasswordChange}
+                    onAnimationStart={handlePasswordAutofillAnimation}
+                    onBlur={handlePasswordBlur}
+                    className="pagestash-signup-password pl-10 pr-24"
                     required
                     disabled={isLoading}
                   />
-                  <div className="absolute right-3 top-3 flex items-center gap-1">
-                    {password && allRequirementsMet && (
+                  <div className="absolute right-2 top-2 flex items-center gap-0.5 sm:right-3 sm:top-3 sm:gap-1">
+                    {password ? (
                       <button
                         type="button"
-                        onClick={handleCopyPassword}
-                        className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                        title="Copy to confirm password"
+                        onClick={() => void handleCopyPassword()}
+                        className="text-muted-foreground hover:text-foreground transition-colors rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        title="Copy into confirm field (and clipboard)"
+                        aria-label="Copy password into confirm password field"
                       >
                         {copied ? (
-                          <Check className="h-4 w-4 text-green-600" />
+                          <Check className="h-4 w-4 text-green-600" aria-hidden />
                         ) : (
-                          <Copy className="h-4 w-4" />
+                          <Copy className="h-4 w-4" aria-hidden />
                         )}
                       </button>
-                    )}
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -360,7 +408,7 @@ export default function SignUpPage() {
                     id="confirmPassword"
                     name="password_confirmation"
                     type={showConfirmPassword ? "text" : "password"}
-                    autoComplete="new-password"
+                    autoComplete="section-signup new-password"
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
