@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { useStripeCheckout } from '@/lib/use-stripe-checkout'
+import { useStripeCheckout, type CheckoutPlan } from '@/lib/use-stripe-checkout'
+import { ProBillingChoicePanel } from '@/components/dashboard/ProBillingChoicePanel'
 import {
   Check,
   Network,
@@ -31,6 +33,7 @@ const PRO_FEATURES = [
 
 export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUpgradeModalProps) {
   const { startCheckout, isLoading } = useStripeCheckout({ source: 'knowledge-graph-upgrade-modal' })
+  const [plan, setPlan] = useState<CheckoutPlan>('annual')
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -135,16 +138,12 @@ export function KnowledgeGraphUpgradeModal({ isOpen, onClose }: KnowledgeGraphUp
             </p>
           </div>
 
-          <button
-            onClick={() => startCheckout('annual')}
-            disabled={isLoading}
-            className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-70 text-white px-4 py-2.5 text-sm font-semibold transition-all flex flex-col items-center leading-tight"
-          >
-            <span>{isLoading ? 'Redirecting…' : 'Go Pro — $10/mo'}</span>
-            <span className="text-[10px] font-medium opacity-85 mt-0.5">
-              billed annually · save $12/yr
-            </span>
-          </button>
+          <ProBillingChoicePanel
+            selected={plan}
+            onSelectedChange={setPlan}
+            onContinue={() => void startCheckout(plan)}
+            isLoading={isLoading}
+          />
 
           <p className="text-[10.5px] text-center text-slate-400 dark:text-slate-500 mt-3">
             30-day money-back guarantee · Cancel anytime · Secured by Stripe

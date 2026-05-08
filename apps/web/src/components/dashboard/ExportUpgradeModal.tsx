@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { useStripeCheckout } from '@/lib/use-stripe-checkout'
+import { useStripeCheckout, type CheckoutPlan } from '@/lib/use-stripe-checkout'
+import { ProBillingChoicePanel } from '@/components/dashboard/ProBillingChoicePanel'
 import {
   FileDown,
   Check,
@@ -108,11 +110,13 @@ export function ExportUpgradeModal({ isOpen, onClose }: ExportUpgradeModalProps)
 
 interface UpgradeFooterProps {
   subtitle: string
-  startCheckout: (plan: 'monthly' | 'annual') => Promise<void> | void
+  startCheckout: (plan: CheckoutPlan) => Promise<void> | void
   isLoading: boolean
 }
 
 function UpgradeFooter({ subtitle, startCheckout, isLoading }: UpgradeFooterProps) {
+  const [plan, setPlan] = useState<CheckoutPlan>('annual')
+
   return (
     <div className="border-t border-slate-100 dark:border-white/5 bg-white dark:bg-slate-950 px-5 sm:px-7 py-4 sm:py-5 shrink-0">
       <div className="mb-3">
@@ -122,16 +126,12 @@ function UpgradeFooter({ subtitle, startCheckout, isLoading }: UpgradeFooterProp
         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
       </div>
 
-      <button
-        onClick={() => startCheckout('annual')}
-        disabled={isLoading}
-        className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-70 text-white px-4 py-2.5 text-sm font-semibold transition-all flex flex-col items-center leading-tight"
-      >
-        <span>{isLoading ? 'Redirecting…' : 'Go Pro — $10/mo'}</span>
-        <span className="text-[10px] font-medium opacity-85 mt-0.5">
-          billed annually · save $12/yr
-        </span>
-      </button>
+      <ProBillingChoicePanel
+        selected={plan}
+        onSelectedChange={setPlan}
+        onContinue={() => void startCheckout(plan)}
+        isLoading={isLoading}
+      />
 
       <p className="text-[10.5px] text-center text-slate-400 dark:text-slate-500 mt-3">
         30-day money-back guarantee · Cancel anytime · Secured by Stripe
