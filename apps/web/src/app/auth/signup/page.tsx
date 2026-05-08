@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Mail, Lock, User, ArrowLeft, Check, Eye, EyeOff, Copy } from 'lucide-react'
+import { Loader2, Mail, Lock, ArrowLeft, Check, Eye, EyeOff, Copy } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { LogoIcon } from '@/components/ui/logo'
 import { trackSignupStarted, trackSignupCompleted, trackSignupFailed, getStoredUtmParams } from '@/lib/analytics'
@@ -32,7 +32,6 @@ function humanizeAuthError(message: string): string {
 }
 
 export default function SignUpPage() {
-  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -133,9 +132,6 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          data: {
-            full_name: fullName,
-          },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         },
       })
@@ -280,28 +276,6 @@ export default function SignUpPage() {
               action="/auth/signup"
               className="space-y-4"
             >
-              <div className="space-y-2">
-                <label htmlFor="fullName" className="text-sm font-medium">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    name="name"
-                    type="text"
-                    autoComplete="section-signup name"
-                    autoCapitalize="words"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
                   Email
